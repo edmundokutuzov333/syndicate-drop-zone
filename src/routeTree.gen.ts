@@ -10,33 +10,63 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CampingRouteImport } from './routes/camping'
+import { Route as MembrosRouteImport } from './routes/membros'
+import { Route as MerchRouteImport } from './routes/merch'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CampingRoute = CampingRouteImport.update({
+  id: '/camping',
+  path: '/camping',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MembrosRoute = MembrosRouteImport.update({
+  id: '/membros',
+  path: '/membros',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MerchRoute = MerchRouteImport.update({
+  id: '/merch',
+  path: '/merch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/camping': typeof CampingRoute
+  '/membros': typeof MembrosRoute
+  '/merch': typeof MerchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/camping': typeof CampingRoute
+  '/membros': typeof MembrosRoute
+  '/merch': typeof MerchRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/camping': typeof CampingRoute
+  '/membros': typeof MembrosRoute
+  '/merch': typeof MerchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/camping' | '/membros' | '/merch'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/camping' | '/membros' | '/merch'
+  id: '__root__' | '/' | '/camping' | '/membros' | '/merch'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CampingRoute: typeof CampingRoute
+  MembrosRoute: typeof MembrosRoute
+  MerchRoute: typeof MerchRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +78,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/camping': {
+      id: '/camping'
+      path: '/camping'
+      fullPath: '/camping'
+      preLoaderRoute: typeof CampingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/membros': {
+      id: '/membros'
+      path: '/membros'
+      fullPath: '/membros'
+      preLoaderRoute: typeof MembrosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/merch': {
+      id: '/merch'
+      path: '/merch'
+      fullPath: '/merch'
+      preLoaderRoute: typeof MerchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CampingRoute: CampingRoute,
+  MembrosRoute: MembrosRoute,
+  MerchRoute: MerchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
