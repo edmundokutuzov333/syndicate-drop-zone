@@ -48,7 +48,7 @@ export class TapeEngine {
     const tick = () => {
       while (next < ctx.currentTime + 0.2) {
         const s = n % 16;
-        const note = spec.pattern[s];
+        const note = spec.pattern[s] ?? -1;
         if (note >= 0) this.kick808(next, spec.root * Math.pow(2, note / 12));
         if (s % spec.hat === 0) this.hat(next, s % 4 === 2 ? 0.12 : 0.05);
         if (s === 4 || s === 12) this.snare(next);
@@ -112,7 +112,7 @@ export class TapeEngine {
     const a = new Uint8Array(this.analyser.frequencyBinCount);
     this.analyser.getByteFrequencyData(a);
     let sum = 0;
-    for (let i = 0; i < 16; i++) sum += a[i];
+    for (let i = 0; i < 16; i++) sum += a[i] ?? 0;
     return sum / (16 * 255);
   }
 
