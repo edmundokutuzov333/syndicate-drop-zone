@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { TapeEngine, type TapeSpec } from "@/lib/tape-engine";
+import { TapeEngine } from "@/lib/tape-engine";
+import { Link } from "@tanstack/react-router";
+import { TAPES, MEMBERS, MERCH } from "@/lib/data";
+import { Halftone } from "@/components/Halftone";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -18,37 +21,12 @@ export const Route = createFileRoute("/")({
 
 const PASS = "808";
 
-const TAPES: (TapeSpec & { id: string; title: string; room: string; dur: string })[] = [
-  { id: "REG_001", title: "CONCRETO ÚMIDO", room: "SALA 02 / 03:14", dur: "0:15", bpm: 142, root: 41.2, hat: 2, pattern: [0,-1,-1,-1,-1,-1,0,-1,-1,-1,3,-1,-1,-1,-1,-1] },
-  { id: "REG_002", title: "PAVILHÃO 808", room: "SALA 01 / 04:40", dur: "0:15", bpm: 130, root: 36.7, hat: 1, pattern: [0,-1,-1,0,-1,-1,-1,-1,5,-1,-1,-1,3,-1,-1,-1] },
-  { id: "REG_003", title: "O PACTO", room: "PORÃO / 23:59", dur: "0:15", bpm: 150, root: 46.2, hat: 2, pattern: [0,-1,-1,-1,-1,-1,-1,-1,-2,-1,-1,-2,-1,-1,-1,-1] },
-  { id: "REG_004", title: "LUZ DE CÂMARA ESCURA", room: "SALA 03 / 05:02", dur: "0:15", bpm: 120, root: 38.9, hat: 4, pattern: [0,-1,-1,-1,-1,-1,-1,7,-1,-1,0,-1,-1,-1,-1,-1] },
-];
-
-const MEMBERS = [
-  { code: "SDT-01", alias: "VULTO", role: "Produtor / 808", last: "Sala 01 — 72h sem sair", status: "ISOLADO" },
-  { code: "SDT-02", alias: "CORONEL MUDO", role: "Voz / Composição", last: "Visto às 04:11 no porão", status: "ATIVO" },
-  { code: "SDT-03", alias: "XEROX", role: "Direção de Arte", last: "Fotocopiadora, bloco C", status: "VIGIADO" },
-  { code: "SDT-04", alias: "FANTASMA", role: "Engenharia de Áudio", last: "Sem registro desde 02/10", status: "DESAPARECIDO" },
-  { code: "SDT-05", alias: "REVERSO", role: "Voz / Ad-libs", last: "Câmera 7 — sussurrando", status: "ATIVO" },
-  { code: "SDT-06", alias: "CHUMBO", role: "Segurança do Bunker", last: "Guarda das maletas", status: "ISOLADO" },
-];
-
-const MERCH = [
-  { n: "01", name: "HEAVYWEIGHT BOXY TEE", sub: "DOSSIÊ VOL. 1", spec: "260 GSM · lavagem mineral · 333 un. numeradas", price: 249, left: 87 },
-  { n: "02", name: "THERMAL WAFFLE LS", sub: "PAVILHÃO 808", spec: "Waffle térmico · costuras expostas · brasão bordado", price: 319, left: 140 },
-  { n: "03", name: "TACTICAL UTILITY HOODIE", sub: "O PACTO", spec: "450 GSM · silk puff · bolso com zíper selado", price: 549, left: 52 },
-  { n: "04", name: "ZINE + FITA K7", sub: "CONTRABANDO", spec: "Papel jornal 90g · K7 fumê · saco antiestático", price: 129, left: 33 },
-];
-
 const DROP = new Date("2026-10-31T23:59:00-03:00").getTime();
 
 function Index() {
   const [unlocked, setUnlocked] = useState(false);
   return (
-    <div className="grain scanlines relative min-h-screen overflow-x-hidden bg-background">
-      {unlocked ? <Hub /> : <Gate onOpen={() => setUnlocked(true)} />}
-    </div>
+    <>{unlocked ? <Hub /> : <Gate onOpen={() => setUnlocked(true)} />}</>
   );
 }
 
@@ -124,7 +102,6 @@ function Hub() {
 
   return (
     <>
-      <TopBar playing={playing} />
       <Marquee />
       <main className="mx-auto max-w-7xl px-4 pb-24 md:px-8">
         <Manifesto />
@@ -137,23 +114,6 @@ function Hub() {
         O SINDICATO DO TRAP · MOVIMENTO AUTÔNOMO · <span className="text-blood">TUDO OU NADA</span>
       </footer>
     </>
-  );
-}
-
-function TopBar({ playing }: { playing: string | null }) {
-  return (
-    <header className="sticky top-0 z-40 flex items-center justify-between border-b border-border bg-background/90 px-4 py-3 text-xs backdrop-blur md:px-8">
-      <span className="font-gothic text-2xl">Sindicato</span>
-      <nav className="hidden gap-6 text-muted-foreground md:flex">
-        <a href="#drop" className="hover:text-blood">[DROP]</a>
-        <a href="#fitas" className="hover:text-blood">[FITAS]</a>
-        <a href="#dossie" className="hover:text-blood">[DOSSIÊ]</a>
-        <a href="#merch" className="hover:text-blood">[ARSENAL]</a>
-      </nav>
-      <span className={playing ? "text-blood" : "text-muted-foreground"}>
-        {playing ? `▶ ${playing}.WAV` : "■ SILÊNCIO"}
-      </span>
-    </header>
   );
 }
 
@@ -297,10 +257,8 @@ function Dossier() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {MEMBERS.map((m, i) => (
           <article key={m.code} className="group relative border border-border bg-card">
-            <div className="halftone relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-background">
-              <span className="font-gothic text-[7rem] leading-none text-ash transition-colors group-hover:text-blood">
-                {m.alias[0]}
-              </span>
+            <div className="relative aspect-[4/3] overflow-hidden">
+              <Halftone src={m.img} alt={`Registro de vigilância de ${m.alias}`} className="h-full w-full" />
               <span className="absolute left-2 top-2 text-[10px] text-blood">● CAM {String(i + 2).padStart(2, "0")}</span>
               <span className="absolute bottom-2 right-2 font-mono text-[10px] text-muted-foreground">
                 02/10/26 0{i}:{String(13 + i * 7).padStart(2, "0")}:{String(i * 9).padStart(2, "0")}
@@ -320,7 +278,7 @@ function Dossier() {
           </article>
         ))}
       </div>
-      <p className="mt-3 text-xs text-muted-foreground">passe o cursor para remover a tarja.</p>
+      <p className="mt-3 text-xs text-muted-foreground">passe o cursor para remover a tarja. <Link to="/membros" className="text-blood underline">abrir arquivo completo →</Link></p>
     </section>
   );
 }
@@ -341,8 +299,8 @@ function Merch({ armed }: { armed: boolean }) {
           const got = bag.includes(p.n);
           return (
             <article key={p.n} className="flex flex-col border border-border bg-card">
-              <div className="halftone relative flex aspect-square items-center justify-center bg-background">
-                <span className="font-gothic text-8xl text-ash">{p.n}</span>
+              <div className="relative aspect-square">
+                <Halftone src={p.img} alt={p.name} className="h-full w-full" />
                 <span className="absolute left-0 top-3 bg-blood px-2 py-0.5 font-stamp text-xs text-primary-foreground">{p.left} RESTANTES</span>
               </div>
               <div className="flex flex-1 flex-col p-4">
