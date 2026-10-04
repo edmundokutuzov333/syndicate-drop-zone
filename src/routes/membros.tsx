@@ -36,7 +36,7 @@ function Membros() {
     <main className="mx-auto max-w-7xl px-4 pb-24 pt-12 md:px-8">
       <p className="text-xs tracking-widest text-blood">// ARQUIVO 02 — VIGILÂNCIA · 1ª EDIÇÃO</p>
       <h1 className="mt-2 font-gothic text-6xl leading-[0.85] md:text-8xl">Dossiê de Vigilância</h1>
-      <p className="mt-3 text-xs text-muted-foreground">16 INDIVÍDUOS SOB OBSERVAÇÃO</p>
+      <p className="mt-3 text-xs text-muted-foreground">17 INDIVÍDUOS SOB OBSERVAÇÃO</p>
 
       <div className="mt-10 grid grid-cols-4 gap-2 md:grid-cols-8">
         {ARTISTS.map((x, i) => (

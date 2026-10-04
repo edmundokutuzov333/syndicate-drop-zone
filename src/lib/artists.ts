@@ -1,4 +1,4 @@
-// 16 artistas da 1ª edição. Fotos reais em src/assets/artists (ponteiros CDN).
+// 17 artistas da 1ª edição. Fotos reais em src/assets/artists (ponteiros CDN).
 import a01 from "@/assets/artists/a01.jpg.asset.json";
 import a02 from "@/assets/artists/a02.jpg.asset.json";
 import a03 from "@/assets/artists/a03.jpg.asset.json";
@@ -9,15 +9,20 @@ import a07 from "@/assets/artists/a07.jpg.asset.json";
 import a08 from "@/assets/artists/a08.jpg.asset.json";
 import a09 from "@/assets/artists/a09.jpg.asset.json";
 import a10 from "@/assets/artists/a10.jpg.asset.json";
+import a11 from "@/assets/artists/a11.jpg.asset.json";
+import a12 from "@/assets/artists/a12.jpg.asset.json";
+import a13 from "@/assets/artists/a13.jpg.asset.json";
+import a14 from "@/assets/artists/a14.jpg.asset.json";
+import a15 from "@/assets/artists/a15.jpg.asset.json";
+import a16 from "@/assets/artists/a16.jpg.asset.json";
+import a17 from "@/assets/artists/a17.jpg.asset.json";
 
 export type Artist = { code: string; name: string; img?: string; status: string };
 
 const STATUS = ["ATIVO", "VIGIADO", "ISOLADO", "CLASSIFICADO"];
-const PHOTOS = [a01, a02, a03, a04, a05, a06, a07, a08, a09, a10].map((a) => a.url);
+const PHOTOS = [a01, a02, a03, a04, a05, a06, a07, a08, a09, a10, a11, a12, a13, a14, a15, a16, a17].map((a) => a.url);
 
-export const ARTISTS: Artist[] = Array.from({ length: 16 }, (_, i) => {
+export const ARTISTS: Artist[] = PHOTOS.map((img, i) => {
   const n = String(i + 1).padStart(2, "0");
-  const base = { code: `SDT-${n}`, name: `ARTISTA ${n}`, status: STATUS[i % STATUS.length]! };
-  const img = PHOTOS[i];
-  return img ? { ...base, img } : base;
+  return { code: `SDT-${n}`, name: `ARTISTA ${n}`, status: STATUS[i % STATUS.length]!, img };
 });
