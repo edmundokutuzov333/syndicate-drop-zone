@@ -19,7 +19,7 @@ export const Route = createFileRoute("/membros")({
 });
 
 function Slot({ a, className }: { a: Artist; className?: string }) {
-  if (a.img) return <Halftone src={a.img} alt={a.name} className={className} />;
+  if (a.img) return <Halftone src={a.img} alt={a.name} className={className ?? ""} />;
   return (
     <div className={`relative flex items-center justify-center overflow-hidden bg-background ${className ?? ""}`}>
       <div className="halftone-overlay pointer-events-none absolute inset-0" />
