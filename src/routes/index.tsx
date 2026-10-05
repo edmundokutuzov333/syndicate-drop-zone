@@ -130,7 +130,8 @@ function Countdown() {
 
 function Tapes({ playing, toggle, lvl }: { playing: string | null; toggle: (t: (typeof TAPES)[number]) => void; lvl: number }) {
   return (
-    <section className="mb-24">
+    <section className="relative mb-24">
+      <img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute -right-6 -top-10 w-28 rotate-[20deg] opacity-70 md:w-36" />
       <SectionTag label="Prévias Cruas" />
       <div className="mb-4 flex h-10 items-end gap-1">
         {Array.from({ length: 32 }).map((_, i) => (
@@ -161,16 +162,17 @@ function Tapes({ playing, toggle, lvl }: { playing: string | null; toggle: (t: (
 
 function Artistas() {
   return (
-    <section className="mb-24">
-      <SectionTag label="Os Convocados" to="/membros" />
+    <section className="relative mb-24 pb-40">
+      <SectionTag label="Os Convocados" />
       <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
-        {ARTISTS.slice(0, 12).map((a) => (
+        {ARTISTS.map((a) => (
           <Link key={a.code} to="/membros" className="group relative aspect-[4/5] border border-border hover:border-blood">
             <Halftone src={a.img!} alt={a.name} className="h-full w-full" />
             <span className="absolute bottom-1 left-1 bg-background px-1 font-stamp text-[10px]">{a.name}</span>
           </Link>
         ))}
       </div>
+      <img src={selo.url} alt="Selo do Sindicato" className="pointer-events-none absolute bottom-0 left-1/2 w-56 -translate-x-1/2 rotate-[-8deg] opacity-80 md:w-72" />
     </section>
   );
 }
@@ -186,7 +188,7 @@ function Merch({ armed }: { armed: boolean }) {
         {MERCH.map((p) => (
           <Link key={p.n} to="/merch" disabled={!armed}
             className={`flex flex-col border border-border bg-card ${armed ? "hover:border-blood" : "pointer-events-none opacity-60"}`}>
-            <div className="aspect-square"><Halftone src={p.img} alt={p.name} className="h-full w-full" /></div>
+            <div className="relative aspect-square"><img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute right-2 top-2 z-10 w-14 rotate-[-15deg] opacity-75" /><Halftone src={p.img} alt={p.name} className="h-full w-full" /></div>
             <div className="flex items-center justify-between p-3">
               <h3 className="font-stamp text-sm leading-tight">{p.name}</h3>
               <span className="text-xs font-bold">R$ {p.price}</span>

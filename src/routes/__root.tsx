@@ -8,10 +8,11 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { TacticalNav } from "../components/TacticalNav";
-import phantom from "@/assets/brand/phantom.png.asset.json";
+import phantomImg from "@/assets/brand/phantom-clean.png";
+import { CodeGate } from "../components/CodeGate";
 import xoyens from "@/assets/brand/xoyens.png.asset.json";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -122,17 +123,20 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const [open, setOpen] = useState<boolean | null>(null);
+  useEffect(() => setOpen(sessionStorage.getItem("sdt-open") === "1"), []);
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <div className="grain scanlines relative min-h-screen overflow-x-hidden bg-background">
+        {open === false && <CodeGate onOpen={() => setOpen(true)} />}
         <TacticalNav />
         <Outlet />
         <footer className="border-t border-border px-4 py-10 text-center">
           <p className="text-[10px] tracking-widest text-muted-foreground">IDEALIZADO POR</p>
           <div className="mt-4 flex items-center justify-center gap-10">
-            <img src={phantom.url} alt="PHANTOM" className="h-8 w-auto opacity-80" />
+            <img src={phantomImg} alt="PHANTOM" className="h-8 w-auto opacity-80" />
             <span className="text-blood">✕</span>
             <img src={xoyens.url} alt="XOYENS" className="h-10 w-auto opacity-80" />
           </div>
