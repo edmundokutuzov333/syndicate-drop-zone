@@ -7,9 +7,9 @@ import { hiss, printer } from "@/lib/sfx";
 export const Route = createFileRoute("/merch")({
   head: () => ({
     meta: [
-      { title: "Cofre Tático de Drops — O Sindicato do Trap" },
+      { title: "Merch — O Sindicato do Trap" },
       { name: "description", content: "Inspecione as peças do drop em visão normal, noturna ou raio-x e reserve sua unidade numerada." },
-      { property: "og:title", content: "Cofre Tático de Drops — O Sindicato do Trap" },
+      { property: "og:title", content: "Merch — O Sindicato do Trap" },
       { property: "og:description", content: "Fardamento numerado do Sindicato. Reserve antes que o cofre feche." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -42,8 +42,8 @@ function Merch() {
 
   return (
     <main className="mx-auto max-w-7xl px-4 pb-24 pt-12 md:px-8">
-      <p className="text-xs tracking-widest text-blood">// ARQUIVO 03 — COFRE</p>
-      <h1 className="mt-2 font-gothic text-6xl leading-[0.85] md:text-8xl">Cofre Tático de Drops</h1>
+      <p className="text-xs tracking-widest text-blood">1ª EDIÇÃO · MERCH OFICIAL</p>
+      <h1 className="mt-2 font-gothic text-6xl leading-[0.85] md:text-8xl">Merch</h1>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[1.3fr_1fr]">
         <div>

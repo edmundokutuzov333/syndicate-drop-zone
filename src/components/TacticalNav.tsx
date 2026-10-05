@@ -1,12 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { click, hiss } from "@/lib/sfx";
+import logo from "@/assets/brand/sindicato-logo.png.asset.json";
 
 const LINKS = [
   { to: "/", label: "HUB", k: "00" },
   { to: "/camping", label: "CAMPING", k: "01" },
-  { to: "/membros", label: "MEMBROS", k: "02" },
-  { to: "/merch", label: "COFRE", k: "03" },
+  { to: "/membros", label: "ARTISTAS", k: "02" },
+  { to: "/merch", label: "MERCH", k: "03" },
 ] as const;
 
 export function TacticalNav() {
@@ -28,7 +29,7 @@ export function TacticalNav() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur">
       <div className="flex items-center justify-between px-4 py-3 text-xs md:px-8">
-        <Link to="/" className="font-gothic text-2xl leading-none">Sindicato</Link>
+        <Link to="/" className="flex items-center gap-2 font-gothic text-2xl leading-none"><img src={logo.url} alt="" className="h-9 w-auto" />Sindicato</Link>
         <nav className="hidden items-center gap-1 md:flex">
           {LINKS.map((l) => (
             <Link key={l.to} to={l.to} onMouseEnter={() => hiss(0.15)}

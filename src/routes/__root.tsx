@@ -11,6 +11,8 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { TacticalNav } from "../components/TacticalNav";
+import phantom from "@/assets/brand/phantom.png.asset.json";
+import xoyens from "@/assets/brand/xoyens.png.asset.json";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -95,7 +97,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/__l5e/assets-v1/8d1c8b73-1330-4900-8723-85f98946699a/sindicato-logo.png", type: "image/png" },
     ],
   }),
   shellComponent: RootShell,
@@ -127,6 +129,14 @@ function RootComponent() {
       <div className="grain scanlines relative min-h-screen overflow-x-hidden bg-background">
         <TacticalNav />
         <Outlet />
+        <footer className="border-t border-border px-4 py-10 text-center">
+          <p className="text-[10px] tracking-widest text-muted-foreground">IDEALIZADO POR</p>
+          <div className="mt-4 flex items-center justify-center gap-10">
+            <img src={phantom.url} alt="PHANTOM" className="h-8 w-auto opacity-80" />
+            <span className="text-blood">✕</span>
+            <img src={xoyens.url} alt="XOYENS" className="h-10 w-auto opacity-80" />
+          </div>
+        </footer>
       </div>
     </QueryClientProvider>
   );
