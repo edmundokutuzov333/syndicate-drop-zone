@@ -165,8 +165,8 @@ function Artistas() {
     <section className="relative mb-24 pb-40">
       <SectionTag label="Os Convocados" />
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
-        {ARTISTS.map((a) => (
-          <Link key={a.code} to="/membros" className="group relative aspect-[4/5] border border-border hover:border-blood">
+        {ARTISTS.map((a, i) => (
+          <Link key={a.code} to="/membros" search={{ a: i + 1 }} className="group relative aspect-[4/5] border border-border hover:border-blood">
             <Halftone src={a.img!} alt={a.name} className="h-full w-full" />
             <span className="absolute bottom-1 left-1 bg-background px-1 font-stamp text-[10px]">{a.name}</span>
           </Link>
