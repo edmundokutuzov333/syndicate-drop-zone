@@ -164,7 +164,7 @@ function Artistas() {
   return (
     <section className="relative mb-24 pb-40">
       <SectionTag label="Os Convocados" />
-      <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
         {ARTISTS.map((a) => (
           <Link key={a.code} to="/membros" className="group relative aspect-[4/5] border border-border hover:border-blood">
             <Halftone src={a.img!} alt={a.name} className="h-full w-full" />
