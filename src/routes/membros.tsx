@@ -8,7 +8,7 @@ type Search = { a?: number };
 
 export const Route = createFileRoute("/membros")({
   validateSearch: (s: Record<string, unknown>): Search => {
-    const n = Number(s.a);
+    const n = Number(s["a"]);
     return Number.isInteger(n) && n >= 1 && n <= ARTISTS.length ? { a: n } : {};
   },
   head: () => ({
