@@ -39,7 +39,7 @@ export function CodeGate({ onOpen }: { onOpen: () => void }) {
   });
 
   return (
-    <div className="grain scanlines fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-background p-4">
+    <div className="grain scanlines fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-background p-4">
       <img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute -left-24 -top-24 w-[28rem] rotate-12 opacity-10" />
       <img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute -bottom-32 -right-24 w-[34rem] -rotate-6 opacity-[0.07]" />
 
