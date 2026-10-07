@@ -9,6 +9,15 @@ export class FrameBuffer {
     width: number,
     height: number,
   ): void {
+    if (
+      this.framebuffer &&
+      this.texture &&
+      this.width === width &&
+      this.height === height
+    ) {
+      return;
+    }
+
     this.destroy(gl);
 
     this.framebuffer = gl.createFramebuffer();
