@@ -119,7 +119,11 @@ export function CameraViewport({
 
         if (
           vfx3d &&
-          (activeFilter === "vamp" || activeFilter === "astro-haze")
+          (
+            activeFilter === "vamp" ||
+            activeFilter === "astro-haze" ||
+            activeFilter === "xray-mesh"
+          )
         ) {
           vfx3d.update(
             activeFilter,
@@ -127,6 +131,7 @@ export function CameraViewport({
             facingRef.current,
             timestamp,
             video,
+            faceVfx.getLandmarks(),
           );
           vfx3d.render();
           engine.setSceneOverlaySource(vfx3d.getCanvas());
@@ -198,6 +203,7 @@ export function CameraViewport({
 
         try {
           vfx3d = new CameraVfx3DOverlay();
+          vfx3d.setXrayParameters([0, 1, 0.4], 1.5, 0.8);
         } catch {
           vfx3d = null;
         }
