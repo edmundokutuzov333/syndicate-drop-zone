@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { CameraManager } from "@/lib/camera/camera-manager";
+import {
+  get4KCaptureDimensions,
+  isReal4KSource,
+} from "@/lib/camera/capture-engine";
 import { DeviceManager } from "@/lib/camera/device-manager";
 import { calculateOrientationState } from "@/lib/camera/orientation-manager";
 import {
@@ -178,6 +182,21 @@ describe("camera engineering foundation", () => {
 
     expect(policy.renderScale).toBeLessThan(1);
     expect(policy.dpr).toBe(1.75);
+  });
+
+  it("keeps the 4K gate orientation-aware", () => {
+    expect(isReal4KSource(3840, 2160)).toBe(true);
+    expect(isReal4KSource(2160, 3840)).toBe(true);
+    expect(isReal4KSource(1920, 1080)).toBe(false);
+
+    expect(get4KCaptureDimensions(3840, 2160)).toEqual({
+      width: 3840,
+      height: 2160,
+    });
+    expect(get4KCaptureDimensions(2160, 3840)).toEqual({
+      width: 2160,
+      height: 3840,
+    });
   });
 
   it("detects the capability matrix without opening a device", () => {
