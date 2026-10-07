@@ -12,7 +12,6 @@ type CaptureControlsProps = {
   formatOptions: CaptureFormatCapability[];
   busy: boolean;
   recording: boolean;
-  countdown: number | null;
   onTimerChange: (timer: CaptureTimer) => void;
   onFormatChange: (format: CaptureFormat) => void;
   onCapture: () => void;
@@ -25,7 +24,6 @@ export function CaptureControls({
   formatOptions,
   busy,
   recording,
-  countdown,
   onTimerChange,
   onFormatChange,
   onCapture,
@@ -87,9 +85,6 @@ export function CaptureControls({
       >
         <span className="camera-shutter-outer" />
         <span className="camera-shutter-inner" />
-        {countdown !== null ? (
-          <span className="camera-shutter-countdown">{countdown}</span>
-        ) : null}
       </button>
     </div>
   );
