@@ -96,7 +96,7 @@ export function ArtistDossier({ artist }: Props) {
       </header>
 
       <section className="relative mt-8 grid gap-8 md:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)] md:gap-12">
-        <div className="relative min-h-[520px] overflow-hidden border-4 border-foreground bg-foreground p-2 md:min-h-[680px]">
+        <div className="relative min-h-[520px] overflow-hidden md:min-h-[680px]">
           <Halftone src={artist.img} alt={artist.name} className="h-full min-h-[500px] md:min-h-[660px]" />
           <span className="absolute left-5 top-5 bg-blood px-3 py-1 font-stamp text-[10px] text-primary-foreground">
             CONVOCADO
@@ -340,7 +340,7 @@ export function ArtistDossier({ artist }: Props) {
               to="/membros/$slug"
               params={{ slug: item.slug }}
               preload="intent"
-              className="group relative overflow-hidden border-2 border-foreground bg-foreground p-2"
+              className="group relative overflow-hidden"
             >
               <Halftone src={item.img} alt={item.name} className="aspect-[4/3] transition duration-500 group-hover:scale-[1.02]" />
               <div className="flex items-center justify-between bg-background px-3 py-3">
