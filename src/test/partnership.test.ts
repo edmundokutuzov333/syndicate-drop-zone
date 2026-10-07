@@ -15,6 +15,19 @@ describe("PartnershipRequestSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("defaults an omitted budget to an empty string", () => {
+    const result = PartnershipRequestSchema.safeParse({
+      name: "Sindicato",
+      company: "Sindicato do Trap",
+      contact: "parcerias@example.com",
+      partnershipType: "Patrocínio",
+      message: "Proposta válida sem orçamento definido.",
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.budget).toBe("");
+  });
+
   it("rejects incomplete proposals", () => {
     const result = PartnershipRequestSchema.safeParse({
       name: "A",
