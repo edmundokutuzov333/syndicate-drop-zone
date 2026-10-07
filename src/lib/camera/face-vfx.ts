@@ -212,6 +212,7 @@ export class FaceVfxTracker {
   private motion = 0;
   private motionBurst = 0;
   private state: FaceVfxUniformState = copyEmptyFaceState();
+  private readonly landmarkBuffer = new Float32Array(478 * 3);
 
   async warmup(): Promise<void> {
     if (this.destroyed || this.landmarker) return;
@@ -274,6 +275,14 @@ export class FaceVfxTracker {
       );
       const next = buildFaceVfxUniforms(result);
 
+      for (let index = 0; index < Math.min(478, result.faceLandmarks?.[0]?.length ?? 0); index += 1) {
+        const point = result.faceLandmarks![0]![index]!;
+        const offset = index * 3;
+        this.landmarkBuffer[offset] = point.x;
+        this.landmarkBuffer[offset + 1] = point.y;
+        this.landmarkBuffer[offset + 2] = point.z ?? 0;
+      }
+
       if (next.present > 0.5 && this.previousFace && this.previousPose) {
         const dt = Math.max(0.012, (timestamp - previousDetectionAt) / 1000);
         const positionDelta = Math.hypot(
@@ -308,6 +317,10 @@ export class FaceVfxTracker {
     }
 
     return this.state;
+  }
+
+  getLandmarks(): Float32Array {
+    return this.landmarkBuffer;
   }
 
   reset(): FaceVfxUniformState {
