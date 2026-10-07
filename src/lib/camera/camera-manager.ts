@@ -3,9 +3,15 @@ import {
   type CameraDevice,
   type CameraFacingMode,
   type CameraState,
+  type FlashMode,
 } from "./types";
 
 type CameraListener = (state: CameraState) => void;
+
+type TorchTrack = MediaStreamTrack & {
+  getCapabilities?: () => MediaTrackCapabilities & { torch?: boolean };
+  applyConstraints?: (constraints?: MediaTrackConstraints) => Promise<void>;
+};
 
 const VIDEO_PREFERENCES: MediaTrackConstraints = {
   width: { ideal: 3840 },
@@ -26,6 +32,8 @@ export class CameraManager {
     devices: [],
     facingMode: "user",
     microphoneEnabled: false,
+    flashEnabled: false,
+    flashMode: "off",
     width: 0,
     height: 0,
     frameRate: 0,
@@ -127,6 +135,7 @@ export class CameraManager {
     this.setState({
       status: "active",
       microphoneEnabled: this.hasLiveMicrophone(),
+      ...this.readFlashState(this.state.flashEnabled),
       ...this.readVideoSettings(),
       error: null,
     });
@@ -211,6 +220,7 @@ export class CameraManager {
         status: "active",
         facingMode: actualFacing,
         microphoneEnabled: this.hasLiveMicrophone(),
+        ...this.readFlashState(this.state.flashEnabled),
         ...this.readVideoSettings(),
         error: null,
       });
@@ -245,6 +255,79 @@ export class CameraManager {
 
   getStream(): MediaStream | null {
     return this.stream;
+  }
+
+  getFlashMode(): FlashMode {
+    return this.state.flashMode;
+  }
+
+  getHardwareFlashAvailable(): boolean {
+    return this.state.flashMode === "hardware";
+  }
+
+  async setFlashEnabled(enabled: boolean): Promise<void> {
+    const flashMode = this.getCurrentFlashMode(enabled);
+    this.setState({
+      flashEnabled: enabled,
+      flashMode,
+    });
+
+    if (!enabled) {
+      await this.setHardwareTorch(false);
+    }
+  }
+
+  async preparePhotoFlash(): Promise<() => Promise<void>> {
+    if (!this.state.flashEnabled || this.getCurrentFlashMode(true) !== "hardware") {
+      this.setState({
+        flashMode: this.state.flashEnabled ? "software" : "off",
+      });
+      return async () => undefined;
+    }
+
+    await this.setHardwareTorch(true);
+    return async () => {
+      await this.setHardwareTorch(false);
+    };
+  }
+
+  async syncVideoFlash(enabled: boolean): Promise<void> {
+    if (!this.state.flashEnabled || !enabled) {
+      await this.setHardwareTorch(false);
+      return;
+    }
+
+    if (this.getCurrentFlashMode(true) === "hardware") {
+      await this.setHardwareTorch(true);
+      return;
+    }
+
+    this.setState({
+      flashMode: "software",
+    });
+  }
+
+  async setHardwareTorch(enabled: boolean): Promise<void> {
+    const track = this.stream?.getVideoTracks()[0] as TorchTrack | undefined;
+    const capabilities = track?.getCapabilities?.();
+
+    if (!track || !capabilities?.torch || !track.applyConstraints) {
+      return;
+    }
+
+    try {
+      await track.applyConstraints({
+        advanced: [{ torch: enabled } as MediaTrackConstraints],
+      });
+
+      if (this.state.flashEnabled) {
+        this.setState({ flashMode: "hardware" });
+      }
+    } catch {
+      if (this.state.flashEnabled) {
+        this.setState({ flashMode: "software" });
+      }
+    }
   }
 
   subscribe(listener: CameraListener): () => void {
@@ -398,6 +481,23 @@ export class CameraManager {
       microphoneEnabled: this.hasLiveMicrophone(),
       ...this.readVideoSettings(),
     });
+  }
+
+  private readFlashState(enabled: boolean): Pick<CameraState, "flashMode" | "flashEnabled"> {
+    const mode = this.getCurrentFlashMode(enabled);
+    return {
+      flashEnabled: enabled,
+      flashMode: mode,
+    };
+  }
+
+  private getCurrentFlashMode(enabled: boolean): FlashMode {
+    if (!enabled) return "off";
+
+    const track = this.stream?.getVideoTracks()[0] as TorchTrack | undefined;
+    const capabilities = track?.getCapabilities?.();
+
+    return capabilities?.torch ? "hardware" : "software";
   }
 
   private readFacingMode(
