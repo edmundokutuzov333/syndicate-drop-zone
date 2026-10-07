@@ -1,3 +1,7 @@
+uniform float uGrainIntensity;
+uniform float uDirtFrequency;
+uniform float uJitterAmount;
+
 float paperNoise(vec2 uv, float time) {
   return fract(
     sin(dot(uv * time, vec2(12.9898, 78.233))) * 43758.5453
