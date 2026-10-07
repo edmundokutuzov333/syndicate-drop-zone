@@ -343,7 +343,6 @@ export function CameraPage() {
             formatOptions={formatOptions}
             busy={busy || captureStatus === "preview" || !canCapture4K}
             recording={captureStatus === "recording"}
-            countdown={countdown}
             onTimerChange={handleTimerChange}
             onFormatChange={handleFormatChange}
             onCapture={() => void handleCapture()}
