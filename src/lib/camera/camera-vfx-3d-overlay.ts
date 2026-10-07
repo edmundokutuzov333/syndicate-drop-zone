@@ -97,7 +97,7 @@ export class CameraVfx3DOverlay {
   private xrayCore: THREE.LineSegments | null = null;
   private readonly rawLandmarks = new Float32Array(LANDMARK_COUNT * 3);
   private readonly smoothedLandmarks = new Float32Array(LANDMARK_COUNT * 3);
-  private readonly xrayEdgeIndices: Uint16Array = new Uint16Array(0);
+  private xrayEdgeIndices: Uint16Array = new Uint16Array(0);
   private xrayReady = false;
   private lastAmbientAt = -Infinity;
   private destroyed = false;
