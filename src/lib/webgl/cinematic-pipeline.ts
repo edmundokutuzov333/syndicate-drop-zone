@@ -428,6 +428,10 @@ export class CinematicPipeline {
     this.setUniform1f(program, "uScanlineCount", 800);
     this.setUniform1f(program, "uChromaticOffset", 0.008 + intensity * 0.0);
 
+    if (key.startsWith("master:")) {
+      this.setUniform1f(program, "uApplyToAllFilters", 1);
+    }
+
     if (faceMotionBurst !== null) {
       this.setUniform1f(program, "u_faceMotionBurst", faceMotionBurst);
     }
@@ -511,6 +515,7 @@ export class CinematicPipeline {
     this.setUniform1f(program, "uGrainIntensity", grainIntensity);
     this.setUniform1f(program, "uDirtFrequency", dirtFrequency);
     this.setUniform1f(program, "uJitterAmount", jitterAmount);
+    this.setUniform1f(program, "uApplyToAllFilters", 1);
 
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     this.cleanup(program);
