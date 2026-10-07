@@ -91,6 +91,10 @@ or
 
 SDT_YYYYMMDD_HHMMSS_FILTER_BACK_4K.ext
 
+Below 4K, the source dimensions are used instead of a false 4K tag, for example:
+
+SDT_YYYYMMDD_HHMMSS_FILTER_BACK_1920x1080.ext
+
 The actual output extension is derived from the MIME type emitted by the recorder.
 
 ## Audio routing
@@ -187,7 +191,7 @@ GPU cost is treated as a workload proxy through render time, texture upload time
 
 Adaptive policy lowers render scale/DPR only when the measured frame budget degrades. It never changes the delivered camera track resolution.
 
-The capture path explicitly disables adaptive preview scaling while forcing a real orientation-correct 4K output, then restores the preview policy after capture.
+The capture path explicitly disables adaptive preview scaling while forcing the true 4K dimensions when the camera supports 4K, or the maximum real source dimensions otherwise. The preview policy is restored after capture.
 
 ### Lifecycle hardening
 
@@ -223,7 +227,8 @@ Physical validation on real iPhone, Android, Safari, Chrome, Firefox, Edge, low-
 - [x] timer OFF
 - [x] countdown is rendered outside the recorded canvas
 - [x] short visual flash
-- [x] 4K output canvas for capture
+- [x] 4K output canvas when the source supports 4K
+- [x] maximum real source resolution fallback below 4K
 - [x] lower-resolution camera sources are not falsely labelled 4K
 - [x] microphone is routed into video when browser audio APIs permit
 - [x] runtime MediaRecorder capability detection
