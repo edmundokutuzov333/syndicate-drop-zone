@@ -11,14 +11,12 @@ const VIDEO_MIME_CANDIDATES: Record<Extract<CaptureFormat, "mp4" | "mov" | "mkv"
     "video/mp4;codecs=avc1.640028,mp4a.40.2",
     "video/mp4;codecs=avc1.4D401F,mp4a.40.2",
     "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
-    "video/mp4",
   ],
   mov: [
     "video/quicktime;codecs=ap4h,pcm_s24le",
     "video/quicktime;codecs=apch,pcm_s24le",
     "video/quicktime;codecs=ap4h",
     "video/quicktime;codecs=apch",
-    "video/quicktime",
   ],
   mkv: [
     "video/x-matroska;codecs=hvc1,flac",
@@ -26,7 +24,6 @@ const VIDEO_MIME_CANDIDATES: Record<Extract<CaptureFormat, "mp4" | "mov" | "mkv"
     "video/x-matroska;codecs=hvc1,mp4a.40.2",
     "video/x-matroska;codecs=hevc,mp4a.40.2",
     "video/x-matroska;codecs=hevc",
-    "video/matroska;codecs=hevc,mp4a.40.2",
   ],
   webm: [
     "video/webm;codecs=vp9,opus",
