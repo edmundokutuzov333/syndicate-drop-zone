@@ -50,7 +50,6 @@ export function CameraPage() {
   const [timer, setTimer] = useState<CaptureTimer>("off");
   const [captureStatus, setCaptureStatus] =
     useState<CaptureStatus>("idle");
-  const [countdown, setCountdown] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
   const [preview, setPreview] = useState<CaptureResult | null>(null);
   const [format, setFormat] = useState<CaptureFormat>("jpg");
@@ -167,15 +166,12 @@ export function CameraPage() {
       setCaptureStatus("countdown");
 
       for (let current = value; current > 0; current -= 1) {
-        setCountdown(current);
         engineReady?.setOverlayText(String(current));
         await wait(1000);
       }
 
-      setCountdown(0);
       engineReady?.setOverlayText("0");
       await wait(90);
-      setCountdown(null);
       engineReady?.setOverlayText(null);
     },
     [engineReady],
@@ -248,7 +244,6 @@ export function CameraPage() {
       console.error(error);
       setCaptureStatus("error");
       setCaptureError(error instanceof Error ? error.message : "CAPTURE_FAILED");
-      setCountdown(null);
     }
   }, [
     camera,
