@@ -68,6 +68,24 @@ function orderValue(row: ContentRow, fallback: number) {
   return numberValue(row, ["position", "sort_order", "order_index", "display_order", "sequence"], fallback);
 }
 
+async function getMediaAssetIndex(): Promise<Map<string, string>> {
+  const rows = await tableRows("media_assets").catch(() => [] as ContentRow[]);
+  const map = new Map<string, string>();
+  for (const row of rows) {
+    const id = stringValue(row, ["id", "uuid", "media_asset_id"]);
+    const url = stringValue(row, ["public_url", "url", "file_url", "asset_url", "media_url", "src"]);
+    if (id && url) map.set(id, url);
+  }
+  return map;
+}
+
+function mediaAssetUrl(row: ContentRow, mediaAssets: Map<string, string>) {
+  const direct = stringValue(row, ["audio_url", "audio_src", "src", "file_url", "media_url", "url", "image_url", "photo_url", "cover_url", "thumbnail_url", "public_url", "asset_url"]);
+  if (direct) return direct;
+  const assetId = stringValue(row, ["media_asset_id", "image_media_asset_id", "cover_media_asset_id", "audio_media_asset_id"]);
+  return assetId ? (mediaAssets.get(assetId) ?? "") : "";
+}
+
 export type LiveTape = {
   id: string;
   title: string;
@@ -88,13 +106,12 @@ const STATIC_TAPES: LiveTape[] = STATIC_TAPE_DATA.map((tape, index) => ({
 
 export async function getLiveTapes(): Promise<LiveTape[]> {
   try {
-    const rows = (await tableRows("tapes"))
-      .filter(isPublic)
-      .sort((a, b) => orderValue(a, 0) - orderValue(b, 0));
+    const [rawRows, mediaAssets] = await Promise.all([tableRows("tapes"), getMediaAssetIndex()]);
+    const rows = rawRows.filter(isPublic).sort((a, b) => orderValue(a, 0) - orderValue(b, 0));
 
     const tapes = rows
       .map((row, index) => {
-        const src = stringValue(row, ["audio_url", "audio_src", "src", "file_url", "media_url", "url"]);
+        const src = mediaAssetUrl(row, mediaAssets);
         if (!src) return null;
         return {
           id: stringValue(row, ["id", "slug", "code"], "T" + String(index + 1)),
@@ -136,9 +153,10 @@ export type LiveMerchProduct = {
 
 export async function getLiveMerchProducts(): Promise<LiveMerchProduct[]> {
   try {
-    const [products, variants] = await Promise.all([
+    const [products, variants, mediaAssets] = await Promise.all([
       tableRows("merch_products"),
       tableRows("merch_variants").catch(() => [] as ContentRow[]),
+      getMediaAssetIndex(),
     ]);
 
     const mapped = products.filter(isPublic).map((row, index) => {
@@ -161,7 +179,7 @@ export async function getLiveMerchProducts(): Promise<LiveMerchProduct[]> {
       return {
         id,
         n: stringValue(row, ["code", "sku", "number", "n"], String(index + 1).padStart(2, "0")),
-        img: stringValue(row, ["image_url", "photo_url", "cover_url", "img", "thumbnail_url", "asset_url"]),
+        img: mediaAssetUrl(row, mediaAssets) || stringValue(row, ["img"]),
         name: stringValue(row, ["name", "title", "label"], "MERCH " + String(index + 1).padStart(2, "0")),
         sub: stringValue(row, ["subtitle", "sub", "collection", "category"], "1ª EDIÇÃO"),
         spec: stringValue(row, ["spec", "summary", "description"]),
@@ -206,9 +224,10 @@ export async function getLiveArtistsForSite() {
 
 export async function getLiveRevelationMedia(): Promise<RevelationMedia[]> {
   try {
-    const rows = (await tableRows("revelation_media")).filter(isPublic).sort((a, b) => orderValue(a, 0) - orderValue(b, 0));
+    const [rawRows, mediaAssets] = await Promise.all([tableRows("revelation_media"), getMediaAssetIndex()]);
+    const rows = rawRows.filter(isPublic).sort((a, b) => orderValue(a, 0) - orderValue(b, 0));
     const mapped = rows.map((row, index) => {
-      const src = stringValue(row, ["src", "media_url", "public_url", "url", "file_url"]);
+      const src = mediaAssetUrl(row, mediaAssets);
       if (!src) return null;
       const typeRaw = stringValue(row, ["type", "media_type"], "image").toLowerCase();
       const type: RevelationMediaType = typeRaw.includes("video") ? "video" : "image";
