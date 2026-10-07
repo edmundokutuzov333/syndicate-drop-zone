@@ -473,6 +473,32 @@ export class WebGLEngine {
     return this.filter;
   }
 
+  async waitForFilter(filter: FilterId, timeoutMs = 1200): Promise<void> {
+    this.setFilter(filter);
+
+    if (this.filter === filter && !this.transition) return;
+
+    const startedAt = performance.now();
+
+    await new Promise<void>((resolve, reject) => {
+      const check = () => {
+        if (this.filter === filter && !this.transition) {
+          resolve();
+          return;
+        }
+
+        if (performance.now() - startedAt >= timeoutMs) {
+          reject(new Error("FILTER_NOT_READY"));
+          return;
+        }
+
+        requestAnimationFrame(check);
+      };
+
+      check();
+    });
+  }
+
   getCapabilities(): { webgl2: boolean; webgl1: boolean } {
     if (!this.canvas) {
       return { webgl2: false, webgl1: false };
