@@ -176,6 +176,22 @@ export interface FileRoutesByTo {
   '/membros/$slug': typeof MembrosSlugRoute
   '/merch': typeof MerchRoute
   '/revelacao': typeof RevelacaoRoute
+  '/control-room': typeof ControlRoomRoute
+  '/control-room/': typeof ControlRoomIndexRoute
+  '/control-room/artistas': typeof ControlRoomArtistasRoute
+  '/control-room/musica': typeof ControlRoomMusicaRoute
+  '/control-room/camping': typeof ControlRoomCampingRoute
+  '/control-room/revelacao': typeof ControlRoomRevelacaoRoute
+  '/control-room/media': typeof ControlRoomMediaRoute
+  '/control-room/merch': typeof ControlRoomMerchRoute
+  '/control-room/parcerias': typeof ControlRoomParceriasRoute
+  '/control-room/site': typeof ControlRoomSiteRoute
+  '/control-room/drop': typeof ControlRoomDropRoute
+  '/control-room/seo': typeof ControlRoomSeoRoute
+  '/control-room/utilizadores': typeof ControlRoomUtilizadoresRoute
+  '/control-room/actividade': typeof ControlRoomActividadeRoute
+  '/control-room/sistema': typeof ControlRoomSistemaRoute
+  '/control-room/login': typeof ControlRoomLoginRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -185,6 +201,22 @@ export interface FileRoutesById {
   '/membros/$slug': typeof MembrosSlugRoute
   '/merch': typeof MerchRoute
   '/revelacao': typeof RevelacaoRoute
+  '/control-room': typeof ControlRoomRoute
+  '/control-room/': typeof ControlRoomIndexRoute
+  '/control-room/artistas': typeof ControlRoomArtistasRoute
+  '/control-room/musica': typeof ControlRoomMusicaRoute
+  '/control-room/camping': typeof ControlRoomCampingRoute
+  '/control-room/revelacao': typeof ControlRoomRevelacaoRoute
+  '/control-room/media': typeof ControlRoomMediaRoute
+  '/control-room/merch': typeof ControlRoomMerchRoute
+  '/control-room/parcerias': typeof ControlRoomParceriasRoute
+  '/control-room/site': typeof ControlRoomSiteRoute
+  '/control-room/drop': typeof ControlRoomDropRoute
+  '/control-room/seo': typeof ControlRoomSeoRoute
+  '/control-room/utilizadores': typeof ControlRoomUtilizadoresRoute
+  '/control-room/actividade': typeof ControlRoomActividadeRoute
+  '/control-room/sistema': typeof ControlRoomSistemaRoute
+  '/control-room/login': typeof ControlRoomLoginRoute
 }
 export interface FileRouteTypes {
   fullPaths: '/' | '/camping' | '/membros' | '/membros/$slug' | '/merch' | '/revelacao' | '/control-room' | '/control-room/' | '/control-room/artistas' | '/control-room/musica' | '/control-room/camping' | '/control-room/revelacao' | '/control-room/media' | '/control-room/merch' | '/control-room/parcerias' | '/control-room/site' | '/control-room/drop' | '/control-room/seo' | '/control-room/utilizadores' | '/control-room/actividade' | '/control-room/sistema' | '/control-room/login'
@@ -201,6 +233,8 @@ export interface RootRouteChildren {
   MembrosSlugRoute: typeof MembrosSlugRoute
   MerchRoute: typeof MerchRoute
   RevelacaoRoute: typeof RevelacaoRoute
+  ControlRoomRoute: typeof ControlRoomRouteWithChildren
+  ControlRoomLoginRoute: typeof ControlRoomLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -362,16 +396,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  CampingRoute: CampingRoute,
-  MembrosRoute: MembrosRoute,
-  MembrosSlugRoute: MembrosSlugRoute,
-  MerchRoute: MerchRoute,
-  RevelacaoRoute: RevelacaoRoute,
-  ControlRoomRoute: ControlRoomRoute,
-  ControlRoomLoginRoute: ControlRoomLoginRoute,
-}
 const controlRoomRouteChildren = {
   ControlRoomIndexRoute: ControlRoomIndexRoute,
   ControlRoomArtistasRoute: ControlRoomArtistasRoute,
@@ -388,7 +412,18 @@ const controlRoomRouteChildren = {
   ControlRoomActividadeRoute: ControlRoomActividadeRoute,
   ControlRoomSistemaRoute: ControlRoomSistemaRoute,
 }
-ControlRoomRoute._addFileChildren(controlRoomRouteChildren as any)
+const ControlRoomRouteWithChildren = ControlRoomRoute._addFileChildren(controlRoomRouteChildren as any)
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  CampingRoute: CampingRoute,
+  MembrosRoute: MembrosRoute,
+  MembrosSlugRoute: MembrosSlugRoute,
+  MerchRoute: MerchRoute,
+  RevelacaoRoute: RevelacaoRoute,
+  ControlRoomRoute: ControlRoomRouteWithChildren,
+  ControlRoomLoginRoute: ControlRoomLoginRoute,
+}
 
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
