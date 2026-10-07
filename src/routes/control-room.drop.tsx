@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ControlRoomModule } from "@/components/control-room/ControlRoomModule";
+import { EditorialManager } from "@/components/control-room/EditorialManager";
 
 export const Route = createFileRoute("/control-room/drop")({
   component: Module,
 });
 
 function Module() {
-  return <ControlRoomModule module="drop" />;
+  return <EditorialManager mode="drop" />;
 }
