@@ -139,7 +139,25 @@ export function CameraPage() {
     void cameraManager.syncVideoFlash(
       mode === "video" && captureStatus === "recording",
     );
-  }, [cameraManager, camera.flashEnabled, mode, captureStatus]);
+
+    if (!engineReady) return;
+
+    if (camera.flashEnabled && camera.flashMode === "software") {
+      engineReady.setUniform(
+        "u_flash",
+        mode === "video" && captureStatus === "recording" ? 0.32 : 0.16,
+      );
+    } else if (!(mode === "video" && captureStatus === "recording")) {
+      engineReady.setUniform("u_flash", 0);
+    }
+  }, [
+    camera.flashEnabled,
+    camera.flashMode,
+    cameraManager,
+    captureStatus,
+    engineReady,
+    mode,
+  ]);
 
   const retryPermission = useCallback(async () => {
     try {
