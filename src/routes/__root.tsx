@@ -16,6 +16,7 @@ import { CodeGate } from "../components/CodeGate";
 import xoyens from "@/assets/brand/xoyens.png.asset.json";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { getLiveSiteConfig } from "../lib/site-content";
 
 function NotFoundComponent() {
   return (
@@ -78,12 +79,13 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  loader: async () => ({ site: await getLiveSiteConfig() }),
+  head: ({ loaderData }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "O Sindicato do Trap" },
-      { name: "description", content: "Portal clandestino do Sindicato do Trap." },
+      { title: loaderData?.site?.heroTitle || "O Sindicato do Trap" },
+      { name: "description", content: loaderData?.site?.heroSubtitle || "Portal clandestino do Sindicato do Trap." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -109,7 +111,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-PT">
       <head>
         <HeadContent />
       </head>
