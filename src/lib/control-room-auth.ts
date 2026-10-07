@@ -1,4 +1,5 @@
 import { getControlRoomStaticRows } from "@/lib/control-room-content";
+import { getPublicSupabaseConfig } from "@/lib/supabase-public";
 
 export type ControlRoomRole = "OWNER" | "ADMIN" | "EDITOR" | "PARTNERSHIPS" | "MERCH";
 
@@ -20,12 +21,7 @@ const REFRESH_KEY = "sdt-control-refresh";
 const USER_KEY = "sdt-control-user";
 
 function getSupabaseConfig() {
-  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  const key =
-    (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) ??
-    (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined);
-  if (!url || !key) throw new Error("O Control Room não está configurado.");
-  return { url, key };
+  return getPublicSupabaseConfig();
 }
 
 function saveSession(session: ControlRoomSession) {
