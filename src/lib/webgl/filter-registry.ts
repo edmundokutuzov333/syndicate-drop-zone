@@ -100,6 +100,7 @@ const DEFINITIONS: FilterDefinition[] = [
     supportsFeedback: true,
     enabled: true,
     defaults: { intensity: 1, noise: 0.62, distortion: 0.18, chromatic: 0.028, feedback: 0.36 },
+  },
   {
     id: "threshold",
     index: "10",
@@ -179,7 +180,6 @@ const DEFINITIONS: FilterDefinition[] = [
     masterOverlay: "paper-film",
     defaults: { intensity: 1, noise: 0.06, distortion: 0.001, chromatic: 0.001, feedback: 0.02 },
     parameters: getFilterShaderContract("paper-film")?.parameters,
-  },
   },
 ];
 
