@@ -202,6 +202,104 @@ export function logoutControlRoom() {
   clearSession();
 }
 
+const DEFAULT_MEDIA_BUCKET = "syndicate-media";
+
+export function getMediaBucket() {
+  return (import.meta.env.VITE_SUPABASE_MEDIA_BUCKET as string | undefined)?.trim() || DEFAULT_MEDIA_BUCKET;
+}
+
+export async function getTableProperties(table: string): Promise<Record<string, unknown>> {
+  const session = await getControlRoomSession();
+  if (!session) throw new Error("Sessão do Control Room expirada.");
+  const { url, key } = getSupabaseConfig();
+  const response = await fetch(url + "/rest/v1/", {
+    headers: {
+      apikey: key,
+      Authorization: "Bearer " + session.accessToken,
+    },
+  });
+  if (!response.ok) throw new Error("Não foi possível inspeccionar o schema de " + table + ".");
+  const document = (await response.json()) as {
+    definitions?: Record<string, { properties?: Record<string, unknown> }>;
+    components?: { schemas?: Record<string, { properties?: Record<string, unknown> }> };
+  };
+  return document.definitions?.[table]?.properties ??
+    document.components?.schemas?.[table]?.properties ??
+    {};
+}
+
+export async function storageUpload(bucket: string, path: string, file: Blob, contentType: string) {
+  const session = await getControlRoomSession();
+  if (!session) throw new Error("Sessão do Control Room expirada.");
+  const { url, key } = getSupabaseConfig();
+  const response = await fetch(
+    url + "/storage/v1/object/" + encodeURIComponent(bucket) + "/" + path.split("/").map(encodeURIComponent).join("/"),
+    {
+      method: "POST",
+      headers: {
+        apikey: key,
+        Authorization: "Bearer " + session.accessToken,
+        "Content-Type": contentType || "application/octet-stream",
+        "x-upsert": "false",
+      },
+      body: file,
+    },
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(body || "Upload falhou.");
+  }
+  return {
+    bucket,
+    path,
+    publicUrl: url + "/storage/v1/object/public/" + encodeURIComponent(bucket) + "/" + path.split("/").map(encodeURIComponent).join("/"),
+  };
+}
+
+export async function storageDelete(bucket: string, path: string) {
+  const session = await getControlRoomSession();
+  if (!session) throw new Error("Sessão do Control Room expirada.");
+  const { url, key } = getSupabaseConfig();
+  const response = await fetch(
+    url + "/storage/v1/object/remove/" + encodeURIComponent(bucket),
+    {
+      method: "POST",
+      headers: {
+        apikey: key,
+        Authorization: "Bearer " + session.accessToken,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify([path]),
+    },
+  );
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(body || "Não foi possível remover o ficheiro do storage.");
+  }
+}
+
+export async function checkStorageBucket(bucket = getMediaBucket()) {
+  try {
+    const session = await getControlRoomSession();
+    if (!session) return { ok: false, configured: false, public: false, error: "Sessão expirada." };
+    const { url, key } = getSupabaseConfig();
+    const response = await fetch(url + "/storage/v1/bucket/" + encodeURIComponent(bucket), {
+      headers: {
+        apikey: key,
+        Authorization: "Bearer " + session.accessToken,
+      },
+    });
+    if (!response.ok) {
+      return { ok: false, configured: true, public: false, error: "Bucket indisponível." };
+    }
+    const data = (await response.json()) as { public?: boolean };
+    return { ok: true, configured: true, public: Boolean(data.public), error: "" };
+  } catch (error) {
+    return { ok: false, configured: true, public: false, error: error instanceof Error ? error.message : "Falha de storage." };
+  }
+}
+
+
 export async function adminQuery<T>(path: string, init: RequestInit = {}) {
   const session = await getControlRoomSession();
   if (!session) throw new Error("Sessão do Control Room expirada.");
