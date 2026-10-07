@@ -4,7 +4,6 @@ import {
   Check,
   Copy,
   ExternalLink,
-  Instagram,
   Link2,
   Music2,
   Play,
@@ -58,14 +57,23 @@ export function ArtistDossier({ artist }: Props) {
     }
   };
 
-  const whatsappUrl =
-    "https://wa.me/?text=" +
-    encodeURIComponent("Arquivo de " + artist.name + " · O Sindicato do Trap · " + window.location.href);
-  const xUrl =
-    "https://x.com/intent/post?text=" +
-    encodeURIComponent("Arquivo de " + artist.name + " · O Sindicato do Trap") +
-    "&url=" +
-    encodeURIComponent(window.location.href);
+  const shareOnWhatsApp = () => {
+    const url = window.location.href;
+    const target =
+      "https://wa.me/?text=" +
+      encodeURIComponent("Arquivo de " + artist.name + " · O Sindicato do Trap · " + url);
+    window.open(target, "_blank", "noopener,noreferrer");
+  };
+
+  const shareOnX = () => {
+    const url = window.location.href;
+    const target =
+      "https://x.com/intent/post?text=" +
+      encodeURIComponent("Arquivo de " + artist.name + " · O Sindicato do Trap") +
+      "&url=" +
+      encodeURIComponent(url);
+    window.open(target, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <main className="relative mx-auto max-w-7xl overflow-hidden px-4 pb-28 pt-10 md:px-8 md:pt-14">
@@ -276,22 +284,20 @@ export function ArtistDossier({ artist }: Props) {
               {shared ? <Check size={14} /> : <Copy size={14} />}
               {shared ? "COPIADO" : "COPIAR LINK"}
             </button>
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
+              onClick={shareOnWhatsApp}
               className="inline-flex items-center gap-2 border border-border px-4 py-3 text-[10px] tracking-widest transition hover:border-blood hover:text-blood"
             >
               <Share2 size={14} /> WHATSAPP
-            </a>
-            <a
-              href={xUrl}
-              target="_blank"
-              rel="noreferrer"
+            </button>
+            <button
+              type="button"
+              onClick={shareOnX}
               className="inline-flex items-center gap-2 border border-border px-4 py-3 text-[10px] tracking-widest transition hover:border-blood hover:text-blood"
             >
               <Link2 size={14} /> X
-            </a>
+            </button>
           </div>
         </div>
       </section>
