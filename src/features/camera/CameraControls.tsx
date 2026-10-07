@@ -7,6 +7,7 @@ type CameraControlsProps = {
   captureStatus: CaptureStatus;
   onModeChange: (mode: CaptureMode) => void;
   onSwitchCamera: () => Promise<void>;
+  onFlashToggle: () => void;
 };
 
 function formatResolution(width: number, height: number): string {
@@ -24,6 +25,7 @@ export function CameraControls({
   captureStatus,
   onModeChange,
   onSwitchCamera,
+  onFlashToggle,
 }: CameraControlsProps) {
   const cameraLabel =
     camera.facingMode === "user" ? "FRONT" : "BACK";
@@ -67,6 +69,23 @@ export function CameraControls({
           aria-label="Trocar câmara"
         >
           {cameraLabel}
+        </button>
+        <button
+          type="button"
+          className={"camera-flash-toggle " + (camera.flashEnabled ? "is-active" : "")}
+          onClick={onFlashToggle}
+          disabled={locked || camera.status !== "active"}
+          aria-pressed={camera.flashEnabled}
+          aria-label={camera.flashEnabled ? "Desligar flash" : "Ligar flash"}
+          title={
+            camera.flashMode === "hardware"
+              ? "Flash físico"
+              : camera.flashMode === "software"
+                ? "Flash de software"
+                : "Flash"
+          }
+        >
+          FLASH {camera.flashEnabled ? "ON" : "OFF"}
         </button>
         <span>{fps}</span>
       </div>
