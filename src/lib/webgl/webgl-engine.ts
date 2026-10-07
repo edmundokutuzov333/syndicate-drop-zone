@@ -750,7 +750,7 @@ export class WebGLEngine {
         currentTexture,
         previousTexture,
         framebuffer,
-        framebuffer ? this.getFramebufferTexture(framebuffer) : null,
+        this.getTargetTexture(framebuffer),
         timestamp / 1000,
         0.08,
         0.02,
@@ -899,6 +899,16 @@ export class WebGLEngine {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     gl.useProgram(null);
+  }
+
+  private getTargetTexture(
+    framebuffer: WebGLFramebuffer | null,
+  ): WebGLTexture | null {
+    if (!framebuffer) return null;
+    if (framebuffer === this.finalOutput.get()) return this.finalOutput.getTexture();
+    if (framebuffer === this.transitionFrom.get()) return this.transitionFrom.getTexture();
+    if (framebuffer === this.transitionTo.get()) return this.transitionTo.getTexture();
+    return null;
   }
 
   private configureOverlayTexture(texture: WebGLTexture): void {
