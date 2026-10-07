@@ -655,6 +655,11 @@ export class WebGLEngine {
       return;
     }
 
+    const cacheValue = () => {
+      cache.set(name, Array.isArray(value) ? [...value] : value);
+      this.uniformValueCache.set(program, cache);
+    };
+
     if (
       name === "u_texture" ||
       name === "u_previousFrame" ||
@@ -665,11 +670,13 @@ export class WebGLEngine {
         location,
         typeof value === "number" ? value : value[0] ?? 0,
       );
+      cacheValue();
       return;
     }
 
     if (typeof value === "number") {
       gl.uniform1f(location, value);
+      cacheValue();
       return;
     }
 
@@ -696,8 +703,7 @@ export class WebGLEngine {
       );
     }
 
-    cache.set(name, Array.isArray(value) ? [...value] : value);
-    this.uniformValueCache.set(program, cache);
+    cacheValue();
   }
 
   private uniformValuesEqual(
@@ -791,6 +797,7 @@ export class WebGLEngine {
 
     this.gl.attachShader(program, vertex);
     this.gl.attachShader(program, fragment);
+    this.gl.linkProgram(program);
     this.gl.deleteShader(vertex);
     this.gl.deleteShader(fragment);
 
