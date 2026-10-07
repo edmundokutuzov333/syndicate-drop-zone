@@ -38,7 +38,8 @@ export function CameraControls({
   const locked =
     captureStatus === "recording" ||
     captureStatus === "countdown" ||
-    captureStatus === "processing";
+    captureStatus === "processing" ||
+    captureStatus === "preview";
 
   return (
     <>
@@ -61,8 +62,7 @@ export function CameraControls({
           onClick={() => void onSwitchCamera()}
           disabled={
             locked ||
-            camera.status !== "active" ||
-            camera.devices.length < 2
+            camera.status !== "active"
           }
           aria-label="Trocar câmara"
         >
