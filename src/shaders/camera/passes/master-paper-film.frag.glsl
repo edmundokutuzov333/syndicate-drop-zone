@@ -4,6 +4,8 @@ uniform float u_time;
 uniform float uGrainIntensity;
 uniform float uDirtFrequency;
 uniform float uJitterAmount;
+
+uniform float uApplyToAllFilters;
 varying vec2 v_uv;
 
 float hashFilm(vec2 p) {
