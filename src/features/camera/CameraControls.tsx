@@ -1,4 +1,5 @@
 import { type CameraState, type CaptureMode, type CaptureStatus } from "@/lib/camera/types";
+import { isReal4KSource } from "@/lib/camera/capture-engine";
 
 type CameraControlsProps = {
   camera: CameraState;
@@ -9,7 +10,7 @@ type CameraControlsProps = {
 };
 
 function formatResolution(width: number, height: number): string {
-  if (width >= 3840 && height >= 2160) return "4K";
+  if (isReal4KSource(width, height)) return "4K";
   if (width >= 2560 && height >= 1440) return "2K";
   if (width >= 1920 && height >= 1080) return "1080P";
   if (width >= 1280 && height >= 720) return "720P";
