@@ -3,12 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { TapeEngine } from "@/lib/tape-engine";
 import { TAPES, MERCH } from "@/lib/data";
 import { ARTISTS } from "@/lib/artists";
+import { getLiveArtists } from "@/lib/public-content";
 import { Halftone } from "@/components/Halftone";
 import { Sponsors } from "@/components/Sponsors";
 import logo from "@/assets/brand/sindicato-logo.png.asset.json";
 import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 
 export const Route = createFileRoute("/")({
+  loader: async () => ({ artists: await getLiveArtists() }),
   head: () => ({
     meta: [
       { title: "O Sindicato do Trap — 1ª Edição" },
@@ -25,6 +27,7 @@ export const Route = createFileRoute("/")({
 const DROP = new Date("2026-12-18T00:00:00+02:00").getTime();
 
 function Hub() {
+  const { artists } = Route.useLoaderData();
   const engine = useRef<TapeEngine | null>(null);
   const [playing, setPlaying] = useState<string | null>(null);
   const [lvl, setLvl] = useState(0);
@@ -54,7 +57,7 @@ function Hub() {
         <Hero />
         <Countdown />
         <Tapes playing={playing} toggle={toggle} lvl={lvl} />
-        <Artistas />
+        <Artistas artists={artists} />
         <Sponsors />
         <Merch armed={!!playing} />
       </main>
@@ -162,12 +165,12 @@ function Tapes({ playing, toggle, lvl }: { playing: string | null; toggle: (t: (
   );
 }
 
-function Artistas() {
+function Artistas({ artists }: { artists: typeof ARTISTS }) {
   return (
     <section className="relative mb-24 pb-40">
       <SectionTag label="Os Convocados" />
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
-        {ARTISTS.map((a) => (
+        {artists.map((a) => (
           <Link key={a.code} to="/membros/$slug" params={{ slug: a.slug }} preload="intent" className="group relative aspect-[4/5] hover:border-blood">
             <Halftone src={a.img!} alt={a.name} className="h-full w-full" />
             <span className="absolute bottom-1 left-1 bg-background px-1 font-stamp text-[10px]">{a.name}</span>
