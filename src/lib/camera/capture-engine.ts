@@ -98,6 +98,8 @@ export class CaptureEngine {
   private chunks: Blob[] = [];
   private startedAt = 0;
   private preferredFormat: Extract<CaptureFormat, "mp4" | "mov" | "mkv" | "webm"> = "webm";
+  private recordingFilterId: string | null = null;
+  private recordingFacingMode: "user" | "environment" | null = null;
   private readonly options: CaptureEngineOptions;
 
   constructor(options: CaptureEngineOptions) {
@@ -124,7 +126,11 @@ export class CaptureEngine {
     return this.recording?.state === "recording";
   }
 
-  async capturePhoto(format: Extract<CaptureFormat, "jpg" | "png">): Promise<CaptureResult> {
+  async capturePhoto(
+    format: Extract<CaptureFormat, "jpg" | "png">,
+    filterId = this.options.getFilterId(),
+    facingMode = this.options.getFacingMode(),
+  ): Promise<CaptureResult> {
     this.assertCaptureReady();
 
     if (this.videoWidth <= 0 || this.videoHeight <= 0) {
@@ -135,11 +141,14 @@ export class CaptureEngine {
     const webgl = this.webgl!;
     const target = getCaptureDimensions(this.videoWidth, this.videoHeight);
 
+    await webgl.waitForFilter(filterId);
+
     return webgl.withOutputResolution(
       target.width,
       target.height,
       async () => {
         await waitForFrame();
+        webgl.render(performance.now());
 
         const mimeType = format === "png" ? "image/png" : "image/jpeg";
         const quality = format === "png" ? undefined : 0.98;
@@ -165,8 +174,8 @@ export class CaptureEngine {
           format,
           buildFilename(
             format,
-            this.options.getFilterId(),
-            this.options.getFacingMode(),
+            filterId,
+            facingMode,
             target.width,
             target.height,
           ),
@@ -177,7 +186,10 @@ export class CaptureEngine {
     );
   }
 
-  async startVideo(): Promise<void> {
+  async startVideo(
+    filterId = this.options.getFilterId(),
+    facingMode = this.options.getFacingMode(),
+  ): Promise<void> {
     this.assertCaptureReady();
 
     if (this.videoWidth <= 0 || this.videoHeight <= 0) {
@@ -185,6 +197,8 @@ export class CaptureEngine {
     }
 
     if (this.isRecording) return;
+
+    await this.webgl!.waitForFilter(filterId);
 
     const sourceStream = this.options.getSourceStream();
     if (!sourceStream) throw new Error("CAMERA_STREAM_UNAVAILABLE");
@@ -199,6 +213,7 @@ export class CaptureEngine {
     const target = getCaptureDimensions(this.videoWidth, this.videoHeight);
     await this.webgl!.setOutputResolution(target.width, target.height);
     await waitForFrame();
+    this.webgl!.render(performance.now());
 
     try {
       const recordingStream = await createRecordingStream(
@@ -230,6 +245,8 @@ export class CaptureEngine {
       };
 
       this.recording = recorder;
+      this.recordingFilterId = filterId;
+      this.recordingFacingMode = facingMode;
       recorder.start(250);
     } catch (error) {
       await this.cleanupRecording();
@@ -244,6 +261,10 @@ export class CaptureEngine {
 
     const durationMs = performance.now() - this.startedAt;
     const target = getCaptureDimensions(this.videoWidth, this.videoHeight);
+    const recordingFilterId =
+      this.recordingFilterId ?? this.options.getFilterId();
+    const recordingFacingMode =
+      this.recordingFacingMode ?? this.options.getFacingMode();
 
     return new Promise((resolve, reject) => {
       recorder.onstop = async () => {
@@ -273,8 +294,8 @@ export class CaptureEngine {
               format,
               buildFilename(
                 format,
-                this.options.getFilterId(),
-                this.options.getFacingMode(),
+                recordingFilterId,
+                recordingFacingMode,
                 target.width,
                 target.height,
               ),
@@ -314,6 +335,8 @@ export class CaptureEngine {
     }
 
     this.recording = null;
+    this.recordingFilterId = null;
+    this.recordingFacingMode = null;
     this.canvas = null;
     this.webgl = null;
   }
@@ -328,6 +351,8 @@ export class CaptureEngine {
 
     this.recordingCleanup = null;
     this.recording = null;
+    this.recordingFilterId = null;
+    this.recordingFacingMode = null;
     this.chunks = [];
 
     if (cleanup) {
