@@ -10,7 +10,7 @@ const DEFINITIONS: FilterDefinition[] = [
     visible: true,
     supportsFeedback: true,
     enabled: true,
-    defaults: { intensity: 0.92, noise: 0.42, distortion: 0.075, chromatic: 0.0038, feedback: 0.12 },
+    defaults: { intensity: 0.98, noise: 0.55, distortion: 0.11, chromatic: 0.0062, feedback: 0.22 },
   },
   {
     id: "xerox",
@@ -21,7 +21,7 @@ const DEFINITIONS: FilterDefinition[] = [
     visible: true,
     supportsFeedback: false,
     enabled: true,
-    defaults: { intensity: 0.96, noise: 0.62, distortion: 0.015, chromatic: 0, feedback: 0 },
+    defaults: { intensity: 0.94, noise: 0.72, distortion: 0.032, chromatic: 0.0012, feedback: 0.06 },
   },
   {
     id: "corrupt",
@@ -32,7 +32,7 @@ const DEFINITIONS: FilterDefinition[] = [
     visible: true,
     supportsFeedback: true,
     enabled: true,
-    defaults: { intensity: 1, noise: 0.38, distortion: 0.28, chromatic: 0.018, feedback: 0.24 },
+    defaults: { intensity: 1, noise: 0.48, distortion: 0.42, chromatic: 0.035, feedback: 0.48 },
   },
   {
     id: "nightvision",
@@ -43,7 +43,7 @@ const DEFINITIONS: FilterDefinition[] = [
     visible: true,
     supportsFeedback: false,
     enabled: true,
-    defaults: { intensity: 0.9, noise: 0.34, distortion: 0.02, chromatic: 0.0015, feedback: 0.04 },
+    defaults: { intensity: 0.98, noise: 0.46, distortion: 0.06, chromatic: 0.0025, feedback: 0.16 },
   },
   {
     id: "thermal",
@@ -54,7 +54,7 @@ const DEFINITIONS: FilterDefinition[] = [
     visible: true,
     supportsFeedback: false,
     enabled: true,
-    defaults: { intensity: 0.92, noise: 0.3, distortion: 0.055, chromatic: 0.001, feedback: 0 },
+    defaults: { intensity: 0.98, noise: 0.38, distortion: 0.12, chromatic: 0.003, feedback: 0.24 },
   },
   {
     id: "redroom",
@@ -65,7 +65,7 @@ const DEFINITIONS: FilterDefinition[] = [
     visible: true,
     supportsFeedback: true,
     enabled: true,
-    defaults: { intensity: 0.96, noise: 0.46, distortion: 0.045, chromatic: 0.007, feedback: 0.13 },
+    defaults: { intensity: 1, noise: 0.56, distortion: 0.10, chromatic: 0.012, feedback: 0.31 },
   },
 ];
 
