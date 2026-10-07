@@ -163,8 +163,6 @@ export class CameraVfx3DOverlay {
     this.scene.add(this.particles);
     this.scene.add(this.glasses);
 
-    this.xrayOuterMaterial.linewidth = 1.5;
-    this.xrayCoreMaterial.linewidth = 0.75;
   }
 
   getCanvas(): HTMLCanvasElement {
@@ -286,8 +284,6 @@ export class CameraVfx3DOverlay {
     this.xrayCoreMaterial.uniforms.uDepthFade.value = depthFade;
     this.xrayOuterMaterial.uniforms.uLineWidth.value = lineWidth;
     this.xrayCoreMaterial.uniforms.uLineWidth.value = lineWidth;
-    this.xrayOuterMaterial.linewidth = lineWidth;
-    this.xrayCoreMaterial.linewidth = Math.max(0.5, lineWidth * 0.5);
   }
 
   private buildXrayTopology(landmarks: Float32Array): void {
