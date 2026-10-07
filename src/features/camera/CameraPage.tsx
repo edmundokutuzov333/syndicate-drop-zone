@@ -340,7 +340,6 @@ export function CameraPage() {
             timer={timer}
             format={format}
             formatOptions={formatOptions}
-,
             busy={busy || captureStatus === "preview" || !canCapture}
             recording={captureStatus === "recording"}
             onTimerChange={handleTimerChange}
