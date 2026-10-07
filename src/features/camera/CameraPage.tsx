@@ -131,6 +131,16 @@ export function CameraPage() {
     }
   }, [cameraManager, captureEngine]);
 
+  const handleFlashToggle = useCallback(() => {
+    void cameraManager.setFlashEnabled(!camera.flashEnabled);
+  }, [camera.flashEnabled, cameraManager]);
+
+  useEffect(() => {
+    void cameraManager.syncVideoFlash(
+      mode === "video" && captureStatus === "recording",
+    );
+  }, [cameraManager, camera.flashEnabled, mode, captureStatus]);
+
   const retryPermission = useCallback(async () => {
     try {
       await cameraManager.start();
@@ -193,6 +203,8 @@ export function CameraPage() {
 
       try {
         const result = await captureEngine.stopVideo();
+        await cameraManager.syncVideoFlash(false);
+        engineReady?.setUniform("u_flash", 0);
         if (result) {
           setPreview(result);
           setCaptureStatus("preview");
@@ -231,19 +243,39 @@ export function CameraPage() {
 
       if (mode === "photo") {
         setCaptureStatus("processing");
-        await triggerFlash();
+        const hardwareFlashCleanup = await cameraManager.preparePhotoFlash();
 
-        const photo = await captureEngine.capturePhoto(
-          format === "png" ? "png" : "jpg",
-          captureFilter,
-          captureFacingMode,
-        );
-        setPreview(photo);
+        try {
+          if (camera.flashMode === "software") {
+            engineReady.setUniform("u_flash", 0.95);
+          }
+
+          await triggerFlash();
+
+          const photo = await captureEngine.capturePhoto(
+            format === "png" ? "png" : "jpg",
+            captureFilter,
+            captureFacingMode,
+          );
+          setPreview(photo);
+        } finally {
+          engineReady.setUniform("u_flash", 0);
+          await hardwareFlashCleanup();
+        }
+
         setCaptureStatus("preview");
         return;
       }
 
       captureEngine.setPreferredFormat(format);
+
+      if (camera.flashEnabled && camera.flashMode === "hardware") {
+        await cameraManager.syncVideoFlash(true);
+      } else if (camera.flashEnabled) {
+        engineReady.setUniform("u_flash", 0.32);
+      } else {
+        engineReady.setUniform("u_flash", 0);
+      }
 
       await captureEngine.startVideo(
         captureFilter,
@@ -257,6 +289,7 @@ export function CameraPage() {
     }
   }, [
     camera,
+    cameraManager,
     captureEngine,
     captureStatus,
     canvasReady,
@@ -340,6 +373,7 @@ export function CameraPage() {
           captureStatus={captureStatus}
           onModeChange={handleModeChange}
           onSwitchCamera={handleSwitchCamera}
+          onFlashToggle={handleFlashToggle}
         />
 
         <div className="camera-shutter-zone">
