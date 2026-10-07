@@ -34,6 +34,16 @@ function makeTrack(
   } as unknown as MediaStreamTrack;
 }
 
+function makeStream(videoTrack: MediaStreamTrack, audioTrack?: MediaStreamTrack) {
+  const tracks = [videoTrack, ...(audioTrack ? [audioTrack] : [])];
+
+  return {
+    getVideoTracks: () => [videoTrack],
+    getAudioTracks: () => (audioTrack ? [audioTrack] : []),
+    getTracks: () => tracks,
+  } as unknown as MediaStream;
+}
+
 describe("camera engineering foundation", () => {
   it("does not request media during manager construction", () => {
     const getUserMedia = vi.fn();
@@ -100,6 +110,168 @@ describe("camera engineering foundation", () => {
 
     manager.destroy();
   });
+
+  it("switches to the requested front/rear camera with strict facing constraints", async () => {
+    const frontTrack = makeTrack("video", {
+      deviceId: "front-1",
+      facingMode: "user",
+      width: 1920,
+      height: 1080,
+      frameRate: 60,
+    });
+    const backTrack = makeTrack("video", {
+      deviceId: "back-1",
+      facingMode: "environment",
+      width: 3840,
+      height: 2160,
+      frameRate: 60,
+    });
+    const streamFront = makeStream(frontTrack);
+    const streamBack = makeStream(backTrack);
+
+    const getUserMedia = vi
+      .fn()
+      .mockResolvedValueOnce(streamFront)
+      .mockResolvedValueOnce(streamBack);
+
+    const enumerateDevices = vi.fn().mockResolvedValue([
+      {
+        deviceId: "front-1",
+        kind: "videoinput",
+        label: "Front Camera",
+      },
+      {
+        deviceId: "back-1",
+        kind: "videoinput",
+        label: "Back Camera",
+      },
+    ]);
+
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia, enumerateDevices },
+    });
+
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, "play")
+      .mockResolvedValue(undefined);
+
+    const manager = new CameraManager();
+
+    await manager.requestPermissions();
+    await manager.start();
+    await manager.switchCamera();
+
+    const request = getUserMedia.mock.calls[1]?.[0] as MediaStreamConstraints;
+    const video = request.video as MediaTrackConstraints;
+
+    expect(video.deviceId).toEqual({ exact: "back-1" });
+    expect(video.facingMode).toEqual({ exact: "environment" });
+    expect(manager.getState().status).toBe("active");
+    expect(manager.getState().facingMode).toBe("environment");
+    expect(manager.getState().deviceId).toBe("back-1");
+    expect(frontTrack.stop).toHaveBeenCalledTimes(1);
+
+    play.mockRestore();
+    manager.destroy();
+  });
+
+  it("never lies about FRONT/BACK when the requested facing camera is unavailable", async () => {
+    const frontTrack = makeTrack("video", {
+      deviceId: "front-1",
+      facingMode: "user",
+      width: 1920,
+      height: 1080,
+      frameRate: 60,
+    });
+    const streamFront = makeStream(frontTrack);
+
+    const getUserMedia = vi
+      .fn()
+      .mockResolvedValueOnce(streamFront)
+      .mockRejectedValue(new Error("NO_REAR_CAMERA"));
+
+    const enumerateDevices = vi.fn().mockResolvedValue([
+      {
+        deviceId: "front-1",
+        kind: "videoinput",
+        label: "Front Camera",
+      },
+      {
+        deviceId: "back-1",
+        kind: "videoinput",
+        label: "Back Camera",
+      },
+    ]);
+
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia, enumerateDevices },
+    });
+
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, "play")
+      .mockResolvedValue(undefined);
+
+    const manager = new CameraManager();
+
+    await manager.requestPermissions();
+    await manager.start();
+    await manager.switchCamera();
+
+    expect(manager.getState().status).toBe("active");
+    expect(manager.getState().facingMode).toBe("user");
+    expect(manager.getState().deviceId).toBe("front-1");
+    expect(frontTrack.stop).not.toHaveBeenCalled();
+
+    play.mockRestore();
+    manager.destroy();
+  });
+
+  it("uses the explicit capture filter and facing snapshot for a photo", async () => {
+    const toBlob = vi.fn((callback: BlobCallback) => {
+      callback(new Blob(["photo"], { type: "image/jpeg" }));
+    });
+    const canvas = { toBlob } as unknown as HTMLCanvasElement;
+    const render = vi.fn();
+    const webgl = {
+      waitForFilter: vi.fn().mockResolvedValue(undefined),
+      withOutputResolution: vi.fn(async (
+        _width: number,
+        _height: number,
+        task: () => Promise<unknown>,
+      ) => task()),
+      render,
+    } as unknown as WebGLEngine;
+
+    const createUrl = vi.fn().mockReturnValue("blob:camera");
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: createUrl,
+    });
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    });
+
+    const capture = new CaptureEngine({
+      getSourceStream: () => null,
+      getFilterId: () => "op1um",
+      getFacingMode: () => "user",
+    });
+    capture.attach(canvas, webgl);
+    capture.setSourceSize(1920, 1080);
+
+    const result = await capture.capturePhoto("jpg", "thermal", "environment");
+
+    expect(webgl.waitForFilter).toHaveBeenCalledWith("thermal");
+    expect(render).toHaveBeenCalled();
+    expect(result.filename).toContain("_THERMAL_BACK_1920x1080.jpg");
+
+    vi.unstubAllGlobals();
+    capture.dispose();
+  });
+
 
   it("classifies and prefers front/back devices without trusting names globally", () => {
     const manager = new DeviceManager();
