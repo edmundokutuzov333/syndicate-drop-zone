@@ -38,7 +38,6 @@ export class CameraVfx3DOverlay {
   private readonly ambientTexture: THREE.CanvasTexture;
   private readonly particleMaterial: THREE.ShaderMaterial;
   private readonly particles: THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>;
-  private readonly glassesMaterials: THREE.Material[] = [];
   private lastAmbientAt = -Infinity;
   private destroyed = false;
   private activeFilter: FilterId | null = null;
@@ -190,7 +189,6 @@ export class CameraVfx3DOverlay {
       }
     });
 
-    this.glassesMaterials.length = 0;
     this.ambientTexture.dispose();
     this.renderer.dispose();
     this.activeFilter = null;
@@ -238,7 +236,6 @@ export class CameraVfx3DOverlay {
       accent.position.set(direction * 0.33, 0.185, 0.085);
 
       this.glasses.add(lens, frame, accent);
-      this.glassesMaterials.push(lens.material, frame.material, accent.material);
     }
 
     const bridge = new THREE.Mesh(bridgeGeometry, frameMaterial);
