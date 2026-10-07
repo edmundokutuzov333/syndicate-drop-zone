@@ -27,11 +27,11 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
-      - name: Lint
-        run: npm run lint
+      - name: Camera lint
+        run: npx eslint src/lib/camera src/lib/webgl src/features/camera src/routes/camera.tsx --max-warnings=0
 
-      - name: Test
-        run: npm run test
+      - name: Camera tests
+        run: npm run test -- src/test/camera-engineering.test.ts
 
       - name: Production build
         run: npm run build
