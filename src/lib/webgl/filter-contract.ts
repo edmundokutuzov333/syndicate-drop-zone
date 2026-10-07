@@ -19,6 +19,7 @@ export type FilterShaderContract = {
   id: FilterId;
   pipeline: FilterPipelineKind;
   parameters: readonly ShaderParameter[];
+  passes: readonly string[];
   masterOverlay?: MasterOverlayId;
 };
 
@@ -26,6 +27,7 @@ export const FILTER_PARAMETER_CONTRACTS: readonly FilterShaderContract[] = [
   {
     id: "threshold",
     pipeline: "single",
+    passes: ["threshold"],
     parameters: [
       { name: "uThreshold", defaultValue: 0.45, min: 0, max: 1, step: 0.001 },
       { name: "uEdgeSmoothness", defaultValue: 0.015, min: 0, max: 0.25, step: 0.001 },
@@ -35,6 +37,7 @@ export const FILTER_PARAMETER_CONTRACTS: readonly FilterShaderContract[] = [
   {
     id: "xray-mesh",
     pipeline: "xray-mesh",
+    passes: ["xray-mesh", "xray-wireframe"],
     parameters: [
       { name: "uMeshColor", defaultValue: [0, 1, 0.4], min: 0, max: 1, step: 0.01 },
       { name: "uLineWidth", defaultValue: 1.5, min: 0.25, max: 8, step: 0.25 },
@@ -44,6 +47,7 @@ export const FILTER_PARAMETER_CONTRACTS: readonly FilterShaderContract[] = [
   {
     id: "cathode-crt",
     pipeline: "single",
+    passes: ["cathode-crt"],
     parameters: [
       { name: "uDistortionK", defaultValue: 0.12, min: -0.5, max: 1, step: 0.005 },
       { name: "uScanlineCount", defaultValue: 800, min: 100, max: 1600, step: 10 },
@@ -55,6 +59,12 @@ export const FILTER_PARAMETER_CONTRACTS: readonly FilterShaderContract[] = [
   {
     id: "halation",
     pipeline: "halation",
+    passes: [
+      "halation-isolate",
+      "halation-blur-h",
+      "halation-blur-v",
+      "halation-composite",
+    ],
     parameters: [
       { name: "uGlowRadius", defaultValue: 0.025, min: 0.002, max: 0.12, step: 0.001 },
       { name: "uHalationIntensity", defaultValue: 0.3, min: 0, max: 1, step: 0.01 },
@@ -64,6 +74,7 @@ export const FILTER_PARAMETER_CONTRACTS: readonly FilterShaderContract[] = [
   {
     id: "kinetic-melt",
     pipeline: "kinetic-melt",
+    passes: ["kinetic-flow", "kinetic-melt"],
     parameters: [
       { name: "uMeltStrength", defaultValue: 0.08, min: 0, max: 0.4, step: 0.005 },
       { name: "uVelocityThreshold", defaultValue: 0.02, min: 0, max: 0.2, step: 0.001 },
@@ -73,6 +84,7 @@ export const FILTER_PARAMETER_CONTRACTS: readonly FilterShaderContract[] = [
   {
     id: "paper-film",
     pipeline: "single",
+    passes: ["paper-film"],
     parameters: [
       { name: "uGrainIntensity", defaultValue: 0.06, min: 0, max: 0.25, step: 0.005 },
       { name: "uDirtFrequency", defaultValue: 0.4, min: 0, max: 1, step: 0.01 },
