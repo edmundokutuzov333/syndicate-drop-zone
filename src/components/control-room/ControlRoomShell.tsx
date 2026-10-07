@@ -1,62 +1,60 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import {
-  Activity,
-  Archive,
-  ArrowUpRight,
-  BarChart3,
-  Boxes,
-  FileImage,
-  Gauge,
-  GitBranch,
-  Image,
-  LayoutDashboard,
-  LogOut,
-  Megaphone,
-  Package,
-  Radio,
-  Search,
-  Settings,
-  Shield,
-  Store,
-  Ticket,
-  Users,
-  Video,
-} from "lucide-react";
-import { getControlRoomSession, logoutControlRoom, type ControlRoomSession } from "@/lib/control-room-auth";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowUpRight, LogOut, Search } from "lucide-react";
+import { getControlRoomSession, logoutControlRoom, type ControlRoomRole, type ControlRoomSession } from "@/lib/control-room-auth";
 
-const GROUPS = [
+type NavItem = {
+  code: string;
+  label: string;
+  to: string;
+  roles: ControlRoomRole[];
+};
+
+type NavGroup = {
+  title: string;
+  items: NavItem[];
+};
+
+const ALL_ROLES: ControlRoomRole[] = ["OWNER", "ADMIN", "EDITOR", "PARTNERSHIPS", "MERCH"];
+
+const GROUPS: NavGroup[] = [
   {
     title: "OPERAÇÃO",
     items: [
-      ["01", "OVERVIEW", "/control-room"],
-      ["02", "ARTISTAS", "/control-room/artistas"],
-      ["03", "MÚSICA", "/control-room/musica"],
-      ["04", "CAMPING", "/control-room/camping"],
-      ["05", "REVELAÇÃO", "/control-room/revelacao"],
-      ["06", "MEDIA", "/control-room/media"],
-      ["07", "MERCH", "/control-room/merch"],
-      ["08", "PARCERIAS", "/control-room/parcerias"],
+      { code: "01", label: "OVERVIEW", to: "/control-room", roles: ALL_ROLES },
+      { code: "02", label: "ARTISTAS", to: "/control-room/artistas", roles: ["OWNER", "ADMIN", "EDITOR"] },
+      { code: "03", label: "MÚSICA", to: "/control-room/musica", roles: ["OWNER", "ADMIN", "EDITOR"] },
+      { code: "04", label: "CAMPING", to: "/control-room/camping", roles: ["OWNER", "ADMIN", "EDITOR"] },
+      { code: "05", label: "REVELAÇÃO", to: "/control-room/revelacao", roles: ["OWNER", "ADMIN", "EDITOR"] },
+      { code: "06", label: "MEDIA", to: "/control-room/media", roles: ["OWNER", "ADMIN", "EDITOR"] },
+      { code: "07", label: "MERCH", to: "/control-room/merch", roles: ["OWNER", "ADMIN", "MERCH"] },
+      { code: "08", label: "PARCERIAS", to: "/control-room/parcerias", roles: ["OWNER", "ADMIN", "PARTNERSHIPS"] },
     ],
   },
   {
     title: "PLATAFORMA",
     items: [
-      ["09", "SITE", "/control-room/site"],
-      ["10", "DROP", "/control-room/drop"],
-      ["11", "SEO & SOCIAL", "/control-room/seo"],
-      ["12", "UTILIZADORES", "/control-room/utilizadores"],
-      ["13", "ACTIVIDADE", "/control-room/actividade"],
-      ["14", "SISTEMA", "/control-room/sistema"],
+      { code: "09", label: "SITE", to: "/control-room/site", roles: ["OWNER", "ADMIN", "EDITOR"] },
+      { code: "10", label: "DROP", to: "/control-room/drop", roles: ["OWNER", "ADMIN", "EDITOR"] },
+      { code: "11", label: "SEO & SOCIAL", to: "/control-room/seo", roles: ["OWNER", "ADMIN", "EDITOR"] },
+      { code: "12", label: "UTILIZADORES", to: "/control-room/utilizadores", roles: ["OWNER", "ADMIN"] },
+      { code: "13", label: "ACTIVIDADE", to: "/control-room/actividade", roles: ["OWNER", "ADMIN", "EDITOR"] },
+      { code: "14", label: "SISTEMA", to: "/control-room/sistema", roles: ["OWNER", "ADMIN"] },
     ],
   },
-] as const;
+];
+
+function canAccess(item: NavItem, role: ControlRoomRole) {
+  return item.roles.includes(role);
+}
 
 export function ControlRoomShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const [session, setSession] = useState<ControlRoomSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [paletteQuery, setPaletteQuery] = useState("");
 
   useEffect(() => {
     getControlRoomSession()
@@ -64,17 +62,68 @@ export function ControlRoomShell() {
       .finally(() => setLoading(false));
   }, []);
 
+  const visibleGroups = useMemo(() => {
+    if (!session) return GROUPS;
+    return GROUPS
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => canAccess(item, session.role)),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [session]);
+
+  const visibleItems = useMemo(() => visibleGroups.flatMap((group) => group.items), [visibleGroups]);
+
+  const paletteItems = useMemo(() => {
+    const needle = paletteQuery.trim().toLowerCase();
+    if (!needle) return visibleItems;
+    return visibleItems.filter((item) => (item.code + " " + item.label + " " + item.to).toLowerCase().includes(needle));
+  }, [paletteQuery, visibleItems]);
+
   useEffect(() => {
     if (!loading && !session) {
       navigate({ to: "/control-room/login", replace: true });
     }
   }, [loading, session, navigate]);
 
+  useEffect(() => {
+    if (!session) return;
+    const current = visibleItems.find((item) => item.to === location.pathname);
+    if (!current) {
+      navigate({ to: "/control-room", replace: true });
+    }
+  }, [location.pathname, navigate, session, visibleItems]);
+
+  useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setPaletteOpen((open) => !open);
+      }
+      if (event.key === "Escape") {
+        setPaletteOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  useEffect(() => {
+    if (paletteOpen) {
+      setPaletteQuery("");
+    }
+  }, [paletteOpen]);
+
   if (loading) {
     return <div className="min-h-screen bg-[#090909] p-8 font-mono text-xs text-white">CONTROL ROOM // AUTHENTICATING...</div>;
   }
 
   if (!session) return null;
+
+  const go = (to: string) => {
+    setPaletteOpen(false);
+    navigate({ to });
+  };
 
   return (
     <div className="min-h-screen bg-[#090909] text-[#efefef]">
@@ -87,8 +136,19 @@ export function ControlRoomShell() {
               <p className="font-gothic text-2xl leading-none">SINDICATO</p>
             </div>
           </div>
-          <div className="flex items-center gap-4 font-mono text-[10px]">
-            <span className="hidden text-white/50 sm:inline">{session.displayName} · {session.role}</span>
+
+          <div className="flex items-center gap-2 font-mono text-[10px]">
+            <button
+              type="button"
+              onClick={() => setPaletteOpen(true)}
+              className="hidden items-center gap-2 border border-white/10 px-2 py-1.5 text-white/45 hover:border-white/30 hover:text-white sm:flex"
+              title="Abrir Command Palette"
+            >
+              <Search size={12} />
+              <span>COMMAND</span>
+              <kbd className="border border-white/10 px-1 text-[8px]">⌘K</kbd>
+            </button>
+            <span className="hidden text-white/50 lg:inline">{session.displayName} · {session.role}</span>
             <span className="text-[#d71920]">● ONLINE</span>
             <button
               type="button"
@@ -97,6 +157,7 @@ export function ControlRoomShell() {
                 navigate({ to: "/control-room/login", replace: true });
               }}
               className="border border-white/10 px-2 py-1 text-white/60 hover:border-[#d71920] hover:text-white"
+              aria-label="Terminar sessão"
             >
               <LogOut size={13} />
             </button>
@@ -106,14 +167,20 @@ export function ControlRoomShell() {
 
       <div className="grid min-h-[calc(100vh-61px)] lg:grid-cols-[240px_minmax(0,1fr)]">
         <div className="border-b border-white/10 bg-[#0d0d0d] p-3 lg:hidden">
+          <div className="mb-3 flex items-center justify-between border border-white/10 px-3 py-2">
+            <span className="font-mono text-[9px] tracking-[0.14em] text-white/35">MÓDULOS AUTORIZADOS</span>
+            <button type="button" onClick={() => setPaletteOpen(true)} className="text-white/45 hover:text-white" aria-label="Pesquisar módulo">
+              <Search size={13} />
+            </button>
+          </div>
           <div className="flex gap-2 overflow-x-auto">
-            {GROUPS.flatMap((group) => group.items).map(([code, label, to]) => (
+            {visibleItems.map((item) => (
               <Link
-                key={to}
-                to={to}
-                className={`shrink-0 border px-3 py-2 font-mono text-[9px] tracking-[0.12em] ${location.pathname === to ? "border-[#d71920] text-white" : "border-white/10 text-white/40"}`}
+                key={item.to}
+                to={item.to}
+                className={`shrink-0 border px-3 py-2 font-mono text-[9px] tracking-[0.12em] ${location.pathname === item.to ? "border-[#d71920] text-white" : "border-white/10 text-white/40"}`}
               >
-                {code} {label}
+                {item.code} {item.label}
               </Link>
             ))}
           </div>
@@ -121,19 +188,19 @@ export function ControlRoomShell() {
 
         <aside className="hidden border-r border-white/10 bg-[#0d0d0d] lg:block">
           <div className="sticky top-[61px] max-h-[calc(100vh-61px)] overflow-y-auto p-3">
-            {GROUPS.map((group) => (
+            {visibleGroups.map((group) => (
               <div key={group.title} className="mb-6">
                 <p className="px-3 pb-2 font-mono text-[9px] tracking-[0.24em] text-white/30">{group.title}</p>
                 <nav className="grid gap-1">
-                  {group.items.map(([code, label, to]) => {
-                    const active = location.pathname === to;
+                  {group.items.map((item) => {
+                    const active = location.pathname === item.to;
                     return (
                       <Link
-                        key={to}
-                        to={to}
+                        key={item.to}
+                        to={item.to}
                         className={`group flex items-center justify-between border px-3 py-2 font-mono text-[10px] tracking-[0.13em] transition ${active ? "border-[#d71920] bg-[#d71920]/10 text-white" : "border-transparent text-white/45 hover:border-white/10 hover:text-white"}`}
                       >
-                        <span><span className={active ? "text-[#d71920]" : "text-white/20"}>{code}</span> {label}</span>
+                        <span><span className={active ? "text-[#d71920]" : "text-white/20"}>{item.code}</span> {item.label}</span>
                         {active && <ArrowUpRight size={12} className="text-[#d71920]" />}
                       </Link>
                     );
@@ -152,6 +219,64 @@ export function ControlRoomShell() {
       <div className="border-t border-white/10 px-4 py-3 font-mono text-[9px] tracking-[0.18em] text-white/25 md:px-6">
         SINDICATO CONTROL ROOM · {location.pathname}
       </div>
+
+      {paletteOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-start justify-center bg-black/70 p-4 pt-[10vh] backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navegação do Control Room"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) setPaletteOpen(false);
+          }}
+        >
+          <div className="w-full max-w-2xl border border-white/10 bg-[#0d0d0d] shadow-2xl">
+            <div className="flex items-center gap-3 border-b border-white/10 px-4">
+              <Search size={15} className="text-[#d71920]" />
+              <input
+                autoFocus
+                value={paletteQuery}
+                onChange={(event) => setPaletteQuery(event.target.value)}
+                placeholder="PESQUISAR MÓDULO..."
+                className="h-14 flex-1 bg-transparent font-mono text-xs text-white outline-none"
+              />
+              <kbd className="border border-white/10 px-2 py-1 font-mono text-[8px] text-white/30">ESC</kbd>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto p-2">
+              {visibleGroups.map((group) => {
+                const items = group.items.filter((item) => paletteItems.includes(item));
+                if (!items.length) return null;
+                return (
+                  <div key={group.title} className="mb-3">
+                    <p className="px-3 py-2 font-mono text-[8px] tracking-[0.22em] text-white/25">{group.title}</p>
+                    <div className="grid gap-1">
+                      {items.map((item) => (
+                        <button
+                          key={item.to}
+                          type="button"
+                          onClick={() => go(item.to)}
+                          className="flex items-center justify-between border border-transparent px-3 py-3 text-left hover:border-white/10 hover:bg-white/[0.02]"
+                        >
+                          <span className="font-mono text-[10px] tracking-[0.12em] text-white/70">
+                            <span className="mr-2 text-[#d71920]">{item.code}</span>{item.label}
+                          </span>
+                          <span className="font-mono text-[9px] text-white/20">{item.to}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              {!paletteItems.length && (
+                <div className="p-8 text-center font-mono text-[10px] text-white/30">NENHUM MÓDULO ENCONTRADO.</div>
+              )}
+            </div>
+            <div className="border-t border-white/10 px-4 py-2 font-mono text-[8px] tracking-[0.16em] text-white/20">
+              COMMAND PALETTE · ACESSO LIMITADO PELO ROLE ACTUAL
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
