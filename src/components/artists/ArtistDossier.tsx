@@ -372,7 +372,7 @@ function ArchiveCard({
 }: {
   index: string;
   title: string;
-  children: React.ReactNode;
+  children: import("react").ReactNode;
 }) {
   return (
     <article className="overflow-hidden border border-border bg-card">
