@@ -32,7 +32,7 @@ export function SpotifyEmbed({ artistName, spotifyArtistId }: Props) {
       <iframe
         title={"Spotify de " + artistName}
         src={embedUrl}
-        loading="lazy"
+        loading="eager"
         className="h-[352px] w-full border-0"
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
       />
