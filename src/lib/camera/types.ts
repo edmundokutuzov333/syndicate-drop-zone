@@ -17,6 +17,7 @@ export type FilterId =
   | "halation"
   | "kinetic-melt"
   | "paper-film";
+export type MasterOverlayId = "cathode-crt" | "paper-film";
 export type FlashMode = "off" | "hardware" | "software";
 export type PerformanceTier = "high" | "medium" | "low";
 export type CameraStatus = "idle" | "requesting" | "ready" | "active" | "error" | "stopped";
