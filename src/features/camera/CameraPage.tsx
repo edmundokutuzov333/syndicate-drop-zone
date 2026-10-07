@@ -214,10 +214,11 @@ export function CameraPage() {
       camera.status !== "active" ||
       !canvasReady ||
       !engineReady ||
-      !isReal4KSource(camera.width, camera.height)
+      camera.width <= 0 ||
+      camera.height <= 0
     ) {
       setCaptureStatus("error");
-      setCaptureError("CAPTURE_4K_SOURCE_REQUIRED");
+      setCaptureError("CAMERA_RESOLUTION_UNAVAILABLE");
       return;
     }
 
@@ -294,15 +295,18 @@ export function CameraPage() {
     setCaptureStatus("idle");
   }, []);
 
-  const canCapture4K =
+  const canCapture =
     camera.status === "active" &&
-    isReal4KSource(camera.width, camera.height) &&
+    camera.width > 0 &&
+    camera.height > 0 &&
     Boolean(canvasReady && engineReady);
+
+  const is4K = isReal4KSource(camera.width, camera.height);
 
   const busy =
     captureStatus === "processing" ||
     captureStatus === "countdown" ||
-    (captureStatus === "error" && !canCapture4K);
+    (captureStatus === "error" && !canCapture);
 
   return (
     <main className="camera-surface" data-filter={selectedFilter.id}>
@@ -336,7 +340,8 @@ export function CameraPage() {
             timer={timer}
             format={format}
             formatOptions={formatOptions}
-            busy={busy || captureStatus === "preview" || !canCapture4K}
+,
+            busy={busy || captureStatus === "preview" || !canCapture}
             recording={captureStatus === "recording"}
             onTimerChange={handleTimerChange}
             onFormatChange={handleFormatChange}
@@ -347,9 +352,13 @@ export function CameraPage() {
             <div className="camera-capture-error">
               {captureError.replaceAll("_", " ")}
             </div>
-          ) : !canCapture4K ? (
+          ) : canCapture && !is4K ? (
             <div className="camera-capture-lock">
-              4K SOURCE REQUIRED · {camera.width || "--"}×{camera.height || "--"} AVAILABLE
+              4K UNAVAILABLE · CAPTURE AT {camera.width}×{camera.height}
+            </div>
+          ) : !canCapture ? (
+            <div className="camera-capture-lock">
+              CAMERA RESOLUTION UNAVAILABLE
             </div>
           ) : null}
         </div>
