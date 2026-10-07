@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { getPublicSupabaseConfig } from "@/lib/supabase-public";
 
 export const PartnershipRequestSchema = z.object({
   name: z.string().trim().min(2, "Indique o seu nome.").max(120, "Nome demasiado longo."),
@@ -11,26 +12,19 @@ export const PartnershipRequestSchema = z.object({
 
 export type PartnershipRequest = z.infer<typeof PartnershipRequestSchema>;
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const SUPABASE_KEY =
-  (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) ??
-  (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined);
-
 export async function submitPartnershipRequest(input: PartnershipRequest): Promise<void> {
   const parsed = PartnershipRequestSchema.safeParse(input);
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Dados inválidos.");
   }
 
-  if (!SUPABASE_URL || !SUPABASE_KEY) {
-    throw new Error("O serviço de propostas não está configurado.");
-  }
+  const { url, key } = getPublicSupabaseConfig();
 
-  const response = await fetch(SUPABASE_URL + "/rest/v1/partnership_requests", {
+  const response = await fetch(url + "/rest/v1/partnership_requests", {
     method: "POST",
     headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: "Bearer " + SUPABASE_KEY,
+      apikey: key,
+      Authorization: "Bearer " + key,
       "Content-Type": "application/json",
       Prefer: "return=minimal",
     },
