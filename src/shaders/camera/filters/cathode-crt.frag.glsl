@@ -1,3 +1,8 @@
+uniform float uDistortionK;
+uniform float uScanlineCount;
+uniform float uChromaticOffset;
+uniform float uScanlineIntensity;
+
 vec2 cathodeUv(vec2 uv) {
   vec2 p = uv * 2.0 - 1.0;
   p *= 1.0 + dot(p, p) * uDistortionK;
