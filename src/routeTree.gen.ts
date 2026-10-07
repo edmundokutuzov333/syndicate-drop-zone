@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CampingRouteImport } from './routes/camping'
 import { Route as MembrosRouteImport } from './routes/membros'
 import { Route as MerchRouteImport } from './routes/merch'
+import { Route as RevelacaoRouteImport } from './routes/revelacao'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const MerchRoute = MerchRouteImport.update({
   path: '/merch',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RevelacaoRoute = RevelacaoRouteImport.update({
+  id: '/revelacao',
+  path: '/revelacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/camping': typeof CampingRoute
   '/membros': typeof MembrosRoute
   '/merch': typeof MerchRoute
+  '/revelacao': typeof RevelacaoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/camping': typeof CampingRoute
   '/membros': typeof MembrosRoute
   '/merch': typeof MerchRoute
+  '/revelacao': typeof RevelacaoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,14 @@ export interface FileRoutesById {
   '/camping': typeof CampingRoute
   '/membros': typeof MembrosRoute
   '/merch': typeof MerchRoute
+  '/revelacao': typeof RevelacaoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/camping' | '/membros' | '/merch'
+  fullPaths: '/' | '/camping' | '/membros' | '/merch' | '/revelacao'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/camping' | '/membros' | '/merch'
-  id: '__root__' | '/' | '/camping' | '/membros' | '/merch'
+  to: '/' | '/camping' | '/membros' | '/merch' | '/revelacao'
+  id: '__root__' | '/' | '/camping' | '/membros' | '/merch' | '/revelacao'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +76,7 @@ export interface RootRouteChildren {
   CampingRoute: typeof CampingRoute
   MembrosRoute: typeof MembrosRoute
   MerchRoute: typeof MerchRoute
+  RevelacaoRoute: typeof RevelacaoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MerchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/revelacao': {
+      id: '/revelacao'
+      path: '/revelacao'
+      fullPath: '/revelacao'
+      preLoaderRoute: typeof RevelacaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +124,7 @@ const rootRouteChildren: RootRouteChildren = {
   CampingRoute: CampingRoute,
   MembrosRoute: MembrosRoute,
   MerchRoute: MerchRoute,
+  RevelacaoRoute: RevelacaoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
