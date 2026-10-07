@@ -18,12 +18,17 @@ import { YouTubePreview } from "@/components/artists/YouTubePreview";
 import { ArtistTapePlayer } from "@/components/artists/ArtistTapePlayer";
 import { ARTISTS, type Artist } from "@/lib/artists";
 import { getArtistChannels } from "@/lib/artist-content";
+import type { ArtistVideo } from "@/lib/artist-profiles";
 import { TAPES } from "@/lib/data";
 import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 import { cn } from "@/lib/utils";
 
 type Props = {
   artist: Artist;
+  channels?: {
+    spotifyArtistId: string;
+    youtube: ArtistVideo[];
+  } | null;
 };
 
 function getTapeForArtist(artist: Artist) {
@@ -35,9 +40,9 @@ function socialLabel(name: string) {
   return name.toUpperCase();
 }
 
-export function ArtistDossier({ artist }: Props) {
+export function ArtistDossier({ artist, channels: liveChannels }: Props) {
   const [shared, setShared] = useState(false);
-  const channels = getArtistChannels(artist.slug);
+  const channels = liveChannels ?? getArtistChannels(artist.slug);
   const currentIndex = ARTISTS.findIndex((item) => item.slug === artist.slug);
   const previous = ARTISTS[(currentIndex - 1 + ARTISTS.length) % ARTISTS.length]!;
   const next = ARTISTS[(currentIndex + 1) % ARTISTS.length]!;
