@@ -1,5 +1,6 @@
 import type { Artist } from "@/lib/artists";
 import { ARTISTS } from "@/lib/artists";
+import { getPublicSupabaseConfig } from "@/lib/supabase-public";
 
 type DbArtist = {
   id: string;
@@ -27,12 +28,7 @@ type DbRelease = {
 };
 
 function config() {
-  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  const key =
-    (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) ??
-    (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined);
-  if (!url || !key) return null;
-  return { url, key };
+  return getPublicSupabaseConfig();
 }
 
 async function getJson<T>(path: string): Promise<T> {
