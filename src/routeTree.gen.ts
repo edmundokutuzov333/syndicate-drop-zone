@@ -15,6 +15,22 @@ import { Route as MembrosRouteImport } from './routes/membros'
 import { Route as MembrosSlugRouteImport } from './routes/membros_.$slug'
 import { Route as MerchRouteImport } from './routes/merch'
 import { Route as RevelacaoRouteImport } from './routes/revelacao'
+import { Route as ControlRoomRouteImport } from './routes/control-room'
+import { Route as ControlRoomIndexRouteImport } from './routes/control-room.index'
+import { Route as ControlRoomArtistasRouteImport } from './routes/control-room.artistas'
+import { Route as ControlRoomCampingRouteImport } from './routes/control-room.camping'
+import { Route as ControlRoomMusicaRouteImport } from './routes/control-room.musica'
+import { Route as ControlRoomRevelacaoRouteImport } from './routes/control-room.revelacao'
+import { Route as ControlRoomMediaRouteImport } from './routes/control-room.media'
+import { Route as ControlRoomMerchRouteImport } from './routes/control-room.merch'
+import { Route as ControlRoomParceriasRouteImport } from './routes/control-room.parcerias'
+import { Route as ControlRoomSiteRouteImport } from './routes/control-room.site'
+import { Route as ControlRoomDropRouteImport } from './routes/control-room.drop'
+import { Route as ControlRoomSeoRouteImport } from './routes/control-room.seo'
+import { Route as ControlRoomUtilizadoresRouteImport } from './routes/control-room.utilizadores'
+import { Route as ControlRoomActividadeRouteImport } from './routes/control-room.actividade'
+import { Route as ControlRoomSistemaRouteImport } from './routes/control-room.sistema'
+import { Route as ControlRoomLoginRouteImport } from './routes/control-room_.login'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -36,6 +52,88 @@ const MembrosSlugRoute = MembrosSlugRouteImport.update({
   path: '/membros/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+
+const ControlRoomRoute = ControlRoomRouteImport.update({
+  id: '/control-room',
+  path: '/control-room',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ControlRoomIndexRoute = ControlRoomIndexRouteImport.update({
+  id: '/control-room/',
+  path: '/',
+  getParentRoute: () => ControlRoomRoute,
+} as any)
+const ControlRoomArtistasRoute = ControlRoomArtistasRouteImport.update({
+  id: '/control-room/artistas',
+  path: 'artistas',
+  getParentRoute: () => ControlRoomRoute,
+} as any)
+const ControlRoomMusicaRoute = ControlRoomMusicaRouteImport.update({
+  id: '/control-room/musica',
+  path: 'musica',
+  getParentRoute: () => ControlRoomRoute,
+} as any)
+const ControlRoomCampingRoute = ControlRoomCampingRouteImport.update({
+  id: '/control-room/camping',
+  path: 'camping',
+  getParentRoute: () => ControlRoomRoute,
+} as any)
+const ControlRoomRevelacaoRoute = ControlRoomRevelacaoRouteImport.update({
+  id: '/control-room/revelacao',
+  path: 'revelacao',
+  getParentRoute: () => ControlRoomRoute,
+} as any)
+const ControlRoomMediaRoute = ControlRoomMediaRouteImport.update({
+  id: '/control-room/media',
+  path: 'media',
+  getParentRoute: () => ControlRoomRoute,
+} as any)
+const ControlRoomMerchRoute = ControlRoomMerchRouteImport.update({
+  id: '/control-room/merch',
+  path: 'merch',
+  getParentRoute: () => ControlRoomRoute,
+} as any)
+const ControlRoomParceriasRoute = ControlRoomParceriasRouteImport.update({
+  id: '/control-room/parcerias',
+  path: 'parcerias',
+  getParentRoute: () => ControlRoomRoute,
+} as any)
+const ControlRoomSiteRoute = ControlRoomSiteRouteImport.update({
+  id: '/control-room/site',
+  path: 'site',
+  getParentRoute: () => ControlRoomRoute,
+} as any)
+const ControlRoomDropRoute = ControlRoomDropRouteImport.update({
+  id: '/control-room/drop',
+  path: 'drop',
+  getParentRoute: () => ControlRoomRoute,
+} as any)
+const ControlRoomSeoRoute = ControlRoomSeoRouteImport.update({
+  id: '/control-room/seo',
+  path: 'seo',
+  getParentRoute: () => ControlRoomRoute,
+} as any)
+const ControlRoomUtilizadoresRoute = ControlRoomUtilizadoresRouteImport.update({
+  id: '/control-room/utilizadores',
+  path: 'utilizadores',
+  getParentRoute: () => ControlRoomRoute,
+} as any)
+const ControlRoomActividadeRoute = ControlRoomActividadeRouteImport.update({
+  id: '/control-room/actividade',
+  path: 'actividade',
+  getParentRoute: () => ControlRoomRoute,
+} as any)
+const ControlRoomSistemaRoute = ControlRoomSistemaRouteImport.update({
+  id: '/control-room/sistema',
+  path: 'sistema',
+  getParentRoute: () => ControlRoomRoute,
+} as any)
+const ControlRoomLoginRoute = ControlRoomLoginRouteImport.update({
+  id: '/control-room/login',
+  path: '/control-room/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+
 const MerchRoute = MerchRouteImport.update({
   id: '/merch',
   path: '/merch',
@@ -54,6 +152,22 @@ export interface FileRoutesByFullPath {
   '/membros/$slug': typeof MembrosSlugRoute
   '/merch': typeof MerchRoute
   '/revelacao': typeof RevelacaoRoute
+  '/control-room': typeof ControlRoomRoute
+  '/control-room/': typeof ControlRoomIndexRoute
+  '/control-room/artistas': typeof ControlRoomArtistasRoute
+  '/control-room/musica': typeof ControlRoomMusicaRoute
+  '/control-room/camping': typeof ControlRoomCampingRoute
+  '/control-room/revelacao': typeof ControlRoomRevelacaoRoute
+  '/control-room/media': typeof ControlRoomMediaRoute
+  '/control-room/merch': typeof ControlRoomMerchRoute
+  '/control-room/parcerias': typeof ControlRoomParceriasRoute
+  '/control-room/site': typeof ControlRoomSiteRoute
+  '/control-room/drop': typeof ControlRoomDropRoute
+  '/control-room/seo': typeof ControlRoomSeoRoute
+  '/control-room/utilizadores': typeof ControlRoomUtilizadoresRoute
+  '/control-room/actividade': typeof ControlRoomActividadeRoute
+  '/control-room/sistema': typeof ControlRoomSistemaRoute
+  '/control-room/login': typeof ControlRoomLoginRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -73,12 +187,12 @@ export interface FileRoutesById {
   '/revelacao': typeof RevelacaoRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/camping' | '/membros' | '/membros/$slug' | '/merch' | '/revelacao'
+  fullPaths: '/' | '/camping' | '/membros' | '/membros/$slug' | '/merch' | '/revelacao' | '/control-room' | '/control-room/' | '/control-room/artistas' | '/control-room/musica' | '/control-room/camping' | '/control-room/revelacao' | '/control-room/media' | '/control-room/merch' | '/control-room/parcerias' | '/control-room/site' | '/control-room/drop' | '/control-room/seo' | '/control-room/utilizadores' | '/control-room/actividade' | '/control-room/sistema' | '/control-room/login'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/camping' | '/membros' | '/membros/$slug' | '/merch' | '/revelacao'
-  id: '__root__' | '/' | '/camping' | '/membros' | '/membros/$slug' | '/merch' | '/revelacao'
-  fileRoutesById: FileRoutesById
+  to: '/' | '/camping' | '/membros' | '/membros/$slug' | '/merch' | '/revelacao' | '/control-room' | '/control-room/' | '/control-room/artistas' | '/control-room/musica' | '/control-room/camping' | '/control-room/revelacao' | '/control-room/media' | '/control-room/merch' | '/control-room/parcerias' | '/control-room/site' | '/control-room/drop' | '/control-room/seo' | '/control-room/utilizadores' | '/control-room/actividade' | '/control-room/sistema' | '/control-room/login'
+  id: '__root__' | '/' | '/camping' | '/membros' | '/membros/$slug' | '/merch' | '/revelacao' | '/control-room' | '/control-room/' | '/control-room/artistas' | '/control-room/musica' | '/control-room/camping' | '/control-room/revelacao' | '/control-room/media' | '/control-room/merch' | '/control-room/parcerias' | '/control-room/site' | '/control-room/drop' | '/control-room/seo' | '/control-room/utilizadores' | '/control-room/actividade' | '/control-room/sistema' | '/control-room/login'
+  fileRoutesByFullPath: FileRoutesByFullPath
+
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
@@ -133,6 +247,118 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RevelacaoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/control-room': {
+      id: '/control-room'
+      path: '/control-room'
+      fullPath: '/control-room'
+      preLoaderRoute: typeof ControlRoomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/control-room/': {
+      id: '/control-room/'
+      path: '/'
+      fullPath: '/control-room/'
+      preLoaderRoute: typeof ControlRoomIndexRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
+    '/control-room/artistas': {
+      id: '/control-room/artistas'
+      path: 'artistas'
+      fullPath: '/control-room/artistas'
+      preLoaderRoute: typeof ControlRoomArtistasRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
+    '/control-room/musica': {
+      id: '/control-room/musica'
+      path: 'musica'
+      fullPath: '/control-room/musica'
+      preLoaderRoute: typeof ControlRoomMusicaRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
+    '/control-room/camping': {
+      id: '/control-room/camping'
+      path: 'camping'
+      fullPath: '/control-room/camping'
+      preLoaderRoute: typeof ControlRoomCampingRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
+    '/control-room/revelacao': {
+      id: '/control-room/revelacao'
+      path: 'revelacao'
+      fullPath: '/control-room/revelacao'
+      preLoaderRoute: typeof ControlRoomRevelacaoRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
+    '/control-room/media': {
+      id: '/control-room/media'
+      path: 'media'
+      fullPath: '/control-room/media'
+      preLoaderRoute: typeof ControlRoomMediaRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
+    '/control-room/merch': {
+      id: '/control-room/merch'
+      path: 'merch'
+      fullPath: '/control-room/merch'
+      preLoaderRoute: typeof ControlRoomMerchRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
+    '/control-room/parcerias': {
+      id: '/control-room/parcerias'
+      path: 'parcerias'
+      fullPath: '/control-room/parcerias'
+      preLoaderRoute: typeof ControlRoomParceriasRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
+    '/control-room/site': {
+      id: '/control-room/site'
+      path: 'site'
+      fullPath: '/control-room/site'
+      preLoaderRoute: typeof ControlRoomSiteRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
+    '/control-room/drop': {
+      id: '/control-room/drop'
+      path: 'drop'
+      fullPath: '/control-room/drop'
+      preLoaderRoute: typeof ControlRoomDropRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
+    '/control-room/seo': {
+      id: '/control-room/seo'
+      path: 'seo'
+      fullPath: '/control-room/seo'
+      preLoaderRoute: typeof ControlRoomSeoRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
+    '/control-room/utilizadores': {
+      id: '/control-room/utilizadores'
+      path: 'utilizadores'
+      fullPath: '/control-room/utilizadores'
+      preLoaderRoute: typeof ControlRoomUtilizadoresRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
+    '/control-room/actividade': {
+      id: '/control-room/actividade'
+      path: 'actividade'
+      fullPath: '/control-room/actividade'
+      preLoaderRoute: typeof ControlRoomActividadeRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
+    '/control-room/sistema': {
+      id: '/control-room/sistema'
+      path: 'sistema'
+      fullPath: '/control-room/sistema'
+      preLoaderRoute: typeof ControlRoomSistemaRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
+    '/control-room/login': {
+      id: '/control-room/login'
+      path: '/control-room/login'
+      fullPath: '/control-room/login'
+      preLoaderRoute: typeof ControlRoomLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -143,7 +369,27 @@ const rootRouteChildren: RootRouteChildren = {
   MembrosSlugRoute: MembrosSlugRoute,
   MerchRoute: MerchRoute,
   RevelacaoRoute: RevelacaoRoute,
+  ControlRoomRoute: ControlRoomRoute,
+  ControlRoomLoginRoute: ControlRoomLoginRoute,
 }
+const controlRoomRouteChildren = {
+  ControlRoomIndexRoute: ControlRoomIndexRoute,
+  ControlRoomArtistasRoute: ControlRoomArtistasRoute,
+  ControlRoomMusicaRoute: ControlRoomMusicaRoute,
+  ControlRoomCampingRoute: ControlRoomCampingRoute,
+  ControlRoomRevelacaoRoute: ControlRoomRevelacaoRoute,
+  ControlRoomMediaRoute: ControlRoomMediaRoute,
+  ControlRoomMerchRoute: ControlRoomMerchRoute,
+  ControlRoomParceriasRoute: ControlRoomParceriasRoute,
+  ControlRoomSiteRoute: ControlRoomSiteRoute,
+  ControlRoomDropRoute: ControlRoomDropRoute,
+  ControlRoomSeoRoute: ControlRoomSeoRoute,
+  ControlRoomUtilizadoresRoute: ControlRoomUtilizadoresRoute,
+  ControlRoomActividadeRoute: ControlRoomActividadeRoute,
+  ControlRoomSistemaRoute: ControlRoomSistemaRoute,
+}
+ControlRoomRoute._addFileChildren(controlRoomRouteChildren as any)
+
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
