@@ -394,12 +394,17 @@ export class CameraManager {
 
     const settings = track.getSettings();
 
-    return {
+    const result: Pick<CameraState, "width" | "height" | "frameRate" | "deviceId"> = {
       width: Math.round(settings.width ?? 0),
       height: Math.round(settings.height ?? 0),
       frameRate: Math.round(settings.frameRate ?? 0),
-      deviceId: settings.deviceId,
     };
+
+    if (settings.deviceId !== undefined) {
+      result.deviceId = settings.deviceId;
+    }
+
+    return result;
   }
 
   private hasLiveMicrophone(): boolean {
