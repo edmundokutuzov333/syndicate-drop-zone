@@ -5,6 +5,8 @@ uniform float uDistortionK;
 uniform float uScanlineCount;
 uniform float uChromaticOffset;
 uniform float u_faceMotionBurst;
+
+uniform float uApplyToAllFilters;
 varying vec2 v_uv;
 
 vec2 warp(vec2 uv) {
