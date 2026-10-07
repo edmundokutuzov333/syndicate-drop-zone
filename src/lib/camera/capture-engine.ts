@@ -26,6 +26,29 @@ export function get4KCaptureDimensions(
     : { width: 2160, height: 3840 };
 }
 
+export function getMaxCaptureDimensions(
+  sourceWidth: number,
+  sourceHeight: number,
+): { width: number; height: number } {
+  return {
+    width: Math.max(1, Math.round(sourceWidth)),
+    height: Math.max(1, Math.round(sourceHeight)),
+  };
+}
+
+function getCaptureDimensions(
+  sourceWidth: number,
+  sourceHeight: number,
+): { width: number; height: number; is4K: boolean } {
+  if (isReal4KSource(sourceWidth, sourceHeight)) {
+    const target = get4KCaptureDimensions(sourceWidth, sourceHeight);
+    return { ...target, is4K: true };
+  }
+
+  const target = getMaxCaptureDimensions(sourceWidth, sourceHeight);
+  return { ...target, is4K: false };
+}
+
 type CaptureEngineOptions = {
   getSourceStream: () => MediaStream | null;
   getFilterId: () => string;
@@ -55,9 +78,15 @@ function buildFilename(
   format: CaptureFormat,
   filterId: string,
   facingMode: "user" | "environment",
+  width: number,
+  height: number,
 ): string {
   const camera = facingMode === "user" ? "FRONT" : "BACK";
-  return `SDT_${stamp()}_${filterId.toUpperCase()}_${camera}_4K.${getExtension(format)}`;
+  const sourceTag =
+    width >= 3840 && height >= 2160
+      ? "4K"
+      : `${width}x${height}`;
+  return `SDT_${stamp()}_${filterId.toUpperCase()}_${camera}_${sourceTag}.${getExtension(format)}`;
 }
 
 export class CaptureEngine {
@@ -99,13 +128,13 @@ export class CaptureEngine {
   async capturePhoto(format: Extract<CaptureFormat, "jpg" | "png">): Promise<CaptureResult> {
     this.assertCaptureReady();
 
-    if (!isReal4KSource(this.videoWidth, this.videoHeight)) {
-      throw new Error("CAPTURE_4K_SOURCE_REQUIRED");
+    if (this.videoWidth <= 0 || this.videoHeight <= 0) {
+      throw new Error("CAMERA_RESOLUTION_UNAVAILABLE");
     }
 
     const canvas = this.canvas!;
     const webgl = this.webgl!;
-    const target = get4KCaptureDimensions(this.videoWidth, this.videoHeight);
+    const target = getCaptureDimensions(this.videoWidth, this.videoHeight);
 
     return webgl.withOutputResolution(
       target.width,
@@ -135,7 +164,13 @@ export class CaptureEngine {
           "photo",
           blob,
           format,
-          buildFilename(format, this.options.getFilterId(), this.options.getFacingMode()),
+          buildFilename(
+            format,
+            this.options.getFilterId(),
+            this.options.getFacingMode(),
+            target.width,
+            target.height,
+          ),
           target.width,
           target.height,
         );
@@ -146,8 +181,8 @@ export class CaptureEngine {
   async startVideo(): Promise<void> {
     this.assertCaptureReady();
 
-    if (!isReal4KSource(this.videoWidth, this.videoHeight)) {
-      throw new Error("CAPTURE_4K_SOURCE_REQUIRED");
+    if (this.videoWidth <= 0 || this.videoHeight <= 0) {
+      throw new Error("CAMERA_RESOLUTION_UNAVAILABLE");
     }
 
     if (this.isRecording) return;
@@ -162,7 +197,7 @@ export class CaptureEngine {
       throw new Error("VIDEO_FORMAT_UNSUPPORTED");
     }
 
-    const target = get4KCaptureDimensions(this.videoWidth, this.videoHeight);
+    const target = getCaptureDimensions(this.videoWidth, this.videoHeight);
     await this.webgl!.setOutputResolution(target.width, target.height);
     await waitForFrame();
 
@@ -241,6 +276,8 @@ export class CaptureEngine {
                 format,
                 this.options.getFilterId(),
                 this.options.getFacingMode(),
+                target.width,
+                target.height,
               ),
               target.width,
               target.height,
