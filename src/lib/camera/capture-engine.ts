@@ -46,7 +46,7 @@ function getCaptureDimensions(
   }
 
   const target = getMaxCaptureDimensions(sourceWidth, sourceHeight);
-  return { ...target, is4K: false };
+  return target;
 }
 
 type CaptureEngineOptions = {
@@ -243,7 +243,7 @@ export class CaptureEngine {
     if (!recorder) return null;
 
     const durationMs = performance.now() - this.startedAt;
-    const target = get4KCaptureDimensions(this.videoWidth, this.videoHeight);
+    const target = getCaptureDimensions(this.videoWidth, this.videoHeight);
 
     return new Promise((resolve, reject) => {
       recorder.onstop = async () => {
