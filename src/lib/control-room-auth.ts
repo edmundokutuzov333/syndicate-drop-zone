@@ -1,3 +1,5 @@
+import { getControlRoomStaticRows } from "@/lib/control-room-content";
+
 export type ControlRoomRole = "OWNER" | "ADMIN" | "EDITOR" | "PARTNERSHIPS" | "MERCH";
 
 export function isPublicPreviewSession(session: ControlRoomSession | null | undefined) {
