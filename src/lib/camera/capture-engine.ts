@@ -162,6 +162,7 @@ export class CaptureEngine {
 
     const target = get4KCaptureDimensions(this.videoWidth, this.videoHeight);
     await this.webgl!.setOutputResolution(target.width, target.height);
+    await waitForFrame();
 
     try {
       const recordingStream = await createRecordingStream(
