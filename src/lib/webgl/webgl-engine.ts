@@ -5,6 +5,11 @@ import { TextureManager } from "./texture-manager";
 import { getFilterFragmentShader } from "./filter-shaders";
 import crossfadeShader from "@/shaders/camera/crossfade.frag.glsl?raw";
 import {
+  ASTRO_LUT_HEIGHT,
+  ASTRO_LUT_WIDTH,
+  createAstroHazeLut,
+} from "./lut";
+import {
   adaptiveRenderPolicy,
   detectPerformanceTier,
   getFilterRenderScaleCap,
@@ -71,6 +76,13 @@ export class WebGLEngine {
   private blendProgram: ShaderProgramHandle | null = null;
   private overlayProgram: ShaderProgramHandle | null = null;
   private overlayTexture: WebGLTexture | null = null;
+  private sceneOverlayTexture: WebGLTexture | null = null;
+  private sceneOverlaySource: TexImageSource | null = null;
+  private hudTexture: WebGLTexture | null = null;
+  private hudCanvas: HTMLCanvasElement | null = null;
+  private hudText: string | null = null;
+  private hudDirty = false;
+  private lutTexture: WebGLTexture | null = null;
   private overlayCanvas: HTMLCanvasElement | null = null;
   private overlayText: string | null = null;
   private overlayDirty = false;
@@ -184,6 +196,39 @@ export class WebGLEngine {
     }
 
     this.configureOverlayTexture(this.overlayTexture);
+
+    this.sceneOverlayTexture = this.gl.createTexture();
+    this.hudTexture = this.gl.createTexture();
+    this.lutTexture = this.gl.createTexture();
+
+    if (!this.sceneOverlayTexture || !this.hudTexture || !this.lutTexture) {
+      throw new Error("WEBGL_VFX_TEXTURE_FAILED");
+    }
+
+    this.configureOverlayTexture(this.sceneOverlayTexture);
+    this.configureOverlayTexture(this.hudTexture);
+
+    this.gl.bindTexture(this.gl.TEXTURE_2D, this.lutTexture);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+    this.gl.texImage2D(
+      this.gl.TEXTURE_2D,
+      0,
+      this.gl.RGBA,
+      ASTRO_LUT_WIDTH,
+      ASTRO_LUT_HEIGHT,
+      0,
+      this.gl.RGBA,
+      this.gl.UNSIGNED_BYTE,
+      createAstroHazeLut(),
+    );
+    this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+
+    this.hudCanvas = document.createElement("canvas");
+    this.hudCanvas.width = 1024;
+    this.hudCanvas.height = 1024;
   }
 
   get hasForcedOutputResolution(): boolean {
@@ -335,6 +380,20 @@ export class WebGLEngine {
     this.uniforms.set("u_eyes", state.eyes);
     this.uniforms.set("u_mouth", state.mouth);
     this.uniforms.set("u_faceDetails", state.details);
+    this.uniforms.set("u_faceMotion", state.motion);
+    this.uniforms.set("u_faceMotionBurst", state.motionBurst);
+    this.uniforms.set("u_facePresent", state.present);
+  }
+
+  setSceneOverlaySource(source: TexImageSource | null): void {
+    this.sceneOverlaySource = source;
+  }
+
+  setHudText(text: string | null): void {
+    const next = text?.trim() || null;
+    if (this.hudText === next) return;
+    this.hudText = next;
+    this.hudDirty = true;
   }
 
   setOverlayText(text: string | null): void {
@@ -428,8 +487,16 @@ export class WebGLEngine {
       this.renderFilterPass(null, this.filter, timestamp, sourceSize);
     }
 
+    if (this.sceneOverlaySource) {
+      this.renderSceneOverlayPass();
+    }
+
     if (this.overlayText || this.overlayDirty) {
       this.renderOverlayPass();
+    }
+
+    if (this.hudText || this.hudDirty) {
+      this.renderHudOverlayPass();
     }
 
     const renderTime = performance.now() - renderStart;
@@ -544,11 +611,21 @@ export class WebGLEngine {
     this.attributeLocations.clear();
     this.uniformValueCache.clear();
 
-    if (this.overlayTexture && gl) {
-      gl.deleteTexture(this.overlayTexture);
+    if (gl) {
+      if (this.overlayTexture) gl.deleteTexture(this.overlayTexture);
+      if (this.sceneOverlayTexture) gl.deleteTexture(this.sceneOverlayTexture);
+      if (this.hudTexture) gl.deleteTexture(this.hudTexture);
+      if (this.lutTexture) gl.deleteTexture(this.lutTexture);
     }
 
     this.overlayTexture = null;
+    this.sceneOverlayTexture = null;
+    this.sceneOverlaySource = null;
+    this.hudTexture = null;
+    this.hudCanvas = null;
+    this.hudText = null;
+    this.hudDirty = false;
+    this.lutTexture = null;
     this.overlayCanvas = null;
     this.overlayProgram = null;
     this.overlayText = null;
@@ -629,6 +706,10 @@ export class WebGLEngine {
       this.videoResolutionUniform,
     );
 
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, this.lutTexture);
+    this.setProgramUniform(programHandle.program, "u_lut", 2);
+
     this.uniforms.set("u_time", timestamp / 1000);
 
     const defaults = FILTER_REGISTRY.get(filter).defaults;
@@ -643,6 +724,8 @@ export class WebGLEngine {
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     this.drawCallsThisFrame += 1;
 
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, null);
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.activeTexture(gl.TEXTURE0);
@@ -701,6 +784,27 @@ export class WebGLEngine {
     gl.bindTexture(gl.TEXTURE_2D, null);
   }
 
+  private updateSceneOverlayTexture(): void {
+    const gl = this.gl;
+    const source = this.sceneOverlaySource;
+    const texture = this.sceneOverlayTexture;
+
+    if (!gl || !source || !texture) return;
+
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      source,
+    );
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
+  }
+
   private updateOverlayTexture(): void {
     const gl = this.gl;
     const canvas = this.overlayCanvas;
@@ -739,6 +843,114 @@ export class WebGLEngine {
     gl.bindTexture(gl.TEXTURE_2D, null);
 
     this.overlayDirty = false;
+  }
+
+  private renderSceneOverlayPass(): void {
+    const gl = this.gl;
+    const canvas = this.canvas;
+    const texture = this.sceneOverlayTexture;
+    const programHandle = this.overlayProgram;
+
+    if (!gl || !canvas || !texture || !programHandle || !this.sceneOverlaySource) return;
+
+    this.updateSceneOverlayTexture();
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    this.bindProgram(programHandle.program);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    this.setProgramUniform(programHandle.program, "u_overlay", 0);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    this.drawCallsThisFrame += 1;
+
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.disable(gl.BLEND);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.useProgram(null);
+  }
+
+  private updateHudTexture(): void {
+    const gl = this.gl;
+    const canvas = this.hudCanvas;
+    const texture = this.hudTexture;
+
+    if (!gl || !canvas || !texture) return;
+
+    const context = canvas.getContext("2d");
+    if (!context) return;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (this.hudText) {
+      context.save();
+      context.font = '700 42px "Space Mono", ui-monospace, monospace';
+      context.textAlign = "left";
+      context.textBaseline = "top";
+      context.fillStyle = "rgba(138, 255, 177, 0.92)";
+      context.shadowColor = "rgba(0, 0, 0, 0.92)";
+      context.shadowBlur = 8;
+      context.fillText(this.hudText, 32, 28);
+      context.font = '700 20px "Space Mono", ui-monospace, monospace';
+      context.fillStyle = "rgba(138, 255, 177, 0.58)";
+      context.shadowBlur = 4;
+      context.fillText("CCTV // LIVE // CAM 01", 34, 82);
+      context.restore();
+    }
+
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      canvas,
+    );
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 0);
+
+    this.hudDirty = false;
+  }
+
+  private renderHudOverlayPass(): void {
+    const gl = this.gl;
+    const canvas = this.canvas;
+    const texture = this.hudTexture;
+    const programHandle = this.overlayProgram;
+
+    if (!gl || !canvas || !texture || !programHandle) return;
+
+    if (this.hudDirty) {
+      this.updateHudTexture();
+    }
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    this.bindProgram(programHandle.program);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    this.setProgramUniform(programHandle.program, "u_overlay", 0);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    this.drawCallsThisFrame += 1;
+
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.disable(gl.BLEND);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.useProgram(null);
   }
 
   private renderOverlayPass(): void {
@@ -845,7 +1057,8 @@ export class WebGLEngine {
       name === "u_previousFrame" ||
       name === "u_from" ||
       name === "u_to" ||
-      name === "u_overlay"
+      name === "u_overlay" ||
+      name === "u_lut"
     ) {
       gl.uniform1i(
         location,
@@ -963,6 +1176,10 @@ export class WebGLEngine {
     const cached = this.shaderCache.get(key);
 
     if (cached) return cached;
+
+    if (key === FILTER_REGISTRY.get("op1um").shaderKey) {
+      this.uniforms.set("u_filterStart", performance.now() / 1000);
+    }
 
     const compileStart = performance.now();
 

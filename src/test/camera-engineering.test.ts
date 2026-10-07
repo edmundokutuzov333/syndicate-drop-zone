@@ -440,10 +440,10 @@ describe("camera engineering foundation", () => {
     ).toBe("cancelled");
   });
 
-  it("ships all six Phase 2 filters as active definitions", () => {
+  it("ships all nine interactive VFX filters as active definitions", () => {
     const visible = FILTER_REGISTRY.listVisible();
 
-    expect(visible).toHaveLength(6);
+    expect(visible).toHaveLength(9);
     expect(visible.every((filter) => filter.enabled)).toBe(true);
     expect(visible.map((filter) => filter.id)).toEqual([
       "op1um",
@@ -452,6 +452,9 @@ describe("camera engineering foundation", () => {
       "nightvision",
       "thermal",
       "redroom",
+      "vamp",
+      "astro-haze",
+      "cyber-mugshot",
     ]);
     expect(new Set(visible.map((filter) => filter.shaderKey)).size).toBe(6);
   });
@@ -486,10 +489,12 @@ describe("camera engineering foundation", () => {
     expect(state.details[0]).toBe(1);
     expect(state.details[2]).toBeCloseTo(0.2, 3);
     expect(state.details[3]).toBeCloseTo(0.72, 3);
+    expect(state.matrix).toHaveLength(16);
+    expect(state.pose).toHaveLength(4);
     expect(state.mouth[3]).toBeCloseTo(0.5, 3);
   });
 
-  it("ships six production VFX pipelines with temporal, face and flash processing", () => {
+  it("ships nine production VFX pipelines with temporal, face, motion and flash processing", () => {
     const ids = FILTER_REGISTRY.listVisible().map((item) => item.id);
 
     for (const id of ids) {
@@ -505,7 +510,22 @@ describe("camera engineering foundation", () => {
       expect(source).toContain("u_faceDetails");
       expect(source).toContain("faceMask");
       expect(source).toContain("eyeGlow");
+      expect(source).toContain("u_faceMotion");
+      expect(source).toContain("u_filterStart");
     }
+  });
+
+  it("keeps the premium VFX signatures wired into the new filters", () => {
+    for (const id of ["vamp", "astro-haze", "cyber-mugshot"] as const) {
+      const source = getFilterFragmentShader(id);
+      expect(source).toContain("u_faceMotion");
+      expect(source).toContain("u_faceMotionBurst");
+      expect(source).toContain("u_filterStart");
+    }
+
+    expect(getFilterFragmentShader("astro-haze")).toContain("applyLut");
+    expect(getFilterFragmentShader("cyber-mugshot")).toContain("fisheyeUv");
+    expect(getFilterFragmentShader("vamp")).toContain("eyeGlow");
   });
 
   it("builds non-static shader programs with shared dynamic uniforms", () => {

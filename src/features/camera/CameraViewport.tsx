@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { CameraManager } from "@/lib/camera/camera-manager";
 import { FaceVfxTracker } from "@/lib/camera/face-vfx";
+import { CameraVfx3DOverlay } from "@/lib/camera/camera-vfx-3d-overlay";
+import { FaceVfxTracker } from "@/lib/camera/face-vfx";
 import {
   type CameraFacingMode,
   type FilterId,
@@ -31,9 +33,13 @@ export function CameraViewport({
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<WebGLEngine | null>(null);
+  const filterRef = useRef(filter);
+  const facingRef = useRef(facingMode);
   const recordingRef = useRef(recording);
   const [engineReady, setEngineReady] = useState(false);
 
+  filterRef.current = filter;
+  facingRef.current = facingMode;
   recordingRef.current = recording;
 
   useEffect(() => {
@@ -55,16 +61,17 @@ export function CameraViewport({
     let ready = false;
     let destroyed = false;
     const faceVfx = new FaceVfxTracker();
-
-    const orientation = new OrientationManager();
+    const vfx3d = new CameraVfx3DOverlay(); = new OrientationManager();
     orientation.start(0);
     const streamActiveRef = { current: manager.getState().status === "active" };
     const rafRef = { current: 0 };
+    const lastHudAt = { current: 0 };
 
     const resize = () => {
       if (engine.hasForcedOutputResolution) return;
       const rect = stage.getBoundingClientRect();
       engine.resize(rect.width, rect.height);
+      vfx3d.resize(rect.width, rect.height);
     };
 
     const applyEngineState = () => {
@@ -98,7 +105,34 @@ export function CameraViewport({
           recordingRef.current
         )
       ) {
-        engine.setFaceTracking(faceVfx.detect(video, timestamp));
+        const faceState = faceVfx.detect(video, timestamp);
+        engine.setFaceTracking(faceState);
+
+        const activeFilter = filterRef.current;
+        if (activeFilter === "vamp" || activeFilter === "astro-haze") {
+          vfx3d.update(
+            activeFilter,
+            faceState,
+            facingRef.current,
+            timestamp,
+            video,
+          );
+          vfx3d.render();
+          engine.setSceneOverlaySource(vfx3d.getCanvas());
+        } else {
+          engine.setSceneOverlaySource(null);
+        }
+
+        if (activeFilter === "cyber-mugshot") {
+          const wallTime = Date.now();
+          if (wallTime - lastHudAt.current >= 33) {
+            engine.setHudText(formatCyberTimecode(wallTime));
+            lastHudAt.current = wallTime;
+          }
+        } else {
+          engine.setHudText(null);
+        }
+
         engine.render(timestamp);
       }
 
@@ -152,6 +186,7 @@ export function CameraViewport({
         engine.init(canvas);
         applyEngineState();
         engineRef.current = engine;
+        engine.setSceneOverlaySource(vfx3d.getCanvas());
         ready = true;
         setEngineReady(true);
         onCanvasReady?.(canvas);
@@ -217,6 +252,7 @@ export function CameraViewport({
       unsubscribeCamera();
       orientation.destroy();
       faceVfx.destroy();
+      vfx3d.destroy();
       canvas.removeEventListener("webglcontextlost", handleContextLost);
       canvas.removeEventListener("webglcontextrestored", handleContextRestored);
       document.removeEventListener("visibilitychange", handleVisibility);
@@ -265,4 +301,13 @@ export function CameraViewport({
       </div>
     </div>
   );
+}
+
+function formatCyberTimecode(timestamp: number): string {
+  const date = new Date(timestamp);
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  const millis = String(date.getMilliseconds()).padStart(3, "0");
+  return `${hours}:${minutes}:${seconds}.${millis}`;
 }

@@ -2,9 +2,11 @@ precision mediump float;
 
 uniform sampler2D u_texture;
 uniform sampler2D u_previousFrame;
+uniform sampler2D u_lut;
 uniform vec2 u_resolution;
 uniform vec2 u_videoResolution;
 uniform float u_time;
+uniform float u_filterStart;
 uniform float u_intensity;
 uniform float u_noise;
 uniform float u_distortion;
@@ -13,6 +15,14 @@ uniform float u_feedback;
 uniform float u_flash;
 uniform float u_rotation;
 uniform float u_mirror;
+uniform float u_faceMotion;
+uniform float u_faceMotionBurst;
+uniform float u_facePresent;
+
+uniform vec4 u_face;
+uniform vec4 u_eyes;
+uniform vec4 u_mouth;
+uniform vec4 u_faceDetails;
 
 varying vec2 v_uv;
 
@@ -173,20 +183,39 @@ vec2 liquidWarp(vec2 uv, float amount) {
   return clamp(p * 0.5 + 0.5, 0.0, 1.0);
 }
 
-
-
-vec3 applyFlash(vec3 color) {
-  float flash = clamp(u_flash, 0.0, 1.0);
-  color += vec3(flash * 0.18);
-  color += color * flash * 0.38;
-  return saturateColor(color);
+vec2 fisheyeUv(vec2 uv, float amount) {
+  vec2 p = uv * 2.0 - 1.0;
+  float radius = dot(p, p);
+  p *= 1.0 + radius * amount;
+  return clamp(p * 0.5 + 0.5, 0.0, 1.0);
 }
 
+vec3 applyLut(vec3 color) {
+  float size = 16.0;
+  float width = size * size;
+  float blue = clamp(color.b, 0.0, 1.0) * (size - 1.0);
+  float slice0 = floor(blue);
+  float slice1 = min(slice0 + 1.0, size - 1.0);
+  float sliceMix = fract(blue);
+  float green = clamp(color.g, 0.0, 1.0) * (size - 1.0);
+  float red = clamp(color.r, 0.0, 1.0) * (size - 1.0);
 
-uniform vec4 u_face;
-uniform vec4 u_eyes;
-uniform vec4 u_mouth;
-uniform vec4 u_faceDetails;
+  vec2 uv0 = vec2(
+    (slice0 * size + red + 0.5) / width,
+    (green + 0.5) / size
+  );
+  vec2 uv1 = vec2(
+    (slice1 * size + red + 0.5) / width,
+    (green + 0.5) / size
+  );
+
+  return mix(texture2D(u_lut, uv0).rgb, texture2D(u_lut, uv1).rgb, sliceMix);
+}
+
+vec3 faceMaskColor(vec3 color) {
+  float edge = faceRing(v_uv, 1.08, 0.11);
+  return color + edge * vec3(0.0, 0.12, 0.18);
+}
 
 vec2 unrotateUv(vec2 uv, float degrees) {
   if (degrees < 45.0) return uv;
@@ -227,7 +256,7 @@ vec2 sourceToViewUv(vec2 sourceUv) {
 }
 
 float faceMask(vec2 uv, float padding) {
-  if (u_face.z <= 0.0001) return 0.0;
+  if (u_facePresent < 0.5) return 0.0;
 
   vec2 center = sourceToViewUv(u_face.xy);
   vec2 top = sourceToViewUv(u_face.xy + vec2(0.0, -u_face.w * 0.5));
@@ -260,7 +289,7 @@ float faceRing(vec2 uv, float padding, float thickness) {
 }
 
 float eyeGlow(vec2 uv, vec2 sourceEye, float scale) {
-  if (u_face.z <= 0.0001) return 0.0;
+  if (u_facePresent < 0.5) return 0.0;
 
   vec2 eye = sourceToViewUv(sourceEye);
   vec2 left = sourceToViewUv(u_eyes.xy);
@@ -272,7 +301,7 @@ float eyeGlow(vec2 uv, vec2 sourceEye, float scale) {
 }
 
 float mouthGlow(vec2 uv, float scale) {
-  if (u_face.z <= 0.0001) return 0.0;
+  if (u_facePresent < 0.5) return 0.0;
 
   vec2 mouth = sourceToViewUv(u_mouth.xy);
   vec2 left = sourceToViewUv(u_eyes.xy);
@@ -286,4 +315,11 @@ float facePulse(float speed, float phase) {
   float motion = 0.5 + 0.5 * sin(u_time * speed + phase);
   float expression = 0.55 + 0.45 * max(u_mouth.z, u_mouth.w);
   return motion * expression;
+}
+
+vec3 applyFlash(vec3 color) {
+  float flash = clamp(u_flash, 0.0, 1.0);
+  color += vec3(flash * 0.18);
+  color += color * flash * 0.38;
+  return saturateColor(color);
 }

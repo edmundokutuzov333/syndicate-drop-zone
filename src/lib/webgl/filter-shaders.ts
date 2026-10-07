@@ -10,6 +10,9 @@ import corrupt from "@/shaders/camera/filters/corrupt.frag.glsl?raw";
 import nightvision from "@/shaders/camera/filters/nightvision.frag.glsl?raw";
 import thermal from "@/shaders/camera/filters/thermal.frag.glsl?raw";
 import redroom from "@/shaders/camera/filters/redroom.frag.glsl?raw";
+import vamp from "@/shaders/camera/filters/vamp.frag.glsl?raw";
+import astroHaze from "@/shaders/camera/filters/astro-haze.frag.glsl?raw";
+import cyberMugshot from "@/shaders/camera/filters/cyber-mugshot.frag.glsl?raw";
 
 const shared = [common, grain, distortion, chromatic, feedback].join("\n");
 
@@ -20,6 +23,9 @@ const BODIES: Record<FilterId, string> = {
   nightvision,
   thermal,
   redroom,
+  vamp,
+  "astro-haze": astroHaze,
+  "cyber-mugshot": cyberMugshot,
 };
 
 export function getFilterFragmentShader(id: FilterId): string {

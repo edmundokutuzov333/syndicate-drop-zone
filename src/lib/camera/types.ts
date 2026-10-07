@@ -1,7 +1,16 @@
 export type CameraFacingMode = "user" | "environment";
 export type CaptureMode = "photo" | "video";
 export type CaptureTimer = "off" | 3 | 10;
-export type FilterId = "op1um" | "xerox" | "corrupt" | "nightvision" | "thermal" | "redroom";
+export type FilterId =
+  | "op1um"
+  | "xerox"
+  | "corrupt"
+  | "nightvision"
+  | "thermal"
+  | "redroom"
+  | "vamp"
+  | "astro-haze"
+  | "cyber-mugshot";
 export type FlashMode = "off" | "hardware" | "software";
 export type PerformanceTier = "high" | "medium" | "low";
 export type CameraStatus = "idle" | "requesting" | "ready" | "active" | "error" | "stopped";
@@ -18,6 +27,16 @@ export type FaceVfxUniformState = {
   eyes: [number, number, number, number];
   mouth: [number, number, number, number];
   details: [number, number, number, number];
+  pose: [number, number, number, number];
+  matrix: [
+    number, number, number, number,
+    number, number, number, number,
+    number, number, number, number,
+    number, number, number, number,
+  ];
+  motion: number;
+  motionBurst: number;
+  present: number;
 };
 
 export type CameraState = {
