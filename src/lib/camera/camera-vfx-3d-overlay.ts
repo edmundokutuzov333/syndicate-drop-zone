@@ -95,7 +95,6 @@ export class CameraVfx3DOverlay {
   private readonly xrayCoreMaterial = createXrayMaterial([0, 1, 0.4], 0.82);
   private xrayOuter: THREE.LineSegments | null = null;
   private xrayCore: THREE.LineSegments | null = null;
-  private readonly rawLandmarks = new Float32Array(LANDMARK_COUNT * 3);
   private readonly smoothedLandmarks = new Float32Array(LANDMARK_COUNT * 3);
   private xrayEdgeIndices: Uint16Array = new Uint16Array(0);
   private xrayReady = false;
@@ -397,10 +396,6 @@ export class CameraVfx3DOverlay {
 
       targetY += mouthFactor * (i === 13 ? 1 : i === 14 ? -1 : 0);
       targetX += eyeFactor * (i % 2 === 0 ? -1 : 1);
-
-      this.rawLandmarks[offset] = targetX;
-      this.rawLandmarks[offset + 1] = targetY;
-      this.rawLandmarks[offset + 2] = targetZ;
 
       this.smoothedLandmarks[offset] =
         this.smoothedLandmarks[offset] * (1 - smoothing) +
