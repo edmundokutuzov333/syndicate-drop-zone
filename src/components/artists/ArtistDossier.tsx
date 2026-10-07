@@ -305,6 +305,7 @@ export function ArtistDossier({ artist }: Props) {
         <Link
           to="/membros/$slug"
           params={{ slug: previous.slug }}
+          preload="intent"
           className="group border border-border p-5 transition hover:border-blood"
         >
           <p className="text-[10px] tracking-widest text-muted-foreground">CONVOCADO ANTERIOR</p>
@@ -316,6 +317,7 @@ export function ArtistDossier({ artist }: Props) {
         <Link
           to="/membros/$slug"
           params={{ slug: next.slug }}
+          preload="intent"
           className="group border border-border p-5 text-right transition hover:border-blood"
         >
           <p className="text-[10px] tracking-widest text-muted-foreground">PRÓXIMO CONVOCADO</p>
@@ -337,6 +339,7 @@ export function ArtistDossier({ artist }: Props) {
               key={item.slug}
               to="/membros/$slug"
               params={{ slug: item.slug }}
+              preload="intent"
               className="group relative overflow-hidden border-2 border-foreground bg-foreground p-2"
             >
               <Halftone src={item.img} alt={item.name} className="aspect-[4/3] transition duration-500 group-hover:scale-[1.02]" />
