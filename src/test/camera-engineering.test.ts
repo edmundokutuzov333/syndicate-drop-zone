@@ -576,6 +576,18 @@ describe("camera engineering foundation", () => {
     expect(MASTER_OVERLAY_CONTRACTS["paper-film"].enabledByDefault).toBe(false);
     expect(getFilterShaderContract("cathode-crt")?.masterOverlay).toBe("cathode-crt");
     expect(getFilterShaderContract("paper-film")?.masterOverlay).toBe("paper-film");
+
+    expect(getFilterShaderContract("halation")?.passes).toEqual([
+      "halation-isolate",
+      "halation-blur-h",
+      "halation-blur-v",
+      "halation-composite",
+    ]);
+    expect(getFilterShaderContract("kinetic-melt")?.passes).toEqual([
+      "kinetic-flow",
+      "kinetic-melt",
+    ]);
+
   });
 
   it("defines the requested multipass topology", () => {
