@@ -173,3 +173,11 @@ vec2 liquidWarp(vec2 uv, float amount) {
   return clamp(p * 0.5 + 0.5, 0.0, 1.0);
 }
 
+
+
+vec3 applyFlash(vec3 color) {
+  float flash = clamp(u_flash, 0.0, 1.0);
+  color += vec3(flash * 0.18);
+  color += color * flash * 0.38;
+  return saturateColor(color);
+}
