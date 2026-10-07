@@ -25,6 +25,18 @@ void main() {
   color += vec3(0.65, 0.16, 0.03) * halo * 0.075;
   color += vec3(0.34, 0.025, 0.008) * leak * 0.09;
 
+  float face = faceMask(uv, 1.0);
+  float faceEdge = faceRing(uv, 1.06, 0.09);
+  float leftEye = eyeGlow(uv, u_eyes.xy, 1.15);
+  float rightEye = eyeGlow(uv, u_eyes.zw, 1.15);
+  float mouth = mouthGlow(uv, 1.0);
+
+  float opticalPulse = facePulse(1.8, 0.4);
+  color += vec3(0.16, 0.28, 0.75) * faceEdge * (0.18 + opticalPulse * 0.16);
+  color += vec3(0.55, 0.08, 0.02) * (leftEye + rightEye) * 0.12;
+  color += vec3(0.26, 0.02, 0.18) * mouth * (0.10 + u_mouth.z * 0.10);
+  color += vec3(0.05, 0.06, 0.14) * face * 0.025;
+
   float gate = filmGate(v_uv, 0.06);
   float scan = scanline(0.32, 0.028);
   float dust = dustSpeck(uv, 310.0, 0.9975);

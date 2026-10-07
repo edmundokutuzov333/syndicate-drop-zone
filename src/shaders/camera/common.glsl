@@ -181,3 +181,109 @@ vec3 applyFlash(vec3 color) {
   color += color * flash * 0.38;
   return saturateColor(color);
 }
+
+
+uniform vec4 u_face;
+uniform vec4 u_eyes;
+uniform vec4 u_mouth;
+uniform vec4 u_faceDetails;
+
+vec2 unrotateUv(vec2 uv, float degrees) {
+  if (degrees < 45.0) return uv;
+  if (degrees < 135.0) return vec2(1.0 - uv.y, uv.x);
+  if (degrees < 225.0) return vec2(1.0 - uv.x, 1.0 - uv.y);
+  if (degrees < 315.0) return vec2(uv.y, 1.0 - uv.x);
+  return uv;
+}
+
+vec2 uncropUv(vec2 uv) {
+  float videoAspect = u_videoResolution.x / max(u_videoResolution.y, 1.0);
+  float viewAspect = u_resolution.x / max(u_resolution.y, 1.0);
+
+  if (u_rotation > 45.0 && u_rotation < 315.0) {
+    videoAspect = 1.0 / videoAspect;
+  }
+
+  if (videoAspect > viewAspect) {
+    float visibleWidth = viewAspect / videoAspect;
+    uv.x = (uv.x - (1.0 - visibleWidth) * 0.5) / max(visibleWidth, 0.0001);
+  } else {
+    float visibleHeight = videoAspect / viewAspect;
+    uv.y = (uv.y - (1.0 - visibleHeight) * 0.5) / max(visibleHeight, 0.0001);
+  }
+
+  return uv;
+}
+
+vec2 sourceToViewUv(vec2 sourceUv) {
+  vec2 transformed = uncropUv(sourceUv);
+  transformed = unrotateUv(transformed, u_rotation);
+
+  if (u_mirror > 0.5) {
+    transformed.x = 1.0 - transformed.x;
+  }
+
+  return clamp(transformed, 0.0, 1.0);
+}
+
+float faceMask(vec2 uv, float padding) {
+  if (u_face.z <= 0.0001) return 0.0;
+
+  vec2 center = sourceToViewUv(u_face.xy);
+  vec2 top = sourceToViewUv(u_face.xy + vec2(0.0, -u_face.w * 0.5));
+  vec2 bottom = sourceToViewUv(u_face.xy + vec2(0.0, u_face.w * 0.5));
+  vec2 left = sourceToViewUv(u_face.xy + vec2(-u_face.z * 0.5, 0.0));
+  vec2 right = sourceToViewUv(u_face.xy + vec2(u_face.z * 0.5, 0.0));
+
+  float width = max(distance(left, right), 0.01);
+  float height = max(distance(top, bottom), 0.01);
+  float angle = atan(
+    sourceToViewUv(u_eyes.zw).y - sourceToViewUv(u_eyes.xy).y,
+    sourceToViewUv(u_eyes.zw).x - sourceToViewUv(u_eyes.xy).x
+  );
+
+  vec2 p = uv - center;
+  float cs = cos(-angle);
+  float sn = sin(-angle);
+  p = vec2(p.x * cs - p.y * sn, p.x * sn + p.y * cs);
+
+  vec2 radius = vec2(width * 0.54, height * 0.58) * padding;
+  float ellipse = dot(p / max(radius, vec2(0.0001)), p / max(radius, vec2(0.0001)));
+
+  return 1.0 - smoothstep(0.58, 1.02, ellipse);
+}
+
+float faceRing(vec2 uv, float padding, float thickness) {
+  float outer = faceMask(uv, padding);
+  float inner = faceMask(uv, max(0.72, padding - thickness));
+  return saturate(outer - inner);
+}
+
+float eyeGlow(vec2 uv, vec2 sourceEye, float scale) {
+  if (u_face.z <= 0.0001) return 0.0;
+
+  vec2 eye = sourceToViewUv(sourceEye);
+  vec2 left = sourceToViewUv(u_eyes.xy);
+  vec2 right = sourceToViewUv(u_eyes.zw);
+  float eyeDistance = max(distance(left, right), 0.01);
+  float radius = eyeDistance * 0.105 * scale;
+
+  return exp(-dot(uv - eye, uv - eye) / max(radius * radius * 2.0, 0.00001));
+}
+
+float mouthGlow(vec2 uv, float scale) {
+  if (u_face.z <= 0.0001) return 0.0;
+
+  vec2 mouth = sourceToViewUv(u_mouth.xy);
+  vec2 left = sourceToViewUv(u_eyes.xy);
+  vec2 right = sourceToViewUv(u_eyes.zw);
+  float radius = max(distance(left, right) * 0.19 * scale, 0.015);
+
+  return exp(-dot(uv - mouth, uv - mouth) / max(radius * radius * 2.4, 0.00001));
+}
+
+float facePulse(float speed, float phase) {
+  float motion = 0.5 + 0.5 * sin(u_time * speed + phase);
+  float expression = 0.55 + 0.45 * max(u_mouth.z, u_mouth.w);
+  return motion * expression;
+}

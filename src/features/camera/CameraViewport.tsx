@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { CameraManager } from "@/lib/camera/camera-manager";
+import { FaceVfxTracker } from "@/lib/camera/face-vfx";
 import {
   type CameraFacingMode,
   type FilterId,
@@ -53,6 +54,7 @@ export function CameraViewport({
     });
     let ready = false;
     let destroyed = false;
+    const faceVfx = new FaceVfxTracker();
 
     const orientation = new OrientationManager();
     orientation.start(0);
@@ -71,6 +73,8 @@ export function CameraViewport({
       engine.setUniform("u_rotation", orientation.getState().renderRotation);
       engine.setUniform("u_mirror", facingMode === "user" ? 1 : 0);
       engine.setUniform("u_flash", 0);
+      faceVfx.reset();
+      engine.setFaceTracking(faceVfx.reset());
       engine.setFilter(filter);
       resize();
     };
@@ -94,6 +98,7 @@ export function CameraViewport({
           recordingRef.current
         )
       ) {
+        engine.setFaceTracking(faceVfx.detect(video, timestamp));
         engine.render(timestamp);
       }
 
@@ -198,6 +203,7 @@ export function CameraViewport({
     document.addEventListener("visibilitychange", handleVisibility);
 
     initializeEngine();
+    void faceVfx.warmup();
     void onReady();
 
     resize();
@@ -210,6 +216,7 @@ export function CameraViewport({
       unsubscribe();
       unsubscribeCamera();
       orientation.destroy();
+      faceVfx.destroy();
       canvas.removeEventListener("webglcontextlost", handleContextLost);
       canvas.removeEventListener("webglcontextrestored", handleContextRestored);
       document.removeEventListener("visibilitychange", handleVisibility);

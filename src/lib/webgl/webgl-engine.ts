@@ -10,6 +10,7 @@ import {
   getFilterRenderScaleCap,
 } from "@/lib/camera/performance-manager";
 import {
+  type FaceVfxUniformState,
   type FilterId,
   type RenderMetrics,
   type ShaderProgramHandle,
@@ -327,6 +328,13 @@ export class WebGLEngine {
 
   setUniform(name: string, value: UniformValue): void {
     this.uniforms.set(name, value);
+  }
+
+  setFaceTracking(state: FaceVfxUniformState): void {
+    this.uniforms.set("u_face", state.face);
+    this.uniforms.set("u_eyes", state.eyes);
+    this.uniforms.set("u_mouth", state.mouth);
+    this.uniforms.set("u_faceDetails", state.details);
   }
 
   setOverlayText(text: string | null): void {

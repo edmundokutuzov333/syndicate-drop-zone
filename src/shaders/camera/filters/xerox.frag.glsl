@@ -14,12 +14,17 @@ void main() {
   float paperNoise = noise2(uv * 22.0 + vec2(0.0, u_time * 0.15));
   float halftoneDot = halftone(uv, 145.0, 0.13);
 
+  float face = faceMask(uv, 1.03);
+  float faceEdge = faceRing(uv, 1.08, 0.10);
+  float eyeRegister = eyeGlow(uv, u_eyes.xy, 1.2) + eyeGlow(uv, u_eyes.zw, 1.2);
+  float mouthRegister = mouthGlow(uv, 1.15);
+
   float copyTone = smoothstep(
     0.18,
     0.78,
     lum + inkNoise * 0.09 + edge * 0.34
   );
-  copyTone = mix(copyTone, halftoneDot, 0.42);
+  copyTone = mix(copyTone, halftoneDot, 0.42 + face * 0.18);
 
   vec3 paper = vec3(0.82, 0.80, 0.75) + paperNoise * 0.035;
   vec3 ink = vec3(0.028, 0.025, 0.023);
@@ -28,6 +33,9 @@ void main() {
   float misregister = sin(uv.y * 36.0 + u_time * 1.7) * 0.018;
   color.r += misregister * edge * 0.42;
   color.b -= misregister * edge * 0.28;
+  color += vec3(0.02, 0.0, 0.04) * faceEdge * 0.20;
+  color += vec3(0.11, 0.015, 0.02) * eyeRegister * 0.55;
+  color += vec3(0.01, 0.015, 0.08) * mouthRegister * (0.28 + u_mouth.w * 0.18);
 
   float fold = smoothstep(
     0.012,

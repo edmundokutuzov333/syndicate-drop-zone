@@ -13,6 +13,7 @@ import {
   createCaptureTimerState,
 } from "@/lib/camera/capture-timer";
 import { FILTER_REGISTRY } from "@/lib/webgl/filter-registry";
+import { buildFaceVfxUniforms } from "@/lib/camera/face-vfx";
 import { adaptiveRenderPolicy } from "@/lib/camera/performance-manager";
 import {
   getImageFormatCapabilities,
@@ -455,7 +456,40 @@ describe("camera engineering foundation", () => {
     expect(new Set(visible.map((filter) => filter.shaderKey)).size).toBe(6);
   });
 
-  it("ships six production VFX pipelines with temporal and flash processing", () => {
+  it("derives stable face VFX controls from MediaPipe landmarks and blendshapes", () => {
+    const result = {
+      faceLandmarks: [
+        Array.from({ length: 478 }, (_, index) => ({
+          x: 0.5 + ((index % 7) - 3) * 0.004,
+          y: 0.5 + ((index % 11) - 5) * 0.004,
+          z: 0,
+          visibility: 1,
+        })),
+      ],
+      faceBlendshapes: [
+        {
+          categories: [
+            { categoryName: "jawOpen", score: 0.72 },
+            { categoryName: "mouthSmileLeft", score: 0.54 },
+            { categoryName: "mouthSmileRight", score: 0.46 },
+            { categoryName: "eyeBlinkLeft", score: 0.18 },
+            { categoryName: "eyeBlinkRight", score: 0.22 },
+          ],
+        },
+      ],
+    } as never;
+
+    const state = buildFaceVfxUniforms(result);
+
+    expect(state.face[2]).toBeGreaterThan(0);
+    expect(state.face[3]).toBeGreaterThan(0);
+    expect(state.details[0]).toBe(1);
+    expect(state.details[2]).toBeCloseTo(0.2, 3);
+    expect(state.details[3]).toBeCloseTo(0.72, 3);
+    expect(state.mouth[3]).toBeCloseTo(0.5, 3);
+  });
+
+  it("ships six production VFX pipelines with temporal, face and flash processing", () => {
     const ids = FILTER_REGISTRY.listVisible().map((item) => item.id);
 
     for (const id of ids) {
@@ -467,6 +501,10 @@ describe("camera engineering foundation", () => {
       expect(source).toContain("applyFlash");
       expect(source).toContain("filmGrain");
       expect(source).toContain("softBloom");
+      expect(source).toContain("u_face");
+      expect(source).toContain("u_faceDetails");
+      expect(source).toContain("faceMask");
+      expect(source).toContain("eyeGlow");
     }
   });
 

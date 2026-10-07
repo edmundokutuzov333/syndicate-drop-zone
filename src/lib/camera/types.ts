@@ -13,6 +13,13 @@ export type CameraDevice = {
   groupId?: string;
 };
 
+export type FaceVfxUniformState = {
+  face: [number, number, number, number];
+  eyes: [number, number, number, number];
+  mouth: [number, number, number, number];
+  details: [number, number, number, number];
+};
+
 export type CameraState = {
   status: CameraStatus;
   devices: CameraDevice[];
