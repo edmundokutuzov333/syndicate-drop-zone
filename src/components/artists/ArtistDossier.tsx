@@ -149,8 +149,8 @@ export function ArtistDossier({ artist }: Props) {
         <div className="grid grid-cols-2 gap-3 self-start">
           <InfoTag label="ZONA" value={artist.zona} />
           <InfoTag label="FAIXAS NO CAMPING" value={artist.faixas.join(" · ")} />
-          <InfoTag label="PRESENÇA" value="ACTIVA" />
-          <InfoTag label="EDIÇÃO" value="01" />
+          <InfoTag label="PRESENÇA" value={artist.presence} />
+          <InfoTag label="EDIÇÃO" value={artist.edition} />
         </div>
       </section>
 
