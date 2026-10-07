@@ -3,16 +3,12 @@ import { MERCH as STATIC_MERCH, SIZES, TAPES as STATIC_TAPE_DATA } from "@/lib/d
 import { REVELACAO_MEDIA as STATIC_REVELACAO_MEDIA, type RevelationMedia } from "@/lib/revelacao-media";
 import type { RevelationMediaRatio, RevelationMediaType } from "@/lib/revelacao-media";
 import { getLiveArtists } from "@/lib/public-content";
+import { getPublicSupabaseConfig } from "@/lib/supabase-public";
 
 export type ContentRow = Record<string, unknown>;
 
 function config() {
-  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  const key =
-    (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) ??
-    (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined);
-  if (!url || !key) return null;
-  return { url, key };
+  return getPublicSupabaseConfig();
 }
 
 async function tableRows(table: string): Promise<ContentRow[]> {
