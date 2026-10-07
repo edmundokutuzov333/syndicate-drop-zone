@@ -140,6 +140,23 @@ export function CameraPage() {
     }
   }, [cameraManager]);
 
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (
+        document.visibilityState === "visible" &&
+        !captureEngine.isRecording
+      ) {
+        void cameraManager.start();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [cameraManager, captureEngine]);
+
+
   const runCountdown = useCallback(
     async (value: CaptureTimer) => {
       if (value === "off") return;
@@ -301,6 +318,7 @@ export function CameraPage() {
           onReady={startCamera}
           onCanvasReady={setCanvasReady}
           onEngineReady={setEngineReady}
+          recording={captureStatus === "recording"}
         />
 
         <CameraControls
