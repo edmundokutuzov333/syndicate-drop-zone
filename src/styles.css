@@ -427,9 +427,29 @@
 .camera-camera-switch:disabled { cursor: default; opacity: 0.55; }
 
 .camera-camera-switch:not(:disabled):hover,
-.camera-camera-switch:not(:disabled):focus-visible {
+.camera-camera-switch:not(:disabled):focus-visible,
+.camera-flash-toggle:not(:disabled):hover,
+.camera-flash-toggle:not(:disabled):focus-visible {
   color: #fff6ea;
   outline: none;
+}
+
+.camera-flash-toggle {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.camera-flash-toggle.is-active {
+  color: #f5eee5;
+  text-shadow:
+    0 0 8px rgba(255,245,230,.18),
+    0 1px 10px rgba(0,0,0,.95);
 }
 
 .camera-mode-switch {
