@@ -107,6 +107,7 @@ export type FilterDefinition = {
   enabled: boolean;
   defaults: FilterUniformDefaults;
   pipeline?: "single" | "xray-mesh" | "halation" | "kinetic-melt";
+  passes?: readonly string[];
   masterOverlay?: "cathode-crt" | "paper-film";
   parameters?: readonly {
     name: string;
