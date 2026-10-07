@@ -163,8 +163,6 @@ export function CameraPage() {
         return;
       }
 
-      setCaptureStatus("countdown");
-
       for (let current = value; current > 0; current -= 1) {
         engineReady?.setOverlayText(String(current));
         await wait(1000);
@@ -222,7 +220,13 @@ export function CameraPage() {
       return;
     }
 
+    const captureFilter = filter;
+    const captureFacingMode = camera.facingMode;
+
+    setCaptureStatus("countdown");
+
     try {
+      await engineReady.waitForFilter(captureFilter);
       await runCountdown(timer);
 
       if (mode === "photo") {
@@ -231,6 +235,8 @@ export function CameraPage() {
 
         const photo = await captureEngine.capturePhoto(
           format === "png" ? "png" : "jpg",
+          captureFilter,
+          captureFacingMode,
         );
         setPreview(photo);
         setCaptureStatus("preview");
@@ -239,7 +245,10 @@ export function CameraPage() {
 
       captureEngine.setPreferredFormat(format);
 
-      await captureEngine.startVideo();
+      await captureEngine.startVideo(
+        captureFilter,
+        captureFacingMode,
+      );
       setCaptureStatus("recording");
     } catch (error) {
       console.error(error);
@@ -252,6 +261,7 @@ export function CameraPage() {
     captureStatus,
     canvasReady,
     engineReady,
+    filter,
     format,
     mode,
     runCountdown,
@@ -333,7 +343,16 @@ export function CameraPage() {
         />
 
         <div className="camera-shutter-zone">
-          <FilterRail selected={filter} onSelect={setFilter} />
+          <FilterRail
+            selected={filter}
+            onSelect={setFilter}
+            locked={
+              captureStatus === "countdown" ||
+              captureStatus === "recording" ||
+              captureStatus === "processing" ||
+              captureStatus === "preview"
+            }
+          />
 
           <CaptureControls
             mode={mode}
