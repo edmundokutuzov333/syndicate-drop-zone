@@ -7,6 +7,7 @@ import crossfadeShader from "@/shaders/camera/crossfade.frag.glsl?raw";
 import {
   adaptiveRenderPolicy,
   detectPerformanceTier,
+  getFilterRenderScaleCap,
 } from "@/lib/camera/performance-manager";
 import {
   type FilterId,
@@ -40,6 +41,17 @@ const BLEND_VERTEX =
 
 const BLEND_FRAGMENT = crossfadeShader;
 
+const OVERLAY_FRAGMENT = `
+precision mediump float;
+uniform sampler2D u_overlay;
+varying vec2 v_uv;
+
+void main() {
+  vec4 sample = texture2D(u_overlay, v_uv);
+  gl_FragColor = sample;
+}
+`;
+
 export class WebGLEngine {
   private canvas: HTMLCanvasElement | null = null;
   private gl: WebGLRenderingContext | WebGL2RenderingContext | null = null;
@@ -56,6 +68,11 @@ export class WebGLEngine {
   private readonly programs = new Map<FilterId, ShaderProgramHandle>();
   private vertexBuffer: WebGLBuffer | null = null;
   private blendProgram: ShaderProgramHandle | null = null;
+  private overlayProgram: ShaderProgramHandle | null = null;
+  private overlayTexture: WebGLTexture | null = null;
+  private overlayCanvas: HTMLCanvasElement | null = null;
+  private overlayText: string | null = null;
+  private overlayDirty = false;
   private frameSource: TexImageSource | null = null;
   private vertexShaderSource = "";
   private filter: FilterId = "op1um";
@@ -149,6 +166,23 @@ export class WebGLEngine {
       BLEND_VERTEX,
       BLEND_FRAGMENT,
     );
+
+    this.overlayProgram = this.compileProgram(
+      "camera-countdown-overlay:v1",
+      BLEND_VERTEX,
+      OVERLAY_FRAGMENT,
+    );
+
+    this.overlayCanvas = document.createElement("canvas");
+    this.overlayCanvas.width = 1024;
+    this.overlayCanvas.height = 1024;
+    this.overlayTexture = this.gl.createTexture();
+
+    if (!this.overlayTexture) {
+      throw new Error("WEBGL_OVERLAY_TEXTURE_FAILED");
+    }
+
+    this.configureOverlayTexture(this.overlayTexture);
   }
 
   get hasForcedOutputResolution(): boolean {
@@ -295,6 +329,14 @@ export class WebGLEngine {
     this.uniforms.set(name, value);
   }
 
+  setOverlayText(text: string | null): void {
+    const next = text?.trim() || null;
+    if (this.overlayText === next) return;
+
+    this.overlayText = next;
+    this.overlayDirty = true;
+  }
+
   render(timestamp = performance.now()): void {
     const gl = this.gl;
 
@@ -376,6 +418,10 @@ export class WebGLEngine {
       }
     } else {
       this.renderFilterPass(null, this.filter, timestamp, sourceSize);
+    }
+
+    if (this.overlayText) {
+      this.renderOverlayPass();
     }
 
     const renderTime = performance.now() - renderStart;
@@ -461,6 +507,16 @@ export class WebGLEngine {
     this.uniformLocations.clear();
     this.attributeLocations.clear();
     this.uniformValueCache.clear();
+
+    if (this.overlayTexture && gl) {
+      gl.deleteTexture(this.overlayTexture);
+    }
+
+    this.overlayTexture = null;
+    this.overlayCanvas = null;
+    this.overlayProgram = null;
+    this.overlayText = null;
+    this.overlayDirty = false;
     this.gcObserver?.disconnect();
     this.gcObserver = null;
     this.gcEvents = 0;
@@ -593,6 +649,93 @@ export class WebGLEngine {
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.useProgram(null);
+  }
+
+  private configureOverlayTexture(texture: WebGLTexture): void {
+    const gl = this.gl;
+    if (!gl) return;
+
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+  }
+
+  private updateOverlayTexture(): void {
+    const gl = this.gl;
+    const canvas = this.overlayCanvas;
+    const texture = this.overlayTexture;
+
+    if (!gl || !canvas || !texture) return;
+
+    const context = canvas.getContext("2d");
+    if (!context) return;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (this.overlayText) {
+      context.save();
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.font = "700 300px \"Space Mono\", ui-monospace, monospace";
+      context.fillStyle = "rgba(245, 239, 230, 0.96)";
+      context.shadowColor = "rgba(0, 0, 0, 0.85)";
+      context.shadowBlur = 28;
+      context.shadowOffsetX = 0;
+      context.shadowOffsetY = 6;
+      context.fillText(this.overlayText, canvas.width / 2, canvas.height / 2);
+      context.restore();
+    }
+
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      canvas,
+    );
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 0);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+
+    this.overlayDirty = false;
+  }
+
+  private renderOverlayPass(): void {
+    const gl = this.gl;
+    const canvas = this.canvas;
+    const texture = this.overlayTexture;
+    const programHandle = this.overlayProgram;
+
+    if (!gl || !canvas || !texture || !programHandle) return;
+
+    if (this.overlayDirty) {
+      this.updateOverlayTexture();
+    }
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    this.bindProgram(programHandle.program);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    this.setProgramUniform(programHandle.program, "u_overlay", 0);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    this.drawCallsThisFrame += 1;
+
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.disable(gl.BLEND);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     gl.useProgram(null);
   }
@@ -756,6 +899,12 @@ export class WebGLEngine {
     if (!this.canvas || !this.gl) return;
 
     const next = adaptiveRenderPolicy(this.metrics);
+    const activeFilter = this.transition?.to ?? this.filter;
+    const filterCap = getFilterRenderScaleCap(
+      this.metrics.deviceTier,
+      FILTER_REGISTRY.get(activeFilter).complexity,
+    );
+    next.renderScale = Math.min(next.renderScale, filterCap);
 
     if (
       Math.abs(next.renderScale - this.renderScale) < 0.01 &&
