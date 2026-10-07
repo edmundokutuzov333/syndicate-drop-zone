@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Check, MessageSquare, RefreshCw } from "lucide-react";
-import { adminQuery, type ControlRoomRole, getControlRoomSession } from "@/lib/control-room-auth";
+import { adminQuery, isPublicPreviewSession, type ControlRoomRole, getControlRoomSession } from "@/lib/control-room-auth";
 
 type Partnership = {
   id: string;
@@ -28,6 +28,7 @@ function ControlRoomPartnerships() {
   const [rows, setRows] = useState<Partnership[]>([]);
   const [selected, setSelected] = useState<Partnership | null>(null);
   const [role, setRole] = useState<ControlRoomRole | null>(null);
+  const [previewMode, setPreviewMode] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -39,6 +40,7 @@ function ControlRoomPartnerships() {
       ]);
       setRows(data);
       setRole(session?.role ?? null);
+      setPreviewMode(isPublicPreviewSession(session));
       setSelected((current) => current ? data.find((row) => row.id === current.id) ?? null : data[0] ?? null);
     } finally {
       setLoading(false);
@@ -49,7 +51,7 @@ function ControlRoomPartnerships() {
     load().catch(() => setLoading(false));
   }, []);
 
-  const canEdit = role === "OWNER" || role === "ADMIN" || role === "PARTNERSHIPS";
+  const canEdit = !previewMode && (role === "OWNER" || role === "ADMIN" || role === "PARTNERSHIPS");
   const fresh = rows.filter((row) => row.status === "new").length;
 
   return (
@@ -112,7 +114,7 @@ function ControlRoomPartnerships() {
         </section>
 
         {selected ? (
-          <ProposalEditor key={selected.id} row={selected} canEdit={canEdit} onSaved={load} />
+          <ProposalEditor key={selected.id} row={selected} canEdit={canEdit} previewMode={previewMode} onSaved={load} />
         ) : (
           <div className="grid min-h-80 place-items-center border border-dashed border-white/10 bg-[#0d0d0d] font-mono text-xs text-white/25">SELECT PROPOSAL</div>
         )}
@@ -121,7 +123,7 @@ function ControlRoomPartnerships() {
   );
 }
 
-function ProposalEditor({ row, canEdit, onSaved }: { row: Partnership; canEdit: boolean; onSaved: () => Promise<void> | void }) {
+function ProposalEditor({ row, canEdit, previewMode, onSaved }: { row: Partnership; canEdit: boolean; previewMode: boolean; onSaved: () => Promise<void> | void }) {
   const [status, setStatus] = useState(row.status);
   const [notes, setNotes] = useState(row.notes);
   const [priority, setPriority] = useState(row.priority);
@@ -157,14 +159,14 @@ function ProposalEditor({ row, canEdit, onSaved }: { row: Partnership; canEdit: 
         <div className="grid gap-3 border border-white/10 p-4 font-mono text-xs">
           <Row label="NOME" value={row.name} />
           <Row label="EMPRESA" value={row.company} />
-          <Row label="CONTACTO" value={row.contact} />
+          <Row label="CONTACTO" value={previewMode ? "OCULTO NO ACESSO DIRECTO" : row.contact} />
           <Row label="TIPO" value={row.partnership_type} />
           <Row label="ORÇAMENTO" value={row.budget} />
         </div>
 
         <div className="border border-white/10 p-4">
           <p className="font-mono text-[9px] tracking-[0.18em] text-[#d71920]">MENSAGEM</p>
-          <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-white/70">{row.message}</p>
+          <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-white/70">{previewMode ? "Detalhes da proposta protegidos no modo de acesso directo. Autenticação administrativa necessária para consultar o conteúdo completo." : row.message}</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
