@@ -4,13 +4,7 @@ import { Halftone } from "@/components/Halftone";
 import { hiss } from "@/lib/sfx";
 import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 
-type Search = { a?: number };
-
 export const Route = createFileRoute("/membros")({
-  validateSearch: (s: Record<string, unknown>): Search => {
-    const n = Number(s["a"]);
-    return Number.isInteger(n) && n >= 1 && n <= ARTISTS.length ? { a: n } : {};
-  },
   head: () => ({
     meta: [
       { title: "Artistas — O Sindicato do Trap" },
@@ -25,57 +19,58 @@ export const Route = createFileRoute("/membros")({
 });
 
 function Membros() {
-  const { a: q } = Route.useSearch();
-  const navigate = Route.useNavigate();
-  const sel = (q ?? 1) - 1;
-  const a = ARTISTS[sel]!;
-  const num = String(sel + 1).padStart(2, "0");
   return (
     <main className="mx-auto max-w-7xl px-4 pb-24 pt-12 md:px-8">
-      <p className="text-xs tracking-widest text-blood">1ª EDIÇÃO · 17 CONVOCADOS</p>
-      <h1 className="mt-2 font-gothic text-6xl leading-[0.85] md:text-8xl">Os Convocados</h1>
+      <header className="relative overflow-hidden border-y border-border py-6">
+        <img
+          src={selo.url}
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute right-4 top-1/2 w-24 -translate-y-1/2 rotate-12 opacity-35 md:right-10 md:w-32"
+        />
+        <p className="text-xs tracking-widest text-blood">1ª EDIÇÃO · 17 CONVOCADOS</p>
+        <h1 className="mt-2 font-gothic text-6xl leading-[0.85] md:text-8xl">Os Convocados</h1>
+        <p className="mt-5 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">
+          Arquivo completo dos 17 artistas. Cada convocado tem o seu próprio dossiê, canais oficiais e registos da edição.
+        </p>
+      </header>
 
-      <article key={a.code} className="relative mt-10 grid animate-fade-in border border-border bg-card md:grid-cols-[1fr_1.2fr]">
-        <div className="relative aspect-[4/5]">
-          <Halftone src={a.img} alt={a.name} className="h-full w-full" />
-        </div>
-        <div className="relative flex flex-col justify-end gap-6 p-6 md:p-10">
-          <img src={selo.url} alt="" aria-hidden className="absolute right-6 top-6 w-28 -rotate-12 opacity-70" />
-          {/* Placa estilo mugshot */}
-          <div className="max-w-md border-2 border-foreground bg-background p-4 font-stamp">
-            <div className="flex justify-between border-b border-foreground pb-2 text-xs tracking-widest">
-              <span>O SINDICATO DO TRAP</span><span>{a.code}</span>
-            </div>
-            <h2 className="mt-3 font-gothic text-5xl leading-none md:text-6xl">{a.name}</h2>
-            <div className="mt-3 flex justify-between border-t border-foreground pt-2 text-xs tracking-widest">
-              <span>Nº {num} / 17</span><span className="text-blood">STUDIO XOYENS · 18.12.2026</span>
-            </div>
-          </div>
+      <section className="mt-10" aria-labelledby="artists-grid-title">
+        <div className="mb-5 flex items-end justify-between gap-4">
           <div>
-            <p className="font-stamp text-2xl text-blood">“{a.frase}”</p>
-            <dl className="mt-4 grid gap-3 text-xs">
-              <div><dt className="tracking-widest text-blood">ZONA</dt><dd className="mt-1 font-stamp text-base">{a.zona}</dd></div>
-              <div><dt className="tracking-widest text-blood">FAIXAS NO CAMPING</dt><dd className="mt-1 font-stamp text-base">{a.faixas.join(" · ")}</dd></div>
-              <div><dt className="tracking-widest text-blood">BIO</dt><dd className="mt-1 text-sm leading-relaxed text-muted-foreground">{a.bio}</dd></div>
-            </dl>
+            <p className="text-[10px] tracking-[0.28em] text-blood">ARQUIVO COMPLETO</p>
+            <h2 id="artists-grid-title" className="mt-1 font-gothic text-4xl md:text-5xl">
+              TODOS OS CONVOCADOS
+            </h2>
           </div>
+          <span className="font-stamp text-xs text-muted-foreground">17 / 17</span>
         </div>
-      </article>
 
-      <div className="mt-6 grid grid-cols-4 gap-2 md:grid-cols-9">
-        {ARTISTS.map((x, i) => (
-          <Link
-            key={x.code}
-            to="/membros/$slug"
-            params={{ slug: x.slug }}
-            onClick={() => hiss()}
-            className={`relative aspect-[4/5] border-2 ${i === sel ? "border-blood" : "border-border opacity-60 hover:opacity-100"}`}
-          >
-            <Halftone src={x.img} alt={x.name} className="h-full w-full" />
-            <span className="absolute bottom-1 left-1 bg-background px-1 text-[10px]">{x.name}</span>
-          </Link>
-        ))}
-      </div>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+          {ARTISTS.map((artist) => (
+            <Link
+              key={artist.slug}
+              to="/membros/$slug"
+              params={{ slug: artist.slug }}
+              onClick={() => hiss()}
+              className="group overflow-hidden border-2 border-foreground bg-foreground p-2 transition hover:border-blood"
+            >
+              <Halftone
+                src={artist.img}
+                alt={artist.name}
+                className="aspect-[4/5] transition duration-500 group-hover:scale-[1.02]"
+              />
+              <div className="bg-background px-3 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-gothic text-2xl md:text-3xl">{artist.name}</span>
+                  <span className="shrink-0 text-[10px] text-blood">{artist.code}</span>
+                </div>
+                <p className="mt-1 text-[9px] tracking-[0.18em] text-muted-foreground">{artist.zona}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
     </main>
   );
 }
