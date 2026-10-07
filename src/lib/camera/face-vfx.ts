@@ -258,6 +258,7 @@ export class FaceVfxTracker {
       return this.state;
     }
 
+    const previousDetectionAt = this.lastDetectionAt;
     this.lastDetectionAt = timestamp;
 
     const monotonicTimestamp = Math.max(
@@ -274,7 +275,7 @@ export class FaceVfxTracker {
       const next = buildFaceVfxUniforms(result);
 
       if (next.present > 0.5 && this.previousFace && this.previousPose) {
-        const dt = Math.max(0.012, (timestamp - this.lastDetectionAt) / 1000);
+        const dt = Math.max(0.012, (timestamp - previousDetectionAt) / 1000);
         const positionDelta = Math.hypot(
           next.face[0] - this.previousFace[0],
           next.face[1] - this.previousFace[1],
