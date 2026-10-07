@@ -107,7 +107,6 @@ export function Sponsors() {
       setStatus("success");
       setStatusMessage("Proposta recebida. A equipa do Sindicato entra em contacto.");
       setForm(EMPTY_FORM);
-      setSelectedTier(null);
     } catch (error) {
       setStatus("error");
       setStatusMessage(
@@ -168,6 +167,15 @@ export function Sponsors() {
               </div>
               <span className="font-stamp text-sm text-muted-foreground">{selectedTier}</span>
             </div>
+
+            {status === "success" && (
+              <div className="mt-6 border border-blood bg-blood/5 p-4" role="status">
+                <p className="font-stamp text-sm text-blood">PROPOSTA RECEBIDA</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  A equipa do Sindicato recebeu os dados e entra em contacto para dar seguimento.
+                </p>
+              </div>
+            )}
 
             <div className="mt-6 grid gap-5 md:grid-cols-2">
               <Field
@@ -249,6 +257,9 @@ export function Sponsors() {
 
             <div className="mt-6 flex flex-col gap-4 border-t border-border pt-5 md:flex-row md:items-center md:justify-between">
               <div aria-live="polite" className="text-sm">
+                <p className="max-w-xl text-[9px] tracking-wider text-muted-foreground">
+                  Os dados enviados destinam-se exclusivamente ao contacto e avaliação desta proposta de parceria.
+                </p>
                 {statusMessage && (
                   <span className={status === "success" ? "text-blood" : "text-muted-foreground"}>
                     {statusMessage}
