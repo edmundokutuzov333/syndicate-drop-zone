@@ -45,6 +45,14 @@ export type RenderMetrics = {
 
 export type FilterComplexity = "low" | "medium" | "high";
 
+export type FilterUniformDefaults = {
+  intensity: number;
+  noise: number;
+  distortion: number;
+  chromatic: number;
+  feedback: number;
+};
+
 export type FilterDefinition = {
   id: FilterId;
   index: string;
@@ -54,6 +62,7 @@ export type FilterDefinition = {
   visible: boolean;
   supportsFeedback: boolean;
   enabled: boolean;
+  defaults: FilterUniformDefaults;
 };
 
 export type ShaderProgramHandle = {

@@ -6,17 +6,27 @@ type FilterRailProps = {
   onSelect: (filter: FilterId) => void;
 };
 
-export function FilterRail({ selected, onSelect }: FilterRailProps) {
+export function FilterRail({
+  selected,
+  onSelect,
+}: FilterRailProps) {
   return (
-    <div className="camera-filter-rail" aria-label="Filtros">
+    <div
+      className="camera-filter-rail"
+      aria-label="Filtros em tempo real"
+    >
       {FILTER_REGISTRY.listVisible().map((filter) => (
         <button
           key={filter.id}
           type="button"
-          className={`camera-filter ${selected === filter.id ? "is-active" : ""}`}
+          className={
+            "camera-filter " +
+            (selected === filter.id ? "is-active" : "")
+          }
           onClick={() => onSelect(filter.id)}
           disabled={!filter.enabled}
-          aria-label={`${filter.label}. Disponível na Fase 2`}
+          aria-pressed={selected === filter.id}
+          aria-label={filter.label + ". Filtro em tempo real"}
         >
           <span>{filter.index}</span>
           <strong>{filter.label}</strong>

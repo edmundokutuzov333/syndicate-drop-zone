@@ -24,7 +24,9 @@ export function PermissionGate({
   return (
     <div className="camera-permission-gate" role="status">
       <span className="camera-permission-code">
-        {error === "NotAllowedError" ? "PERMISSION BLOCKED" : "INPUT ERROR"}
+        {error === "NotAllowedError"
+          ? "PERMISSION BLOCKED"
+          : "INPUT ERROR"}
       </span>
       <button
         type="button"

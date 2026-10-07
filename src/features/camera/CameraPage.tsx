@@ -5,7 +5,11 @@ import { CaptureControls } from "./CaptureControls";
 import { FilterRail } from "./FilterRail";
 import { PermissionGate } from "./PermissionGate";
 import { CameraManager } from "@/lib/camera/camera-manager";
-import { type CameraState, type CaptureMode, type FilterId } from "@/lib/camera/types";
+import {
+  type CameraState,
+  type CaptureMode,
+  type FilterId,
+} from "@/lib/camera/types";
 import { FILTER_REGISTRY } from "@/lib/webgl/filter-registry";
 
 const INITIAL_CAMERA_STATE: CameraState = {
@@ -64,10 +68,14 @@ export function CameraPage() {
 
   return (
     <main className="camera-surface" data-filter={selectedFilter.id}>
-      <section className="camera-stage-full" aria-label="Câmara do Sindicato">
+      <section
+        className="camera-stage-full"
+        aria-label="Câmara do Sindicato"
+      >
         <CameraViewport
           manager={cameraManager}
           facingMode={camera.facingMode}
+          filter={filter}
           onReady={startCamera}
         />
 

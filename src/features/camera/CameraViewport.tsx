@@ -1,20 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import { CameraManager } from "@/lib/camera/camera-manager";
-import { type CameraFacingMode } from "@/lib/camera/types";
+import {
+  type CameraFacingMode,
+  type FilterId,
+} from "@/lib/camera/types";
 import { OrientationManager } from "@/lib/camera/orientation-manager";
 import { WebGLEngine } from "@/lib/webgl/webgl-engine";
 import vertexShader from "@/shaders/camera/video.vert.glsl?raw";
-import fragmentShader from "@/shaders/camera/video.frag.glsl?raw";
 
 type CameraViewportProps = {
   manager: CameraManager;
   facingMode: CameraFacingMode;
+  filter: FilterId;
   onReady: () => void | Promise<void>;
 };
 
 export function CameraViewport({
   manager,
   facingMode,
+  filter,
   onReady,
 }: CameraViewportProps) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -25,13 +29,12 @@ export function CameraViewport({
   useEffect(() => {
     const stage = stageRef.current;
     const canvas = canvasRef.current;
+
     if (!stage || !canvas) return;
 
     const video = manager.getVideoElement();
     video.className = "camera-native-video";
     stage.appendChild(video);
-
-    void onReady();
 
     const engine = new WebGLEngine({
       alpha: false,
@@ -44,26 +47,32 @@ export function CameraViewport({
 
     try {
       engine.init(canvas);
-      engine.setProgram("camera-video:v1", vertexShader, fragmentShader);
       engine.setFrameSource(video);
+      engine.preloadFilters(vertexShader);
+      engine.setUniform("u_rotation", 0);
+      engine.setUniform("u_mirror", facingMode === "user" ? 1 : 0);
+      engine.setFilter(filter);
       engineRef.current = engine;
       setEngineReady(true);
       ready = true;
     } catch {
+      engine.destroy();
       setEngineReady(false);
     }
+
+    void onReady();
 
     const orientation = new OrientationManager();
     orientation.start(0);
 
-    const syncOrientation = () => {
-      const state = orientation.getState();
+    const unsubscribe = orientation.subscribe((state) => {
       engine.setUniform("u_rotation", state.renderRotation);
-    };
+    });
 
-    const unsubscribe = orientation.subscribe(syncOrientation);
-    syncOrientation();
-    engine.setUniform("u_mirror", facingMode === "user" ? 1 : 0);
+    engine.setUniform(
+      "u_mirror",
+      facingMode === "user" ? 1 : 0,
+    );
 
     const resize = () => {
       const rect = stage.getBoundingClientRect();
@@ -104,17 +113,28 @@ export function CameraViewport({
     );
   }, [facingMode]);
 
+  useEffect(() => {
+    engineRef.current?.setFilter(filter);
+  }, [filter]);
+
   return (
     <div
       ref={stageRef}
-      className={`camera-viewport ${engineReady ? "is-webgl" : "is-fallback"} ${facingMode === "user" ? "is-user" : "is-environment"}`}
+      className={
+        "camera-viewport " +
+        (engineReady ? "is-webgl " : "is-fallback ") +
+        (facingMode === "user" ? "is-user" : "is-environment")
+      }
     >
       <canvas
         ref={canvasRef}
         className="camera-canvas"
         aria-label="Saída WebGL da câmara"
       />
-      <div className="camera-fallback-notice" aria-hidden={engineReady}>
+      <div
+        className="camera-fallback-notice"
+        aria-hidden={engineReady}
+      >
         WEBGL FALLBACK
       </div>
     </div>

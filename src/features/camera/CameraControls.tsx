@@ -12,7 +12,7 @@ function formatResolution(width: number, height: number): string {
   if (width >= 2560 && height >= 1440) return "2K";
   if (width >= 1920 && height >= 1080) return "1080P";
   if (width >= 1280 && height >= 720) return "720P";
-  if (width > 0 && height > 0) return `${width}×${height}`;
+  if (width > 0 && height > 0) return width + "×" + height;
   return "---";
 }
 
@@ -22,7 +22,8 @@ export function CameraControls({
   onModeChange,
   onSwitchCamera,
 }: CameraControlsProps) {
-  const cameraLabel = camera.facingMode === "user" ? "FRONT" : "BACK";
+  const cameraLabel =
+    camera.facingMode === "user" ? "FRONT" : "BACK";
   const fps = camera.frameRate > 0 ? String(camera.frameRate) : "--";
   const mic = camera.microphoneEnabled ? "MIC ON" : "MIC OFF";
   const recording = mode === "video" ? "REC STBY" : "REC OFF";
@@ -31,7 +32,12 @@ export function CameraControls({
     <>
       <div className="camera-hud camera-hud-top">
         <span className="camera-hud-indicator">
-          <span className={`camera-rec-dot ${mode === "video" ? "is-ready" : ""}`} />
+          <span
+            className={
+              "camera-rec-dot " +
+              (mode === "video" ? "is-ready" : "")
+            }
+          />
           {recording}
         </span>
 
@@ -41,7 +47,10 @@ export function CameraControls({
           type="button"
           className="camera-camera-switch"
           onClick={() => void onSwitchCamera()}
-          disabled={camera.status !== "active" || camera.devices.length < 2}
+          disabled={
+            camera.status !== "active" ||
+            camera.devices.length < 2
+          }
           aria-label="Trocar câmara"
         >
           {cameraLabel}

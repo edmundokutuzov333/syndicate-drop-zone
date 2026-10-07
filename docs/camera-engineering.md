@@ -1,6 +1,6 @@
 # Camera Engineering
 
-## Phase 0 and Phase 1
+## Phase 0, Phase 1 and Phase 2
 
 The camera feature is an isolated local capture surface. The global site shell does not render TacticalNav, footer, grain or scanlines on /camera.
 
@@ -16,7 +16,7 @@ MediaStream + HTMLVideoElement
   ↓
 TextureManager
   ↓
-WebGL compositor
+WebGL FX engine
   ↓
 ShaderCache / FilterRegistry / FrameBuffer
   ↓
@@ -24,148 +24,142 @@ Canvas Output
   ↓
 Photo / Video capture
 
-Phase 1 activates the first real path from browser device permission to a live WebGL canvas. Recording and final filter effects remain disabled until later phases.
+Phase 2 activates the real-time visual FX layer while capture remains deliberately outside the phase boundary.
 
-## Phase 1 lifecycle
+## Phase 2 lifecycle
 
-1. /camera mounts.
-2. CameraManager requests camera + microphone together.
-3. The default target is user / front camera.
-4. Video constraints prefer 3840x2160 and 60 FPS, but use ideal constraints and accept the real capability returned by the browser.
-5. The actual track settings drive the HUD, so the UI never claims 4K or 60 FPS when the device did not deliver it.
-6. The MediaStream is attached to a single HTMLVideoElement.
-7. WebGLEngine consumes that video as a GPU texture.
-8. A fullscreen triangle renders the video through one compositor pass.
-9. Orientation updates uniforms without restarting the stream.
-10. Exiting /camera stops media tracks and tears down the WebGL resources.
+1. /camera mounts and requests camera + microphone through the existing CameraManager.
+2. WebGLEngine initializes WebGL2 first and WebGL1 as fallback.
+3. The engine precompiles the six visible filter programs into the ShaderCache before normal filter interaction.
+4. Each live frame reuses a primary GPU texture and a previous-frame texture instead of allocating textures per frame.
+5. The selected filter runs in one fullscreen shader pass during normal operation.
+6. Feedback-capable filters can sample the previous frame for temporal drift, trails and echo-like motion.
+7. Filter changes use a dedicated two-filter cross-fade path for exactly 300 ms. The normal steady-state path remains single-pass.
+8. Dynamic values such as time, grain, distortion, chromatic shift and feedback are uniforms, not shader defines.
+9. Adaptive render policy observes frame time and FPS and can lower DPR/render scale without changing the source camera resolution.
+10. Route exit destroys the engine, programs, framebuffers, textures and media tracks.
 
-## Permission and fallback
+## FX pipeline
 
-The page attempts to open camera + microphone on mount.
+camera frame
+  ↓
+current GPU texture + previous GPU texture
+  ↓
+filter shader
+  ├── dynamic grain
+  ├── procedural noise
+  ├── lens / line distortion
+  ├── chromatic aberration
+  └── optional feedback
+  ↓
+Canvas Output
 
-If permission is blocked, the surface remains intact and exposes only a small ALLOW/RETRY control.
+During the 300 ms transition:
 
-If WebGL is unavailable, the feature falls back to the native video element instead of crashing the route.
+previous filter → offscreen framebuffer A
+current filter  → offscreen framebuffer B
+A + B           → crossfade shader → Canvas Output
 
-If a microphone is unavailable but camera access succeeds, the camera remains usable and the HUD reports MIC OFF.
+The additional passes exist only during the transition, not during the normal steady-state render loop.
 
-## Camera switching
+## Shader architecture
 
-The default direction is user.
+Shared modules:
+- common.glsl
+- grain.glsl
+- distortion.glsl
+- chromatic.glsl
+- feedback.glsl
 
-Switching is not based only on the facingMode constraint. Device enumeration is used after permission, named devices are classified when possible, and an exact deviceId is preferred when a matching device is known.
+Filter bodies:
+- op1um.frag.glsl
+- xerox.frag.glsl
+- corrupt.frag.glsl
+- nightvision.frag.glsl
+- thermal.frag.glsl
+- redroom.frag.glsl
 
-If there is no second camera, the current camera is preserved.
+The source is composed at build/runtime into individual filter programs. The project does not use one monolithic shaders.ts file.
 
-## Orientation
+## Filter behaviour
 
-OrientationManager separates:
-- screen orientation
-- viewport orientation
-- camera orientation
-- render orientation
-- capture orientation
+OP1UM:
+deep blacks, high contrast, controlled blood-red grading, dynamic grain, chromatic drift, lens distortion and restrained feedback.
 
-Rotation events update WebGL uniforms. The MediaStream is not restarted because the phone or window was rotated.
+XEROX:
+luminance posterisation, thresholding, edge extraction, paper noise and black crush.
 
-## WebGL lifecycle
+CORRUPT:
+time-varying RGB split, scanline jitter, block displacement, frame tearing and temporal noise.
 
-The WebGL engine:
-- prefers WebGL2 and falls back to WebGL1
-- keeps preserveDrawingBuffer disabled
-- creates one reusable fullscreen vertex buffer
-- keeps one primary video texture
-- uses texImage2D only when source dimensions change
-- uses texSubImage2D for normal frame updates
-- caches shader programs by key
-- updates dynamic values through uniforms
-- records FPS, frame time, dropped frames, DPR and render scale
+NIGHTVISION:
+green phosphor response, scanlines, rolling beam, vignette and procedural sensor grain.
 
-The Phase 1 renderer uses one passthrough shader. The filter registry is already prepared for the production FX layer, but its six visible filters are intentionally disabled until Phase 2.
+THERMAL:
+luminance-to-thermal palette, edge enhancement, sensor noise and subtle lens distortion.
 
-## Filter registry
+REDROOM:
+monochrome red treatment, deep shadows, highlight extraction, grain, chromatic drift, vignette and restrained feedback.
 
-Registered identifiers:
+## Cross-fade
 
-- OP1UM
-- XEROX
-- CORRUPT
-- NIGHTVISION
-- THERMAL
-- REDROOM
+The transition duration is 300 ms.
 
-Each definition already carries a complexity tier, shader key and feedback capability. No final visual effect is shipped in Phase 1.
+The steady render path does not render two filters every frame. Only a filter change enters the transition compositor.
 
-## Capture boundary
+The transition compositor blends two reusable offscreen textures and then returns to the single-filter direct-to-canvas path.
 
-The WebGL canvas is the future source for photo and video capture.
+## Performance
 
-Phase 1 does not ship:
-- MediaRecorder UX
-- countdown
-- flash
-- download
-- final photo formats
-- final video encoding
-
-The requested future output formats such as H.264 MP4, ProRes MOV and HEVC MKV require runtime capability validation and, where browser recording APIs cannot natively produce the requested container/codec pair, a dedicated encoding path. They are not falsely advertised as available in Phase 1.
-
-## Privacy boundary
-
-device → browser permission → local MediaStream → local WebGL → local canvas → local capture
-
-There is no automatic upload, Supabase persistence, remote camera processing or Control Room integration for camera frames.
-
-## Performance budget
-
-Phase 1 starts with:
-- one render loop
-- one primary video texture
-- one fullscreen draw
-- no filter recompilation
-- reusable GPU resources
+The phase keeps these constraints:
+- one primary fullscreen draw in steady state
+- two reusable video textures
+- zero texture creation during normal frame updates
+- shader programs compiled once and cached
+- uniforms for dynamic parameters
 - bounded DPR
+- adaptive render scale when frame budget degrades
+- no preserveDrawingBuffer dependency
 
-Adaptive degradation remains conservative. Phase 4 is responsible for device-specific profiling and more aggressive adaptive resolution.
+The source camera stream remains at its browser-delivered capability. Performance adaptation changes the WebGL output resolution, not the camera track.
+
+The target remains adaptive rather than absolute:
+- modern desktop: approximately 60 FPS
+- recent iPhone: approximately 60 FPS
+- mid Android: approximately 45-60 FPS
+- constrained hardware: stable lower frame rates are accepted rather than forcing a costly 60 FPS claim
 
 ## Existing site integrity
 
-The camera feature is imported by /camera only. Other routes do not import CameraManager, MediaRecorder or camera shaders.
+The camera feature remains imported only by /camera. The rest of the application does not load the FX shader bundle or camera runtime.
 
-Supabase remains unchanged by the camera feature. Existing Control Room and public content tables are not part of camera runtime.
-
-## Reference projects
-
-webcam-shader-boilerplate informed the webcam-to-texture-to-shader flow and feedback concepts.
-
-pmndrs/postprocessing informed effect lifecycle, uniform discipline, caching and composition concepts.
-
-filters-test-kutu informed orientation, recording contracts, countdown, crossfade, dynamic grain, thermal/phosphor concepts, camera switching and cleanup.
-
-No repository is copied wholesale.
+Supabase, Control Room and public content tables remain unchanged. Camera frames still stay local and are not uploaded automatically.
 
 ## Phase boundaries
 
 Phase 1: real camera + microphone, front default, device detection, switching, permission flow, native fallback, live WebGL preview, orientation and cleanup.
 
-Phase 2: real-time FX engine, dynamic grain/noise/distortion/chromatic/feedback, filter programs and 300 ms cross-fade.
+Phase 2: real-time FX engine, dynamic grain/noise/distortion/chromatic/feedback, six filter programs, shader cache, 300 ms cross-fade, GPU resource reuse and adaptive render policy.
 
 Phase 3: photo/video capture, countdown, flash, MediaRecorder, audio routing, preview, download and capture tests.
 
-Phase 4: profiling, shader/uniform/texture optimisation, adaptive render resolution, low-end hardening and cross-browser lifecycle tests.
+Phase 4: profiling, shader/uniform/texture optimisation, low-end hardening and cross-browser lifecycle tests.
 
-## Phase 1 definition of done
+## Phase 2 definition of done
 
-- [x] camera starts on /camera
-- [x] microphone requested with camera
-- [x] front camera is the default target
-- [x] device enumeration and front/back switching foundation
-- [x] live video reaches WebGL
-- [x] WebGL2/WebGL1 fallback
-- [x] native video fallback when WebGL is unavailable
-- [x] orientation changes without stream restart
-- [x] actual resolution/FPS shown in HUD
-- [x] cleanup on route exit
-- [x] camera feature isolated from the rest of the application
-- [x] no automatic upload/persistence
-- [x] unit coverage for camera foundations
+- [x] six visible filters enabled
+- [x] filter shader programs separated by file
+- [x] shared shader modules
+- [x] dynamic film grain
+- [x] procedural noise
+- [x] distortion
+- [x] chromatic aberration
+- [x] previous-frame feedback path
+- [x] ShaderCache prewarming
+- [x] 300 ms cross-fade
+- [x] reusable frame textures
+- [x] adaptive DPR/render scale
+- [x] camera surface remains immersive and minimal
+- [x] Phase 1 camera lifecycle preserved
+- [x] no capture/upload/backend changes
+- [ ] physical browser/device matrix still requires real-device validation in Phase 4

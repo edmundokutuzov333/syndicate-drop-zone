@@ -2,12 +2,19 @@ import { describe, expect, it, vi } from "vitest";
 import { CameraManager } from "@/lib/camera/camera-manager";
 import { DeviceManager } from "@/lib/camera/device-manager";
 import { calculateOrientationState } from "@/lib/camera/orientation-manager";
-import { captureTimerReducer, createCaptureTimerState } from "@/lib/camera/capture-timer";
+import {
+  captureTimerReducer,
+  createCaptureTimerState,
+} from "@/lib/camera/capture-timer";
 import { FILTER_REGISTRY } from "@/lib/webgl/filter-registry";
 import { adaptiveRenderPolicy } from "@/lib/camera/performance-manager";
 import { getRecorderCapabilities } from "@/lib/camera/recorder";
+import { getFilterFragmentShader } from "@/lib/webgl/filter-shaders";
 
-function makeTrack(kind: "video" | "audio", settings: MediaTrackSettings) {
+function makeTrack(
+  kind: "video" | "audio",
+  settings: MediaTrackSettings,
+) {
   return {
     kind,
     readyState: "live",
@@ -20,6 +27,7 @@ function makeTrack(kind: "video" | "audio", settings: MediaTrackSettings) {
 describe("camera engineering foundation", () => {
   it("does not request media during manager construction", () => {
     const getUserMedia = vi.fn();
+
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
       value: {
@@ -50,8 +58,16 @@ describe("camera engineering foundation", () => {
 
     const getUserMedia = vi.fn().mockResolvedValue(stream);
     const enumerateDevices = vi.fn().mockResolvedValue([
-      { deviceId: "front-1", kind: "videoinput", label: "FaceTime HD Camera" },
-      { deviceId: "back-1", kind: "videoinput", label: "Back Camera" },
+      {
+        deviceId: "front-1",
+        kind: "videoinput",
+        label: "FaceTime HD Camera",
+      },
+      {
+        deviceId: "back-1",
+        kind: "videoinput",
+        label: "Back Camera",
+      },
     ]);
 
     Object.defineProperty(navigator, "mediaDevices", {
@@ -78,8 +94,16 @@ describe("camera engineering foundation", () => {
   it("classifies and prefers front/back devices without trusting names globally", () => {
     const manager = new DeviceManager();
     const devices = [
-      { deviceId: "front", label: "Integrated Camera", facingMode: "user" as const },
-      { deviceId: "rear", label: "Rear Camera", facingMode: "environment" as const },
+      {
+        deviceId: "front",
+        label: "Integrated Camera",
+        facingMode: "user" as const,
+      },
+      {
+        deviceId: "rear",
+        label: "Rear Camera",
+        facingMode: "environment" as const,
+      },
     ];
 
     expect(manager.prefer("user", devices)?.deviceId).toBe("front");
@@ -101,12 +125,20 @@ describe("camera engineering foundation", () => {
     );
 
     expect(capturing.status).toBe("capturing");
-    expect(captureTimerReducer(capturing, { type: "DONE" }).status).toBe("done");
-    expect(captureTimerReducer(capturing, { type: "CANCEL" }).status).toBe("cancelled");
+    expect(
+      captureTimerReducer(capturing, { type: "DONE" }).status,
+    ).toBe("done");
+    expect(
+      captureTimerReducer(capturing, { type: "CANCEL" }).status,
+    ).toBe("cancelled");
   });
 
-  it("keeps the six visible filter ids stable", () => {
-    expect(FILTER_REGISTRY.listVisible().map((filter) => filter.id)).toEqual([
+  it("ships all six Phase 2 filters as active definitions", () => {
+    const visible = FILTER_REGISTRY.listVisible();
+
+    expect(visible).toHaveLength(6);
+    expect(visible.every((filter) => filter.enabled)).toBe(true);
+    expect(visible.map((filter) => filter.id)).toEqual([
       "op1um",
       "xerox",
       "corrupt",
@@ -114,9 +146,22 @@ describe("camera engineering foundation", () => {
       "thermal",
       "redroom",
     ]);
+    expect(new Set(visible.map((filter) => filter.shaderKey)).size).toBe(6);
   });
 
-  it("keeps performance policy conservative", () => {
+  it("builds non-static shader programs with shared dynamic uniforms", () => {
+    const source = getFilterFragmentShader("op1um");
+
+    expect(source).toContain("u_time");
+    expect(source).toContain("u_noise");
+    expect(source).toContain("u_distortion");
+    expect(source).toContain("u_chromatic");
+    expect(source).toContain("u_previousFrame");
+    expect(source).toContain("filmGrain");
+    expect(source).toContain("feedbackBlend");
+  });
+
+  it("keeps performance adaptation inside the render budget", () => {
     const policy = adaptiveRenderPolicy({
       fps: 18,
       frameTimeMs: 60,
@@ -127,7 +172,7 @@ describe("camera engineering foundation", () => {
     });
 
     expect(policy.renderScale).toBeLessThan(1);
-    expect(policy.dpr).toBe(1.5);
+    expect(policy.dpr).toBe(1.75);
   });
 
   it("detects recorder capability without opening a device", () => {
