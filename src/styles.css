@@ -556,6 +556,40 @@
   border-bottom-color: var(--blood);
 }
 
+.camera-master-fx {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 8px;
+  padding: 3px 5px;
+  border: 1px solid rgba(235,231,222,0.10);
+  background: rgba(0,0,0,0.18);
+  pointer-events: auto;
+}
+.camera-master-fx-label {
+  color: rgba(235,231,222,0.32);
+  font: 6px var(--font-mono);
+  letter-spacing: 0.12em;
+}
+.camera-master-fx button {
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(235,231,222,0.42);
+  padding: 4px 5px;
+  font: 7px var(--font-mono);
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+.camera-master-fx button:hover,
+.camera-master-fx button.is-active {
+  color: #f0e9df;
+  border-color: var(--blood);
+}
+.camera-master-fx button:disabled {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+
 .camera-filter:disabled {
   opacity: 0.32;
   cursor: default;
