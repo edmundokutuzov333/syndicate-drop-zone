@@ -420,7 +420,7 @@ export class WebGLEngine {
       this.renderFilterPass(null, this.filter, timestamp, sourceSize);
     }
 
-    if (this.overlayText) {
+    if (this.overlayText || this.overlayDirty) {
       this.renderOverlayPass();
     }
 
