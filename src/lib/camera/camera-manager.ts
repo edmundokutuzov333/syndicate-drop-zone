@@ -155,19 +155,21 @@ export class CameraManager {
   async switchCamera(): Promise<void> {
     if (!this.stream) return;
 
+    const currentTrack = this.stream.getVideoTracks()[0];
+    if (!currentTrack || currentTrack.readyState !== "live") return;
+
+    const previousFacing = this.state.facingMode;
+    const previousStatus = this.state.status;
     const nextFacing: CameraFacingMode =
-      this.state.facingMode === "user" ? "environment" : "user";
+      previousFacing === "user" ? "environment" : "user";
 
     const devices = await this.refreshDevices();
-    if (devices.length < 2) return;
-
     const preferred = this.deviceManager.prefer(nextFacing, devices);
     const previousStream = this.stream;
     const token = ++this.requestToken;
 
     this.setState({
       status: "requesting",
-      facingMode: nextFacing,
       error: null,
     });
 
@@ -175,6 +177,7 @@ export class CameraManager {
       const stream = await this.openStream(
         nextFacing,
         preferred?.deviceId,
+        true,
       );
 
       if (token !== this.requestToken || this.destroyed) {
@@ -182,8 +185,11 @@ export class CameraManager {
         return;
       }
 
-      this.stopStream(previousStream);
-      this.replaceStream(stream);
+      const actualFacing = this.readFacingMode(stream) ?? nextFacing;
+      if (actualFacing !== nextFacing) {
+        this.stopStream(stream);
+        throw new Error("CAMERA_FACING_UNAVAILABLE");
+      }
 
       const video = this.getVideoElement();
       video.srcObject = stream;
@@ -192,23 +198,27 @@ export class CameraManager {
       video.playsInline = true;
       await video.play();
 
+      if (token !== this.requestToken || this.destroyed) {
+        this.stopStream(stream);
+        return;
+      }
+
+      this.stopStream(previousStream);
+      this.stream = stream;
+      this.bindTrackLifecycle(stream);
+
       this.setState({
         status: "active",
+        facingMode: actualFacing,
         microphoneEnabled: this.hasLiveMicrophone(),
         ...this.readVideoSettings(),
         error: null,
       });
-    } catch (error) {
-      const message =
-        error instanceof DOMException
-          ? error.name
-          : error instanceof Error
-            ? error.message
-            : "CAMERA_SWITCH_FAILED";
-
+    } catch {
       this.setState({
-        status: "error",
-        error: message,
+        status: previousStatus,
+        facingMode: previousFacing,
+        error: null,
       });
     }
   }
@@ -258,7 +268,12 @@ export class CameraManager {
   private async openStream(
     facingMode: CameraFacingMode,
     preferredDeviceId?: string,
+    strictFacing = false,
   ): Promise<MediaStream> {
+    const facingConstraint: ConstrainDOMString = strictFacing
+      ? { exact: facingMode }
+      : { ideal: facingMode };
+
     const constraints: MediaStreamConstraints[] = [];
 
     if (preferredDeviceId) {
@@ -266,6 +281,7 @@ export class CameraManager {
         video: {
           ...VIDEO_PREFERENCES,
           deviceId: { exact: preferredDeviceId },
+          facingMode: facingConstraint,
         },
         audio: this.audioConstraints(),
       });
@@ -274,7 +290,7 @@ export class CameraManager {
     constraints.push({
       video: {
         ...VIDEO_PREFERENCES,
-        facingMode: { ideal: facingMode },
+        facingMode: facingConstraint,
       },
       audio: this.audioConstraints(),
     });
@@ -284,13 +300,13 @@ export class CameraManager {
         width: { ideal: 1920 },
         height: { ideal: 1080 },
         frameRate: { ideal: 60, max: 60 },
-        facingMode: { ideal: facingMode },
+        facingMode: facingConstraint,
       },
       audio: this.audioConstraints(),
     });
 
     constraints.push({
-      video: { facingMode: { ideal: facingMode } },
+      video: { facingMode: facingConstraint },
       audio: this.audioConstraints(),
     });
 
@@ -309,6 +325,12 @@ export class CameraManager {
           throw error;
         }
       }
+    }
+
+    if (strictFacing) {
+      throw lastError instanceof Error
+        ? lastError
+        : new Error("CAMERA_UNAVAILABLE");
     }
 
     try {
@@ -376,6 +398,13 @@ export class CameraManager {
       microphoneEnabled: this.hasLiveMicrophone(),
       ...this.readVideoSettings(),
     });
+  }
+
+  private readFacingMode(
+    stream: MediaStream,
+  ): CameraFacingMode | undefined {
+    const value = stream.getVideoTracks()[0]?.getSettings().facingMode;
+    return value === "user" || value === "environment" ? value : undefined;
   }
 
   private readVideoSettings(): Pick<
