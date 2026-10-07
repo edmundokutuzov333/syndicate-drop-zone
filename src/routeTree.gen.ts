@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CampingRouteImport } from './routes/camping'
 import { Route as MembrosRouteImport } from './routes/membros'
+import { Route as MembrosSlugRouteImport } from './routes/membros/$slug'
 import { Route as MerchRouteImport } from './routes/merch'
 import { Route as RevelacaoRouteImport } from './routes/revelacao'
 
@@ -30,6 +31,11 @@ const MembrosRoute = MembrosRouteImport.update({
   path: '/membros',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MembrosSlugRoute = MembrosSlugRouteImport.update({
+  id: '/membros/$slug',
+  path: '/$slug',
+  getParentRoute: () => MembrosRoute,
+} as any)
 const MerchRoute = MerchRouteImport.update({
   id: '/merch',
   path: '/merch',
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/camping': typeof CampingRoute
   '/membros': typeof MembrosRoute
+  '/membros/$slug': typeof MembrosSlugRoute
   '/merch': typeof MerchRoute
   '/revelacao': typeof RevelacaoRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/camping': typeof CampingRoute
   '/membros': typeof MembrosRoute
+  '/membros/$slug': typeof MembrosSlugRoute
   '/merch': typeof MerchRoute
   '/revelacao': typeof RevelacaoRoute
 }
@@ -60,6 +68,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/camping': typeof CampingRoute
   '/membros': typeof MembrosRoute
+  '/membros/$slug': typeof MembrosSlugRoute
   '/merch': typeof MerchRoute
   '/revelacao': typeof RevelacaoRoute
 }
@@ -75,6 +84,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CampingRoute: typeof CampingRoute
   MembrosRoute: typeof MembrosRoute
+  MembrosSlugRoute: typeof MembrosSlugRoute
   MerchRoute: typeof MerchRoute
   RevelacaoRoute: typeof RevelacaoRoute
 }
@@ -123,6 +133,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CampingRoute: CampingRoute,
   MembrosRoute: MembrosRoute,
+  MembrosSlugRoute: MembrosSlugRoute,
   MerchRoute: MerchRoute,
   RevelacaoRoute: RevelacaoRoute,
 }
