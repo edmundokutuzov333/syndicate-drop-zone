@@ -174,6 +174,7 @@ export class CinematicPipeline {
     inputTexture: WebGLTexture,
     previousFrameTexture: WebGLTexture,
     destination: WebGLFramebuffer | null,
+    destinationTexture: WebGLTexture | null,
     timeSeconds: number,
     meltStrength: number,
     velocityThreshold: number,
@@ -227,13 +228,8 @@ export class CinematicPipeline {
       faceMotionBurst,
     );
 
-    const outputTexture =
-      destination === null
-        ? null
-        : this.getFramebufferTexture(destination);
-
-    if (outputTexture && feedbackFramebuffer) {
-      this.drawCopy(feedbackFramebuffer, outputTexture);
+    if (destinationTexture && feedbackFramebuffer) {
+      this.drawCopy(feedbackFramebuffer, destinationTexture);
       this.feedbackUsesA = !this.feedbackUsesA;
       this.feedbackReady = true;
     }
