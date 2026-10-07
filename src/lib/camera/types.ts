@@ -41,6 +41,13 @@ export type RenderMetrics = {
   deviceTier: PerformanceTier;
   dpr: number;
   renderScale: number;
+  renderTimeMs?: number;
+  textureUploadTimeMs?: number;
+  shaderCompileTimeMs?: number;
+  gpuTimeMs?: number;
+  memoryUsedMb?: number;
+  gcEvents?: number;
+  drawCalls?: number;
 };
 
 export type FilterComplexity = "low" | "medium" | "high";
