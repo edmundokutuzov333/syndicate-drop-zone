@@ -94,11 +94,11 @@ export class TextureManager {
   }
 
   getCurrent(): WebGLTexture | null {
-    return this.textures[this.currentIndex];
+    return this.textures[this.currentIndex] ?? null;
   }
 
   getPrevious(): WebGLTexture | null {
-    return this.textures[1 - this.currentIndex];
+    return this.textures[1 - this.currentIndex] ?? null;
   }
 
   destroy(gl: WebGLRenderingContext | WebGL2RenderingContext): void {
