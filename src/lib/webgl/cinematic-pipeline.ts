@@ -292,7 +292,7 @@ export class CinematicPipeline {
       }
 
       if (!isLast) {
-        source = scratch?.getTexture() ?? source;
+        source = this.framebuffers.overlay.getTexture() ?? source;
       }
     }
   }
