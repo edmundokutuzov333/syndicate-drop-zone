@@ -387,7 +387,7 @@ export class CameraVfx3DOverlay {
 
       let targetX = (sourceX - 0.5) * 2.6 * xOffset;
       let targetY = (0.5 - sourceY) * 3.0;
-      let targetZ = sourceZ * 0.32;
+      const targetZ = sourceZ * 0.32;
 
       const mouthFactor =
         Math.abs(state.mouth[2]) * (MOUTH_INDICES.includes(i) ? 0.055 : 0);
