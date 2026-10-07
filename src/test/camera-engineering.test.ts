@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { CameraManager } from "@/lib/camera/camera-manager";
+import { CaptureEngine } from "@/lib/camera/capture-engine";
 import {
   get4KCaptureDimensions,
   getMaxCaptureDimensions,
@@ -155,6 +156,9 @@ describe("camera engineering foundation", () => {
     const play = vi
       .spyOn(HTMLMediaElement.prototype, "play")
       .mockResolvedValue(undefined);
+    const pause = vi
+      .spyOn(HTMLMediaElement.prototype, "pause")
+      .mockImplementation(() => undefined);
 
     const manager = new CameraManager();
 
@@ -173,6 +177,7 @@ describe("camera engineering foundation", () => {
     expect(frontTrack.stop).toHaveBeenCalledTimes(1);
 
     play.mockRestore();
+    pause.mockRestore();
     manager.destroy();
   });
 
@@ -269,7 +274,7 @@ describe("camera engineering foundation", () => {
     expect(result.filename).toContain("_THERMAL_BACK_1920x1080.jpg");
 
     vi.unstubAllGlobals();
-    capture.dispose();
+    await capture.dispose();
   });
 
 
