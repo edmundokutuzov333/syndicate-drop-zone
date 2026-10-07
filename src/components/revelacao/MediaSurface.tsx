@@ -15,14 +15,14 @@ export function RevelationMediaSurface({ item, className, lightbox = false }: Pr
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (item.type !== "video" || !videoRef.current) return;
+    if (item.type !== "video" || !item.src || !videoRef.current) return;
     const playPromise = videoRef.current.play();
     playPromise?.catch(() => undefined);
   }, [item]);
 
   return (
     <div className={cn("relative h-full w-full overflow-hidden bg-background", className)}>
-      {item.type === "video" ? (
+      {item.src && item.type === "video" ? (
         <video
           ref={videoRef}
           src={item.src}
@@ -35,7 +35,7 @@ export function RevelationMediaSurface({ item, className, lightbox = false }: Pr
           className={cn("h-full w-full", lightbox ? "object-contain" : "object-cover")}
           style={{ filter: VIDEO_FILTER }}
         />
-      ) : (
+      ) : item.src ? (
         <img
           src={item.src}
           alt={item.alt}
@@ -44,11 +44,21 @@ export function RevelationMediaSurface({ item, className, lightbox = false }: Pr
           className={cn("h-full w-full", lightbox ? "object-contain" : "object-cover")}
           style={{ filter: IMAGE_FILTER }}
         />
+      ) : (
+        <div
+          aria-hidden="true"
+          className="h-full w-full bg-background"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, oklch(0.87 0.015 85 / 0.08) 1px, transparent 1.4px)",
+            backgroundSize: "5px 5px",
+          }}
+        />
       )}
 
       <div className="halftone-overlay pointer-events-none absolute inset-0" />
       <div className="xerox-wear pointer-events-none absolute inset-0" />
-      {item.type === "video" && !lightbox && (
+      {item.src && item.type === "video" && !lightbox && (
         <div className="scan-sweep pointer-events-none absolute inset-x-0 h-1/4 opacity-70" />
       )}
     </div>
