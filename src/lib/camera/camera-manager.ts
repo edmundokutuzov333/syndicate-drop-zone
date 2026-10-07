@@ -139,6 +139,10 @@ export class CameraManager {
       ...this.readVideoSettings(),
       error: null,
     });
+
+    if (this.state.flashEnabled && this.state.flashMode === "hardware") {
+      await this.setHardwareTorch(true);
+    }
   }
 
   stop(): void {
@@ -225,6 +229,10 @@ export class CameraManager {
         ...this.readVideoSettings(),
         error: null,
       });
+
+      if (this.state.flashEnabled && this.state.flashMode === "hardware") {
+        await this.setHardwareTorch(true);
+      }
     } catch {
       this.setState({
         status: previousStatus,
@@ -273,9 +281,7 @@ export class CameraManager {
       flashMode,
     });
 
-    if (!enabled) {
-      await this.setHardwareTorch(false);
-    }
+    await this.setHardwareTorch(enabled && flashMode === "hardware");
   }
 
   async preparePhotoFlash(): Promise<() => Promise<void>> {
