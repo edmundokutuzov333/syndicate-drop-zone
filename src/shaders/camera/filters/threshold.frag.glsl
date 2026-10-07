@@ -1,3 +1,7 @@
+uniform float uThreshold;
+uniform float uEdgeSmoothness;
+uniform float uFlickerIntensity;
+
 void main() {
   vec3 source = sampleColor(v_uv);
   float luminance = dot(source, vec3(0.2126, 0.7152, 0.0722));
