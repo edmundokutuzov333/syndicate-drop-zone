@@ -32,8 +32,12 @@ void main() {
     0.13 * (0.5 + 0.5 * sin(v_uv.y * uScanlineCount + u_time * 5.0));
   float glass = 1.0 - edge * 0.33;
 
+  vec3 processed = clamp(vec3(r, g, b) * scan * glass, 0.0, 1.0);
+  vec3 original = texture2D(u_input, v_uv).rgb;
+  float enabled = clamp(uApplyToAllFilters, 0.0, 1.0);
+
   gl_FragColor = vec4(
-    clamp(vec3(r, g, b) * scan * glass, 0.0, 1.0),
+    mix(original, processed, enabled),
     1.0
   );
 }
