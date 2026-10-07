@@ -56,6 +56,8 @@ export function CameraViewport({
 
     const orientation = new OrientationManager();
     orientation.start(0);
+    const streamActiveRef = { current: manager.getState().status === "active" };
+    const rafRef = { current: 0 };
 
     const resize = () => {
       if (engine.hasForcedOutputResolution) return;
@@ -71,6 +73,66 @@ export function CameraViewport({
       engine.setFilter(filter);
       resize();
     };
+
+    const stopRenderLoop = () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = 0;
+      }
+    };
+
+    const render = (timestamp: number) => {
+      rafRef.current = 0;
+
+      if (
+        ready &&
+        streamActiveRef.current &&
+        video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+        (
+          document.visibilityState === "visible" ||
+          recordingRef.current
+        )
+      ) {
+        engine.render(timestamp);
+      }
+
+      if (
+        ready &&
+        streamActiveRef.current &&
+        (
+          document.visibilityState === "visible" ||
+          recordingRef.current
+        )
+      ) {
+        rafRef.current = requestAnimationFrame(render);
+      }
+    };
+
+    const scheduleRenderLoop = () => {
+      if (
+        !rafRef.current &&
+        ready &&
+        streamActiveRef.current &&
+        (
+          document.visibilityState === "visible" ||
+          recordingRef.current
+        )
+      ) {
+        rafRef.current = requestAnimationFrame(render);
+      }
+    };
+
+    const handleManagerState = () => {
+      const state = manager.getState();
+      streamActiveRef.current = state.status === "active" && Boolean(manager.getStream());
+      if (!streamActiveRef.current) {
+        stopRenderLoop();
+        return;
+      }
+      scheduleRenderLoop();
+    };
+
+    const unsubscribeCamera = manager.subscribe(handleManagerState);
 
     const initializeEngine = () => {
       try {
@@ -88,8 +150,10 @@ export function CameraViewport({
         setEngineReady(true);
         onCanvasReady?.(canvas);
         onEngineReady?.(engine);
+        handleManagerState();
       } catch {
         ready = false;
+        stopRenderLoop();
         setEngineReady(false);
         engineRef.current = null;
         onCanvasReady?.(null);
@@ -119,6 +183,12 @@ export function CameraViewport({
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
         void onReady();
+        scheduleRenderLoop();
+        return;
+      }
+
+      if (!recordingRef.current) {
+        stopRenderLoop();
       }
     };
 
@@ -129,29 +199,15 @@ export function CameraViewport({
     initializeEngine();
     void onReady();
 
-    let raf = 0;
-
-    const render = (timestamp: number) => {
-      if (
-        ready &&
-        (
-          document.visibilityState === "visible" ||
-          recordingRef.current
-        )
-      ) {
-        engine.render(timestamp);
-      }
-      raf = requestAnimationFrame(render);
-    };
-
     resize();
-    raf = requestAnimationFrame(render);
+    handleManagerState();
 
     return () => {
       destroyed = true;
-      cancelAnimationFrame(raf);
+      stopRenderLoop();
       resizeObserver.disconnect();
       unsubscribe();
+      unsubscribeCamera();
       orientation.destroy();
       canvas.removeEventListener("webglcontextlost", handleContextLost);
       canvas.removeEventListener("webglcontextrestored", handleContextRestored);
