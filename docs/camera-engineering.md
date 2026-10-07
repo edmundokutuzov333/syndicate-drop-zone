@@ -60,9 +60,11 @@ The interface countdown, flash and HUD are DOM overlays and are therefore not in
 
 The capture engine does not upscale a lower-resolution camera stream and call it native 4K.
 
-The shutter remains locked until the delivered video track reports at least 3840×2160 pixels in either orientation. Landscape capture targets 3840×2160; portrait capture targets 2160×3840. A 1080p camera cannot produce a genuine 4K capture merely by enlarging the canvas.
+When the delivered camera source is true 4K or higher, capture targets 3840×2160 in landscape or 2160×3840 in portrait.
 
-The preview renderer may use adaptive DPR/render scale for performance, while capture temporarily forces the output canvas to the orientation-correct 4K dimensions.
+When 4K is unavailable, capture is still allowed at the maximum real camera resolution actually delivered by the track. The interface exposes that resolution and the filename uses the actual dimensions instead of a false 4K tag.
+
+The preview renderer may use adaptive DPR/render scale for performance, while capture temporarily forces the output canvas to the true 4K dimensions or the actual maximum source dimensions.
 
 ## Video format capability policy
 
