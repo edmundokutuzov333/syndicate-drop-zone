@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ARTISTS } from "@/lib/artists";
+import { getLiveArtists } from "@/lib/public-content";
 import { Halftone } from "@/components/Halftone";
 import { hiss } from "@/lib/sfx";
 import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 
 export const Route = createFileRoute("/membros")({
+  loader: async () => ({ artists: await getLiveArtists() }),
   head: () => ({
     meta: [
       { title: "Artistas — O Sindicato do Trap" },
@@ -19,6 +21,7 @@ export const Route = createFileRoute("/membros")({
 });
 
 function Membros() {
+  const { artists } = Route.useLoaderData();
   return (
     <main className="mx-auto max-w-7xl px-4 pb-24 pt-12 md:px-8">
       <header className="relative overflow-hidden border-y border-border py-6">
@@ -47,7 +50,7 @@ function Membros() {
         </div>
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-          {ARTISTS.map((artist) => (
+          {artists.map((artist) => (
             <Link
               key={artist.slug}
               to="/membros/$slug"
