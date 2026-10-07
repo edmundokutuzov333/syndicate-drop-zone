@@ -9,7 +9,7 @@ A /camera passou a validação automatizada específica da superfície, mas não
 1. Vercel production build bloqueado pelo rate limit da conta/build.
 2. Matriz física de browsers e dispositivos ainda não executada com câmaras e microfones reais.
 
-Último commit validado pelo CI: 08c3e880032ca5b00d8d07d6d68236473de997d6.
+Último commit validado pelo CI: b000af92fbfe8c4b12a598232e795238cb310c32.
 
 ## Matriz automatizada
 
@@ -36,8 +36,8 @@ A /camera passou a validação automatizada específica da superfície, mas não
 Workflow: .github/workflows/ci.yml
 
 Green run:
-- Run 37648198179
-- Commit 08c3e880032ca5b00d8d07d6d68236473de997d6
+- Run 37648653599
+- Commit b000af92fbfe8c4b12a598232e795238cb310c32
 - Setup Node: PASS
 - Install dependencies: PASS
 - Camera lint: PASS
@@ -196,12 +196,12 @@ Project ID: 67a20cf5-03a6-4c64-ab1e-c6089a5ecca0
 Published: true
 Status: ready
 Agent finished: true
-Latest synced commit: 08c3e880032ca5b00d8d07d6d68236473de997d6
+Latest synced commit: b000af92fbfe8c4b12a598232e795238cb310c32
 
 Preview:
 https://id-preview--67a20cf5-03a6-4c64-ab1e-c6089a5ecca0.lovable.app
 
-O runtime do preview não pôde ser exercitado neste ambiente porque o mecanismo externo de browsing recusou o acesso. O estado do projecto e o screenshot foram confirmados pela integração Lovable.
+O runtime interactivo do preview não pôde ser exercitado neste ambiente: o mecanismo externo de browsing recusou o acesso ao host do preview e a tentativa de validação pela automação Lovable foi bloqueada por workspace sem créditos. O estado do projecto, a publicação, o commit sincronizado e o screenshot foram confirmados pela integração Lovable.
 
 ## Vercel
 
@@ -212,7 +212,13 @@ O target de status aponta para o rate limit de build da conta.
 
 O CI independente executou o production build com sucesso. A falha de Vercel não foi mascarada como erro de código.
 
-GitHub Issue #1 rastreia este blocker.
+GitHub Issue #3 rastreia este blocker.
+
+## Dispositivos, browsers e versões
+
+**CI:** GitHub Actions `ubuntu-latest`, Node.js 22.
+
+**Runtime físico:** nenhuma versão de Safari, Chrome, Firefox, Edge ou Android/iOS foi marcada como testada porque a matriz física não foi executada neste ambiente. Não são inventadas versões ou resultados.
 
 ## Validação física
 
@@ -235,7 +241,7 @@ Não executada neste ambiente.
 | Codec matrix real | PENDENTE |
 | DevTools memory/GC profiling físico | PENDENTE |
 
-GitHub Issue #2 rastreia esta matriz.
+GitHub Issue #4 rastreia esta matriz.
 
 ## PRs
 
@@ -243,13 +249,13 @@ Nenhuma PR foi aberta. As alterações foram executadas directamente na main, se
 
 ## Evidências
 
-- CI verde: 37648198179
-- Commit validado: 08c3e880032ca5b00d8d07d6d68236473de997d6
-- Lovable synced commit: 08c3e880032ca5b00d8d07d6d68236473de997d6
+- CI verde: 37648653599
+- Commit validado: b000af92fbfe8c4b12a598232e795238cb310c32
+- Lovable synced commit: b000af92fbfe8c4b12a598232e795238cb310c32
 - Vercel: build-rate-limit blocker
 - Supabase: sem tabelas de captura
-- Issue #1: Vercel production build rate limit
-- Issue #2: physical browser-device validation matrix
+- Issue #3: Vercel production build rate limit
+- Issue #4: physical browser-device validation matrix
 
 ## Critérios de aceitação
 
