@@ -456,7 +456,7 @@ describe("camera engineering foundation", () => {
       "astro-haze",
       "cyber-mugshot",
     ]);
-    expect(new Set(visible.map((filter) => filter.shaderKey)).size).toBe(6);
+    expect(new Set(visible.map((filter) => filter.shaderKey)).size).toBe(9);
   });
 
   it("derives stable face VFX controls from MediaPipe landmarks and blendshapes", () => {
