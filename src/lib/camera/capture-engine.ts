@@ -243,12 +243,17 @@ export class CaptureEngine {
   }
 
   async dispose(): Promise<void> {
-    if (this.recording && this.recording.state === "recording") {
-      this.recording.stop();
+    if (this.recording?.state === "recording") {
+      try {
+        await this.stopVideo();
+      } catch {
+        await this.cleanupRecording();
+        await this.webgl?.restorePreviewResolution();
+      }
+    } else {
+      await this.cleanupRecording();
+      await this.webgl?.restorePreviewResolution();
     }
-
-    await this.cleanupRecording();
-    await this.webgl?.restorePreviewResolution();
 
     this.recording = null;
     this.canvas = null;
