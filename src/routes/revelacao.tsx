@@ -5,6 +5,7 @@ import { RevelationLightbox } from "@/components/revelacao/Lightbox";
 import { RevelationMediaSurface } from "@/components/revelacao/MediaSurface";
 import {
   REVELACAO_MEDIA,
+  REVELACAO_READY_MEDIA,
   type RevelationMedia,
 } from "@/lib/revelacao-media";
 import { cn } from "@/lib/utils";
@@ -42,14 +43,6 @@ const STAMPS = [
   "right-[30%] bottom-20 w-32 -rotate-12 opacity-40",
 ];
 
-const LAYOUTS: Record<RevelationMedia["layoutVariant"], string> = {
-  hero: "md:col-span-8 md:row-span-2 min-h-[22rem] md:min-h-[44rem]",
-  tall: "md:col-span-4 md:row-span-2 min-h-[22rem] md:min-h-[36rem]",
-  wide: "md:col-span-8 min-h-[18rem] md:min-h-[24rem]",
-  standard: "md:col-span-4 min-h-[18rem] md:min-h-[24rem]",
-  compact: "md:col-span-3 min-h-[16rem] md:min-h-[20rem]",
-};
-
 function GalleryItem({
   item,
   index,
@@ -60,24 +53,49 @@ function GalleryItem({
   onOpen: (index: number) => void;
 }) {
   const rotate =
-    item.layoutVariant === "hero"
-      ? "rotate-[0.8deg]"
-      : index % 3 === 0
-        ? "-rotate-2"
-        : index % 3 === 1
-          ? "rotate-1"
-          : "rotate-[-0.8deg]";
+    index % 3 === 0
+      ? "-rotate-2"
+      : index % 3 === 1
+        ? "rotate-1"
+        : "rotate-[-0.8deg]";
+
+  const ready = item.src !== null;
+
+  const className = cn(
+    "group relative block w-full overflow-visible border-4 border-foreground bg-foreground p-2 shadow-2xl",
+    "aspect-[8/5]",
+    ready &&
+      "cursor-pointer transition-transform duration-300 hover:rotate-0 hover:scale-[1.015] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blood",
+    rotate,
+  );
+
+  if (!ready) {
+    return (
+      <div
+        className={className}
+        aria-hidden="true"
+      >
+        <RevelationMediaSurface item={item} />
+        <img
+          src={selo.url}
+          alt=""
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute z-10 w-16 opacity-70 md:w-20",
+            index % 2 ? "-left-6 -top-6 rotate-12" : "-bottom-5 -right-5 -rotate-12",
+          )}
+        />
+        <span className="pointer-events-none absolute inset-3 border border-foreground/20" />
+      </div>
+    );
+  }
 
   return (
     <button
       type="button"
       onClick={() => onOpen(index)}
       aria-label="Abrir media"
-      className={cn(
-        "group relative block w-full overflow-visible border-4 border-foreground bg-foreground p-2 shadow-2xl transition-transform duration-300 hover:rotate-0 hover:scale-[1.015] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blood",
-        LAYOUTS[item.layoutVariant],
-        rotate,
-      )}
+      className={className}
     >
       <RevelationMediaSurface item={item} />
       <img
@@ -100,7 +118,7 @@ function Revelacao() {
 
   const selectedIndex = useMemo(() => {
     if (!media) return null;
-    const index = REVELACAO_MEDIA.findIndex((item) => item.id === media);
+    const index = REVELACAO_READY_MEDIA.findIndex((item) => item.id === media);
     return index >= 0 ? index : null;
   }, [media]);
 
@@ -112,7 +130,9 @@ function Revelacao() {
 
   const open = (index: number) => {
     const item = REVELACAO_MEDIA[index];
-    if (!item) return;
+    if (!item?.src) return;
+    const readyIndex = REVELACAO_READY_MEDIA.findIndex((ready) => ready.id === item.id);
+    if (readyIndex < 0) return;
     navigate({ search: { media: item.id } });
   };
 
@@ -138,7 +158,7 @@ function Revelacao() {
       </h1>
 
       <section
-        className="relative mt-10 overflow-hidden border border-blood outline-none focus-visible:ring-2 focus-visible:ring-blood"
+        className="relative mt-10 aspect-video overflow-hidden border border-blood outline-none focus-visible:ring-2 focus-visible:ring-blood"
         role="button"
         tabIndex={0}
         aria-label="Abrir vídeo da revelação"
@@ -163,7 +183,7 @@ function Revelacao() {
         />
       </section>
 
-      <section className="relative mt-16 grid auto-rows-[1fr] gap-6 md:grid-cols-12">
+      <section className="relative mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {REVELACAO_MEDIA.slice(1).map((item, index) => (
           <GalleryItem
             key={item.id}
@@ -176,11 +196,11 @@ function Revelacao() {
 
       {selectedIndex !== null && (
         <RevelationLightbox
-          items={REVELACAO_MEDIA}
+          items={REVELACAO_READY_MEDIA}
           index={selectedIndex}
           onClose={close}
           onChange={(nextIndex) => {
-            const item = REVELACAO_MEDIA[nextIndex];
+            const item = REVELACAO_READY_MEDIA[nextIndex];
             if (item) {
               navigate({ search: { media: item.id }, replace: true });
             }
