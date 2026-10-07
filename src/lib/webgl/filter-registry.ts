@@ -112,6 +112,7 @@ const DEFINITIONS: FilterDefinition[] = [
     enabled: true,
     pipeline: "single",
     defaults: { intensity: 1, noise: 0.7, distortion: 0.01, chromatic: 0, feedback: 0 },
+    passes: getFilterShaderContract("threshold")?.passes,
     parameters: getFilterShaderContract("threshold")?.parameters,
   },
   {
@@ -125,6 +126,7 @@ const DEFINITIONS: FilterDefinition[] = [
     enabled: true,
     pipeline: "xray-mesh",
     defaults: { intensity: 1, noise: 0.15, distortion: 0, chromatic: 0, feedback: 0 },
+    passes: getFilterShaderContract("xray-mesh")?.passes,
     parameters: getFilterShaderContract("xray-mesh")?.parameters,
   },
   {
@@ -139,6 +141,7 @@ const DEFINITIONS: FilterDefinition[] = [
     pipeline: "single",
     masterOverlay: "cathode-crt",
     defaults: { intensity: 1, noise: 0.28, distortion: 0.12, chromatic: 0.008, feedback: 0.18 },
+    passes: getFilterShaderContract("cathode-crt")?.passes,
     parameters: getFilterShaderContract("cathode-crt")?.parameters,
   },
   {
@@ -152,6 +155,7 @@ const DEFINITIONS: FilterDefinition[] = [
     enabled: true,
     pipeline: "halation",
     defaults: { intensity: 1, noise: 0.02, distortion: 0, chromatic: 0.002, feedback: 0.12 },
+    passes: getFilterShaderContract("halation")?.passes,
     parameters: getFilterShaderContract("halation")?.parameters,
   },
   {
@@ -165,6 +169,7 @@ const DEFINITIONS: FilterDefinition[] = [
     enabled: true,
     pipeline: "kinetic-melt",
     defaults: { intensity: 1, noise: 0.12, distortion: 0.18, chromatic: 0.01, feedback: 0.92 },
+    passes: getFilterShaderContract("kinetic-melt")?.passes,
     parameters: getFilterShaderContract("kinetic-melt")?.parameters,
   },
   {
@@ -179,6 +184,7 @@ const DEFINITIONS: FilterDefinition[] = [
     pipeline: "single",
     masterOverlay: "paper-film",
     defaults: { intensity: 1, noise: 0.06, distortion: 0.001, chromatic: 0.001, feedback: 0.02 },
+    passes: getFilterShaderContract("paper-film")?.passes,
     parameters: getFilterShaderContract("paper-film")?.parameters,
   },
 ];
