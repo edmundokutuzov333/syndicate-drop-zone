@@ -7,7 +7,8 @@ const LINKS = [
   { to: "/", label: "HUB", k: "00" },
   { to: "/camping", label: "CAMPING", k: "01" },
   { to: "/membros", label: "ARTISTAS", k: "02" },
-  { to: "/merch", label: "MERCH", k: "03" },
+  { to: "/revelacao", label: "REVELAÇÃO", k: "03" },
+  { to: "/merch", label: "MERCH", k: "04" },
 ] as const;
 
 export function TacticalNav() {

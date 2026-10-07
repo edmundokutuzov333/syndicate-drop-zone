@@ -52,8 +52,12 @@ function Membros() {
             </div>
           </div>
           <div>
-            <p className="text-xs tracking-widest text-blood">BIO</p>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{a.bio || "BIO EM BREVE."}</p>
+            <p className="font-stamp text-2xl text-blood">“{a.frase}”</p>
+            <dl className="mt-4 grid gap-3 text-xs">
+              <div><dt className="tracking-widest text-blood">ZONA</dt><dd className="mt-1 font-stamp text-base">{a.zona}</dd></div>
+              <div><dt className="tracking-widest text-blood">FAIXAS NO CAMPING</dt><dd className="mt-1 font-stamp text-base">{a.faixas.join(" · ")}</dd></div>
+              <div><dt className="tracking-widest text-blood">BIO</dt><dd className="mt-1 text-sm leading-relaxed text-muted-foreground">{a.bio}</dd></div>
+            </dl>
           </div>
         </div>
       </article>

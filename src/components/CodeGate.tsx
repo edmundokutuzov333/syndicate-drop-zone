@@ -4,6 +4,7 @@ import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 import logo from "@/assets/brand/sindicato-logo.png.asset.json";
 
 const CODE = "808";
+const buzz = (p: number | number[]) => { try { navigator.vibrate?.(p); } catch { /* sem suporte */ } };
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "OK"];
 
 export function CodeGate({ onOpen }: { onOpen: () => void }) {
@@ -14,15 +15,17 @@ export function CodeGate({ onOpen }: { onOpen: () => void }) {
   const press = (k: string) => {
     if (ok) return;
     click();
+    buzz(12);
     setErr(false);
     if (k === "C") return setV("");
     if (k === "OK") {
       if (v === CODE) {
         setOk(true);
+        buzz([60, 40, 60, 40, 220]);
         hiss(0.6);
         sessionStorage.setItem("sdt-open", "1");
         setTimeout(onOpen, 900);
-      } else { setErr(true); setV(""); }
+      } else { buzz([180, 60, 180]); setErr(true); setV(""); }
       return;
     }
     setV((s) => (s + k).slice(0, 3));
