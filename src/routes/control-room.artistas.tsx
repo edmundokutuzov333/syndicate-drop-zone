@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Check, Edit3, ExternalLink, Plus, RefreshCw, Save, Search, Trash2 } from "lucide-react";
-import { adminQuery, type ControlRoomRole, getControlRoomSession } from "@/lib/control-room-auth";
+import { adminQuery, isPublicPreviewSession, type ControlRoomRole, getControlRoomSession } from "@/lib/control-room-auth";
 
 type Artist = {
   id: string;
@@ -44,6 +44,7 @@ function ControlRoomArtists() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | Artist["status"]>("all");
   const [role, setRole] = useState<ControlRoomRole | null>(null);
+  const [previewMode, setPreviewMode] = useState(false);
   const [busy, setBusy] = useState(true);
 
   const load = async () => {
@@ -57,6 +58,7 @@ function ControlRoomArtists() {
       setArtists(artistRows);
       setReleases(releaseRows);
       setRole(session?.role ?? null);
+      setPreviewMode(isPublicPreviewSession(session));
       setSelected((current) => current ? artistRows.find((item) => item.id === current.id) ?? null : artistRows[0] ?? null);
     } finally {
       setBusy(false);
@@ -79,7 +81,7 @@ function ControlRoomArtists() {
     });
   }, [artists, filter, query]);
 
-  const canEdit = role === "OWNER" || role === "ADMIN" || role === "EDITOR";
+  const canEdit = !previewMode && (role === "OWNER" || role === "ADMIN" || role === "EDITOR");
 
   return (
     <div>
