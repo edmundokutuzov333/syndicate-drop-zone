@@ -266,11 +266,10 @@ export function ControlRoomModule({ module }: { module: keyof typeof MODULE_CONF
     if (!editable) return;
     setNotice("A GUARDAR...");
     try {
-      const clean = { ...next };
+      const clean = Object.fromEntries(
+        Object.entries(next).filter(([key]) => !PROTECTED_FIELDS.has(key)),
+      );
       if (create) {
-        delete clean.id;
-        delete clean.created_at;
-        delete clean.updated_at;
         await adminQuery("/rest/v1/" + activeTable, {
           method: "POST",
           headers: { Prefer: "return=minimal" },
@@ -455,8 +454,18 @@ export function ControlRoomModule({ module }: { module: keyof typeof MODULE_CONF
               <button
                 type="button"
                 onClick={() => {
-                  setSelected({});
-                  setNotice("NOVO REGISTO. PODE EDITAR OU COLAR JSON.");
+                  const template = activeRows[0]
+                    ? Object.fromEntries(
+                        Object.entries(activeRows[0])
+                          .filter(([key]) => !PROTECTED_FIELDS.has(key))
+                          .map(([key, value]) => [
+                            key,
+                            Array.isArray(value) ? [] : typeof value === "boolean" ? false : "",
+                          ]),
+                      )
+                    : {};
+                  setSelected(template);
+                  setNotice("NOVO REGISTO. PREENCHA OS CAMPOS OBRIGATÓRIOS.");
                 }}
                 className="inline-flex items-center gap-2 border border-[#d71920] px-3 py-2 font-mono text-[9px] tracking-[0.14em] text-[#d71920] hover:bg-[#d71920]/10"
               >
@@ -514,13 +523,16 @@ function RecordEditor({
   onPublish: (status: string) => Promise<void>;
 }) {
   const [form, setForm] = useState<RowData>(() => (record ? normaliseRecord(record) : {}));
+  const [savedForm, setSavedForm] = useState<RowData>(() => (record ? normaliseRecord(record) : {}));
   const [raw, setRaw] = useState(() => JSON.stringify(record ?? {}, null, 2));
   const [mode, setMode] = useState<"form" | "json">("form");
   const [preview, setPreview] = useState(false);
 
   useEffect(() => {
-    setForm(record ? normaliseRecord(record) : {});
-    setRaw(JSON.stringify(record ?? {}, null, 2));
+    const next = record ? normaliseRecord(record) : {};
+    setForm(next);
+    setSavedForm(next);
+    setRaw(JSON.stringify(next, null, 2));
     setMode("form");
     setPreview(false);
   }, [record?.id]);
@@ -535,23 +547,40 @@ function RecordEditor({
 
   const isNew = !record.id;
   const fields = Object.keys(form);
+  const dirty = JSON.stringify(form) !== JSON.stringify(savedForm);
 
   const patchField = (key: string, value: unknown) => {
-    setForm((current) => ({ ...current, [key]: value }));
-    setRaw(JSON.stringify({ ...form, [key]: value }, null, 2));
+    setForm((current) => {
+      const next = { ...current, [key]: value };
+      setRaw(JSON.stringify(next, null, 2));
+      return next;
+    });
   };
 
   const saveForm = async () => {
     await onSave(form, isNew);
+    setSavedForm(normaliseRecord(form));
+    setRaw(JSON.stringify(form, null, 2));
   };
 
   const saveJson = async () => {
     try {
       const parsed = JSON.parse(raw) as RowData;
+      setForm(normaliseRecord(parsed));
       await onSave(parsed, isNew);
+      setSavedForm(normaliseRecord(parsed));
+      setRaw(JSON.stringify(parsed, null, 2));
     } catch (error) {
       window.alert(error instanceof SyntaxError ? "JSON inválido." : "Não foi possível guardar.");
     }
+  };
+
+  const saveWorkflowStatus = async (status: string) => {
+    const next = { ...form, status };
+    setForm(next);
+    setRaw(JSON.stringify(next, null, 2));
+    await onSave(next, isNew);
+    setSavedForm(normaliseRecord(next));
   };
 
   const previewTitle = String(
@@ -579,14 +608,14 @@ function RecordEditor({
             <>
               <button
                 type="button"
-                onClick={() => void onPublish("draft")}
+                onClick={() => void saveWorkflowStatus("draft")}
                 className="border border-white/10 px-3 py-2 font-mono text-[9px] text-white/45 hover:text-white"
               >
                 GUARDAR RASCUNHO
               </button>
               <button
                 type="button"
-                onClick={() => void onPublish("published")}
+                onClick={() => void saveWorkflowStatus("published")}
                 className="border border-[#d71920] bg-[#d71920] px-3 py-2 font-mono text-[9px] text-white hover:opacity-90"
               >
                 PUBLICAR
