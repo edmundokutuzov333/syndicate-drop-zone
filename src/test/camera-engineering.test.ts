@@ -320,6 +320,10 @@ describe("camera engineering foundation", () => {
       .spyOn(HTMLMediaElement.prototype, "pause")
       .mockImplementation(() => undefined);
 
+    const pause = vi
+      .spyOn(HTMLMediaElement.prototype, "pause")
+      .mockImplementation(() => undefined);
+
     const manager = new CameraManager();
     await manager.start();
     await manager.setFlashEnabled(true);
