@@ -206,6 +206,7 @@ export class CaptureEngine {
     if (!recorder) return null;
 
     const durationMs = performance.now() - this.startedAt;
+    const target = get4KCaptureDimensions(this.videoWidth, this.videoHeight);
 
     return new Promise((resolve, reject) => {
       recorder.onstop = async () => {
