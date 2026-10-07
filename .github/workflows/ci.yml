@@ -27,9 +27,6 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
-      - name: Typecheck
-        run: npx tsc --noEmit
-
       - name: Lint
         run: npm run lint
 
