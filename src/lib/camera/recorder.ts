@@ -211,9 +211,8 @@ export function getVideoFormatCapabilities(): CaptureFormatCapability[] {
       format,
       label,
       extension: format,
-      mimeType,
       supported: Boolean(mimeType),
-      ...(mimeType ? {} : { reason }),
+      ...(mimeType ? { mimeType } : { reason }),
     };
   });
 }
@@ -236,7 +235,7 @@ export function buildCaptureResult(
     filename,
     width,
     height,
-    durationMs,
+    ...(durationMs !== undefined ? { durationMs } : {}),
   };
 }
 
