@@ -88,7 +88,13 @@ export class CameraManager {
   async start(): Promise<void> {
     if (this.destroyed) return;
 
-    if (!this.stream) {
+    const currentVideoTrack = this.stream?.getVideoTracks()[0];
+
+    if (
+      !this.stream ||
+      !currentVideoTrack ||
+      currentVideoTrack.readyState !== "live"
+    ) {
       await this.requestPermissions();
     }
 
@@ -339,7 +345,30 @@ export class CameraManager {
   private replaceStream(stream: MediaStream): void {
     this.stopStream(this.stream);
     this.stream = stream;
+    this.bindTrackLifecycle(stream);
     this.applyStreamState();
+  }
+
+  private bindTrackLifecycle(stream: MediaStream): void {
+    stream.getTracks().forEach((track) => {
+      track.onended = () => {
+        if (this.destroyed || this.stream !== stream) return;
+
+        const hasLiveVideo = stream
+          .getVideoTracks()
+          .some((videoTrack) => videoTrack.readyState === "live");
+
+        if (!hasLiveVideo) {
+          this.setState({
+            status: "error",
+            error: "CAMERA_TRACK_ENDED",
+          });
+          return;
+        }
+
+        this.applyStreamState();
+      };
+    });
   }
 
   private applyStreamState(): void {
@@ -382,7 +411,10 @@ export class CameraManager {
   }
 
   private stopStream(stream: MediaStream | null): void {
-    stream?.getTracks().forEach((track) => track.stop());
+    stream?.getTracks().forEach((track) => {
+      track.onended = null;
+      track.stop();
+    });
   }
 
   private setState(patch: Partial<CameraState>): void {
