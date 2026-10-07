@@ -117,7 +117,13 @@ export async function createRecordingStream(
         audioSource.connect(destination);
 
         if (audioContext.state === "suspended") {
-          await audioContext.resume().catch(() => undefined);
+          try {
+            await audioContext.resume();
+          } catch {
+            destination = null;
+            await audioContext.close().catch(() => undefined);
+            audioContext = null;
+          }
         }
       } catch {
         destination = null;
