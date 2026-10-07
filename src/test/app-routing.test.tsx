@@ -20,20 +20,19 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-// Assert only that the router mounts and paints, never page content:
-// routes are rewritten as the app is built and this must keep passing.
 describe("App routing", () => {
   it("renders the index route", async () => {
     const { container } = renderAt("/");
-
     await waitFor(() => expect(container.firstChild).not.toBeNull());
   });
 
   it("renders the not-found route", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => undefined);
-
     const { container } = renderAt("/this-route-does-not-exist");
-
     await waitFor(() => expect(container.firstChild).not.toBeNull());
+  });
+
+  it("registers the camera route in the generated tree", () => {
+    expect(routeTree.children).toHaveProperty("CameraRoute");
   });
 });

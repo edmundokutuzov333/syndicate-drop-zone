@@ -15,6 +15,7 @@ import { Route as MembrosRouteImport } from './routes/membros'
 import { Route as MembrosSlugRouteImport } from './routes/membros_.$slug'
 import { Route as MerchRouteImport } from './routes/merch'
 import { Route as RevelacaoRouteImport } from './routes/revelacao'
+import { Route as CameraRouteImport } from './routes/camera'
 import { Route as ControlRoomRouteImport } from './routes/control-room'
 import { Route as ControlRoomIndexRouteImport } from './routes/control-room.index'
 import { Route as ControlRoomArtistasRouteImport } from './routes/control-room.artistas'
@@ -134,6 +135,11 @@ const ControlRoomLoginRoute = ControlRoomLoginRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 
+const CameraRoute = CameraRouteImport.update({
+  id: '/camera',
+  path: '/camera',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MerchRoute = MerchRouteImport.update({
   id: '/merch',
   path: '/merch',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/camping': typeof CampingRoute
   '/membros': typeof MembrosRoute
   '/membros/$slug': typeof MembrosSlugRoute
+  '/camera': typeof CameraRoute
   '/merch': typeof MerchRoute
   '/revelacao': typeof RevelacaoRoute
   '/control-room': typeof ControlRoomRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/camping': typeof CampingRoute
   '/membros': typeof MembrosRoute
   '/membros/$slug': typeof MembrosSlugRoute
+  '/camera': typeof CameraRoute
   '/merch': typeof MerchRoute
   '/revelacao': typeof RevelacaoRoute
   '/control-room': typeof ControlRoomRoute
@@ -199,6 +207,7 @@ export interface FileRoutesById {
   '/camping': typeof CampingRoute
   '/membros': typeof MembrosRoute
   '/membros/$slug': typeof MembrosSlugRoute
+  '/camera': typeof CameraRoute
   '/merch': typeof MerchRoute
   '/revelacao': typeof RevelacaoRoute
   '/control-room': typeof ControlRoomRoute
@@ -219,10 +228,10 @@ export interface FileRoutesById {
   '/control-room/login': typeof ControlRoomLoginRoute
 }
 export interface FileRouteTypes {
-  fullPaths: '/' | '/camping' | '/membros' | '/membros/$slug' | '/merch' | '/revelacao' | '/control-room' | '/control-room/' | '/control-room/artistas' | '/control-room/musica' | '/control-room/camping' | '/control-room/revelacao' | '/control-room/media' | '/control-room/merch' | '/control-room/parcerias' | '/control-room/site' | '/control-room/drop' | '/control-room/seo' | '/control-room/utilizadores' | '/control-room/actividade' | '/control-room/sistema' | '/control-room/login'
+  fullPaths: '/' | '/camping' | '/membros' | '/membros/$slug' | '/camera' | '/merch' | '/revelacao' | '/control-room' | '/control-room/' | '/control-room/artistas' | '/control-room/musica' | '/control-room/camping' | '/control-room/revelacao' | '/control-room/media' | '/control-room/merch' | '/control-room/parcerias' | '/control-room/site' | '/control-room/drop' | '/control-room/seo' | '/control-room/utilizadores' | '/control-room/actividade' | '/control-room/sistema' | '/control-room/login'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/camping' | '/membros' | '/membros/$slug' | '/merch' | '/revelacao' | '/control-room' | '/control-room/' | '/control-room/artistas' | '/control-room/musica' | '/control-room/camping' | '/control-room/revelacao' | '/control-room/media' | '/control-room/merch' | '/control-room/parcerias' | '/control-room/site' | '/control-room/drop' | '/control-room/seo' | '/control-room/utilizadores' | '/control-room/actividade' | '/control-room/sistema' | '/control-room/login'
-  id: '__root__' | '/' | '/camping' | '/membros' | '/membros/$slug' | '/merch' | '/revelacao' | '/control-room' | '/control-room/' | '/control-room/artistas' | '/control-room/musica' | '/control-room/camping' | '/control-room/revelacao' | '/control-room/media' | '/control-room/merch' | '/control-room/parcerias' | '/control-room/site' | '/control-room/drop' | '/control-room/seo' | '/control-room/utilizadores' | '/control-room/actividade' | '/control-room/sistema' | '/control-room/login'
+  to: '/' | '/camping' | '/membros' | '/membros/$slug' | '/camera' | '/merch' | '/revelacao' | '/control-room' | '/control-room/' | '/control-room/artistas' | '/control-room/musica' | '/control-room/camping' | '/control-room/revelacao' | '/control-room/media' | '/control-room/merch' | '/control-room/parcerias' | '/control-room/site' | '/control-room/drop' | '/control-room/seo' | '/control-room/utilizadores' | '/control-room/actividade' | '/control-room/sistema' | '/control-room/login'
+  id: '__root__' | '/' | '/camping' | '/membros' | '/membros/$slug' | '/camera' | '/merch' | '/revelacao' | '/control-room' | '/control-room/' | '/control-room/artistas' | '/control-room/musica' | '/control-room/camping' | '/control-room/revelacao' | '/control-room/media' | '/control-room/merch' | '/control-room/parcerias' | '/control-room/site' | '/control-room/drop' | '/control-room/seo' | '/control-room/utilizadores' | '/control-room/actividade' | '/control-room/sistema' | '/control-room/login'
   fileRoutesByFullPath: FileRoutesByFullPath
 
 }
@@ -265,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/membros/$slug'
       fullPath: '/membros/$slug'
       preLoaderRoute: typeof MembrosSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/camera': {
+      id: '/camera'
+      path: '/camera'
+      fullPath: '/camera'
+      preLoaderRoute: typeof CameraRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/merch': {
@@ -419,6 +435,7 @@ const rootRouteChildren: RootRouteChildren = {
   CampingRoute: CampingRoute,
   MembrosRoute: MembrosRoute,
   MembrosSlugRoute: MembrosSlugRoute,
+  CameraRoute: CameraRoute,
   MerchRoute: MerchRoute,
   RevelacaoRoute: RevelacaoRoute,
   ControlRoomRoute: ControlRoomRouteWithChildren,
