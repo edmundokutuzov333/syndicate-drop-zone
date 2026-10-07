@@ -17,6 +17,15 @@ type NavGroup = {
 
 const ALL_ROLES: ControlRoomRole[] = ["OWNER", "ADMIN", "EDITOR", "PARTNERSHIPS", "MERCH"];
 
+const PUBLIC_PREVIEW_SESSION: ControlRoomSession = {
+  accessToken: "",
+  refreshToken: "",
+  userId: "public-preview",
+  email: "",
+  displayName: "ACESSO DIRECTO",
+  role: "OWNER",
+};
+
 const GROUPS: NavGroup[] = [
   {
     title: "OPERAÇÃO",
@@ -58,7 +67,7 @@ export function ControlRoomShell() {
 
   useEffect(() => {
     getControlRoomSession()
-      .then(setSession)
+      .then((authenticatedSession) => setSession(authenticatedSession ?? PUBLIC_PREVIEW_SESSION))
       .finally(() => setLoading(false));
   }, []);
 
@@ -81,15 +90,9 @@ export function ControlRoomShell() {
   }, [paletteQuery, visibleItems]);
 
   useEffect(() => {
-    if (!loading && !session) {
-      navigate({ to: "/control-room/login", replace: true });
-    }
-  }, [loading, session, navigate]);
-
-  useEffect(() => {
     if (!session) return;
     const current = visibleItems.find((item) => item.to === location.pathname);
-    if (!current) {
+    if (!current && location.pathname.startsWith("/control-room") && location.pathname !== "/control-room/login") {
       navigate({ to: "/control-room", replace: true });
     }
   }, [location.pathname, navigate, session, visibleItems]);
@@ -115,7 +118,7 @@ export function ControlRoomShell() {
   }, [paletteOpen]);
 
   if (loading) {
-    return <div className="min-h-screen bg-[#090909] p-8 font-mono text-xs text-white">CONTROL ROOM // AUTHENTICATING...</div>;
+    return <div className="min-h-screen bg-[#090909] p-8 font-mono text-xs text-white">CONTROL ROOM // LOADING...</div>;
   }
 
   if (!session) return null;
@@ -148,7 +151,7 @@ export function ControlRoomShell() {
               <span>COMMAND</span>
               <kbd className="border border-white/10 px-1 text-[8px]">⌘K</kbd>
             </button>
-            <span className="hidden text-white/50 lg:inline">{session.displayName} · {session.role}</span>
+            <span className="hidden text-white/50 lg:inline">{session.userId === "public-preview" ? "ACESSO DIRECTO · PREVIEW" : `${session.displayName} · ${session.role}`}</span>
             <span className="text-[#d71920]">● ONLINE</span>
             <button
               type="button"
@@ -168,7 +171,7 @@ export function ControlRoomShell() {
       <div className="grid min-h-[calc(100vh-61px)] lg:grid-cols-[240px_minmax(0,1fr)]">
         <div className="border-b border-white/10 bg-[#0d0d0d] p-3 lg:hidden">
           <div className="mb-3 flex items-center justify-between border border-white/10 px-3 py-2">
-            <span className="font-mono text-[9px] tracking-[0.14em] text-white/35">MÓDULOS AUTORIZADOS</span>
+            <span className="font-mono text-[9px] tracking-[0.14em] text-white/35">MÓDULOS DISPONÍVEIS</span>
             <button type="button" onClick={() => setPaletteOpen(true)} className="text-white/45 hover:text-white" aria-label="Pesquisar módulo">
               <Search size={13} />
             </button>
@@ -272,7 +275,7 @@ export function ControlRoomShell() {
               )}
             </div>
             <div className="border-t border-white/10 px-4 py-2 font-mono text-[8px] tracking-[0.16em] text-white/20">
-              COMMAND PALETTE · ACESSO LIMITADO PELO ROLE ACTUAL
+              COMMAND PALETTE · ACESSO DIRECTO / PREVIEW
             </div>
           </div>
         </div>
