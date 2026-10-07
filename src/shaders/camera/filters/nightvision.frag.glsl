@@ -1,18 +1,38 @@
 void main() {
-  vec2 uv = distortUv(v_uv);
+  vec2 uv = liquidWarp(v_uv, 0.58 + u_distortion * 2.2);
   vec3 source = sampleColor(uv);
   float lum = luma(source);
+  float edge = edgeStrength(uv);
 
-  float scanline = 0.88 + 0.12 * sin((uv.y * u_resolution.y) * 0.45);
-  float rollingBeam = 1.0 - smoothstep(0.0, 0.04, abs(fract(uv.y + u_time * 0.055) - 0.5));
+  float beamY = fract(u_time * 0.055);
+  float beam = 1.0 - smoothstep(0.0, 0.055, abs(uv.y - beamY));
+  float scan = scanline(0.46, 0.075);
 
-  vec3 green = vec3(lum * 0.18, lum * 0.84, lum * 0.28);
-  green += vec3(0.02, 0.06, 0.01) * rollingBeam;
-  green += filmGrain(uv, lum) * 0.11;
+  vec3 phosphor = vec3(
+    lum * 0.08,
+    pow(lum, 0.72) * 0.92,
+    lum * 0.20
+  );
 
-  float hudGrid = step(0.985, sin(uv.x * 120.0) * sin(uv.y * 96.0));
-  green += vec3(0.18, 0.52, 0.2) * hudGrid * 0.18;
-  green *= scanline * vignette(v_uv, 0.48);
+  float hot = smoothstep(0.78, 1.0, lum);
+  phosphor += vec3(0.10, 0.38, 0.07) * hot;
+  phosphor = softBloom(uv, phosphor, 0.65, 0.18);
 
-  gl_FragColor = vec4(clamp(green * (0.92 + u_intensity * 0.18), 0.0, 1.0), 1.0);
+  float reticle = abs(sin(uv.x * 95.0)) + abs(sin(uv.y * 74.0));
+  float grid = smoothstep(1.88, 1.98, reticle) * 0.045;
+
+  float pixelNoise = filmGrain(uv, lum) * 0.095;
+  float hotPixel = step(0.997, hash12(floor(uv * u_resolution * 0.32) + floor(u_time * 2.0)));
+
+  phosphor += vec3(0.10, 0.72, 0.12) * grid;
+  phosphor += vec3(0.12, 0.75, 0.18) * hotPixel * 0.32;
+  phosphor += vec3(0.05, 0.22, 0.025) * beam * (0.24 + edge * 0.42);
+  phosphor += pixelNoise;
+
+  phosphor *= scan * digitalFlicker(9.0);
+  phosphor *= vignette(v_uv, 0.52);
+  phosphor = mix(phosphor, phosphor + edge * vec3(0.02, 0.12, 0.02), 0.75);
+  phosphor = applyFlash(phosphor);
+
+  gl_FragColor = vec4(saturateColor(phosphor), 1.0);
 }
