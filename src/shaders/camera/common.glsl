@@ -212,11 +212,6 @@ vec3 applyLut(vec3 color) {
   return mix(texture2D(u_lut, uv0).rgb, texture2D(u_lut, uv1).rgb, sliceMix);
 }
 
-vec3 faceMaskColor(vec3 color) {
-  float edge = faceRing(v_uv, 1.08, 0.11);
-  return color + edge * vec3(0.0, 0.12, 0.18);
-}
-
 vec2 unrotateUv(vec2 uv, float degrees) {
   if (degrees < 45.0) return uv;
   if (degrees < 135.0) return vec2(1.0 - uv.y, uv.x);
