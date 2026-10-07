@@ -54,7 +54,7 @@ function Membros() {
               params={{ slug: artist.slug }}
               preload="intent"
               onClick={() => { try { hiss(); } catch { /* navigation must never depend on SFX */ } }}
-              className="group overflow-hidden border-2 border-foreground bg-foreground p-2 transition hover:border-blood"
+              className="group overflow-hidden transition"
             >
               <Halftone
                 src={artist.img}
