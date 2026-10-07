@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { CameraManager } from "@/lib/camera/camera-manager";
-import { FaceVfxTracker } from "@/lib/camera/face-vfx";
 import { CameraVfx3DOverlay } from "@/lib/camera/camera-vfx-3d-overlay";
 import { FaceVfxTracker } from "@/lib/camera/face-vfx";
 import {
@@ -58,31 +57,42 @@ export function CameraViewport({
       preserveDrawingBuffer: false,
       targetFps: 60,
     });
+    let vfx3d: CameraVfx3DOverlay | null = null;
     let ready = false;
     let destroyed = false;
+
     const faceVfx = new FaceVfxTracker();
-    const vfx3d = new CameraVfx3DOverlay(); = new OrientationManager();
+    const orientation = new OrientationManager();
     orientation.start(0);
-    const streamActiveRef = { current: manager.getState().status === "active" };
+
+    const streamActiveRef = {
+      current: manager.getState().status === "active",
+    };
     const rafRef = { current: 0 };
     const lastHudAt = { current: 0 };
 
     const resize = () => {
       if (engine.hasForcedOutputResolution) return;
+
       const rect = stage.getBoundingClientRect();
       engine.resize(rect.width, rect.height);
-      vfx3d.resize(rect.width, rect.height);
+      vfx3d?.resize(rect.width, rect.height);
     };
 
     const applyEngineState = () => {
       engine.setFrameSource(video);
       engine.preloadFilters(vertexShader);
-      engine.setUniform("u_rotation", orientation.getState().renderRotation);
-      engine.setUniform("u_mirror", facingMode === "user" ? 1 : 0);
+      engine.setUniform(
+        "u_rotation",
+        orientation.getState().renderRotation,
+      );
+      engine.setUniform(
+        "u_mirror",
+        facingRef.current === "user" ? 1 : 0,
+      );
       engine.setUniform("u_flash", 0);
-      faceVfx.reset();
       engine.setFaceTracking(faceVfx.reset());
-      engine.setFilter(filter);
+      engine.setFilter(filterRef.current);
       resize();
     };
 
@@ -100,16 +110,17 @@ export function CameraViewport({
         ready &&
         streamActiveRef.current &&
         video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
-        (
-          document.visibilityState === "visible" ||
-          recordingRef.current
-        )
+        (document.visibilityState === "visible" || recordingRef.current)
       ) {
         const faceState = faceVfx.detect(video, timestamp);
         engine.setFaceTracking(faceState);
 
         const activeFilter = filterRef.current;
-        if (activeFilter === "vamp" || activeFilter === "astro-haze") {
+
+        if (
+          vfx3d &&
+          (activeFilter === "vamp" || activeFilter === "astro-haze")
+        ) {
           vfx3d.update(
             activeFilter,
             faceState,
@@ -139,10 +150,7 @@ export function CameraViewport({
       if (
         ready &&
         streamActiveRef.current &&
-        (
-          document.visibilityState === "visible" ||
-          recordingRef.current
-        )
+        (document.visibilityState === "visible" || recordingRef.current)
       ) {
         rafRef.current = requestAnimationFrame(render);
       }
@@ -153,10 +161,7 @@ export function CameraViewport({
         !rafRef.current &&
         ready &&
         streamActiveRef.current &&
-        (
-          document.visibilityState === "visible" ||
-          recordingRef.current
-        )
+        (document.visibilityState === "visible" || recordingRef.current)
       ) {
         rafRef.current = requestAnimationFrame(render);
       }
@@ -164,11 +169,14 @@ export function CameraViewport({
 
     const handleManagerState = () => {
       const state = manager.getState();
-      streamActiveRef.current = state.status === "active" && Boolean(manager.getStream());
+      streamActiveRef.current =
+        state.status === "active" && Boolean(manager.getStream());
+
       if (!streamActiveRef.current) {
         stopRenderLoop();
         return;
       }
+
       scheduleRenderLoop();
     };
 
@@ -176,6 +184,9 @@ export function CameraViewport({
 
     const initializeEngine = () => {
       try {
+        vfx3d?.destroy();
+        vfx3d = null;
+
         engine.destroy();
         engine = new WebGLEngine({
           alpha: false,
@@ -184,9 +195,15 @@ export function CameraViewport({
           targetFps: 60,
         });
         engine.init(canvas);
+
+        try {
+          vfx3d = new CameraVfx3DOverlay();
+        } catch {
+          vfx3d = null;
+        }
+
         applyEngineState();
         engineRef.current = engine;
-        engine.setSceneOverlaySource(vfx3d.getCanvas());
         ready = true;
         setEngineReady(true);
         onCanvasReady?.(canvas);
@@ -195,6 +212,8 @@ export function CameraViewport({
       } catch {
         ready = false;
         stopRenderLoop();
+        vfx3d?.destroy();
+        vfx3d = null;
         setEngineReady(false);
         engineRef.current = null;
         onCanvasReady?.(null);
@@ -233,8 +252,16 @@ export function CameraViewport({
       }
     };
 
-    canvas.addEventListener("webglcontextlost", handleContextLost, false);
-    canvas.addEventListener("webglcontextrestored", handleContextRestored, false);
+    canvas.addEventListener(
+      "webglcontextlost",
+      handleContextLost,
+      false,
+    );
+    canvas.addEventListener(
+      "webglcontextrestored",
+      handleContextRestored,
+      false,
+    );
     document.addEventListener("visibilitychange", handleVisibility);
 
     initializeEngine();
@@ -252,9 +279,16 @@ export function CameraViewport({
       unsubscribeCamera();
       orientation.destroy();
       faceVfx.destroy();
-      vfx3d.destroy();
-      canvas.removeEventListener("webglcontextlost", handleContextLost);
-      canvas.removeEventListener("webglcontextrestored", handleContextRestored);
+      vfx3d?.destroy();
+      vfx3d = null;
+      canvas.removeEventListener(
+        "webglcontextlost",
+        handleContextLost,
+      );
+      canvas.removeEventListener(
+        "webglcontextrestored",
+        handleContextRestored,
+      );
       document.removeEventListener("visibilitychange", handleVisibility);
       engine.destroy();
       engineRef.current = null;
