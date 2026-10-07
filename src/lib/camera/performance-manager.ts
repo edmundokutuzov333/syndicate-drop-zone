@@ -1,4 +1,22 @@
-import { type PerformanceTier, type RenderMetrics } from "./types";
+import {
+  type FilterComplexity,
+  type PerformanceTier,
+  type RenderMetrics,
+} from "./types";
+
+
+export function getFilterRenderScaleCap(
+  deviceTier: PerformanceTier,
+  complexity: FilterComplexity,
+): number {
+  if (deviceTier === "high") return 1;
+  if (deviceTier === "medium") {
+    return complexity === "high" ? 0.9 : 1;
+  }
+  if (complexity === "high") return 0.72;
+  if (complexity === "medium") return 0.82;
+  return 0.92;
+}
 
 export function detectPerformanceTier(): PerformanceTier {
   if (typeof navigator === "undefined") return "medium";
