@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CampingRouteImport } from './routes/camping'
 import { Route as MembrosRouteImport } from './routes/membros'
-import { Route as MembrosSlugRouteImport } from './routes/membros/$slug'
+import { Route as MembrosSlugRouteImport } from './routes/membros.$slug'
 import { Route as MerchRouteImport } from './routes/merch'
 import { Route as RevelacaoRouteImport } from './routes/revelacao'
 
@@ -34,7 +34,7 @@ const MembrosRoute = MembrosRouteImport.update({
 const MembrosSlugRoute = MembrosSlugRouteImport.update({
   id: '/membros/$slug',
   path: '/$slug',
-  getParentRoute: () => MembrosRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MerchRoute = MerchRouteImport.update({
   id: '/merch',
@@ -117,7 +117,7 @@ declare module '@tanstack/react-router' {
       path: '/$slug'
       fullPath: '/membros/$slug'
       preLoaderRoute: typeof MembrosSlugRouteImport
-      parentRoute: typeof MembrosRoute
+      parentRoute: typeof rootRouteImport
     }
     '/merch': {
       id: '/merch'
