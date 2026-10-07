@@ -6,6 +6,7 @@ import {
   getControlRoomSession,
   getMediaBucket,
   getTableProperties,
+  isPublicPreviewSession,
   storageDelete,
   storageUpload,
   type ControlRoomRole,
@@ -31,12 +32,13 @@ const kindOf = (row: MediaRow) => {
   const type = text(row, ["mime_type", "media_type", "type", "kind"]).toLowerCase();
   return type.includes("video") ? "video" : "image";
 };
-const canEdit = (role: ControlRoomRole | null) => role === "OWNER" || role === "ADMIN" || role === "EDITOR";
+const canEdit = (role: ControlRoomRole | null, previewMode = false) => !previewMode && (role === "OWNER" || role === "ADMIN" || role === "EDITOR");
 
 export function MediaManager() {
   const [rows, setRows] = useState<MediaRow[]>([]);
   const [selected, setSelected] = useState<MediaRow | null>(null);
   const [role, setRole] = useState<ControlRoomRole | null>(null);
+  const [previewMode, setPreviewMode] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "image" | "video">("all");
   const [file, setFile] = useState<File | null>(null);
@@ -58,6 +60,7 @@ export function MediaManager() {
         adminQuery<MediaRow[]>("/rest/v1/media_assets?select=*&order=created_at.desc&limit=1000"),
       ]);
       setRole(session?.role ?? null);
+      setPreviewMode(isPublicPreviewSession(session));
       setRows(data);
       setSelected((current) => current ? data.find((item) => String(item.id) === String(current.id)) ?? null : data[0] ?? null);
     } catch (error) {
@@ -88,7 +91,7 @@ export function MediaManager() {
   };
 
   const upload = async () => {
-    if (!file || !canEdit(role)) return;
+    if (!file || !canEdit(role, previewMode)) return;
     setUploading(true);
     setNotice("A VERIFICAR STORAGE...");
     let uploadedPath = "";
@@ -145,7 +148,7 @@ export function MediaManager() {
   };
 
   const remove = async () => {
-    if (!selected?.id || !canEdit(role)) return;
+    if (!selected?.id || !canEdit(role, previewMode)) return;
     const label = text(selected, ["name", "title", "filename", "file_name"], "este asset");
     if (!window.confirm("Eliminar " + label + "? Esta acção remove o registo e tenta remover o ficheiro do storage.")) return;
     setNotice("A ELIMINAR...");
@@ -167,7 +170,7 @@ export function MediaManager() {
   };
 
   const saveMeta = async () => {
-    if (!selected?.id || !canEdit(role)) return;
+    if (!selected?.id || !canEdit(role, previewMode)) return;
     try {
       const properties = await getTableProperties("media_assets");
       const updates: Record<string, unknown> = {};
@@ -248,16 +251,16 @@ export function MediaManager() {
       <section className="border border-white/10 bg-[#0d0d0d]">
         <div className="border-b border-white/10 p-5"><p className="font-mono text-[9px] tracking-[0.22em] text-[#d71920]">UPLOAD CENTRAL</p><h2 className="mt-1 font-gothic text-4xl">NOVO ASSET</h2></div>
         <div className="grid gap-4 p-5">
-          <button type="button" disabled={!canEdit(role) || uploading} onClick={() => inputRef.current?.click()} className="grid min-h-40 place-items-center border border-dashed border-white/15 bg-[#090909] p-6 text-center transition hover:border-[#d71920] disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="button" disabled={!canEdit(role, previewMode) || uploading} onClick={() => inputRef.current?.click()} className="grid min-h-40 place-items-center border border-dashed border-white/15 bg-[#090909] p-6 text-center transition hover:border-[#d71920] disabled:cursor-not-allowed disabled:opacity-50">
             <div><Upload size={22} className="mx-auto text-[#d71920]" /><p className="mt-3 font-mono text-[10px] tracking-[0.16em] text-white/60">{file ? file.name : "SELECCIONAR IMAGEM OU VÍDEO"}</p><p className="mt-2 font-mono text-[9px] text-white/25">UPLOAD DIRECTO PARA SUPABASE STORAGE</p></div>
           </button>
           <input ref={inputRef} type="file" accept="image/*,video/*" className="hidden" onChange={(event) => choose(event.target.files?.[0] ?? null)} />
           {file && <div className="border border-white/10 bg-[#090909] p-3 font-mono text-[9px] text-white/45">{file.type || "ficheiro"} · {Math.round(file.size / 1024)} KB</div>}
-          <Field label="NOME" value={name} onChange={setName} disabled={!canEdit(role)} />
-          <Field label="ALT / TÍTULO" value={alt} onChange={setAlt} disabled={!canEdit(role)} />
-          <Field label="CONTEXTO" value={context} onChange={setContext} disabled={!canEdit(role)} />
-          <Field label="TAGS" value={tags} onChange={setTags} disabled={!canEdit(role)} />
-          <button type="button" disabled={!canEdit(role) || !file || uploading} onClick={() => void upload()} className="inline-flex min-h-11 items-center justify-center gap-2 border border-[#d71920] bg-[#d71920] px-4 font-mono text-[10px] tracking-[0.16em] text-white disabled:cursor-not-allowed disabled:opacity-50"><Upload size={14} /> {uploading ? "A ENVIAR..." : "FAZER UPLOAD"}</button>
+          <Field label="NOME" value={name} onChange={setName} disabled={!canEdit(role, previewMode)} />
+          <Field label="ALT / TÍTULO" value={alt} onChange={setAlt} disabled={!canEdit(role, previewMode)} />
+          <Field label="CONTEXTO" value={context} onChange={setContext} disabled={!canEdit(role, previewMode)} />
+          <Field label="TAGS" value={tags} onChange={setTags} disabled={!canEdit(role, previewMode)} />
+          <button type="button" disabled={!canEdit(role, previewMode) || !file || uploading} onClick={() => void upload()} className="inline-flex min-h-11 items-center justify-center gap-2 border border-[#d71920] bg-[#d71920] px-4 font-mono text-[10px] tracking-[0.16em] text-white disabled:cursor-not-allowed disabled:opacity-50"><Upload size={14} /> {uploading ? "A ENVIAR..." : "FAZER UPLOAD"}</button>
           <p className="font-mono text-[8px] leading-5 text-white/25">BUCKET: {bucket}</p>
         </div>
       </section>
@@ -275,11 +278,11 @@ export function MediaManager() {
       </div>
       <div className="grid content-start gap-4">
         <div className="border border-white/10 bg-[#090909] p-4 font-mono text-[9px] leading-6 text-white/45"><p>URL</p><p className="mt-1 break-all text-white/70">{urlOf(selected) || "SEM URL"}</p>{pathOf(selected) && <p className="mt-2 break-all text-white/30">PATH {pathOf(selected)}</p>}</div>
-        <Field label="NOME" value={name} onChange={setName} disabled={!canEdit(role)} />
-        <Field label="ALT / TÍTULO" value={alt} onChange={setAlt} disabled={!canEdit(role)} />
-        <Field label="CONTEXTO" value={context} onChange={setContext} disabled={!canEdit(role)} />
-        <Field label="TAGS" value={tags} onChange={setTags} disabled={!canEdit(role)} />
-        {canEdit(role) && <div className="flex flex-wrap gap-2">
+        <Field label="NOME" value={name} onChange={setName} disabled={!canEdit(role, previewMode)} />
+        <Field label="ALT / TÍTULO" value={alt} onChange={setAlt} disabled={!canEdit(role, previewMode)} />
+        <Field label="CONTEXTO" value={context} onChange={setContext} disabled={!canEdit(role, previewMode)} />
+        <Field label="TAGS" value={tags} onChange={setTags} disabled={!canEdit(role, previewMode)} />
+        {canEdit(role, previewMode) && <div className="flex flex-wrap gap-2">
           <button type="button" onClick={() => void saveMeta()} className="inline-flex items-center gap-2 border border-[#d71920] bg-[#d71920] px-4 py-3 font-mono text-[10px] tracking-[0.16em] text-white"><Check size={14} /> GUARDAR METADADOS</button>
           {urlOf(selected) && <button type="button" onClick={() => void navigator.clipboard.writeText(urlOf(selected)).then(() => setNotice("URL COPIADA"))} className="inline-flex items-center gap-2 border border-white/10 px-4 py-3 font-mono text-[10px] tracking-[0.16em] text-white/50 hover:text-white"><Clipboard size={14} /> COPIAR URL</button>}
           <button type="button" onClick={() => void remove()} className="inline-flex items-center gap-2 border border-white/10 px-4 py-3 font-mono text-[10px] tracking-[0.16em] text-white/40 hover:border-[#d71920] hover:text-[#d71920]"><Trash2 size={14} /> ELIMINAR ASSET</button>
