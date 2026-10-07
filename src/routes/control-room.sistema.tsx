@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Check, ExternalLink, RefreshCw, TriangleAlert } from "lucide-react";
-import { adminQuery, publicQuery } from "@/lib/control-room-auth";
+import { adminQuery, checkStorageBucket, getMediaBucket, publicQuery } from "@/lib/control-room-auth";
 
 const TABLES = [
   "artists","artist_releases","tapes","releases","camping_events","camping_sessions",
@@ -16,10 +16,12 @@ function System() {
   const [auditCount, setAuditCount] = useState<number | null>(null);
   const [adminCount, setAdminCount] = useState<number | null>(null);
   const [checking, setChecking] = useState(true);
+  const [platform, setPlatform] = useState({ database: false, auth: false, media: false, site: false });
 
   const load = async () => {
     setChecking(true);
     const next: Record<string,{ok:boolean;error?:string}> = {};
+    const platformNext = { database: false, auth: false, media: false, site: false };
     await Promise.all(TABLES.map(async table => {
       try {
         await publicQuery("/rest/v1/" + table + "?select=id&limit=1");
@@ -36,7 +38,21 @@ function System() {
       const rows = await adminQuery<Array<{id:string}>>("/rest/v1/admin_profiles?select=id&limit=1000");
       setAdminCount(rows.length);
     } catch { setAdminCount(null); }
+    platformNext.database = TABLES.some((table) => next[table]?.ok);
+    try {
+      await publicQuery("/auth/v1/settings");
+      platformNext.auth = true;
+    } catch {}
+    try {
+      const storage = await checkStorageBucket(getMediaBucket());
+      platformNext.media = storage.ok && storage.public;
+    } catch {}
+    try {
+      await publicQuery("/rest/v1/site_settings?select=id&limit=1");
+      platformNext.site = true;
+    } catch {}
     setChecks(next);
+    setPlatform(platformNext);
     setChecking(false);
   };
 
@@ -61,6 +77,20 @@ function System() {
           </button>
         </div>
       </header>
+
+      <section className="mt-6 grid gap-px border border-white/10 bg-white/10 md:grid-cols-4">
+        {[
+          ["DATABASE", platform.database],
+          ["AUTH", platform.auth],
+          ["MEDIA", platform.media],
+          ["SITE", platform.site],
+        ].map(([label, ok]) => (
+          <div key={String(label)} className="bg-[#0d0d0d] p-4">
+            <p className="font-mono text-[9px] tracking-[0.18em] text-white/30">{String(label)}</p>
+            <p className={ok ? "mt-2 font-mono text-sm text-[#d71920]" : "mt-2 font-mono text-sm text-white/25"}>{checking ? "CHECKING..." : ok ? "CONNECTED" : "ERROR"}</p>
+          </div>
+        ))}
+      </section>
 
       <section className="mt-8 grid gap-px border border-white/10 bg-white/10 md:grid-cols-4">
         <Metric value={checking ? "--" : String(connected)+"/"+String(TABLES.length)} label="TABELAS LIGADAS" />
@@ -115,7 +145,7 @@ function System() {
 
       {auditCount === 0 && (
         <div className="mt-6 border border-[#d71920]/40 bg-[#d71920]/5 p-4 font-mono text-[10px] leading-6 text-white/55">
-          A tabela de actividade está acessível mas não há registos. Isto não prova que os triggers de auditoria estejam activos. A migration de triggers continua no repositório para aplicação no Supabase.
+          A tabela de actividade está acessível mas não há registos. Isto não prova que os triggers de auditoria estejam activos. A migration de triggers continua no repositório para aplicação no Supabase. O armazenamento central também depende da migration de storage quando o bucket ainda não existir.
         </div>
       )}
     </div>
