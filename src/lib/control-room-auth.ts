@@ -317,16 +317,18 @@ export async function adminQuery<T>(path: string, init: RequestInit = {}) {
     }
 
     const tableMatch = path.match(/^\/rest\/v1\/([^?]+)/);
-    const table = tableMatch?.[1];
-    if (!table) throw new Error("Recurso do Control Room inválido.");
+    const requestedTable = tableMatch?.[1];
+    if (!requestedTable) throw new Error("Recurso do Control Room inválido.");
+    const table = requestedTable === "partnership_requests" ? "partnership_public" : requestedTable;
+    const publicPath = table === requestedTable ? path : path.replace("/rest/v1/" + requestedTable, "/rest/v1/" + table);
 
     try {
-      const rows = await publicQuery<T>(path);
+      const rows = await publicQuery<T>(publicPath);
       if (Array.isArray(rows) && rows.length > 0) return rows;
-      const fallback = getControlRoomStaticRows(table);
+      const fallback = getControlRoomStaticRows(requestedTable);
       return (fallback ?? rows) as T;
     } catch {
-      const fallback = getControlRoomStaticRows(table);
+      const fallback = getControlRoomStaticRows(requestedTable);
       if (fallback !== null) return fallback as T;
       throw new Error("Dados públicos do módulo não estão disponíveis.");
     }
