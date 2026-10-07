@@ -452,10 +452,12 @@ export class WebGLEngine {
             )
           : 0;
 
-      this.metrics = {
-        ...this.metrics,
-        memoryUsedMb: memory > 0 ? memory / 1_000_000 : undefined,
-      };
+      if (memory > 0) {
+        this.metrics = {
+          ...this.metrics,
+          memoryUsedMb: memory / 1_000_000,
+        };
+      }
 
       if (!this.forcedOutputResolution) {
         this.applyAdaptivePolicy();
