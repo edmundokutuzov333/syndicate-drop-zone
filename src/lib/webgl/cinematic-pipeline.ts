@@ -258,7 +258,7 @@ export class CinematicPipeline {
     }
 
     let source = inputTexture;
-    let scratch = this.framebuffers.overlay.get();
+    const scratch = this.framebuffers.overlay.get();
 
     for (let index = 0; index < enabled.length; index += 1) {
       const id = enabled[index];
