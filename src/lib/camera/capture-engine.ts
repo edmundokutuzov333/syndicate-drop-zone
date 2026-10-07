@@ -69,7 +69,7 @@ export class CaptureEngine {
   private recordingCleanup: (() => Promise<void>) | null = null;
   private chunks: Blob[] = [];
   private startedAt = 0;
-  private preferredFormat: CaptureFormat = "webm";
+  private preferredFormat: Extract<CaptureFormat, "mp4" | "mov" | "mkv" | "webm"> = "webm";
   private readonly options: CaptureEngineOptions;
 
   constructor(options: CaptureEngineOptions) {
@@ -86,7 +86,9 @@ export class CaptureEngine {
     this.videoHeight = height;
   }
 
-  setPreferredFormat(format: CaptureFormat): void {
+  setPreferredFormat(
+    format: Extract<CaptureFormat, "mp4" | "mov" | "mkv" | "webm">,
+  ): void {
     this.preferredFormat = format;
   }
 
@@ -212,9 +214,9 @@ export class CaptureEngine {
     return new Promise((resolve, reject) => {
       recorder.onstop = async () => {
         try {
-          const blob = new Blob(this.chunks, {
-            type: recorder.mimeType || undefined,
-          });
+          const blob = recorder.mimeType
+            ? new Blob(this.chunks, { type: recorder.mimeType })
+            : new Blob(this.chunks);
 
           const extension = recorder.mimeType.includes("mp4")
             ? "mp4"
