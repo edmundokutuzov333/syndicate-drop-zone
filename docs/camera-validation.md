@@ -9,7 +9,8 @@ A /camera passou a validação automatizada específica da superfície, mas não
 1. Vercel production build bloqueado pelo rate limit da conta/build.
 2. Matriz física de browsers e dispositivos ainda não executada com câmaras e microfones reais.
 
-Último commit validado pelo CI: b000af92fbfe8c4b12a598232e795238cb310c32.
+Último commit de aplicação validado pelo CI: b000af92fbfe8c4b12a598232e795238cb310c32.
+Último commit de documentação/relatório em main: f574f083769dfdbfb72ad1f83d034a42df999262.
 
 ## Matriz automatizada
 
@@ -249,9 +250,10 @@ Nenhuma PR foi aberta. As alterações foram executadas directamente na main, se
 
 ## Evidências
 
-- CI verde: 37648653599
+- CI do código da aplicação: 37648653599
+- CI do relatório/documentação: 37649235905
 - Commit validado: b000af92fbfe8c4b12a598232e795238cb310c32
-- Lovable synced commit: b000af92fbfe8c4b12a598232e795238cb310c32
+- Lovable synced commit: f574f083769dfdbfb72ad1f83d034a42df999262
 - Vercel: build-rate-limit blocker
 - Supabase: sem tabelas de captura
 - Issue #3: Vercel production build rate limit — OPEN
