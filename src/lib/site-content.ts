@@ -73,14 +73,14 @@ async function getMediaAssetIndex(): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   for (const row of rows) {
     const id = stringValue(row, ["id", "uuid", "media_asset_id"]);
-    const url = stringValue(row, ["public_url", "url", "file_url", "asset_url", "media_url", "src"]);
+    const url = stringValue(row, ["storage_url", "public_url", "url", "file_url", "asset_url", "media_url", "src"]);
     if (id && url) map.set(id, url);
   }
   return map;
 }
 
 function mediaAssetUrl(row: ContentRow, mediaAssets: Map<string, string>) {
-  const direct = stringValue(row, ["audio_url", "audio_src", "src", "file_url", "media_url", "url", "image_url", "photo_url", "cover_url", "thumbnail_url", "public_url", "asset_url"]);
+  const direct = stringValue(row, ["audio_url", "audio_src", "src", "storage_url", "file_url", "media_url", "url", "image_url", "photo_url", "cover_url", "thumbnail_url", "public_url", "asset_url"]);
   if (direct) return direct;
   const assetId = stringValue(row, ["media_asset_id", "image_media_asset_id", "cover_media_asset_id", "audio_media_asset_id"]);
   return assetId ? (mediaAssets.get(assetId) ?? "") : "";
