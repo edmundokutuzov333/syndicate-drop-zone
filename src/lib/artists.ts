@@ -17,7 +17,16 @@ import a15 from "@/assets/artists/a15.jpg.asset.json";
 import a16 from "@/assets/artists/a16.jpg.asset.json";
 import a17 from "@/assets/artists/a17.jpg.asset.json";
 
-export type Artist = { code: string; name: string; img: string; bio: string; frase: string; zona: string; faixas: string[] };
+export type Artist = {
+  code: string;
+  slug: string;
+  name: string;
+  img: string;
+  bio: string;
+  frase: string;
+  zona: string;
+  faixas: string[];
+};
 
 const NAMES = [
   "Khriys", "KongV12", "Bruno The Goat", "Masepurp", "Kingston Siriro", "Kaká Machava",
@@ -46,8 +55,17 @@ const FICHAS: { frase: string; zona: string; faixas: string[]; bio: string }[] =
 ];
 const PHOTOS = [a01, a02, a03, a04, a05, a06, a07, a08, a09, a10, a11, a12, a13, a14, a15, a16, a17].map((a) => a.url);
 
+const slugify = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\\u0300-\\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
 export const ARTISTS: Artist[] = PHOTOS.map((img, i) => ({
   code: `SDT-${String(i + 1).padStart(2, "0")}`,
+  slug: slugify(NAMES[i]!),
   name: NAMES[i]!,
   ...FICHAS[i]!,
   img,
