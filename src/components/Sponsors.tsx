@@ -36,14 +36,13 @@ const TIERS = [
   },
 ] as const;
 
-type FormState = PartnershipRequest;
+type FormState = Omit<PartnershipRequest, "budget">;
 
 const EMPTY_FORM: FormState = {
   name: "",
   company: "",
   contact: "",
   partnershipType: "",
-  budget: "",
   message: "",
 };
 
@@ -103,7 +102,7 @@ export function Sponsors() {
     setErrors({});
 
     try {
-      await submitPartnershipRequest(parsed.data);
+      await submitPartnershipRequest({ ...parsed.data, budget: "" });
       setStatus("success");
       setStatusMessage("Proposta recebida. A equipa do Sindicato entra em contacto.");
       setForm(EMPTY_FORM);
