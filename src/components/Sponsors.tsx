@@ -217,13 +217,6 @@ export function Sponsors() {
                 </select>
                 {errors.partnershipType && <span className="text-[10px] normal-case tracking-normal text-blood">{errors.partnershipType}</span>}
               </label>
-              <Field
-                label="ORÇAMENTO"
-                value={form.budget}
-                error={errors.budget}
-                placeholder="Ex.: 150.000 MT / a definir"
-                onChange={(value) => updateField("budget", value)}
-              />
               <label className="grid gap-2 text-[10px] tracking-[0.2em] text-muted-foreground md:col-span-2">
                 MENSAGEM
                 <textarea

@@ -5,7 +5,7 @@ export const PartnershipRequestSchema = z.object({
   company: z.string().trim().min(2, "Indique a empresa.").max(160, "Nome da empresa demasiado longo."),
   contact: z.string().trim().min(3, "Indique um contacto.").max(160, "Contacto demasiado longo."),
   partnershipType: z.string().trim().min(2, "Seleccione o tipo de parceria.").max(80),
-  budget: z.string().trim().min(1, "Indique o orçamento.").max(80),
+  budget: z.string().trim().max(80).default(""),
   message: z.string().trim().min(10, "Explique brevemente a proposta.").max(4000, "Mensagem demasiado longa."),
 });
 
@@ -39,7 +39,7 @@ export async function submitPartnershipRequest(input: PartnershipRequest): Promi
       company: parsed.data.company,
       contact: parsed.data.contact,
       partnership_type: parsed.data.partnershipType,
-      budget: parsed.data.budget,
+      budget: parsed.data.budget ?? "",
       message: parsed.data.message,
     }),
   });
