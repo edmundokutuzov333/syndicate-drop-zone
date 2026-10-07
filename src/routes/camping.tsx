@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getLiveCamping } from "@/lib/site-content";
 
 export const Route = createFileRoute("/camping")({
+  loader: async () => ({ camping: await getLiveCamping() }),
   head: () => ({
     meta: [
       { title: "Camping — O Sindicato do Trap" },
