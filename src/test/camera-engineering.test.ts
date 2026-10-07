@@ -551,7 +551,7 @@ describe("camera engineering foundation", () => {
       0.12,
       800,
       0.008,
-      0,
+      1,
     ]);
     expect(getFilterShaderContract("halation")?.parameters.map((item) => item.defaultValue)).toEqual([
       0.025,
@@ -567,7 +567,7 @@ describe("camera engineering foundation", () => {
       0.06,
       0.4,
       0.001,
-      0,
+      1,
     ]);
   });
 
