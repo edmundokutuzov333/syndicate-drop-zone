@@ -9,12 +9,19 @@ export type RevelationMediaType = "image" | "video";
 export type RevelationMedia = {
   id: string;
   type: RevelationMediaType;
-  src: string;
+  src: string | null;
   alt: string;
-  layoutVariant: "hero" | "tall" | "wide" | "standard" | "compact";
   downloadable: boolean;
-  downloadName: string;
+  downloadName?: string;
 };
+
+const EMPTY_PHOTO_SLOTS: RevelationMedia[] = Array.from({ length: 17 }, (_, index) => ({
+  id: "revelacao-photo-slot-" + String(index + 1).padStart(2, "0"),
+  type: "image",
+  src: null,
+  alt: "Slot reservado para fotografia da Sala de Revelação",
+  downloadable: false,
+}));
 
 export const REVELACAO_MEDIA: RevelationMedia[] = [
   {
@@ -22,7 +29,6 @@ export const REVELACAO_MEDIA: RevelationMedia[] = [
     type: "video",
     src: v1.url,
     alt: "Registo em vídeo do camping no Studio XOYENS",
-    layoutVariant: "hero",
     downloadable: true,
     downloadName: "sindicato-revelacao-001.mp4",
   },
@@ -31,7 +37,6 @@ export const REVELACAO_MEDIA: RevelationMedia[] = [
     type: "image",
     src: g1,
     alt: "Registo fotográfico do camping no Studio XOYENS",
-    layoutVariant: "tall",
     downloadable: true,
     downloadName: "sindicato-revelacao-002.jpg",
   },
@@ -40,7 +45,6 @@ export const REVELACAO_MEDIA: RevelationMedia[] = [
     type: "image",
     src: g2,
     alt: "Imagem dos bastidores do camping",
-    layoutVariant: "standard",
     downloadable: true,
     downloadName: "sindicato-revelacao-003.jpg",
   },
@@ -49,7 +53,6 @@ export const REVELACAO_MEDIA: RevelationMedia[] = [
     type: "image",
     src: g3,
     alt: "Registo dos bastidores do camping",
-    layoutVariant: "wide",
     downloadable: true,
     downloadName: "sindicato-revelacao-004.jpg",
   },
@@ -58,20 +61,24 @@ export const REVELACAO_MEDIA: RevelationMedia[] = [
     type: "image",
     src: g4,
     alt: "Registo visual do camping",
-    layoutVariant: "tall",
     downloadable: true,
     downloadName: "sindicato-revelacao-005.jpg",
   },
+  ...EMPTY_PHOTO_SLOTS,
 ];
 
+export const REVELACAO_READY_MEDIA = REVELACAO_MEDIA.filter(
+  (item): item is RevelationMedia & { src: string } => item.src !== null,
+);
+
 export const REVELACAO_DOWNLOADS = Object.fromEntries(
-  REVELACAO_MEDIA
-    .filter((item) => item.downloadable)
+  REVELACAO_READY_MEDIA
+    .filter((item) => item.downloadable && item.downloadName)
     .map((item) => [
       item.id,
       {
         src: item.src,
-        downloadName: item.downloadName,
+        downloadName: item.downloadName!,
       },
     ]),
 ) as Record<string, { src: string; downloadName: string }>;
