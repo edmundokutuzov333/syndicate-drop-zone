@@ -35,7 +35,7 @@ Phase 3 connects the existing WebGL output to real local capture without introdu
 1. Verify camera is active, WebGL is available and the delivered camera source is at least 3840×2160.
 2. Optional 3 s or 10 s countdown is rendered in the interface only.
 3. Trigger a short 90 ms visual flash outside the capture canvas.
-4. Force the WebGL canvas to 3840×2160.
+4. Force the WebGL canvas to the orientation-correct 4K dimensions.
 5. Wait for a rendered frame at the capture resolution.
 6. Export the rendered canvas to JPEG or PNG.
 7. Restore the adaptive preview resolution.
@@ -46,7 +46,7 @@ Phase 3 connects the existing WebGL output to real local capture without introdu
 
 1. Verify camera, WebGL and 4K source capability.
 2. Optional 3 s or 10 s countdown runs before recording.
-3. Force the WebGL canvas to 3840×2160.
+3. Force the WebGL canvas to the orientation-correct 4K dimensions.
 4. Call canvas.captureStream(60).
 5. Route the microphone through AudioContext + MediaStreamDestination when the browser exposes the API.
 6. Combine the canvas video track with the processed microphone track.
@@ -178,14 +178,14 @@ GPU cost is treated as a workload proxy through render time, texture upload time
 - two persistent video textures are reused frame-to-frame
 - video updates use texSubImage2D after initial allocation
 - transition framebuffers are reused when the output resolution has not changed
-- capture still allocates the required 3840×2160 surfaces only when the capture resolution actually changes
+- capture still allocates the required orientation-correct 4K surfaces only when the capture resolution actually changes
 - no per-frame WebGL texture creation is introduced
 
 ### Low-end hardening
 
 Adaptive policy lowers render scale/DPR only when the measured frame budget degrades. It never changes the delivered camera track resolution.
 
-The capture path explicitly disables adaptive preview scaling while forcing a real 3840×2160 output, then restores the preview policy after capture.
+The capture path explicitly disables adaptive preview scaling while forcing a real orientation-correct 4K output, then restores the preview policy after capture.
 
 ### Lifecycle hardening
 
