@@ -282,6 +282,115 @@ describe("camera engineering foundation", () => {
   });
 
 
+  it("controls a real hardware torch when the camera exposes torch capability", async () => {
+    const track = makeTrack("video", {
+      deviceId: "rear-1",
+      facingMode: "environment",
+      width: 3840,
+      height: 2160,
+      frameRate: 60,
+    }) as MediaStreamTrack & {
+      getCapabilities: () => { torch: boolean };
+      applyConstraints: ReturnType<typeof vi.fn>;
+    };
+
+    track.getCapabilities = () => ({ torch: true });
+    track.applyConstraints = vi.fn().mockResolvedValue(undefined);
+
+    const audioTrack = makeTrack("audio", {});
+    const stream = makeStream(track, audioTrack);
+    const getUserMedia = vi.fn().mockResolvedValue(stream);
+    const enumerateDevices = vi.fn().mockResolvedValue([
+      {
+        deviceId: "rear-1",
+        kind: "videoinput",
+        label: "Back Camera",
+      },
+    ]);
+
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia, enumerateDevices },
+    });
+
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, "play")
+      .mockResolvedValue(undefined);
+    const pause = vi
+      .spyOn(HTMLMediaElement.prototype, "pause")
+      .mockImplementation(() => undefined);
+
+    const manager = new CameraManager();
+    await manager.start();
+    await manager.setFlashEnabled(true);
+
+    expect(manager.getState().flashEnabled).toBe(true);
+    expect(manager.getState().flashMode).toBe("hardware");
+    expect(track.applyConstraints).toHaveBeenCalledWith({
+      advanced: [{ torch: true }],
+    });
+
+    const cleanup = await manager.preparePhotoFlash();
+    expect(track.applyConstraints).toHaveBeenLastCalledWith({
+      advanced: [{ torch: true }],
+    });
+
+    await cleanup();
+    expect(track.applyConstraints).toHaveBeenLastCalledWith({
+      advanced: [{ torch: false }],
+    });
+
+    play.mockRestore();
+    pause.mockRestore();
+    manager.destroy();
+  });
+
+  it("falls back to software flash when torch is not exposed by the camera", async () => {
+    const track = makeTrack("video", {
+      deviceId: "front-1",
+      facingMode: "user",
+      width: 1920,
+      height: 1080,
+      frameRate: 60,
+    });
+
+    const stream = makeStream(track);
+    const getUserMedia = vi.fn().mockResolvedValue(stream);
+    const enumerateDevices = vi.fn().mockResolvedValue([
+      {
+        deviceId: "front-1",
+        kind: "videoinput",
+        label: "Front Camera",
+      },
+    ]);
+
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia, enumerateDevices },
+    });
+
+    const play = vi
+      .spyOn(HTMLMediaElement.prototype, "play")
+      .mockResolvedValue(undefined);
+    const pause = vi
+      .spyOn(HTMLMediaElement.prototype, "pause")
+      .mockImplementation(() => undefined);
+
+    const manager = new CameraManager();
+    await manager.start();
+    await manager.setFlashEnabled(true);
+
+    expect(manager.getState().flashEnabled).toBe(true);
+    expect(manager.getState().flashMode).toBe("software");
+
+    const cleanup = await manager.preparePhotoFlash();
+    await cleanup();
+
+    play.mockRestore();
+    pause.mockRestore();
+    manager.destroy();
+  });
+
   it("classifies and prefers front/back devices without trusting names globally", () => {
     const manager = new DeviceManager();
     const devices = [
@@ -338,6 +447,21 @@ describe("camera engineering foundation", () => {
       "redroom",
     ]);
     expect(new Set(visible.map((filter) => filter.shaderKey)).size).toBe(6);
+  });
+
+  it("ships six production VFX pipelines with temporal and flash processing", () => {
+    const ids = FILTER_REGISTRY.listVisible().map((item) => item.id);
+
+    for (const id of ids) {
+      const source = getFilterFragmentShader(id);
+
+      expect(source).toContain("u_time");
+      expect(source).toContain("u_previousFrame");
+      expect(source).toContain("u_flash");
+      expect(source).toContain("applyFlash");
+      expect(source).toContain("filmGrain");
+      expect(source).toContain("softBloom");
+    }
   });
 
   it("builds non-static shader programs with shared dynamic uniforms", () => {
