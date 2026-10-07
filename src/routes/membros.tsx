@@ -52,6 +52,7 @@ function Membros() {
               key={artist.slug}
               to="/membros/$slug"
               params={{ slug: artist.slug }}
+              preload="intent"
               onClick={() => hiss()}
               className="group overflow-hidden border-2 border-foreground bg-foreground p-2 transition hover:border-blood"
             >
