@@ -159,20 +159,26 @@ export function CameraPage() {
 
   const runCountdown = useCallback(
     async (value: CaptureTimer) => {
-      if (value === "off") return;
+      if (value === "off") {
+        engineReady?.setOverlayText(null);
+        return;
+      }
 
       setCaptureStatus("countdown");
 
       for (let current = value; current > 0; current -= 1) {
         setCountdown(current);
+        engineReady?.setOverlayText(String(current));
         await wait(1000);
       }
 
       setCountdown(0);
+      engineReady?.setOverlayText("0");
       await wait(90);
       setCountdown(null);
+      engineReady?.setOverlayText(null);
     },
-    [],
+    [engineReady],
   );
 
   const triggerFlash = useCallback(async () => {
@@ -349,16 +355,10 @@ export function CameraPage() {
             </div>
           ) : !canCapture4K ? (
             <div className="camera-capture-lock">
-              4K SOURCE REQUIRED
+              4K SOURCE REQUIRED · {camera.width || "--"}×{camera.height || "--"} AVAILABLE
             </div>
           ) : null}
         </div>
-
-        {countdown !== null ? (
-          <div className="camera-countdown" aria-live="assertive">
-            {countdown}
-          </div>
-        ) : null}
 
         <div
           className={"camera-flash " + (flash ? "is-active" : "")}
