@@ -21,7 +21,7 @@ type Props = {
 export function RevelationLightbox({ items, index, onClose, onChange }: Props) {
   const item = items[index]!;
   const frameRef = useRef<HTMLDivElement>(null);
-  const [shareState, setShareState] = useState<"idle" | "done">("idle");
+  const [shareState, setShareState] = useState<"idle" | "shared" | "copied">("idle");
   const [fullscreen, setFullscreen] = useState(false);
   const touchStartX = useRef<number | null>(null);
 
@@ -79,15 +79,20 @@ export function RevelationLightbox({ items, index, onClose, onChange }: Props) {
           text: "Sala de Revelação",
           url,
         });
+        setShareState("shared");
       } else {
         await navigator.clipboard.writeText(url);
+        setShareState("copied");
       }
-      setShareState("done");
       window.setTimeout(() => setShareState("idle"), 1800);
-    } catch {
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
       try {
         await navigator.clipboard.writeText(url);
-        setShareState("done");
+        setShareState("copied");
         window.setTimeout(() => setShareState("idle"), 1800);
       } catch {
         setShareState("idle");
@@ -168,7 +173,11 @@ export function RevelationLightbox({ items, index, onClose, onChange }: Props) {
             aria-label="Partilhar"
             className="flex h-10 min-w-10 items-center justify-center border border-border px-2 text-foreground transition hover:border-blood hover:text-blood focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blood"
           >
-            {shareState === "done" ? "COPIED" : <Share2 size={17} />}
+            {shareState === "shared"
+              ? "SHARED"
+              : shareState === "copied"
+                ? "COPIED"
+                : <Share2 size={17} />}
           </button>
 
           {item.downloadable && (
