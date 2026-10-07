@@ -209,6 +209,10 @@ describe("camera engineering foundation", () => {
       width: 1280,
       height: 720,
     });
+    expect(getMaxCaptureDimensions(1080, 1920)).toEqual({
+      width: 1080,
+      height: 1920,
+    });
   });
 
   it("detects the capability matrix without opening a device", () => {
