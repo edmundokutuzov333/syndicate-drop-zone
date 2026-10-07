@@ -1,23 +1,41 @@
 void main() {
-  vec2 uv = distortUv(v_uv);
+  vec2 breathing = vec2(
+    sin(u_time * 0.72) * 0.002,
+    cos(u_time * 0.52) * 0.0014
+  );
+  vec2 uv = distortUv(v_uv + breathing);
   vec3 color = chromaticSample(uv);
 
   float lum = luma(color);
-  float contrast = mix(1.0, 1.58, u_intensity);
-  color = (color - 0.5) * contrast + 0.5;
+  color = cinematicGrade(
+    color,
+    vec3(0.015, 0.025, 0.055),
+    vec3(0.18, 0.035, -0.015),
+    1.0
+  );
 
-  color.r += 0.14 * u_intensity;
-  color.g *= 0.87;
-  color.b *= 0.80;
+  color = softBloom(uv, color, 0.70, 0.24);
 
-  float bloom = max(0.0, luma(color) - 0.72);
-  color += vec3(0.55, 0.08, 0.04) * bloom * 0.16;
+  float halo = smoothstep(
+    0.85,
+    0.15,
+    distance(uv, vec2(0.78 + sin(u_time * 0.22) * 0.06, 0.20))
+  );
+  float leak = smoothstep(0.80, 0.99, uv.x) * (0.45 + 0.55 * pulse(0.75, 1.2));
+  color += vec3(0.65, 0.16, 0.03) * halo * 0.075;
+  color += vec3(0.34, 0.025, 0.008) * leak * 0.09;
 
-  float grain = filmGrain(uv, lum);
-  color += grain * 0.075;
+  float gate = filmGate(v_uv, 0.06);
+  float scan = scanline(0.32, 0.028);
+  float dust = dustSpeck(uv, 310.0, 0.9975);
+  float hair = hairline(uv, 0.55, 0.032);
 
-  color *= vignette(v_uv, 0.44);
+  color += filmGrain(uv, lum) * 0.065;
+  color += vec3(dust + hair) * 0.035;
+  color *= gate * scan * vignette(v_uv, 0.34);
+
   color = feedbackBlend(uv, color);
+  color = applyFlash(color);
 
-  gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
+  gl_FragColor = vec4(saturateColor(color), 1.0);
 }
