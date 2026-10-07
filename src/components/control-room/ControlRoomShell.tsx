@@ -122,7 +122,7 @@ export function ControlRoomShell() {
 
   const go = (to: string) => {
     setPaletteOpen(false);
-    navigate({ to });
+    navigate({ to: to as never });
   };
 
   return (
