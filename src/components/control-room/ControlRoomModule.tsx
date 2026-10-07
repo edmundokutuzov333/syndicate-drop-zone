@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { MediaManager } from "@/components/control-room/MediaManager";
 import {
   Check,
   Copy,
@@ -177,6 +178,7 @@ function canEditDefinition(definition: ModuleDefinition, role: ControlRoomRole |
 }
 
 export function ControlRoomModule({ module }: { module: keyof typeof MODULE_CONFIG }) {
+  if (module === "media") return <MediaManager />;
   const config = MODULE_CONFIG[module];
   const [role, setRole] = useState<ControlRoomRole | null>(null);
   const [activeTable, setActiveTable] = useState(config.tables[0] ?? "");
@@ -549,6 +551,16 @@ function RecordEditor({
   const fields = Object.keys(form);
   const dirty = JSON.stringify(form) !== JSON.stringify(savedForm);
 
+  useEffect(() => {
+    if (!dirty || !editable) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [dirty, editable]);
+
   const patchField = (key: string, value: unknown) => {
     setForm((current) => {
       const next = { ...current, [key]: value };
@@ -596,6 +608,12 @@ function RecordEditor({
           {form.id && <p className="mt-1 font-mono text-[9px] text-white/25">{String(form.id)}</p>}
         </div>
 
+      {dirty && editable && (
+        <div className="border-b border-[#d71920]/30 bg-[#d71920]/5 px-4 py-3 font-mono text-[9px] tracking-[0.12em] text-white/60">
+          ALTERAÇÕES NÃO GUARDADAS. GUARDAR ANTES DE SAIR.
+          <button type="button" onClick={() => { setForm(normaliseRecord(savedForm)); setRaw(JSON.stringify(savedForm, null, 2)); }} className="ml-3 text-[#d71920] hover:text-white">DESCARTAR</button>
+        </div>
+      )}
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
