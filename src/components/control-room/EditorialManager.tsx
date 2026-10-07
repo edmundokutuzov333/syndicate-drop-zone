@@ -3,6 +3,7 @@ import { Check, Eye, Plus, RefreshCw, Save, Trash2 } from "lucide-react";
 import {
   adminQuery,
   getControlRoomSession,
+  isPublicPreviewSession,
   type ControlRoomRole,
 } from "@/lib/control-room-auth";
 
@@ -55,6 +56,7 @@ function patchFor(row: Row) {
 export function EditorialManager({ mode }: { mode: keyof typeof DISPLAY_GROUPS }) {
   const cfg = DISPLAY_GROUPS[mode];
   const [role, setRole] = useState<ControlRoomRole | null>(null);
+  const [previewMode, setPreviewMode] = useState(false);
   const [rowsByTable, setRowsByTable] = useState<Record<string, Row[]>>({});
   const [table, setTable] = useState(cfg.tables[0]);
   const [selected, setSelected] = useState<Row | null>(null);
@@ -63,7 +65,7 @@ export function EditorialManager({ mode }: { mode: keyof typeof DISPLAY_GROUPS }
   const [busy, setBusy] = useState(true);
   const [notice, setNotice] = useState("");
 
-  const canEdit = editable(role);
+  const canEdit = !previewMode && editable(role);
   const rows = rowsByTable[table] ?? [];
 
   const load = async () => {
@@ -75,6 +77,7 @@ export function EditorialManager({ mode }: { mode: keyof typeof DISPLAY_GROUPS }
         ...cfg.tables.map((name) => adminQuery<Row[]>("/rest/v1/" + name + "?select=*&limit=1000")),
       ]);
       setRole(session?.role ?? null);
+      setPreviewMode(isPublicPreviewSession(session));
       const next = Object.fromEntries(cfg.tables.map((name, index) => [name, sets[index]]));
       setRowsByTable(next);
       setSelected((current) => {
