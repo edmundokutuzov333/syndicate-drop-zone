@@ -3,16 +3,14 @@ import { useEffect, useMemo } from "react";
 import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 import { RevelationLightbox } from "@/components/revelacao/Lightbox";
 import { RevelationMediaSurface } from "@/components/revelacao/MediaSurface";
-import {
-  REVELACAO_MEDIA,
-  REVELACAO_READY_MEDIA,
-  type RevelationMedia,
-} from "@/lib/revelacao-media";
+import { type RevelationMedia } from "@/lib/revelacao-media";
 import { cn } from "@/lib/utils";
+import { getLiveRevelationMedia } from "@/lib/site-content";
 
 type Search = { media?: string };
 
 export const Route = createFileRoute("/revelacao")({
+  loader: async () => ({ mediaItems: await getLiveRevelationMedia() }),
   validateSearch: (search: Record<string, unknown>): Search => {
     const media = typeof search.media === "string" ? search.media : undefined;
     return media ? { media } : {};
@@ -116,12 +114,14 @@ function GalleryItem({
 function Revelacao() {
   const navigate = useNavigate({ from: "/revelacao" });
   const { media } = Route.useSearch();
+  const { mediaItems } = Route.useLoaderData();
+  const readyMedia = mediaItems.filter((item) => item.src);
 
   const selectedIndex = useMemo(() => {
     if (!media) return null;
-    const index = REVELACAO_READY_MEDIA.findIndex((item) => item.id === media);
+    const index = readyMedia.findIndex((item) => item.id === media);
     return index >= 0 ? index : null;
-  }, [media]);
+  }, [media, readyMedia]);
 
   useEffect(() => {
     if (media && selectedIndex === null) {
@@ -130,9 +130,9 @@ function Revelacao() {
   }, [media, navigate, selectedIndex]);
 
   const open = (index: number) => {
-    const item = REVELACAO_MEDIA[index];
+    const item = mediaItems[index];
     if (!item?.src) return;
-    const readyIndex = REVELACAO_READY_MEDIA.findIndex((ready) => ready.id === item.id);
+    const readyIndex = readyMedia.findIndex((ready) => ready.id === item.id);
     if (readyIndex < 0) return;
     navigate({ search: { media: item.id } });
   };
@@ -171,7 +171,7 @@ function Revelacao() {
           }
         }}
       >
-        <RevelationMediaSurface item={REVELACAO_MEDIA[0]!} />
+        <RevelationMediaSurface item={mediaItems[0]!} />
         <div className="pointer-events-none absolute inset-0 bg-background/10" />
         <span className="absolute left-3 top-3 bg-blood px-2 py-1 font-stamp text-xs text-primary-foreground">
           ● REC — SESSÃO
@@ -185,7 +185,7 @@ function Revelacao() {
       </section>
 
       <section className="relative mt-20 grid grid-cols-1 items-start gap-8 md:grid-cols-2 md:gap-10 lg:gap-12">
-        {REVELACAO_MEDIA.slice(1).map((item, index) => (
+        {mediaItems.slice(1).map((item, index) => (
           <GalleryItem
             key={item.id}
             item={item}
@@ -197,11 +197,11 @@ function Revelacao() {
 
       {selectedIndex !== null && (
         <RevelationLightbox
-          items={REVELACAO_READY_MEDIA}
+          items={readyMedia}
           index={selectedIndex}
           onClose={close}
           onChange={(nextIndex) => {
-            const item = REVELACAO_READY_MEDIA[nextIndex];
+            const item = readyMedia[nextIndex];
             if (item) {
               navigate({ search: { media: item.id }, replace: true });
             }
