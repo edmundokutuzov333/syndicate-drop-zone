@@ -692,7 +692,6 @@ export class WebGLEngine {
     }
 
     gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
     gl.texImage2D(
       gl.TEXTURE_2D,
       0,
@@ -701,7 +700,6 @@ export class WebGLEngine {
       gl.UNSIGNED_BYTE,
       canvas,
     );
-    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 0);
     gl.bindTexture(gl.TEXTURE_2D, null);
 
     this.overlayDirty = false;
@@ -810,7 +808,8 @@ export class WebGLEngine {
       name === "u_texture" ||
       name === "u_previousFrame" ||
       name === "u_from" ||
-      name === "u_to"
+      name === "u_to" ||
+      name === "u_overlay"
     ) {
       gl.uniform1i(
         location,
