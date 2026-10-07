@@ -203,8 +203,6 @@ export function CameraPage() {
 
       try {
         const result = await captureEngine.stopVideo();
-        await cameraManager.syncVideoFlash(false);
-        engineReady?.setUniform("u_flash", 0);
         if (result) {
           setPreview(result);
           setCaptureStatus("preview");
@@ -215,6 +213,9 @@ export function CameraPage() {
         setCaptureStatus("error");
         setCaptureError(error instanceof Error ? error.message : "VIDEO_RECORDING_FAILED");
         console.error(error);
+      } finally {
+        await cameraManager.syncVideoFlash(false);
+        engineReady?.setUniform("u_flash", 0);
       }
 
       return;
@@ -284,6 +285,8 @@ export function CameraPage() {
       setCaptureStatus("recording");
     } catch (error) {
       console.error(error);
+      await cameraManager.syncVideoFlash(false);
+      engineReady?.setUniform("u_flash", 0);
       setCaptureStatus("error");
       setCaptureError(error instanceof Error ? error.message : "CAPTURE_FAILED");
     }
