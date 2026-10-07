@@ -12,6 +12,7 @@ import {
   getImageFormatCapabilities,
   getRecorderCapabilities,
   getVideoFormatCapabilities,
+  chooseRecorderMimeType,
 } from "@/lib/camera/recorder";
 import { getFilterFragmentShader } from "@/lib/webgl/filter-shaders";
 
@@ -198,5 +199,51 @@ describe("camera engineering foundation", () => {
       "mkv",
       "webm",
     ]);
+  });
+
+  it("never claims a requested codec without MediaRecorder runtime support", () => {
+    vi.stubGlobal("MediaRecorder", {
+      isTypeSupported: vi.fn(
+        (mime: string) =>
+          mime.includes("video/webm;codecs=vp9,opus") ||
+          mime === "video/webm",
+      ),
+    });
+
+    expect(chooseRecorderMimeType("mp4")).toBeNull();
+    expect(chooseRecorderMimeType("mov")).toBeNull();
+    expect(chooseRecorderMimeType("mkv")).toBeNull();
+    expect(chooseRecorderMimeType("webm")).toBe("video/webm;codecs=vp9,opus");
+
+    const capabilities = getVideoFormatCapabilities();
+    expect(capabilities.find((item) => item.format === "mp4")?.supported).toBe(false);
+    expect(capabilities.find((item) => item.format === "webm")?.supported).toBe(true);
+
+    vi.unstubAllGlobals();
+  });
+
+  it("keeps the performance policy conservative on constrained frames", () => {
+    const low = adaptiveRenderPolicy({
+      fps: 30,
+      frameTimeMs: 33,
+      droppedFrames: 8,
+      deviceTier: "low",
+      dpr: 1,
+      renderScale: 0.8,
+    });
+
+    const healthy = adaptiveRenderPolicy({
+      fps: 60,
+      frameTimeMs: 16.7,
+      droppedFrames: 0,
+      deviceTier: "high",
+      dpr: 2,
+      renderScale: 0.85,
+    });
+
+    expect(low.renderScale).toBeLessThan(0.8);
+    expect(low.dpr).toBe(1);
+    expect(healthy.renderScale).toBeGreaterThan(0.85);
+    expect(healthy.dpr).toBe(2);
   });
 });
