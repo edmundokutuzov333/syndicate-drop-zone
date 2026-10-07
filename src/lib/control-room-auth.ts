@@ -1,5 +1,9 @@
 export type ControlRoomRole = "OWNER" | "ADMIN" | "EDITOR" | "PARTNERSHIPS" | "MERCH";
 
+export function isPublicPreviewSession(session: ControlRoomSession | null | undefined) {
+  return session?.userId === "public-preview";
+}
+
 export type ControlRoomSession = {
   accessToken: string;
   refreshToken: string;
@@ -303,6 +307,29 @@ export async function checkStorageBucket(bucket = getMediaBucket()) {
 export async function adminQuery<T>(path: string, init: RequestInit = {}) {
   const session = await getControlRoomSession();
   if (!session) throw new Error("Sessão do Control Room expirada.");
+
+  const method = (init.method ?? "GET").toUpperCase();
+  if (isPublicPreviewSession(session)) {
+    if (method !== "GET" && method !== "HEAD") {
+      throw new Error("ACESSO DIRECTO: edição requer uma sessão administrativa real.");
+    }
+
+    const tableMatch = path.match(/^\/rest\/v1\/([^?]+)/);
+    const table = tableMatch?.[1];
+    if (!table) throw new Error("Recurso do Control Room inválido.");
+
+    try {
+      const rows = await publicQuery<T>(path);
+      if (Array.isArray(rows) && rows.length > 0) return rows;
+      const fallback = getControlRoomStaticRows(table);
+      return (fallback ?? rows) as T;
+    } catch {
+      const fallback = getControlRoomStaticRows(table);
+      if (fallback !== null) return fallback as T;
+      throw new Error("Dados públicos do módulo não estão disponíveis.");
+    }
+  }
+
   return supabaseRequest<T>(path, init, session.accessToken);
 }
 
