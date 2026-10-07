@@ -70,6 +70,7 @@ export function CameraViewport({
       engine.preloadFilters(vertexShader);
       engine.setUniform("u_rotation", orientation.getState().renderRotation);
       engine.setUniform("u_mirror", facingMode === "user" ? 1 : 0);
+      engine.setUniform("u_flash", 0);
       engine.setFilter(filter);
       resize();
     };
