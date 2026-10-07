@@ -2,6 +2,7 @@ export type CameraFacingMode = "user" | "environment";
 export type CaptureMode = "photo" | "video";
 export type CaptureTimer = "off" | 3 | 10;
 export type FilterId = "op1um" | "xerox" | "corrupt" | "nightvision" | "thermal" | "redroom";
+export type FlashMode = "off" | "hardware" | "software";
 export type PerformanceTier = "high" | "medium" | "low";
 export type CameraStatus = "idle" | "requesting" | "ready" | "active" | "error" | "stopped";
 
@@ -17,6 +18,8 @@ export type CameraState = {
   devices: CameraDevice[];
   facingMode: CameraFacingMode;
   microphoneEnabled: boolean;
+  flashEnabled: boolean;
+  flashMode: FlashMode;
   width: number;
   height: number;
   frameRate: number;
