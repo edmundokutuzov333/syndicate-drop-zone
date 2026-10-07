@@ -145,7 +145,72 @@ Phase 2: real-time FX engine, dynamic grain/noise/distortion/chromatic/feedback,
 
 Phase 3: photo/video capture, countdown, flash, MediaRecorder, audio routing, preview, download, filename strategy, 4K capture gate and runtime format capabilities.
 
-Phase 4: profiling, shader/uniform/texture optimisation, low-end hardening and cross-browser lifecycle tests.
+Phase 4: profiling, shader/uniform/texture optimisation, low-end hardening and browser lifecycle hardening.
+
+## Phase 4 engineering
+
+### Render profiling
+
+The WebGL engine now records:
+- rolling FPS and frame time
+- render CPU time
+- texture upload time
+- shader compile time
+- draw calls per frame
+- JavaScript heap usage when the browser exposes it
+- GC event count when the browser exposes a GC PerformanceObserver entry type
+- device tier, DPR and adaptive render scale
+
+GPU cost is treated as a workload proxy through render time, texture upload time and draw-call count because WebGL does not expose a portable synchronous GPU timing API across all target browsers.
+
+### Shader and uniform optimisation
+
+- shader programs remain cached by stable program key
+- program compilation is measured and never repeated for ordinary uniform changes
+- uniform locations are cached
+- unchanged uniforms are skipped instead of issuing redundant GL calls
+- dynamic values remain uniforms rather than shader defines
+- the normal render path remains one filter pass
+- two filter passes plus a blend pass are used only during the 300 ms filter transition
+
+### Texture and framebuffer reuse
+
+- two persistent video textures are reused frame-to-frame
+- video updates use texSubImage2D after initial allocation
+- transition framebuffers are reused when the output resolution has not changed
+- capture still allocates the required 3840×2160 surfaces only when the capture resolution actually changes
+- no per-frame WebGL texture creation is introduced
+
+### Low-end hardening
+
+Adaptive policy lowers render scale/DPR only when the measured frame budget degrades. It never changes the delivered camera track resolution.
+
+The capture path explicitly disables adaptive preview scaling while forcing a real 3840×2160 output, then restores the preview policy after capture.
+
+### Lifecycle hardening
+
+- camera recovery checks for ended video tracks when the page becomes visible again
+- camera tracks expose an ended lifecycle state instead of silently rendering a dead stream
+- WebGL context loss is intercepted and the engine can reinitialise after context restoration
+- hidden tabs stop the live render workload when not recording
+- recording keeps the render loop alive while the document is hidden
+- route cleanup remains responsible for WebGL, MediaRecorder, audio and camera resources
+
+### Bundle isolation
+
+The /camera route lazy-loads CameraPage so the heavy camera feature is no longer eagerly pulled into the initial application route payload.
+
+### Capability hardening
+
+Requested MP4, MOV and MKV formats remain capability-gated through MediaRecorder.isTypeSupported(). Unsupported encoders are never simulated by changing file extensions.
+
+TIFF remains explicitly unavailable because the requested Adobe RGB / CMYK, lossless browser-native TIFF pipeline does not exist in the current capture layer.
+
+## Phase 4 verification boundary
+
+Static/unit coverage has been expanded for codec capability gating and adaptive performance policy.
+
+Physical validation on real iPhone, Android, Safari, Chrome, Firefox, Edge, low-end GPUs and browser sleep/wake conditions still requires an actual browser/device matrix. The code is hardened for those cases, but no claim of a completed physical matrix is made until those environments have been exercised.
 
 ## Phase 3 definition of done
 
