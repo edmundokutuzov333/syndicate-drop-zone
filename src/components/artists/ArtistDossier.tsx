@@ -118,12 +118,12 @@ export function ArtistDossier({ artist }: Props) {
             <div>
               <dt className="text-blood">VOZ</dt>
               <dd className="mt-1 font-stamp text-sm tracking-normal">
-                {artist.slug === "herkey-hk" ? "MELÓDICO / TRAP" : "TRAP"}
+                {artist.role}
               </dd>
             </div>
             <div>
               <dt className="text-blood">SESSÃO</dt>
-              <dd className="mt-1 font-stamp text-sm tracking-normal">STUDIO XOYENS</dd>
+              <dd className="mt-1 font-stamp text-sm tracking-normal">{artist.studio}</dd>
             </div>
             <div>
               <dt className="text-blood">ZONA</dt>
@@ -131,7 +131,7 @@ export function ArtistDossier({ artist }: Props) {
             </div>
             <div>
               <dt className="text-blood">EDIÇÃO</dt>
-              <dd className="mt-1 font-stamp text-sm tracking-normal">01</dd>
+              <dd className="mt-1 font-stamp text-sm tracking-normal">{artist.edition}</dd>
             </div>
           </dl>
         </div>
