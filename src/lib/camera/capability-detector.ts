@@ -34,6 +34,9 @@ export function detectCameraCapabilities(): {
       supported: supportedMimes.length > 0,
       mimeTypes: supportedMimes,
       canvasCaptureSupported: Boolean(canvas && typeof canvas.captureStream === "function"),
+      audioCaptureSupported:
+        typeof window !== "undefined" &&
+        ("AudioContext" in window || "webkitAudioContext" in window),
     },
     webgl: {
       webgl2,

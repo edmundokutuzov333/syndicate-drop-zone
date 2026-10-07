@@ -1,8 +1,9 @@
-import { type CameraState, type CaptureMode } from "@/lib/camera/types";
+import { type CameraState, type CaptureMode, type CaptureStatus } from "@/lib/camera/types";
 
 type CameraControlsProps = {
   camera: CameraState;
   mode: CaptureMode;
+  captureStatus: CaptureStatus;
   onModeChange: (mode: CaptureMode) => void;
   onSwitchCamera: () => Promise<void>;
 };
@@ -19,6 +20,7 @@ function formatResolution(width: number, height: number): string {
 export function CameraControls({
   camera,
   mode,
+  captureStatus,
   onModeChange,
   onSwitchCamera,
 }: CameraControlsProps) {
@@ -26,7 +28,16 @@ export function CameraControls({
     camera.facingMode === "user" ? "FRONT" : "BACK";
   const fps = camera.frameRate > 0 ? String(camera.frameRate) : "--";
   const mic = camera.microphoneEnabled ? "MIC ON" : "MIC OFF";
-  const recording = mode === "video" ? "REC STBY" : "REC OFF";
+  const recording =
+    captureStatus === "recording"
+      ? "REC"
+      : mode === "video"
+        ? "REC STBY"
+        : "REC OFF";
+  const locked =
+    captureStatus === "recording" ||
+    captureStatus === "countdown" ||
+    captureStatus === "processing";
 
   return (
     <>
@@ -35,7 +46,7 @@ export function CameraControls({
           <span
             className={
               "camera-rec-dot " +
-              (mode === "video" ? "is-ready" : "")
+              (captureStatus === "recording" ? "is-recording" : "")
             }
           />
           {recording}
@@ -48,6 +59,7 @@ export function CameraControls({
           className="camera-camera-switch"
           onClick={() => void onSwitchCamera()}
           disabled={
+            locked ||
             camera.status !== "active" ||
             camera.devices.length < 2
           }
@@ -63,6 +75,7 @@ export function CameraControls({
           type="button"
           className={mode === "photo" ? "is-active" : ""}
           onClick={() => onModeChange("photo")}
+          disabled={locked}
         >
           PHOTO
         </button>
@@ -71,6 +84,7 @@ export function CameraControls({
           type="button"
           className={mode === "video" ? "is-active" : ""}
           onClick={() => onModeChange("video")}
+          disabled={locked}
         >
           VIDEO
         </button>

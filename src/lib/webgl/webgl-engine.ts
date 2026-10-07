@@ -64,6 +64,7 @@ export class WebGLEngine {
   private renderScale = 1;
   private surfaceWidth = 1;
   private surfaceHeight = 1;
+  private forcedOutputResolution: { width: number; height: number } | null = null;
   private lastFrameAt = 0;
   private frameCounter = 0;
   private metrics: RenderMetrics = {
@@ -138,20 +139,21 @@ export class WebGLEngine {
     );
   }
 
+  get hasForcedOutputResolution(): boolean {
+    return Boolean(this.forcedOutputResolution);
+  }
+
+  getCanvas(): HTMLCanvasElement | null {
+    return this.canvas;
+  }
+
   resize(width: number, height: number): void {
     if (!this.canvas || !this.gl) return;
 
     this.surfaceWidth = Math.max(1, width);
     this.surfaceHeight = Math.max(1, height);
 
-    this.canvas.width = Math.max(
-      1,
-      Math.round(this.surfaceWidth * this.dpr * this.renderScale),
-    );
-    this.canvas.height = Math.max(
-      1,
-      Math.round(this.surfaceHeight * this.dpr * this.renderScale),
-    );
+    this.applyCanvasResolution();
 
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 
@@ -163,6 +165,54 @@ export class WebGLEngine {
       dpr: this.dpr,
       renderScale: this.renderScale,
     };
+  }
+
+  async setOutputResolution(width: number, height: number): Promise<void> {
+    if (!this.canvas || !this.gl) {
+      throw new Error("WEBGL_NOT_INITIALIZED");
+    }
+
+    this.forcedOutputResolution = {
+      width: Math.round(width),
+      height: Math.round(height),
+    };
+
+    this.applyCanvasResolution();
+    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    this.transitionFrom.create(this.gl, this.canvas.width, this.canvas.height);
+    this.transitionTo.create(this.gl, this.canvas.width, this.canvas.height);
+  }
+
+  async restorePreviewResolution(): Promise<void> {
+    this.forcedOutputResolution = null;
+
+    if (!this.canvas || !this.gl) return;
+
+    this.applyCanvasResolution();
+    this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+    this.transitionFrom.create(this.gl, this.canvas.width, this.canvas.height);
+    this.transitionTo.create(this.gl, this.canvas.width, this.canvas.height);
+  }
+
+  async withOutputResolution<T>(
+    width: number,
+    height: number,
+    task: () => Promise<T>,
+  ): Promise<T> {
+    const previous = this.forcedOutputResolution;
+
+    await this.setOutputResolution(width, height);
+
+    try {
+      return await task();
+    } finally {
+      this.forcedOutputResolution = previous;
+      if (previous) {
+        await this.setOutputResolution(previous.width, previous.height);
+      } else {
+        await this.restorePreviewResolution();
+      }
+    }
   }
 
   setFrameSource(source: TexImageSource | null): void {
@@ -181,7 +231,6 @@ export class WebGLEngine {
 
       this.programs.set(filter.id, handle);
     }
-
   }
 
   setProgram(
@@ -228,7 +277,6 @@ export class WebGLEngine {
       to: filter,
       startedAt: now,
     };
-
   }
 
   setUniform(name: string, value: UniformValue): void {
@@ -311,7 +359,7 @@ export class WebGLEngine {
 
     this.frameCounter += 1;
 
-    if (this.frameCounter % 30 === 0) {
+    if (this.frameCounter % 30 === 0 && !this.forcedOutputResolution) {
       this.applyAdaptivePolicy();
     }
   }
@@ -353,6 +401,7 @@ export class WebGLEngine {
     this.vertexShaderSource = "";
     this.filter = "op1um";
     this.transition = null;
+    this.forcedOutputResolution = null;
     this.programs.clear();
     this.blendProgram = null;
     this.uniforms.clear();
@@ -360,6 +409,25 @@ export class WebGLEngine {
     this.attributeLocations.clear();
     this.lastFrameAt = 0;
     this.frameCounter = 0;
+  }
+
+  private applyCanvasResolution(): void {
+    if (!this.canvas) return;
+
+    if (this.forcedOutputResolution) {
+      this.canvas.width = Math.max(1, this.forcedOutputResolution.width);
+      this.canvas.height = Math.max(1, this.forcedOutputResolution.height);
+      return;
+    }
+
+    this.canvas.width = Math.max(
+      1,
+      Math.round(this.surfaceWidth * this.dpr * this.renderScale),
+    );
+    this.canvas.height = Math.max(
+      1,
+      Math.round(this.surfaceHeight * this.dpr * this.renderScale),
+    );
   }
 
   private renderFilterPass(
@@ -615,7 +683,6 @@ export class WebGLEngine {
 
     this.gl.attachShader(program, vertex);
     this.gl.attachShader(program, fragment);
-    this.gl.linkProgram(program);
     this.gl.deleteShader(vertex);
     this.gl.deleteShader(fragment);
 

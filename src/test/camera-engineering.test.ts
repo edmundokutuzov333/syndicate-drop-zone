@@ -8,7 +8,11 @@ import {
 } from "@/lib/camera/capture-timer";
 import { FILTER_REGISTRY } from "@/lib/webgl/filter-registry";
 import { adaptiveRenderPolicy } from "@/lib/camera/performance-manager";
-import { getRecorderCapabilities } from "@/lib/camera/recorder";
+import {
+  getImageFormatCapabilities,
+  getRecorderCapabilities,
+  getVideoFormatCapabilities,
+} from "@/lib/camera/recorder";
 import { getFilterFragmentShader } from "@/lib/webgl/filter-shaders";
 
 function makeTrack(
@@ -175,11 +179,24 @@ describe("camera engineering foundation", () => {
     expect(policy.dpr).toBe(1.75);
   });
 
-  it("detects recorder capability without opening a device", () => {
-    const capabilities = getRecorderCapabilities();
+  it("detects the capability matrix without opening a device", () => {
+    const recorder = getRecorderCapabilities();
+    const images = getImageFormatCapabilities();
+    const videos = getVideoFormatCapabilities();
 
-    expect(capabilities).toHaveProperty("supported");
-    expect(capabilities).toHaveProperty("mimeTypes");
-    expect(capabilities).toHaveProperty("canvasCaptureSupported");
+    expect(recorder).toHaveProperty("supported");
+    expect(recorder).toHaveProperty("canvasCaptureSupported");
+    expect(recorder).toHaveProperty("audioCaptureSupported");
+    expect(images.map((item) => item.format)).toEqual([
+      "jpg",
+      "png",
+      "tiff",
+    ]);
+    expect(videos.map((item) => item.format)).toEqual([
+      "mp4",
+      "mov",
+      "mkv",
+      "webm",
+    ]);
   });
 });

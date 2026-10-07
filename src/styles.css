@@ -677,3 +677,302 @@
   .camera-shutter-inner { inset: 20px; }
 }
 
+
+
+/* Phase 3: capture engine controls and preview. */
+.camera-capture {
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.camera-capture-tools {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  max-width: 100%;
+  color: rgba(235,231,222,0.42);
+  font: 7px/1 var(--font-mono);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  pointer-events: auto;
+  text-shadow: 0 1px 8px rgba(0,0,0,.95);
+}
+
+.camera-timer-strip,
+.camera-format-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.camera-timer-strip button {
+  appearance: none;
+  border: 0;
+  padding: 3px 2px;
+  background: transparent;
+  color: rgba(235,231,222,.42);
+  font: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.camera-timer-strip button:hover,
+.camera-timer-strip button.is-active,
+.camera-timer-strip button:focus-visible {
+  color: #f3eee5;
+  outline: none;
+}
+
+.camera-timer-strip button:disabled {
+  opacity: .38;
+  cursor: default;
+}
+
+.camera-format-select select {
+  appearance: none;
+  border: 0;
+  padding: 2px 14px 2px 2px;
+  background: transparent;
+  color: #d7d0c4;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.camera-format-select select:focus-visible {
+  outline: 1px solid rgba(190,29,24,.65);
+  outline-offset: 2px;
+}
+
+.camera-format-select select:disabled {
+  opacity: .38;
+  cursor: default;
+}
+
+.camera-format-select option {
+  background: #080808;
+  color: #e8e4d8;
+}
+
+.camera-shutter {
+  cursor: pointer;
+}
+
+.camera-shutter:not(:disabled):hover {
+  transform: scale(1.02);
+}
+
+.camera-shutter:not(:disabled):active {
+  transform: scale(.96);
+}
+
+.camera-shutter:disabled {
+  cursor: not-allowed;
+}
+
+.camera-shutter.is-recording {
+  border-color: rgba(174,25,20,.82);
+}
+
+.camera-shutter.is-recording .camera-shutter-inner {
+  inset: 20px;
+  background: #a71814;
+  border-color: rgba(255,255,255,.35);
+  box-shadow: 0 0 12px rgba(167,24,20,.6);
+}
+
+.camera-shutter-countdown {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  color: #090909;
+  font: 15px/1 var(--font-mono);
+  font-weight: 700;
+}
+
+.camera-countdown {
+  position: absolute;
+  z-index: 14;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(248,242,233,.94);
+  font: 100px/1 var(--font-stamp);
+  text-shadow: 0 5px 30px rgba(0,0,0,.8), 0 0 30px rgba(160,24,20,.35);
+  pointer-events: none;
+}
+
+.camera-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.camera-flash.is-active {
+  animation: camera-flash 90ms linear both;
+}
+
+@keyframes camera-flash {
+  from { opacity: .95; }
+  to { opacity: 0; }
+}
+
+.camera-capture-lock {
+  color: rgba(210,205,195,.36);
+  font: 6px/1 var(--font-mono);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 8px rgba(0,0,0,.95);
+}
+
+.camera-rec-dot.is-recording {
+  background: var(--blood);
+  box-shadow: 0 0 11px rgba(164,24,20,.8);
+  animation: blink 1s steps(2,end) infinite;
+}
+
+.camera-mode-switch button:disabled {
+  opacity: .35;
+  cursor: default;
+}
+
+.camera-preview {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: max(14px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  border: 0;
+  background: rgba(3,3,3,.96);
+  box-sizing: border-box;
+}
+
+.camera-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.camera-preview-head > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.camera-preview-kicker {
+  color: var(--blood);
+  font: 6px/1 var(--font-mono);
+  letter-spacing: .16em;
+}
+
+.camera-preview-head strong {
+  overflow: hidden;
+  color: rgba(239,233,224,.8);
+  font: 8px/1.2 var(--font-mono);
+  font-weight: 400;
+  letter-spacing: .06em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.camera-preview-close,
+.camera-preview-download,
+.camera-preview-dismiss {
+  appearance: none;
+  border: 1px solid rgba(235,231,222,.18);
+  padding: 7px 9px;
+  background: transparent;
+  color: rgba(235,231,222,.62);
+  font: 7px/1 var(--font-mono);
+  letter-spacing: .14em;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.camera-preview-close:hover,
+.camera-preview-download:hover,
+.camera-preview-dismiss:hover,
+.camera-preview-close:focus-visible,
+.camera-preview-download:focus-visible,
+.camera-preview-dismiss:focus-visible {
+  border-color: rgba(166,24,20,.68);
+  color: #f3eee5;
+  outline: none;
+}
+
+.camera-preview-stage {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid rgba(235,231,222,.08);
+}
+
+.camera-preview-stage img,
+.camera-preview-stage video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.camera-preview-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+  color: rgba(235,231,222,.42);
+  font: 6px/1 var(--font-mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.camera-preview-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.camera-preview-download {
+  border-color: rgba(167,24,20,.6);
+  color: rgba(238,229,219,.86);
+}
+
+.camera-preview-note {
+  margin: 0;
+  color: rgba(235,231,222,.28);
+  font: 6px/1.5 var(--font-mono);
+  letter-spacing: .05em;
+}
+
+@media (max-width: 700px) {
+  .camera-capture-tools {
+    gap: 8px;
+  }
+
+  .camera-countdown {
+    font-size: 74px;
+  }
+
+  .camera-preview-actions {
+    justify-content: stretch;
+  }
+
+  .camera-preview-download,
+  .camera-preview-dismiss {
+    flex: 1;
+    text-align: center;
+  }
+}

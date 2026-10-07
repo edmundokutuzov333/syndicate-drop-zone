@@ -13,6 +13,8 @@ type CameraViewportProps = {
   facingMode: CameraFacingMode;
   filter: FilterId;
   onReady: () => void | Promise<void>;
+  onCanvasReady?: (canvas: HTMLCanvasElement | null) => void;
+  onEngineReady?: (engine: WebGLEngine | null) => void;
 };
 
 export function CameraViewport({
@@ -20,6 +22,8 @@ export function CameraViewport({
   facingMode,
   filter,
   onReady,
+  onCanvasReady,
+  onEngineReady,
 }: CameraViewportProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -50,14 +54,21 @@ export function CameraViewport({
       engine.setFrameSource(video);
       engine.preloadFilters(vertexShader);
       engine.setUniform("u_rotation", 0);
-      engine.setUniform("u_mirror", facingMode === "user" ? 1 : 0);
+      engine.setUniform(
+        "u_mirror",
+        facingMode === "user" ? 1 : 0,
+      );
       engine.setFilter(filter);
       engineRef.current = engine;
       setEngineReady(true);
       ready = true;
+      onCanvasReady?.(canvas);
+      onEngineReady?.(engine);
     } catch {
       engine.destroy();
       setEngineReady(false);
+      onCanvasReady?.(null);
+      onEngineReady?.(null);
     }
 
     void onReady();
@@ -69,12 +80,8 @@ export function CameraViewport({
       engine.setUniform("u_rotation", state.renderRotation);
     });
 
-    engine.setUniform(
-      "u_mirror",
-      facingMode === "user" ? 1 : 0,
-    );
-
     const resize = () => {
+      if (engine.hasForcedOutputResolution) return;
       const rect = stage.getBoundingClientRect();
       engine.resize(rect.width, rect.height);
     };
@@ -99,12 +106,14 @@ export function CameraViewport({
       orientation.destroy();
       engine.destroy();
       engineRef.current = null;
+      onCanvasReady?.(null);
+      onEngineReady?.(null);
 
       if (video.parentElement === stage) {
         stage.removeChild(video);
       }
     };
-  }, [manager, onReady]);
+  }, [manager, onReady, onCanvasReady, onEngineReady]);
 
   useEffect(() => {
     engineRef.current?.setUniform(

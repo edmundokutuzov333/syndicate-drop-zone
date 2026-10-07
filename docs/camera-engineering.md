@@ -1,6 +1,6 @@
 # Camera Engineering
 
-## Phase 0, Phase 1 and Phase 2
+## Phase 0, Phase 1, Phase 2 and Phase 3
 
 The camera feature is an isolated local capture surface. The global site shell does not render TacticalNav, footer, grain or scanlines on /camera.
 
@@ -22,118 +22,120 @@ ShaderCache / FilterRegistry / FrameBuffer
   ↓
 Canvas Output
   ↓
-Photo / Video capture
+CaptureEngine
+  ├── Photo
+  └── Video + microphone
 
-Phase 2 activates the real-time visual FX layer while capture remains deliberately outside the phase boundary.
+Phase 3 connects the existing WebGL output to real local capture without introducing camera media persistence or Control Room coupling.
 
-## Phase 2 lifecycle
+## Phase 3 lifecycle
 
-1. /camera mounts and requests camera + microphone through the existing CameraManager.
-2. WebGLEngine initializes WebGL2 first and WebGL1 as fallback.
-3. The engine precompiles the six visible filter programs into the ShaderCache before normal filter interaction.
-4. Each live frame reuses a primary GPU texture and a previous-frame texture instead of allocating textures per frame.
-5. The selected filter runs in one fullscreen shader pass during normal operation.
-6. Feedback-capable filters can sample the previous frame for temporal drift, trails and echo-like motion.
-7. Filter changes use a dedicated two-filter cross-fade path for exactly 300 ms. The normal steady-state path remains single-pass.
-8. Dynamic values such as time, grain, distortion, chromatic shift and feedback are uniforms, not shader defines.
-9. Adaptive render policy observes frame time and FPS and can lower DPR/render scale without changing the source camera resolution.
-10. Route exit destroys the engine, programs, framebuffers, textures and media tracks.
+### Photo
 
-## FX pipeline
+1. Verify camera is active, WebGL is available and the delivered camera source is at least 3840×2160.
+2. Optional 3 s or 10 s countdown is rendered in the interface only.
+3. Trigger a short 90 ms visual flash outside the capture canvas.
+4. Force the WebGL canvas to 3840×2160.
+5. Wait for a rendered frame at the capture resolution.
+6. Export the rendered canvas to JPEG or PNG.
+7. Restore the adaptive preview resolution.
+8. Create a local object URL and open CapturePreview.
+9. User downloads the original local blob using the generated filename.
 
-camera frame
+### Video
+
+1. Verify camera, WebGL and 4K source capability.
+2. Optional 3 s or 10 s countdown runs before recording.
+3. Force the WebGL canvas to 3840×2160.
+4. Call canvas.captureStream(60).
+5. Route the microphone through AudioContext + MediaStreamDestination when the browser exposes the API.
+6. Combine the canvas video track with the processed microphone track.
+7. Create MediaRecorder only after runtime codec capability detection.
+8. Collect chunks without touching Supabase or remote storage.
+9. On STOP, close the recorder, build the blob, restore preview resolution and open CapturePreview.
+
+The interface countdown, flash and HUD are DOM overlays and are therefore not inserted into the canvas recording. The recorded pixels are the WebGL canvas output.
+
+## 4K rule
+
+The capture engine does not upscale a lower-resolution camera stream and call it native 4K.
+
+The shutter remains locked until the delivered video track reports at least 3840×2160. This is intentional: a 1080p camera cannot produce a genuine 4K capture merely by enlarging the canvas.
+
+The preview renderer may use adaptive DPR/render scale for performance, while capture temporarily forces the output canvas to exactly 3840×2160.
+
+## Video format capability policy
+
+The application checks MediaRecorder.isTypeSupported() at runtime.
+
+Requested formats are represented explicitly:
+- MP4: H.264 / AAC
+- MOV: ProRes 422 HQ / 4444
+- MKV: H.265 / HEVC
+
+A requested format is selectable only when the current browser exposes a matching MediaRecorder MIME/codec combination. Otherwise it stays visible as unavailable instead of producing a file with the wrong codec and extension.
+
+WEBM / VP9 is retained as a browser-native fallback so that a browser with no requested MP4/MOV/MKV encoder can still record a real video.
+
+The same principle applies to TIFF. Native browser canvas export does not provide the requested Adobe RGB / CMYK TIFF pipeline, so TIFF remains unavailable until a dedicated encoder is introduced. JPEG and PNG remain native sRGB exports.
+
+## Filename strategy
+
+Files follow:
+
+SDT_YYYYMMDD_HHMMSS_FILTER_FRONT_4K.ext
+
+or
+
+SDT_YYYYMMDD_HHMMSS_FILTER_BACK_4K.ext
+
+The actual output extension is derived from the MIME type emitted by the recorder.
+
+## Audio routing
+
+The camera stream remains owned by CameraManager.
+
+For video capture:
+camera MediaStream
   ↓
-current GPU texture + previous GPU texture
+microphone audio track
   ↓
-filter shader
-  ├── dynamic grain
-  ├── procedural noise
-  ├── lens / line distortion
-  ├── chromatic aberration
-  └── optional feedback
+AudioContext
   ↓
-Canvas Output
+MediaStreamDestination
+  ↓
+recording MediaStream
 
-During the 300 ms transition:
+No audio node is connected to speakers, preventing the recorder path from intentionally feeding the microphone back to the output.
 
-previous filter → offscreen framebuffer A
-current filter  → offscreen framebuffer B
-A + B           → crossfade shader → Canvas Output
+When AudioContext is unavailable, the engine falls back to the camera stream's live audio track where the browser exposes one.
 
-The additional passes exist only during the transition, not during the normal steady-state render loop.
+## Capture preview and cleanup
 
-## Shader architecture
+CapturePreview owns only the local object URL reference.
 
-Shared modules:
-- common.glsl
-- grain.glsl
-- distortion.glsl
-- chromatic.glsl
-- feedback.glsl
+Closing the preview revokes the object URL.
 
-Filter bodies:
-- op1um.frag.glsl
-- xerox.frag.glsl
-- corrupt.frag.glsl
-- nightvision.frag.glsl
-- thermal.frag.glsl
-- redroom.frag.glsl
+Route exit:
+- stops MediaRecorder when active
+- closes the audio context
+- stops capture tracks
+- restores preview resolution
+- destroys WebGL resources
+- CameraManager stops camera and microphone tracks
 
-The source is composed at build/runtime into individual filter programs. The project does not use one monolithic shaders.ts file.
+## Existing architecture preserved
 
-## Filter behaviour
+Phase 3 does not change:
+- route topology
+- global shell behaviour
+- Supabase tables
+- Control Room contracts
+- privacy boundary
+- Phase 2 filter shaders
+- adaptive preview rendering
 
-OP1UM:
-deep blacks, high contrast, controlled blood-red grading, dynamic grain, chromatic drift, lens distortion and restrained feedback.
-
-XEROX:
-luminance posterisation, thresholding, edge extraction, paper noise and black crush.
-
-CORRUPT:
-time-varying RGB split, scanline jitter, block displacement, frame tearing and temporal noise.
-
-NIGHTVISION:
-green phosphor response, scanlines, rolling beam, vignette and procedural sensor grain.
-
-THERMAL:
-luminance-to-thermal palette, edge enhancement, sensor noise and subtle lens distortion.
-
-REDROOM:
-monochrome red treatment, deep shadows, highlight extraction, grain, chromatic drift, vignette and restrained feedback.
-
-## Cross-fade
-
-The transition duration is 300 ms.
-
-The steady render path does not render two filters every frame. Only a filter change enters the transition compositor.
-
-The transition compositor blends two reusable offscreen textures and then returns to the single-filter direct-to-canvas path.
-
-## Performance
-
-The phase keeps these constraints:
-- one primary fullscreen draw in steady state
-- two reusable video textures
-- zero texture creation during normal frame updates
-- shader programs compiled once and cached
-- uniforms for dynamic parameters
-- bounded DPR
-- adaptive render scale when frame budget degrades
-- no preserveDrawingBuffer dependency
-
-The source camera stream remains at its browser-delivered capability. Performance adaptation changes the WebGL output resolution, not the camera track.
-
-The target remains adaptive rather than absolute:
-- modern desktop: approximately 60 FPS
-- recent iPhone: approximately 60 FPS
-- mid Android: approximately 45-60 FPS
-- constrained hardware: stable lower frame rates are accepted rather than forcing a costly 60 FPS claim
-
-## Existing site integrity
-
-The camera feature remains imported only by /camera. The rest of the application does not load the FX shader bundle or camera runtime.
-
-Supabase, Control Room and public content tables remain unchanged. Camera frames still stay local and are not uploaded automatically.
+The camera feature remains isolated to /camera.
 
 ## Phase boundaries
 
@@ -141,25 +143,29 @@ Phase 1: real camera + microphone, front default, device detection, switching, p
 
 Phase 2: real-time FX engine, dynamic grain/noise/distortion/chromatic/feedback, six filter programs, shader cache, 300 ms cross-fade, GPU resource reuse and adaptive render policy.
 
-Phase 3: photo/video capture, countdown, flash, MediaRecorder, audio routing, preview, download and capture tests.
+Phase 3: photo/video capture, countdown, flash, MediaRecorder, audio routing, preview, download, filename strategy, 4K capture gate and runtime format capabilities.
 
 Phase 4: profiling, shader/uniform/texture optimisation, low-end hardening and cross-browser lifecycle tests.
 
-## Phase 2 definition of done
+## Phase 3 definition of done
 
-- [x] six visible filters enabled
-- [x] filter shader programs separated by file
-- [x] shared shader modules
-- [x] dynamic film grain
-- [x] procedural noise
-- [x] distortion
-- [x] chromatic aberration
-- [x] previous-frame feedback path
-- [x] ShaderCache prewarming
-- [x] 300 ms cross-fade
-- [x] reusable frame textures
-- [x] adaptive DPR/render scale
-- [x] camera surface remains immersive and minimal
-- [x] Phase 1 camera lifecycle preserved
-- [x] no capture/upload/backend changes
+- [x] photo shutter is functional
+- [x] video shutter starts and stops recording
+- [x] 3 s timer
+- [x] 10 s timer
+- [x] timer OFF
+- [x] countdown is rendered outside the recorded canvas
+- [x] short visual flash
+- [x] 4K output canvas for capture
+- [x] lower-resolution camera sources are not falsely labelled 4K
+- [x] microphone is routed into video when browser audio APIs permit
+- [x] runtime MediaRecorder capability detection
+- [x] CapturePreview
+- [x] local download
+- [x] filename strategy
+- [x] front/rear capture state preserved
+- [x] object URL cleanup
+- [x] recorder/audio/WebGL cleanup
+- [x] no automatic upload
+- [x] no Supabase changes
 - [ ] physical browser/device matrix still requires real-device validation in Phase 4

@@ -65,6 +65,32 @@ export type FilterDefinition = {
   defaults: FilterUniformDefaults;
 };
 
+export type CaptureFormat =
+  | "jpg"
+  | "png"
+  | "tiff"
+  | "mp4"
+  | "mov"
+  | "mkv"
+  | "webm";
+
+export type CaptureStatus =
+  | "idle"
+  | "countdown"
+  | "recording"
+  | "processing"
+  | "preview"
+  | "error";
+
+export type CaptureFormatCapability = {
+  format: CaptureFormat;
+  label: string;
+  extension: string;
+  mimeType?: string;
+  supported: boolean;
+  reason?: string;
+};
+
 export type ShaderProgramHandle = {
   key: string;
   program: WebGLProgram;
@@ -82,12 +108,18 @@ export type CaptureResult = {
   blob: Blob;
   url: string;
   mimeType: string;
+  format: CaptureFormat;
+  filename: string;
+  width: number;
+  height: number;
+  durationMs?: number;
 };
 
 export type RecorderCapabilities = {
   supported: boolean;
   mimeTypes: string[];
   canvasCaptureSupported: boolean;
+  audioCaptureSupported: boolean;
 };
 
 export type WebglCapabilities = {
