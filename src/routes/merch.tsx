@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { MERCH, SIZES } from "@/lib/data";
+import { SIZES } from "@/lib/data";
+import { getLiveMerchProducts, type LiveMerchProduct } from "@/lib/site-content";
 import { Halftone } from "@/components/Halftone";
 import { hiss, printer } from "@/lib/sfx";
 
 export const Route = createFileRoute("/merch")({
+  loader: async () => ({ merch: await getLiveMerchProducts() }),
   head: () => ({
     meta: [
       { title: "Merch — O Sindicato do Trap" },
@@ -19,7 +21,7 @@ export const Route = createFileRoute("/merch")({
 });
 
 type Mode = "normal" | "noturna" | "raiox";
-type Receipt = { code: string; serial: number; item: (typeof MERCH)[number]; size: string; at: string };
+type Receipt = { code: string; serial: number; item: LiveMerchProduct; size: string; at: string };
 
 function Merch() {
   const [sel, setSel] = useState(0);
@@ -27,7 +29,8 @@ function Merch() {
   const [size, setSize] = useState("M");
   const [alias, setAlias] = useState("");
   const [receipt, setReceipt] = useState<Receipt | null>(null);
-  const p = MERCH[sel]!;
+  const { merch } = Route.useLoaderData();
+  const p = merch[sel]!;
 
   const reserve = () => {
     printer();
@@ -62,7 +65,7 @@ function Merch() {
             ))}
           </div>
           <div className="mt-4 grid grid-cols-4 gap-2">
-            {MERCH.map((x, i) => (
+            {merch.map((x, i) => (
               <button key={x.n} onClick={() => { setSel(i); setReceipt(null); }}
                 className={`aspect-square border-2 ${i === sel ? "border-blood" : "border-border opacity-60 hover:opacity-100"}`}>
                 <Halftone src={x.img} alt={x.name} className="h-full w-full" />
