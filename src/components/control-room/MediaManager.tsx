@@ -25,7 +25,7 @@ const size = (row: MediaRow) => {
   const parsed = Number(value(row, ["size_bytes", "file_size", "size"]));
   return Number.isFinite(parsed) ? parsed : 0;
 };
-const urlOf = (row: MediaRow) => text(row, ["public_url", "url", "file_url", "asset_url", "media_url", "src"]);
+const urlOf = (row: MediaRow) => text(row, ["storage_url", "public_url", "url", "file_url", "asset_url", "media_url", "src"]);
 const pathOf = (row: MediaRow) => text(row, ["storage_path", "path", "object_path", "file_path"]);
 const kindOf = (row: MediaRow) => {
   const type = text(row, ["mime_type", "media_type", "type", "kind"]).toLowerCase();
@@ -96,6 +96,8 @@ export function MediaManager() {
       const storage = await checkStorageBucket(bucket);
       if (!storage.ok) throw new Error(storage.error || "Bucket de media indisponível.");
       if (!storage.public) throw new Error("O bucket de media precisa de ser público para o Content API servir os ficheiros directamente.");
+      const session = await getControlRoomSession();
+      if (!session) throw new Error("Sessão do Control Room expirada.");
 
       const safeName = (file.name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "asset").toLowerCase();
       const date = new Date();
@@ -108,15 +110,15 @@ export function MediaManager() {
       const properties = await getTableProperties("media_assets");
       const tagList = tags.split(",").map((item) => item.trim()).filter(Boolean);
       const candidates: Record<string, unknown> = {
-        name: name || file.name, title: name || file.name, filename: file.name, file_name: file.name,
-        original_name: file.name, mime_type: file.type || null, media_type: file.type || null,
-        type: file.type || (file.type.startsWith("video/") ? "video" : "image"),
-        size_bytes: file.size, file_size: file.size, size: file.size,
-        storage_path: uploadedPath, path: uploadedPath, object_path: uploadedPath, file_path: uploadedPath,
-        bucket, bucket_id: bucket, public_url: stored.publicUrl, url: stored.publicUrl,
-        file_url: stored.publicUrl, asset_url: stored.publicUrl, media_url: stored.publicUrl,
-        alt, alt_text: alt, caption: alt, context, collection: context, tags: tagList,
-        status: "published", metadata: { context, tags: tagList, original_name: file.name, mime_type: file.type || null },
+        name: name || file.name,
+        asset_type: file.type.startsWith("video/") ? "video" : "image",
+        storage_url: stored.publicUrl,
+        size_bytes: file.size,
+        format: file.type || file.name.split(".").pop() || null,
+        uploader_user_id: session.userId,
+        tags: [...tagList, "context:" + context],
+        alt_text: alt,
+        status: "published",
       };
       const payload: Record<string, unknown> = {};
       for (const [key, candidate] of Object.entries(candidates)) if (properties[key] && candidate !== undefined) payload[key] = candidate;
@@ -171,9 +173,10 @@ export function MediaManager() {
       const updates: Record<string, unknown> = {};
       const set = (key: string, data: unknown) => { if (properties[key]) updates[key] = data; };
       const tagList = tags.split(",").map((item) => item.trim()).filter(Boolean);
-      set("name", name); set("title", name); set("alt", alt); set("alt_text", alt); set("caption", alt);
-      set("context", context); set("collection", context); set("tags", tagList);
-      if (properties.metadata) updates.metadata = { ...(typeof selected.metadata === "object" && selected.metadata ? selected.metadata : {}), context, tags: tagList };
+      const cleanTags = Array.from(new Set([...tagList, "context:" + context]));
+      set("name", name);
+      set("alt_text", alt);
+      set("tags", cleanTags);
       if (!Object.keys(updates).length) throw new Error("A tabela media_assets não tem campos editáveis compatíveis.");
       await adminQuery("/rest/v1/media_assets?id=eq." + encodeURIComponent(String(selected.id)), {
         method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify(updates),
@@ -188,10 +191,12 @@ export function MediaManager() {
   useEffect(() => {
     if (!selected) { setName(""); setAlt(""); setContext("site"); setTags(""); return; }
     setName(text(selected, ["name", "title", "filename", "file_name"]));
-    setAlt(text(selected, ["alt", "alt_text", "caption", "name", "title"]));
-    setContext(text(selected, ["context", "collection"], "site"));
+    setAlt(text(selected, ["alt_text", "alt", "caption", "name", "title"]));
     const raw = value(selected, ["tags"]);
-    setTags(Array.isArray(raw) ? raw.map(String).join(", ") : "");
+    const tagList = Array.isArray(raw) ? raw.map(String) : [];
+    const contextTag = tagList.find((tag) => tag.startsWith("context:"));
+    setContext(contextTag ? contextTag.slice(8) : "site");
+    setTags(tagList.filter((tag) => !tag.startsWith("context:")).join(", "));
   }, [selected?.id]);
 
   return <div>
