@@ -1,25 +1,47 @@
 void main() {
+  float glitchFrame = floor(u_time * 12.0);
+  float frameRandom = hash12(vec2(glitchFrame, 91.0));
+
   vec2 uv = v_uv;
+  float tearBand = step(0.86, hash12(vec2(floor(uv.y * 72.0), glitchFrame)));
+  float tearDirection = sign(hash12(vec2(floor(uv.y * 72.0), glitchFrame + 7.0)) - 0.5);
 
-  float lineSeed = noise2(vec2(floor(uv.y * 180.0), floor(u_time * 7.0)));
-  float lineJitter = (lineSeed - 0.5) * 0.045 * u_distortion;
-  uv.x += lineJitter * smoothstep(0.12, 0.9, abs(sin(uv.y * 31.0 + u_time * 2.6)));
+  uv.x += tearBand * tearDirection * (0.018 + 0.050 * u_distortion);
+  uv.y += (hash12(vec2(floor(uv.x * 34.0), glitchFrame + 3.0)) - 0.5)
+    * 0.010 * u_distortion;
 
-  vec2 block = floor(uv * vec2(24.0, 18.0));
-  float blockNoise = hash12(block + floor(u_time * 2.0));
-  uv.x += (step(0.82, blockNoise) - 0.5) * 0.06 * u_distortion;
-  uv.y += (step(0.93, hash12(block + 8.0)) - 0.5) * 0.025 * u_distortion;
+  vec2 block = floor(uv * vec2(30.0, 22.0));
+  float blockSeed = hash12(block + glitchFrame);
+  float blockHit = step(0.80, blockSeed);
 
-  vec3 color = chromaticSample(clamp(uv, 0.0, 1.0));
+  uv.x += blockHit * (hash12(block + 4.0) - 0.5) * 0.08 * u_distortion;
 
-  float scan = sin(uv.y * u_resolution.y * 0.22 + u_time * 22.0) * 0.045;
-  color += scan * (0.55 + 0.45 * noise2(uv * 50.0));
+  vec2 channel = vec2(0.006 + u_chromatic * 0.8, 0.0);
+  vec3 color;
+  color.r = sampleColor(uv + channel * (1.0 + blockHit * 1.8)).r;
+  color.g = sampleColor(uv).g;
+  color.b = sampleColor(uv - channel * (1.0 + tearBand * 1.6)).b;
 
-  float tear = step(0.94, noise2(vec2(floor(u_time * 3.0), floor(uv.y * 60.0))));
-  color.rb += vec2(tear * 0.12, tear * 0.03);
+  float scan = scanline(0.62, 0.095);
+  float frameFlicker = 0.72 + 0.28 * frameRandom;
 
-  color += filmGrain(uv, luma(color)) * 0.065;
+  float data = noise2(vec2(
+    floor(uv.x * 190.0) + glitchFrame,
+    floor(uv.y * 120.0)
+  ));
+
+  float poster = floor(luma(color) * 8.0) / 7.0;
+  color = mix(color, vec3(poster), blockHit * 0.12);
+  color += (data - 0.5) * 0.06;
+
+  float tearFlash = step(0.94, hash12(vec2(glitchFrame, floor(uv.y * 80.0))));
+  color += vec3(0.75, 0.05, 0.02) * tearFlash * 0.12;
+
   color = feedbackBlend(uv, color);
+  color *= scan * frameFlicker;
+  color += filmGrain(uv, luma(color)) * 0.075;
+  color *= vignette(v_uv, 0.22);
+  color = applyFlash(color);
 
-  gl_FragColor = vec4(clamp(color * u_intensity, 0.0, 1.0), 1.0);
+  gl_FragColor = vec4(saturateColor(color * (0.88 + 0.18 * u_intensity)), 1.0);
 }
