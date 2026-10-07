@@ -132,7 +132,7 @@ export class WebGLEngine {
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
 
     this.blendProgram = this.compileProgram(
-      "camera-crossfade:v2",
+      "camera-crossfade:v3",
       BLEND_VERTEX,
       BLEND_FRAGMENT,
     );
@@ -220,7 +220,6 @@ export class WebGLEngine {
     if (filter === from) {
       this.transition = null;
       this.filter = filter;
-      this.applyFilterDefaults(filter);
       return;
     }
 
@@ -230,7 +229,6 @@ export class WebGLEngine {
       startedAt: now,
     };
 
-    this.applyFilterDefaults(filter);
   }
 
   setUniform(name: string, value: UniformValue): void {
@@ -306,7 +304,7 @@ export class WebGLEngine {
       if (progress >= 1) {
         this.filter = this.transition.to;
         this.transition = null;
-          }
+      }
     } else {
       this.renderFilterPass(null, this.filter, timestamp, sourceSize);
     }
