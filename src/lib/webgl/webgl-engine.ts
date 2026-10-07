@@ -3,6 +3,7 @@ import { FrameBuffer } from "./frame-buffer";
 import { ShaderCache } from "./shader-cache";
 import { TextureManager } from "./texture-manager";
 import { getFilterFragmentShader } from "./filter-shaders";
+import crossfadeShader from "@/shaders/camera/crossfade.frag.glsl?raw";
 import {
   adaptiveRenderPolicy,
   detectPerformanceTier,
@@ -37,16 +38,7 @@ const BLEND_VERTEX =
   "  gl_Position = vec4(a_position, 0.0, 1.0);\n" +
   "}";
 
-const BLEND_FRAGMENT =
-  "precision mediump float;\n" +
-  "uniform sampler2D u_from;\n" +
-  "uniform sampler2D u_to;\n" +
-  "uniform float u_progress;\n" +
-  "varying vec2 v_uv;\n" +
-  "void main() {\n" +
-  "  float progress = smoothstep(0.0, 1.0, u_progress);\n" +
-  "  gl_FragColor = mix(texture2D(u_from, v_uv), texture2D(u_to, v_uv), progress);\n" +
-  "}";
+const BLEND_FRAGMENT = crossfadeShader;
 
 export class WebGLEngine {
   private canvas: HTMLCanvasElement | null = null;
@@ -190,7 +182,6 @@ export class WebGLEngine {
       this.programs.set(filter.id, handle);
     }
 
-    this.applyFilterDefaults(this.filter);
   }
 
   setProgram(
@@ -315,8 +306,7 @@ export class WebGLEngine {
       if (progress >= 1) {
         this.filter = this.transition.to;
         this.transition = null;
-        this.applyFilterDefaults(this.filter);
-      }
+          }
     } else {
       this.renderFilterPass(null, this.filter, timestamp, sourceSize);
     }
@@ -422,6 +412,14 @@ export class WebGLEngine {
     );
 
     this.uniforms.set("u_time", timestamp / 1000);
+
+    const defaults = FILTER_REGISTRY.get(filter).defaults;
+    this.setProgramUniform(programHandle.program, "u_intensity", defaults.intensity);
+    this.setProgramUniform(programHandle.program, "u_noise", defaults.noise);
+    this.setProgramUniform(programHandle.program, "u_distortion", defaults.distortion);
+    this.setProgramUniform(programHandle.program, "u_chromatic", defaults.chromatic);
+    this.setProgramUniform(programHandle.program, "u_feedback", defaults.feedback);
+
     this.applyUniforms(programHandle.program);
 
     gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -571,15 +569,6 @@ export class WebGLEngine {
     this.uniforms.forEach((value, name) => {
       this.setProgramUniform(program, name, value);
     });
-  }
-
-  private applyFilterDefaults(filter: FilterId): void {
-    const defaults = FILTER_REGISTRY.get(filter).defaults;
-    this.uniforms.set("u_intensity", defaults.intensity);
-    this.uniforms.set("u_noise", defaults.noise);
-    this.uniforms.set("u_distortion", defaults.distortion);
-    this.uniforms.set("u_chromatic", defaults.chromatic);
-    this.uniforms.set("u_feedback", defaults.feedback);
   }
 
   private applyAdaptivePolicy(): void {

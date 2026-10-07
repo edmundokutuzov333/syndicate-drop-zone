@@ -107,12 +107,29 @@
   animation: flicker 4s infinite;
 }
 
+@keyframes grain {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-5%, 3%); }
+  40% { transform: translate(3%, -6%); }
+  60% { transform: translate(-7%, 2%); }
+  80% { transform: translate(4%, 5%); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes flicker {
+  0%, 92%, 100% { opacity: 1; }
+  93% { opacity: 0.4; }
+  95% { opacity: 0.9; }
+  96% { opacity: 0.2; }
+}
+@keyframes spin-reel { to { transform: rotate(360deg); } }
+@keyframes marquee { to { transform: translateX(-50%); } }
+@keyframes blink { 50% { opacity: 0; } }
+
 @utility halftone-overlay {
   background-image: radial-gradient(circle, oklch(0.14 0 0 / 0.75) 0.9px, transparent 1.5px);
   background-size: 4px 4px;
   mix-blend-mode: multiply;
 }
-
 @utility xerox-wear {
   background:
     linear-gradient(90deg, transparent 0 12%, oklch(0.87 0.015 85 / 0.06) 12.3%, transparent 13%),
@@ -127,46 +144,165 @@
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   }
 }
-
 @utility scan-sweep {
   background: linear-gradient(180deg, transparent, oklch(0.8 0.2 140 / 0.25), transparent);
   animation: sweep 2.4s linear infinite;
 }
-
 @utility stamp {
   border: 3px solid var(--blood);
   color: var(--blood);
   font-family: var(--font-stamp);
   opacity: 0.8;
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.7'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.6'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
-
 @utility thermal {
   background: oklch(0.92 0.01 85);
   color: oklch(0.15 0 0);
+  -webkit-mask: radial-gradient(circle 6px at 50% 0, transparent 98%, black) top / 14px 51% repeat-x,
+    radial-gradient(circle 6px at 50% 100%, transparent 98%, black) bottom / 14px 51% repeat-x;
+}
+@keyframes sweep { from { top: -25%; } to { top: 100%; } }
+@keyframes print-out { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+/* Camera surface: intentionally bypasses the global grain/scanline stack. */
+.camera-root,
+.camera-surface {
+  isolation: isolate;
 }
 
-@keyframes grain {
-  0% { transform: translate(0, 0); }
-  20% { transform: translate(-5%, 3%); }
-  40% { transform: translate(3%, -6%); }
-  60% { transform: translate(-7%, 2%); }
-  80% { transform: translate(4%, 5%); }
-  100% { transform: translate(0, 0); }
+.camera-shell {
+  width: min(1500px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 18px clamp(14px, 3vw, 42px) 28px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  background:
+    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px),
+    #050505;
+  background-size: 36px 36px;
 }
 
-@keyframes flicker {
-  0%, 92%, 100% { opacity: 1; }
-  93% { opacity: 0.4; }
-  95% { opacity: 0.9; }
-  96% { opacity: 0.2; }
+.camera-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #292929;
+  padding-bottom: 12px;
 }
 
-@keyframes sweep {
-  from { top: -25%; }
-  to { top: 100%; }
+.camera-kicker,
+.camera-status,
+.camera-control-label,
+.camera-overlay,
+.camera-capture-meta,
+.camera-permission-code {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
 }
 
-/* Legacy camera selectors remain intentionally available for older saved layouts. */
+.camera-kicker { color: var(--blood); margin: 0 0 4px; }
+.camera-title { margin: 0; font-family: var(--font-stamp); font-size: clamp(24px, 4vw, 44px); line-height: .9; letter-spacing: .04em; }
+.camera-status { color: #6c6c6c; display: flex; align-items: center; gap: 7px; }
+.camera-status-dot { width: 6px; height: 6px; display: inline-block; background: var(--blood); box-shadow: 0 0 10px var(--blood); }
+
+.camera-stage {
+  position: relative;
+  min-height: min(68vh, 760px);
+  border: 1px solid #2d2d2d;
+  background: #000;
+  overflow: hidden;
+}
+
+.camera-canvas { width: 100%; height: 100%; min-height: min(68vh, 760px); display: block; }
+.camera-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 12px solid rgba(255,255,255,.015);
+}
+
+.camera-overlay {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  pointer-events: none;
+  color: #686868;
+}
+.camera-overlay-top { top: 12px; }
+.camera-overlay-bottom { bottom: 12px; }
+
+.camera-permission-gate {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  width: min(420px, calc(100% - 36px));
+  border: 1px solid #333;
+  background: rgba(5,5,5,.92);
+  padding: 18px;
+  text-align: center;
+}
+.camera-permission-code { color: var(--blood); }
+.camera-permission-gate p { margin: 10px 0 5px; font-family: var(--font-stamp); font-size: 16px; }
+.camera-permission-gate small { color: #666; font-size: 10px; }
+
+.camera-console { display: grid; gap: 10px; }
+.camera-filter-rail { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; background: #292929; border: 1px solid #292929; }
+.camera-filter {
+  min-width: 0;
+  border: 0;
+  background: #0a0a0a;
+  color: #676767;
+  padding: 10px 8px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.camera-filter span { font-size: 8px; letter-spacing: .15em; }
+.camera-filter strong { font-family: var(--font-mono); font-size: 10px; letter-spacing: .06em; }
+.camera-filter:hover,
+.camera-filter.is-active { color: #eee8dc; background: #151515; }
+.camera-filter.is-active { box-shadow: inset 0 -2px 0 var(--blood); }
+
+.camera-control-row,
+.camera-capture-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #292929; padding: 9px; background: #090909; }
+.camera-control-row { justify-content: flex-start; flex-wrap: wrap; }
+.camera-control-group { display: flex; align-items: center; gap: 4px; }
+.camera-control-label { color: #555; margin-right: 5px; }
+.camera-control-button { border: 1px solid #252525; background: #0b0b0b; color: #666; padding: 7px 9px; font: 9px var(--font-mono); letter-spacing: .1em; cursor: pointer; }
+.camera-control-button:hover,
+.camera-control-button.is-active { border-color: var(--blood); color: #eee8dc; }
+
+.camera-capture-button { display: inline-flex; align-items: center; gap: 9px; border: 1px solid var(--blood); background: transparent; color: #c7c0b5; padding: 8px 12px; font: 10px var(--font-mono); letter-spacing: .14em; cursor: not-allowed; opacity: .55; }
+.camera-capture-core { width: 10px; height: 10px; border: 2px solid var(--blood); border-radius: 999px; }
+.camera-capture-meta { display: flex; gap: 18px; color: #4e4e4e; }
+
+.camera-preview { position: fixed; inset: 20px; z-index: 100; background: #080808; border: 1px solid #333; padding: 20px; }
+.camera-preview-head { display: flex; justify-content: space-between; margin-bottom: 20px; }
+.camera-preview a { color: var(--blood); font: 10px var(--font-mono); letter-spacing: .12em; }
+
+@media (max-width: 700px) {
+  .camera-shell { padding-inline: 10px; }
+  .camera-filter-rail { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .camera-capture-row { align-items: stretch; flex-direction: column; }
+  .camera-capture-button { justify-content: center; }
+}
+
+.camera-viewport.is-user .camera-native-video { transform: scaleX(-1); }
+.camera-viewport.is-environment .camera-native-video { transform: none; }
+
 
 /* Phase 2: full-viewport live camera surface. */
 .camera-root,
@@ -540,3 +676,4 @@
 
   .camera-shutter-inner { inset: 20px; }
 }
+
