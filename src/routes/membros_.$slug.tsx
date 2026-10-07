@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { ArtistDossier } from "@/components/artists/ArtistDossier";
 import { getArtistBySlug } from "@/lib/artist-content";
+import { getLiveArtistBySlug } from "@/lib/public-content";
 
 export const Route = createFileRoute("/membros/$slug")({
   head: ({ params }) => {
@@ -30,8 +31,10 @@ export const Route = createFileRoute("/membros/$slug")({
       ],
     };
   },
-  loader: ({ params }) => {
-    const artist = getArtistBySlug(params.slug);
+  loader: async ({ params }) => {
+    const fallback = getArtistBySlug(params.slug);
+    if (!fallback) throw notFound();
+    const artist = await getLiveArtistBySlug(params.slug);
     if (!artist) throw notFound();
     return { artist };
   },
