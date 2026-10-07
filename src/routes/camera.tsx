@@ -1,5 +1,24 @@
+import { lazy, Suspense } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { CameraPage } from "@/features/camera/CameraPage";
+
+const CameraPage = lazy(() =>
+  import("@/features/camera/CameraPage").then((module) => ({
+    default: module.CameraPage,
+  })),
+);
+
+function CameraRouteFallback() {
+  return (
+    <main
+      className="camera-surface"
+      aria-label="A preparar a câmara"
+    >
+      <section className="camera-stage-full camera-route-loading">
+        <span>CAM INIT</span>
+      </section>
+    </main>
+  );
+}
 
 export const Route = createFileRoute("/camera")({
   head: () => ({
@@ -12,5 +31,9 @@ export const Route = createFileRoute("/camera")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: CameraPage,
+  component: () => (
+    <Suspense fallback={<CameraRouteFallback />}>
+      <CameraPage />
+    </Suspense>
+  ),
 });
