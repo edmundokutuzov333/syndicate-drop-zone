@@ -3,15 +3,29 @@ export type CaptureMode = "photo" | "video";
 export type CaptureTimer = "off" | 3 | 10;
 export type FilterId = "op1um" | "xerox" | "corrupt" | "nightvision" | "thermal" | "redroom";
 export type PerformanceTier = "high" | "medium" | "low";
+export type CameraStatus = "idle" | "requesting" | "ready" | "active" | "error" | "stopped";
 
-export type CameraDevice = { deviceId: string; label: string; facingMode?: CameraFacingMode; groupId?: string };
+export type CameraDevice = {
+  deviceId: string;
+  label: string;
+  facingMode?: CameraFacingMode;
+  groupId?: string;
+};
+
 export type CameraState = {
-  status: "idle" | "requesting" | "ready" | "active" | "error";
+  status: CameraStatus;
   devices: CameraDevice[];
   facingMode: CameraFacingMode;
+  microphoneEnabled: boolean;
+  width: number;
+  height: number;
+  frameRate: number;
+  deviceId?: string;
   error: string | null;
 };
+
 export type MicrophoneState = "unknown" | "available" | "unavailable" | "denied";
+
 export type OrientationState = {
   screenAngle: number;
   viewportAngle: number;
@@ -19,6 +33,7 @@ export type OrientationState = {
   renderRotation: number;
   captureRotation: number;
 };
+
 export type RenderMetrics = {
   fps: number;
   frameTimeMs: number;
@@ -27,24 +42,46 @@ export type RenderMetrics = {
   dpr: number;
   renderScale: number;
 };
+
+export type FilterComplexity = "low" | "medium" | "high";
+
 export type FilterDefinition = {
   id: FilterId;
   index: string;
   label: string;
   shaderKey: string;
+  complexity: FilterComplexity;
   visible: boolean;
   supportsFeedback: boolean;
+  enabled: boolean;
 };
-export type ShaderProgramHandle = { key: string; program: WebGLProgram };
+
+export type ShaderProgramHandle = {
+  key: string;
+  program: WebGLProgram;
+};
+
 export type WebglEngineConfig = {
   alpha?: boolean;
   antialias?: boolean;
   preserveDrawingBuffer?: boolean;
   targetFps?: number;
 };
-export type CaptureResult = { mode: CaptureMode; blob: Blob; url: string; mimeType: string };
+
+export type CaptureResult = {
+  mode: CaptureMode;
+  blob: Blob;
+  url: string;
+  mimeType: string;
+};
+
 export type RecorderCapabilities = {
   supported: boolean;
   mimeTypes: string[];
   canvasCaptureSupported: boolean;
+};
+
+export type WebglCapabilities = {
+  webgl2: boolean;
+  webgl1: boolean;
 };

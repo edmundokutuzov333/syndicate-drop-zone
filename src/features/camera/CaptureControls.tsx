@@ -1,18 +1,21 @@
-import { type CaptureMode, type CaptureTimer } from "@/lib/camera/types";
+import { type CaptureMode } from "@/lib/camera/types";
 
-type CaptureControlsProps = { mode: CaptureMode; timer: CaptureTimer };
+type CaptureControlsProps = {
+  mode: CaptureMode;
+};
 
-export function CaptureControls({ mode, timer }: CaptureControlsProps) {
+export function CaptureControls({ mode }: CaptureControlsProps) {
   return (
-    <div className="camera-capture-row">
-      <button type="button" className="camera-capture-button" disabled>
-        <span className="camera-capture-core" />
-        <span>{mode === "photo" ? "CAPTURE" : "REC"}</span>
+    <div className="camera-capture">
+      <button
+        type="button"
+        className="camera-shutter"
+        disabled
+        aria-label={mode === "photo" ? "Shutter. Captura disponível na Fase 3." : "Rec. Gravação disponível na Fase 3."}
+      >
+        <span className="camera-shutter-outer" />
+        <span className="camera-shutter-inner" />
       </button>
-      <div className="camera-capture-meta">
-        <span>INPUT: OFF</span>
-        <span>TIMER: {timer === "off" ? "OFF" : `${timer}S`}</span>
-      </div>
     </div>
   );
 }

@@ -1,33 +1,71 @@
-import { type CaptureMode, type CaptureTimer } from "@/lib/camera/types";
+import { type CameraState, type CaptureMode } from "@/lib/camera/types";
 
 type CameraControlsProps = {
+  camera: CameraState;
   mode: CaptureMode;
-  timer: CaptureTimer;
   onModeChange: (mode: CaptureMode) => void;
-  onTimerChange: (timer: CaptureTimer) => void;
+  onSwitchCamera: () => Promise<void>;
 };
 
-const timers: CaptureTimer[] = ["off", 3, 10];
+function formatResolution(width: number, height: number): string {
+  if (width >= 3840 && height >= 2160) return "4K";
+  if (width >= 2560 && height >= 1440) return "2K";
+  if (width >= 1920 && height >= 1080) return "1080P";
+  if (width >= 1280 && height >= 720) return "720P";
+  if (width > 0 && height > 0) return `${width}×${height}`;
+  return "---";
+}
 
-export function CameraControls({ mode, timer, onModeChange, onTimerChange }: CameraControlsProps) {
+export function CameraControls({
+  camera,
+  mode,
+  onModeChange,
+  onSwitchCamera,
+}: CameraControlsProps) {
+  const cameraLabel = camera.facingMode === "user" ? "FRONT" : "BACK";
+  const fps = camera.frameRate > 0 ? String(camera.frameRate) : "--";
+  const mic = camera.microphoneEnabled ? "MIC ON" : "MIC OFF";
+  const recording = mode === "video" ? "REC STBY" : "REC OFF";
+
   return (
-    <div className="camera-control-row">
-      <div className="camera-control-group">
-        <span className="camera-control-label">MODE</span>
-        {(["photo", "video"] as const).map((value) => (
-          <button key={value} type="button" className={`camera-control-button ${mode === value ? "is-active" : ""}`} onClick={() => onModeChange(value)}>
-            {value.toUpperCase()}
-          </button>
-        ))}
+    <>
+      <div className="camera-hud camera-hud-top">
+        <span className="camera-hud-indicator">
+          <span className={`camera-rec-dot ${mode === "video" ? "is-ready" : ""}`} />
+          {recording}
+        </span>
+
+        <span>{mic}</span>
+        <span>{formatResolution(camera.width, camera.height)}</span>
+        <button
+          type="button"
+          className="camera-camera-switch"
+          onClick={() => void onSwitchCamera()}
+          disabled={camera.status !== "active" || camera.devices.length < 2}
+          aria-label="Trocar câmara"
+        >
+          {cameraLabel}
+        </button>
+        <span>{fps}</span>
       </div>
-      <div className="camera-control-group">
-        <span className="camera-control-label">TIMER</span>
-        {timers.map((value) => (
-          <button key={String(value)} type="button" className={`camera-control-button ${timer === value ? "is-active" : ""}`} onClick={() => onTimerChange(value)}>
-            {value === "off" ? "OFF" : `${value}S`}
-          </button>
-        ))}
+
+      <div className="camera-mode-switch">
+        <button
+          type="button"
+          className={mode === "photo" ? "is-active" : ""}
+          onClick={() => onModeChange("photo")}
+        >
+          PHOTO
+        </button>
+        <span>|</span>
+        <button
+          type="button"
+          className={mode === "video" ? "is-active" : ""}
+          onClick={() => onModeChange("video")}
+        >
+          VIDEO
+        </button>
       </div>
-    </div>
+    </>
   );
 }

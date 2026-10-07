@@ -299,3 +299,6 @@
   .camera-capture-row { align-items: stretch; flex-direction: column; }
   .camera-capture-button { justify-content: center; }
 }
+
+.camera-viewport.is-user .camera-native-video { transform: scaleX(-1); }
+.camera-viewport.is-environment .camera-native-video { transform: none; }
