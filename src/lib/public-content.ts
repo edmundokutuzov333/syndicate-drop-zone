@@ -109,3 +109,33 @@ export async function getLiveArtistChannels(slug: string) {
     };
   }
 }
+
+
+export async function getLiveArtists(): Promise<Artist[]> {
+  try {
+    const rows = await getJson<DbArtist[]>("/rest/v1/artists?select=*&status=eq.published&order=code.asc");
+    if (!rows.length) return ARTISTS;
+    return rows.map((row, index) => {
+      const fallback = ARTISTS.find((artist) => artist.slug === row.slug) ?? ARTISTS[index];
+      return {
+        ...(fallback ?? {}),
+        id: row.id,
+        slug: row.slug,
+        code: row.code,
+        name: row.name,
+        bio: row.bio,
+        frase: row.frase,
+        zona: row.zona,
+        faixas: row.faixas,
+        role: row.role,
+        studio: row.studio,
+        edition: row.edition,
+        presence: row.presence,
+        spotifyArtistId: row.spotify_artist_id,
+        img: row.photo_url,
+      } as Artist;
+    });
+  } catch {
+    return ARTISTS;
+  }
+}
