@@ -168,7 +168,7 @@ function Artistas() {
       <SectionTag label="Os Convocados" />
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
         {ARTISTS.map((a, i) => (
-          <Link key={a.code} to="/membros" search={{ a: i + 1 }} className="group relative aspect-[4/5] border border-border hover:border-blood">
+          <Link key={a.code} to="/membros/$slug" params={{ slug: a.slug }} preload="intent" className="group relative aspect-[4/5] hover:border-blood">
             <Halftone src={a.img!} alt={a.name} className="h-full w-full" />
             <span className="absolute bottom-1 left-1 bg-background px-1 font-stamp text-[10px]">{a.name}</span>
           </Link>
