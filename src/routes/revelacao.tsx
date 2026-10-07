@@ -60,10 +60,14 @@ function GalleryItem({
         : "rotate-[-0.8deg]";
 
   const ready = item.src !== null;
+  const ratioClass =
+    item.ratio === "3:4"
+      ? "aspect-[3/4]"
+      : "aspect-[4/3]";
 
   const className = cn(
     "group relative block w-full overflow-visible border-4 border-foreground bg-foreground p-2 shadow-2xl",
-    "aspect-[8/5]",
+    ratioClass,
     ready &&
       "cursor-pointer transition-transform duration-300 hover:rotate-0 hover:scale-[1.015] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blood",
     rotate,
@@ -71,17 +75,14 @@ function GalleryItem({
 
   if (!ready) {
     return (
-      <div
-        className={className}
-        aria-hidden="true"
-      >
+      <div className={className} aria-hidden="true">
         <RevelationMediaSurface item={item} />
         <img
           src={selo.url}
           alt=""
           aria-hidden
           className={cn(
-            "pointer-events-none absolute z-10 w-16 opacity-70 md:w-20",
+            "pointer-events-none absolute z-10 w-16 opacity-70 transition-transform duration-300 md:w-20",
             index % 2 ? "-left-6 -top-6 rotate-12" : "-bottom-5 -right-5 -rotate-12",
           )}
         />
@@ -183,7 +184,7 @@ function Revelacao() {
         />
       </section>
 
-      <section className="relative mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="relative mt-20 grid grid-cols-1 items-start gap-8 md:grid-cols-2 md:gap-10 lg:gap-12">
         {REVELACAO_MEDIA.slice(1).map((item, index) => (
           <GalleryItem
             key={item.id}
