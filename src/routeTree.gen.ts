@@ -74,10 +74,10 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/camping' | '/membros' | '/merch' | '/revelacao'
+  fullPaths: '/' | '/camping' | '/membros' | '/membros/$slug' | '/merch' | '/revelacao'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/camping' | '/membros' | '/merch' | '/revelacao'
-  id: '__root__' | '/' | '/camping' | '/membros' | '/merch' | '/revelacao'
+  to: '/' | '/camping' | '/membros' | '/membros/$slug' | '/merch' | '/revelacao'
+  id: '__root__' | '/' | '/camping' | '/membros' | '/membros/$slug' | '/merch' | '/revelacao'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -111,6 +111,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/membros'
       preLoaderRoute: typeof MembrosRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/membros/$slug': {
+      id: '/membros/$slug'
+      path: '/$slug'
+      fullPath: '/membros/$slug'
+      preLoaderRoute: typeof MembrosSlugRouteImport
+      parentRoute: typeof MembrosRoute
     }
     '/merch': {
       id: '/merch'
