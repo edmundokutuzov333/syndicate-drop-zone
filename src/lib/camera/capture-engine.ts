@@ -39,10 +39,10 @@ export function getMaxCaptureDimensions(
 function getCaptureDimensions(
   sourceWidth: number,
   sourceHeight: number,
-): { width: number; height: number; is4K: boolean } {
+): { width: number; height: number } {
   if (isReal4KSource(sourceWidth, sourceHeight)) {
     const target = get4KCaptureDimensions(sourceWidth, sourceHeight);
-    return { ...target, is4K: true };
+    return target;
   }
 
   const target = getMaxCaptureDimensions(sourceWidth, sourceHeight);
@@ -82,10 +82,9 @@ function buildFilename(
   height: number,
 ): string {
   const camera = facingMode === "user" ? "FRONT" : "BACK";
-  const sourceTag =
-    width >= 3840 && height >= 2160
-      ? "4K"
-      : `${width}x${height}`;
+  const sourceTag = isReal4KSource(width, height)
+    ? "4K"
+    : `${width}x${height}`;
   return `SDT_${stamp()}_${filterId.toUpperCase()}_${camera}_${sourceTag}.${getExtension(format)}`;
 }
 
