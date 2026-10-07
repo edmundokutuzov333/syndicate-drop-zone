@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { CameraManager } from "@/lib/camera/camera-manager";
-import { CaptureEngine } from "@/lib/camera/capture-engine";
 import {
+  CaptureEngine,
   get4KCaptureDimensions,
   getMaxCaptureDimensions,
   isReal4KSource,
@@ -217,6 +217,9 @@ describe("camera engineering foundation", () => {
     const play = vi
       .spyOn(HTMLMediaElement.prototype, "play")
       .mockResolvedValue(undefined);
+    const pause = vi
+      .spyOn(HTMLMediaElement.prototype, "pause")
+      .mockImplementation(() => undefined);
 
     const manager = new CameraManager();
 
@@ -247,6 +250,7 @@ describe("camera engineering foundation", () => {
         task: () => Promise<unknown>,
       ) => task()),
       render,
+      restorePreviewResolution: vi.fn().mockResolvedValue(undefined),
     } as unknown as WebGLEngine;
 
     const createUrl = vi.fn().mockReturnValue("blob:camera");
