@@ -105,6 +105,20 @@ export function ControlRoomShell() {
       </header>
 
       <div className="grid min-h-[calc(100vh-61px)] lg:grid-cols-[240px_minmax(0,1fr)]">
+        <div className="border-b border-white/10 bg-[#0d0d0d] p-3 lg:hidden">
+          <div className="flex gap-2 overflow-x-auto">
+            {GROUPS.flatMap((group) => group.items).map(([code, label, to]) => (
+              <Link
+                key={to}
+                to={to}
+                className={`shrink-0 border px-3 py-2 font-mono text-[9px] tracking-[0.12em] ${location.pathname === to ? "border-[#d71920] text-white" : "border-white/10 text-white/40"}`}
+              >
+                {code} {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
         <aside className="hidden border-r border-white/10 bg-[#0d0d0d] lg:block">
           <div className="sticky top-[61px] max-h-[calc(100vh-61px)] overflow-y-auto p-3">
             {GROUPS.map((group) => (
