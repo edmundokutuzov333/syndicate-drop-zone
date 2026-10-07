@@ -22,6 +22,12 @@ import {
   chooseRecorderMimeType,
 } from "@/lib/camera/recorder";
 import { getFilterFragmentShader } from "@/lib/webgl/filter-shaders";
+import {
+  FILTER_PARAMETER_CONTRACTS,
+  MASTER_OVERLAY_CONTRACTS,
+  getFilterShaderContract,
+} from "@/lib/webgl/filter-contract";
+import { CinematicPipeline } from "@/lib/webgl/cinematic-pipeline";
 
 function makeTrack(
   kind: "video" | "audio",
@@ -440,10 +446,10 @@ describe("camera engineering foundation", () => {
     ).toBe("cancelled");
   });
 
-  it("ships all nine interactive VFX filters as active definitions", () => {
+  it("ships all fifteen interactive VFX filters as active definitions", () => {
     const visible = FILTER_REGISTRY.listVisible();
 
-    expect(visible).toHaveLength(9);
+    expect(visible).toHaveLength(15);
     expect(visible.every((filter) => filter.enabled)).toBe(true);
     expect(visible.map((filter) => filter.id)).toEqual([
       "op1um",
@@ -455,8 +461,14 @@ describe("camera engineering foundation", () => {
       "vamp",
       "astro-haze",
       "cyber-mugshot",
+      "threshold",
+      "xray-mesh",
+      "cathode-crt",
+      "halation",
+      "kinetic-melt",
+      "paper-film",
     ]);
-    expect(new Set(visible.map((filter) => filter.shaderKey)).size).toBe(9);
+    expect(new Set(visible.map((filter) => filter.shaderKey)).size).toBe(15);
   });
 
   it("derives stable face VFX controls from MediaPipe landmarks and blendshapes", () => {
@@ -494,7 +506,7 @@ describe("camera engineering foundation", () => {
     expect(state.mouth[3]).toBeCloseTo(0.5, 3);
   });
 
-  it("ships nine production VFX pipelines with temporal, face, motion and flash processing", () => {
+  it("ships fifteen production VFX pipelines with temporal, face, motion and flash processing", () => {
     const ids = FILTER_REGISTRY.listVisible().map((item) => item.id);
 
     for (const id of ids) {
@@ -513,6 +525,80 @@ describe("camera engineering foundation", () => {
       expect(source).toContain("u_faceMotion");
       expect(source).toContain("u_filterStart");
     }
+  });
+
+  it("registers the six cinematic module contracts with exact defaults", () => {
+    expect(FILTER_PARAMETER_CONTRACTS.map((contract) => contract.id)).toEqual([
+      "threshold",
+      "xray-mesh",
+      "cathode-crt",
+      "halation",
+      "kinetic-melt",
+      "paper-film",
+    ]);
+
+    expect(getFilterShaderContract("threshold")?.parameters.map((item) => item.defaultValue)).toEqual([
+      0.45,
+      0.015,
+      0.05,
+    ]);
+    expect(getFilterShaderContract("xray-mesh")?.parameters.map((item) => item.defaultValue)).toEqual([
+      [0, 1, 0.4],
+      1.5,
+      0.8,
+    ]);
+    expect(getFilterShaderContract("cathode-crt")?.parameters.map((item) => item.defaultValue)).toEqual([
+      0.12,
+      800,
+      0.008,
+      0,
+    ]);
+    expect(getFilterShaderContract("halation")?.parameters.map((item) => item.defaultValue)).toEqual([
+      0.025,
+      0.3,
+      0.7,
+    ]);
+    expect(getFilterShaderContract("kinetic-melt")?.parameters.map((item) => item.defaultValue)).toEqual([
+      0.08,
+      0.02,
+      0.92,
+    ]);
+    expect(getFilterShaderContract("paper-film")?.parameters.map((item) => item.defaultValue)).toEqual([
+      0.06,
+      0.4,
+      0.001,
+      0,
+    ]);
+  });
+
+  it("exposes the two master overlays as explicit reusable contracts", () => {
+    expect(MASTER_OVERLAY_CONTRACTS["cathode-crt"].enabledByDefault).toBe(false);
+    expect(MASTER_OVERLAY_CONTRACTS["paper-film"].enabledByDefault).toBe(false);
+    expect(getFilterShaderContract("cathode-crt")?.masterOverlay).toBe("cathode-crt");
+    expect(getFilterShaderContract("paper-film")?.masterOverlay).toBe("paper-film");
+  });
+
+  it("defines the requested multipass topology", () => {
+    expect(CinematicPipeline.toString()).toContain('"halation:isolate"');
+    expect(CinematicPipeline.toString()).toContain('"halation:blur-h"');
+    expect(CinematicPipeline.toString()).toContain('"halation:blur-v"');
+    expect(CinematicPipeline.toString()).toContain('"halation:composite"');
+    expect(CinematicPipeline.toString()).toContain('"kinetic:flow"');
+    expect(CinematicPipeline.toString()).toContain('"kinetic:melt"');
+    expect(CinematicPipeline.toString()).toContain('"master:cathode-crt"');
+    expect(CinematicPipeline.toString()).toContain('"master:paper-film"');
+  });
+
+  it("ships required shader uniforms for the six new cinematic modules", () => {
+    expect(getFilterFragmentShader("threshold")).toContain("uThreshold");
+    expect(getFilterFragmentShader("threshold")).toContain("uEdgeSmoothness");
+    expect(getFilterFragmentShader("threshold")).toContain("uFlickerIntensity");
+
+    expect(getFilterFragmentShader("xray-mesh")).toContain("u_face");
+    expect(getFilterFragmentShader("cathode-crt")).toContain("uApplyToAllFilters");
+    expect(getFilterFragmentShader("halation")).toContain("uGlowThreshold");
+    expect(getFilterFragmentShader("kinetic-melt")).toContain("u_previousFrame");
+    expect(getFilterFragmentShader("paper-film")).toContain("uApplyToAllFilters");
   });
 
   it("keeps the premium VFX signatures wired into the new filters", () => {
