@@ -1,6 +1,6 @@
 # Camera Engineering
 
-## Phase 0, Phase 1, Phase 2 and Phase 3
+## Phase 0, Phase 1, Phase 2, Phase 3 and Phase 4
 
 The camera feature is an isolated local capture surface. The global site shell does not render TacticalNav, footer, grain or scanlines on /camera.
 
