@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { SIZES } from "@/lib/data";
-import { getLiveMerchProducts, type LiveMerchProduct } from "@/lib/site-content";
+import { createPublicMerchReservation, getLiveMerchProducts, type LiveMerchProduct } from "@/lib/site-content";
 import { Halftone } from "@/components/Halftone";
 import { hiss, printer } from "@/lib/sfx";
 
@@ -29,18 +29,40 @@ function Merch() {
   const [size, setSize] = useState("M");
   const [alias, setAlias] = useState("");
   const [receipt, setReceipt] = useState<Receipt | null>(null);
+  const [reservationState, setReservationState] = useState<"idle" | "sending" | "error">("idle");
+  const [reservationMessage, setReservationMessage] = useState("");
   const { merch } = Route.useLoaderData();
   const p = merch[sel]!;
 
-  const reserve = () => {
-    printer();
-    setReceipt({
-      code: Math.random().toString(36).slice(2, 8).toUpperCase(),
-      serial: Math.floor(Math.random() * 333) + 1,
-      item: p,
-      size: p.n === "04" ? "ÚNICO" : size,
-      at: new Date().toLocaleString("pt-BR"),
-    });
+  const reserve = async () => {
+    if (!p || reservationState === "sending") return;
+    setReservationState("sending");
+    setReservationMessage("");
+    try {
+      const variant = p.variants.find((item) => item.size === (p.n === "04" ? "ÚNICO" : size)) ?? p.variants[0];
+      const row = await createPublicMerchReservation({
+        productId: p.id,
+        productName: p.name,
+        variantId: variant?.id ?? null,
+        size: p.n === "04" ? "ÚNICO" : size,
+        alias,
+        price: p.price,
+      });
+      printer();
+      const reference = String(row.code ?? row.reference ?? row.reservation_code ?? row.id ?? "RESERVA");
+      const serialRaw = Number(row.serial_number ?? row.unit_number ?? row.number ?? 0);
+      setReceipt({
+        code: reference.slice(-10).toUpperCase(),
+        serial: Number.isFinite(serialRaw) && serialRaw > 0 ? serialRaw : 0,
+        item: p,
+        size: p.n === "04" ? "ÚNICO" : size,
+        at: new Date().toLocaleString("pt-PT"),
+      });
+      setReservationState("idle");
+    } catch (error) {
+      setReservationState("error");
+      setReservationMessage(error instanceof Error ? error.message : "Não foi possível criar a reserva.");
+    }
   };
 
   return (
@@ -95,10 +117,11 @@ function Merch() {
           <label className="mt-6 text-xs text-muted-foreground">CODINOME DO RECEPTOR</label>
           <input value={alias} onChange={(e) => setAlias(e.target.value.toUpperCase())} maxLength={20} placeholder="ANÔNIMO"
             className="mt-2 border border-border bg-transparent px-3 py-3 text-sm outline-none focus:border-blood" />
-          <button onClick={reserve} className="mt-6 bg-blood py-4 font-stamp text-lg text-primary-foreground hover:opacity-85">
+          <button onClick={() => void reserve()} disabled={reservationState === "sending"} className="mt-6 bg-blood py-4 font-stamp text-lg text-primary-foreground hover:opacity-85 disabled:cursor-wait disabled:opacity-60">
             RESERVAR UNIDADE
           </button>
-          <p className="mt-2 text-[10px] text-muted-foreground">reserva simbólica — pagamento liberado no dia do drop.</p>
+          <p className="mt-2 text-[10px] text-muted-foreground">{reservationState === "sending" ? "a registar a reserva..." : "reserva real no Control Room — pagamento liberado no dia do drop."}</p>
+          {reservationState === "error" && <p className="mt-2 border border-blood/50 bg-blood/5 p-3 text-[10px] text-blood">{reservationMessage}</p>}
 
           {receipt && (
             <div className="mt-8 flex justify-center">
@@ -110,7 +133,7 @@ function Merch() {
                 <p>RECEPTOR: {alias || "ANÔNIMO"}</p>
                 <p>PEÇA: {receipt.item.name}</p>
                 <p>LOTE: {receipt.item.n} · TAM: {receipt.size}</p>
-                <p>UNIDADE Nº {String(receipt.serial).padStart(3, "0")}/333</p>
+                {receipt.serial > 0 && <p>UNIDADE Nº {String(receipt.serial).padStart(3, "0")}/333</p>}
                 <p className="my-2 text-center">--------------------------------</p>
                 <p className="flex justify-between font-bold"><span>TOTAL</span><span>R$ {receipt.item.price},00</span></p>
                 <p className="my-2 text-center">--------------------------------</p>
