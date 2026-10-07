@@ -1,5 +1,5 @@
 import { ARTISTS } from "@/lib/artists";
-import { MERCH as STATIC_MERCH, SIZES } from "@/lib/data";
+import { MERCH as STATIC_MERCH, SIZES, TAPES as STATIC_TAPE_DATA } from "@/lib/data";
 import { REVELACAO_MEDIA as STATIC_REVELACAO_MEDIA, type RevelationMedia } from "@/lib/revelacao-media";
 import type { RevelationMediaRatio, RevelationMediaType } from "@/lib/revelacao-media";
 import { getLiveArtists } from "@/lib/public-content";
@@ -77,12 +77,14 @@ export type LiveTape = {
   position: number;
 };
 
-const STATIC_TAPES: LiveTape[] = [
-  { id: "T1", title: "A NOVA WAVE", feat: "Bruno The GOAT, Elton Penicela, Alemão Wavv", dur: "0:30", src: "", position: 1 },
-  { id: "T2", title: "PHANTOM MODE", feat: "INF8M8US", dur: "0:30", src: "", position: 2 },
-  { id: "T3", title: "FASHIION D'PHANTOM", feat: "Kingston Siriro, Kaká Machava, Elton Penicela", dur: "0:30", src: "", position: 3 },
-  { id: "T4", title: "ph4nt0mmm_intr0", feat: "PHANTOM", dur: "0:30", src: "", position: 4 },
-];
+const STATIC_TAPES: LiveTape[] = STATIC_TAPE_DATA.map((tape, index) => ({
+  id: tape.id,
+  title: tape.title,
+  feat: tape.feat,
+  dur: tape.dur,
+  src: tape.src,
+  position: index + 1,
+}));
 
 export async function getLiveTapes(): Promise<LiveTape[]> {
   try {
