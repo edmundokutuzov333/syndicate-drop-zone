@@ -1,16 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { TapeEngine } from "@/lib/tape-engine";
-import { TAPES, MERCH } from "@/lib/data";
 import { ARTISTS } from "@/lib/artists";
-import { getLiveArtists } from "@/lib/public-content";
+import { getLiveHomeContent, type LiveMerchProduct, type LiveTape } from "@/lib/site-content";
+
 import { Halftone } from "@/components/Halftone";
 import { Sponsors } from "@/components/Sponsors";
 import logo from "@/assets/brand/sindicato-logo.png.asset.json";
 import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 
 export const Route = createFileRoute("/")({
-  loader: async () => ({ artists: await getLiveArtists() }),
+  loader: async () => getLiveHomeContent(),
   head: () => ({
     meta: [
       { title: "O Sindicato do Trap — 1ª Edição" },
@@ -24,10 +24,8 @@ export const Route = createFileRoute("/")({
   component: Hub,
 });
 
-const DROP = new Date("2026-12-18T00:00:00+02:00").getTime();
-
 function Hub() {
-  const { artists } = Route.useLoaderData();
+  const { artists, tapes, merch, site } = Route.useLoaderData();
   const engine = useRef<TapeEngine | null>(null);
   const [playing, setPlaying] = useState<string | null>(null);
   const [lvl, setLvl] = useState(0);
@@ -45,28 +43,28 @@ function Hub() {
     return () => cancelAnimationFrame(raf);
   }, [playing]);
 
-  const toggle = (t: (typeof TAPES)[number]) => {
+  const toggle = (t: LiveTape) => {
     if (playing === t.id) { engine.current?.stop(); setPlaying(null); }
     else { engine.current?.start(t, () => setPlaying(null)); setPlaying(t.id); }
   };
 
   return (
     <>
-      <Marquee />
+      <Marquee text={site.marquee} />
       <main className="mx-auto max-w-7xl px-4 pb-24 md:px-8">
-        <Hero />
-        <Countdown />
-        <Tapes playing={playing} toggle={toggle} lvl={lvl} />
+        <Hero title={site.heroTitle} subtitle={site.heroSubtitle} />
+        <Countdown dropAt={site.dropAt} />
+        <Tapes tapes={tapes} playing={playing} toggle={toggle} lvl={lvl} />
         <Artistas artists={artists} />
         <Sponsors />
-        <Merch armed={!!playing} />
+        <Merch merch={merch} armed={!!playing} />
       </main>
     </>
   );
 }
 
-function Marquee() {
-  const t = "1ª EDIÇÃO ✕ 17 ARTISTAS ✕ STUDIO XOYENS ✕ 18.12.2026 ✕ TUDO OU NADA ✕ ";
+function Marquee({ text }: { text: string | null }) {
+  const t = text || "1ª EDIÇÃO ✕ 17 ARTISTAS ✕ STUDIO XOYENS ✕ 18.12.2026 ✕ TUDO OU NADA ✕ ";
   return (
     <div className="overflow-hidden border-b border-border bg-blood py-2 font-stamp text-sm text-primary-foreground">
       <div className="flex w-max" style={{ animation: "marquee 30s linear infinite" }}>
@@ -86,25 +84,25 @@ function SectionTag({ label, to }: { label: string; to?: "/membros" | "/merch" |
   );
 }
 
-function Hero() {
+function Hero({ title, subtitle }: { title: string | null; subtitle: string | null }) {
   return (
     <section className="relative flex flex-col items-center py-16 text-center md:py-24">
       <img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute right-0 top-10 hidden w-40 -rotate-12 opacity-20 md:block" />
       <img src={logo.url} alt="O Sindicato do Trap" className="flicker w-48 md:w-64" />
-      <h1 className="mt-8 font-gothic text-6xl leading-[0.85] md:text-8xl">O Sindicato do Trap</h1>
-      <p className="mt-4 font-stamp text-lg text-blood">A união do trap. Gravado no camping.</p>
+      <h1 className="mt-8 font-gothic text-6xl leading-[0.85] md:text-8xl">{title || "O Sindicato do Trap"}</h1>
+      <p className="mt-4 font-stamp text-lg text-blood">{subtitle || "A união do trap. Gravado no camping."}</p>
     </section>
   );
 }
 
-function Countdown() {
+function Countdown({ dropAt }: { dropAt: number }) {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
     setNow(Date.now());
     const i = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(i);
   }, []);
-  const diff = now ? Math.max(0, DROP - now) : 0;
+  const diff = now ? Math.max(0, dropAt - now) : 0;
   const parts = [
     ["DIAS", Math.floor(diff / 864e5)],
     ["HORAS", Math.floor(diff / 36e5) % 24],
@@ -117,7 +115,7 @@ function Countdown() {
       <div className="grid gap-6 p-6 md:grid-cols-[1fr_2fr] md:p-10">
         <div>
           <p className="text-xs tracking-widest text-blood">LANÇAMENTO</p>
-          <p className="mt-2 font-stamp text-3xl">18.12.2026</p>
+          <p className="mt-2 font-stamp text-3xl">{new Date(dropAt).toLocaleDateString("pt-PT")}</p>
         </div>
         <div className="grid grid-cols-4 gap-2">
           {parts.map(([l, v]) => (
@@ -133,7 +131,7 @@ function Countdown() {
   );
 }
 
-function Tapes({ playing, toggle, lvl }: { playing: string | null; toggle: (t: (typeof TAPES)[number]) => void; lvl: number }) {
+function Tapes({ tapes, playing, toggle, lvl }: { tapes: LiveTape[]; playing: string | null; toggle: (t: LiveTape) => void; lvl: number }) {
   return (
     <section className="relative mb-24">
       <img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute -right-6 -top-10 w-28 rotate-[20deg] opacity-70 md:w-36" />
@@ -145,7 +143,7 @@ function Tapes({ playing, toggle, lvl }: { playing: string | null; toggle: (t: (
         ))}
       </div>
       <ul className="divide-y divide-border border border-border">
-        {TAPES.map((t) => {
+        {tapes.map((t) => {
           const on = playing === t.id;
           return (
             <li key={t.id}>
@@ -182,7 +180,7 @@ function Artistas({ artists }: { artists: typeof ARTISTS }) {
   );
 }
 
-function Merch({ armed }: { armed: boolean }) {
+function Merch({ merch, armed }: { merch: LiveMerchProduct[]; armed: boolean }) {
   return (
     <section className="mb-12">
       <SectionTag label="Merch" to="/merch" />
@@ -190,7 +188,7 @@ function Merch({ armed }: { armed: boolean }) {
         {armed ? "▶ FITA RODANDO — LOJA ABERTA." : "■ LOJA FECHADA — dá play numa prévia pra abrir."}
       </p>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {MERCH.map((p) => (
+        {merch.map((p) => (
           <Link key={p.n} to="/merch" disabled={!armed}
             className={`flex flex-col border border-border bg-card ${armed ? "hover:border-blood" : "pointer-events-none opacity-60"}`}>
             <div className="relative aspect-square"><img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute right-2 top-2 z-10 w-14 rotate-[-15deg] opacity-75" /><Halftone src={p.img} alt={p.name} className="h-full w-full" /></div>
