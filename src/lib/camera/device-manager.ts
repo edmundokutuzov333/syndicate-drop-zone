@@ -8,12 +8,19 @@ export class DeviceManager {
 
     return devices
       .filter((device) => device.kind === "videoinput")
-      .map((device) => ({
-        deviceId: device.deviceId,
-        label: device.label || "CAMERA INPUT",
-        groupId: device.groupId || undefined,
-        facingMode: this.classify(device.label),
-      }));
+      .map((device) => {
+        const result: CameraDevice = {
+          deviceId: device.deviceId,
+          label: device.label || "CAMERA INPUT",
+        };
+
+        if (device.groupId) result.groupId = device.groupId;
+
+        const facingMode = this.classify(device.label);
+        if (facingMode) result.facingMode = facingMode;
+
+        return result;
+      });
   }
 
   prefer(facingMode: CameraFacingMode, devices: CameraDevice[]): CameraDevice | undefined {
