@@ -298,3 +298,80 @@ export async function getLiveHomeContent() {
   ]);
   return { artists, tapes, merch, site };
 }
+
+
+async function tableSchema(table: string): Promise<Record<string, unknown> | null> {
+  const cfg = config();
+  if (!cfg) return null;
+  try {
+    const response = await fetch(cfg.url + "/rest/v1/", { headers: { apikey: cfg.key } });
+    if (!response.ok) return null;
+    const document = (await response.json()) as {
+      definitions?: Record<string, { properties?: Record<string, unknown> }>;
+      components?: { schemas?: Record<string, { properties?: Record<string, unknown> }> };
+    };
+    return document.definitions?.[table]?.properties ??
+      document.components?.schemas?.[table]?.properties ??
+      null;
+  } catch {
+    return null;
+  }
+}
+
+export async function createPublicMerchReservation(input: {
+  productId: string;
+  productName: string;
+  variantId?: string | null;
+  size: string;
+  alias: string;
+  price: number;
+}) {
+  const cfg = config();
+  if (!cfg) throw new Error("O serviço de reservas não está configurado.");
+
+  const properties = await tableSchema("reservations");
+  if (!properties) throw new Error("O schema de reservas não está disponível.");
+
+  const candidates: Record<string, unknown> = {
+    product_id: input.productId,
+    merch_product_id: input.productId,
+    variant_id: input.variantId ?? undefined,
+    merch_variant_id: input.variantId ?? undefined,
+    product_name: input.productName,
+    item_name: input.productName,
+    size: input.size,
+    selected_size: input.size,
+    alias: input.alias || "ANÔNIMO",
+    codename: input.alias || "ANÔNIMO",
+    recipient_alias: input.alias || "ANÔNIMO",
+    quantity: 1,
+    qty: 1,
+    unit_price: input.price,
+    price: input.price,
+    amount: input.price,
+    status: "new",
+  };
+
+  const payload: Record<string, unknown> = {};
+  for (const [key, candidate] of Object.entries(candidates)) {
+    if (properties[key] && candidate !== undefined) payload[key] = candidate;
+  }
+  if (!Object.keys(payload).length) throw new Error("A tabela de reservas não expõe campos compatíveis.");
+
+  const response = await fetch(cfg.url + "/rest/v1/reservations", {
+    method: "POST",
+    headers: {
+      apikey: cfg.key,
+      Authorization: "Bearer " + cfg.key,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(body || "Não foi possível criar a reserva.");
+  }
+  const rows = (await response.json()) as ContentRow[];
+  return rows[0] ?? payload;
+}
