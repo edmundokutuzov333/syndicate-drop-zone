@@ -10,11 +10,16 @@ import p3 from "@/assets/p3.jpg";
 import p4 from "@/assets/p4.jpg";
 import type { TapeSpec } from "./tape-engine";
 
-export const TAPES: (TapeSpec & { id: string; title: string; room: string; dur: string })[] = [
-  { id: "REG_001", title: "CONCRETO ÚMIDO", room: "SALA 02 / 03:14", dur: "0:15", bpm: 142, root: 41.2, hat: 2, pattern: [0,-1,-1,-1,-1,-1,0,-1,-1,-1,3,-1,-1,-1,-1,-1] },
-  { id: "REG_002", title: "PAVILHÃO 808", room: "SALA 01 / 04:40", dur: "0:15", bpm: 130, root: 36.7, hat: 1, pattern: [0,-1,-1,0,-1,-1,-1,-1,5,-1,-1,-1,3,-1,-1,-1] },
-  { id: "REG_003", title: "O PACTO", room: "PORÃO / 23:59", dur: "0:15", bpm: 150, root: 46.2, hat: 2, pattern: [0,-1,-1,-1,-1,-1,-1,-1,-2,-1,-1,-2,-1,-1,-1,-1] },
-  { id: "REG_004", title: "LUZ DE CÂMARA ESCURA", room: "SALA 03 / 05:02", dur: "0:15", bpm: 120, root: 38.9, hat: 4, pattern: [0,-1,-1,-1,-1,-1,-1,7,-1,-1,0,-1,-1,-1,-1,-1] },
+import t1 from "@/assets/tapes/nova-wave.mp3.asset.json";
+import t2 from "@/assets/tapes/phantom-mode.mp3.asset.json";
+import t3 from "@/assets/tapes/fashiion.mp3.asset.json";
+import t4 from "@/assets/tapes/intro.mp3.asset.json";
+
+export const TAPES: (TapeSpec & { id: string; title: string; feat: string; dur: string })[] = [
+  { id: "T1", title: "A NOVA WAVE", feat: "Bruno The GOAT, Elton Penicela, Alemão Wavv", dur: "0:30", src: t1.url },
+  { id: "T2", title: "PHANTOM MODE", feat: "INF8M8US", dur: "0:30", src: t2.url },
+  { id: "T3", title: "FASHIION D'PHANTOM", feat: "Kingston Siriro, Kaká Machava, Elton Penicela", dur: "0:30", src: t3.url },
+  { id: "T4", title: "ph4nt0mmm_intr0", feat: "PHANTOM", dur: "0:30", src: t4.url },
 ];
 
 export const MEMBERS = [

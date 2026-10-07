@@ -4,6 +4,7 @@ import { TapeEngine } from "@/lib/tape-engine";
 import { TAPES, MERCH } from "@/lib/data";
 import { ARTISTS } from "@/lib/artists";
 import { Halftone } from "@/components/Halftone";
+import { Sponsors } from "@/components/Sponsors";
 import logo from "@/assets/brand/sindicato-logo.png.asset.json";
 import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 
@@ -43,7 +44,7 @@ function Hub() {
 
   const toggle = (t: (typeof TAPES)[number]) => {
     if (playing === t.id) { engine.current?.stop(); setPlaying(null); }
-    else { engine.current?.start(t); setPlaying(t.id); }
+    else { engine.current?.start(t, () => setPlaying(null)); setPlaying(t.id); }
   };
 
   return (
@@ -54,6 +55,7 @@ function Hub() {
         <Countdown />
         <Tapes playing={playing} toggle={toggle} lvl={lvl} />
         <Artistas />
+        <Sponsors />
         <Merch armed={!!playing} />
       </main>
     </>
@@ -149,7 +151,7 @@ function Tapes({ playing, toggle, lvl }: { playing: string | null; toggle: (t: (
                 <span className={`flex h-10 w-10 items-center justify-center border ${on ? "border-blood bg-blood text-primary-foreground" : "border-border"}`}>
                   {on ? "■" : "▶"}
                 </span>
-                <span className="flex-1 font-stamp text-lg">{t.title}</span>
+                <span className="flex-1"><span className="block font-stamp text-lg">{t.title}</span><span className="block text-[10px] tracking-widest text-muted-foreground">{t.feat}</span></span>
                 <span className="text-xs text-muted-foreground">{t.dur}</span>
               </button>
             </li>
