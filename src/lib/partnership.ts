@@ -45,13 +45,7 @@ export async function submitPartnershipRequest(input: PartnershipRequest): Promi
   });
 
   if (!response.ok) {
-    let message = "Não foi possível enviar a proposta.";
-    try {
-      const payload = (await response.json()) as { message?: string; hint?: string };
-      message = payload.message ?? payload.hint ?? message;
-    } catch {
-      // Keep the safe generic message.
-    }
-    throw new Error(message);
+    console.error("Partnership proposal submission failed:", response.status);
+    throw new Error("Não foi possível enviar a proposta. Tente novamente.");
   }
 }
