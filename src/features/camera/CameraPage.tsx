@@ -5,7 +5,7 @@ import { CaptureControls } from "./CaptureControls";
 import { CapturePreview } from "./CapturePreview";
 import { FilterRail } from "./FilterRail";
 import { PermissionGate } from "./PermissionGate";
-import { CaptureEngine } from "@/lib/camera/capture-engine";
+import { CaptureEngine, isReal4KSource } from "@/lib/camera/capture-engine";
 import {
   getImageFormatCapabilities,
   getVideoFormatCapabilities,
@@ -212,8 +212,7 @@ export function CameraPage() {
       camera.status !== "active" ||
       !canvasReady ||
       !engineReady ||
-      camera.width < 3840 ||
-      camera.height < 2160
+      !isReal4KSource(camera.width, camera.height)
     ) {
       setCaptureStatus("error");
       setCaptureError("CAPTURE_4K_SOURCE_REQUIRED");
@@ -296,8 +295,7 @@ export function CameraPage() {
 
   const canCapture4K =
     camera.status === "active" &&
-    camera.width >= 3840 &&
-    camera.height >= 2160 &&
+    isReal4KSource(camera.width, camera.height) &&
     Boolean(canvasReady && engineReady);
 
   const busy =
