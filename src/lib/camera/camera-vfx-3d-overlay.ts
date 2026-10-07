@@ -1,3 +1,4 @@
+import { FaceLandmarker } from "@mediapipe/tasks-vision";
 import * as THREE from "three";
 import type {
   CameraFacingMode,
@@ -9,7 +10,6 @@ const OVERLAY_SCALE = 0.72;
 const AMBIENT_WIDTH = 64;
 const AMBIENT_HEIGHT = 32;
 const LANDMARK_COUNT = 478;
-const XRAY_NEIGHBOURS = 4;
 const MOUTH_INDICES = [13, 14, 61, 291];
 const EYE_INDICES = [33, 133, 159, 145, 362, 263, 386, 374];
 
@@ -96,8 +96,7 @@ export class CameraVfx3DOverlay {
   private xrayOuter: THREE.LineSegments | null = null;
   private xrayCore: THREE.LineSegments | null = null;
   private readonly smoothedLandmarks = new Float32Array(LANDMARK_COUNT * 3);
-  private xrayEdgeIndices: Uint16Array = new Uint16Array(0);
-  private xrayReady = false;
+  private readonly xrayEdgeIndices: Uint16Array;
   private lastAmbientAt = -Infinity;
   private destroyed = false;
   private activeFilter: FilterId | null = null;
@@ -150,6 +149,34 @@ export class CameraVfx3DOverlay {
     const rimLight = new THREE.PointLight(0xff4c96, 2.2, 8);
     rimLight.position.set(1.4, 0.9, 2.8);
     this.scene.add(rimLight);
+
+    const tesselation = FaceLandmarker.FACE_LANDMARKS_TESSELATION;
+    this.xrayEdgeIndices = new Uint16Array(tesselation.length * 2);
+    for (let index = 0; index < tesselation.length; index += 1) {
+      this.xrayEdgeIndices[index * 2] = tesselation[index]!.start;
+      this.xrayEdgeIndices[index * 2 + 1] = tesselation[index]!.end;
+    }
+
+    const positions = new Float32Array(this.xrayEdgeIndices.length * 3);
+    const depths = new Float32Array(this.xrayEdgeIndices.length / 3);
+    this.xrayGeometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage),
+    );
+    this.xrayGeometry.setAttribute(
+      "aDepth",
+      new THREE.BufferAttribute(depths, 1).setUsage(THREE.DynamicDrawUsage),
+    );
+
+    this.xrayOuter = new THREE.LineSegments(
+      this.xrayGeometry,
+      this.xrayOuterMaterial,
+    );
+    this.xrayCore = new THREE.LineSegments(
+      this.xrayGeometry,
+      this.xrayCoreMaterial,
+    );
+    this.xrayGroup.add(this.xrayOuter, this.xrayCore);
 
     this.xrayGroup.visible = false;
     this.scene.add(this.xrayGroup);
@@ -285,93 +312,12 @@ export class CameraVfx3DOverlay {
     this.xrayCoreMaterial.uniforms.uLineWidth.value = lineWidth;
   }
 
-  private buildXrayTopology(landmarks: Float32Array): void {
-    if (this.xrayReady) return;
-
-    const edgeSet = new Set<string>();
-    const edges: number[] = [];
-    const nearestIndices = new Int16Array(XRAY_NEIGHBOURS);
-    const nearestDistances = new Float32Array(XRAY_NEIGHBOURS);
-
-    for (let i = 0; i < LANDMARK_COUNT; i += 1) {
-      nearestIndices.fill(-1);
-      nearestDistances.fill(Number.POSITIVE_INFINITY);
-
-      const ix = landmarks[i * 3] ?? 0;
-      const iy = landmarks[i * 3 + 1] ?? 0;
-
-      for (let j = 0; j < LANDMARK_COUNT; j += 1) {
-        if (i === j) continue;
-
-        const jx = landmarks[j * 3] ?? 0;
-        const jy = landmarks[j * 3 + 1] ?? 0;
-        const dx = jx - ix;
-        const dy = jy - iy;
-        const distance = dx * dx + dy * dy;
-
-        for (let slot = 0; slot < XRAY_NEIGHBOURS; slot += 1) {
-          if (distance >= nearestDistances[slot]!) continue;
-
-          for (let shift = XRAY_NEIGHBOURS - 1; shift > slot; shift -= 1) {
-            nearestDistances[shift] = nearestDistances[shift - 1]!;
-            nearestIndices[shift] = nearestIndices[shift - 1]!;
-          }
-
-          nearestDistances[slot] = distance;
-          nearestIndices[slot] = j;
-          break;
-        }
-      }
-
-      for (let slot = 0; slot < XRAY_NEIGHBOURS; slot += 1) {
-        const neighbour = nearestIndices[slot]!;
-        if (neighbour < 0) continue;
-
-        const a = Math.min(i, neighbour);
-        const b = Math.max(i, neighbour);
-        const key = a + ":" + b;
-
-        if (edgeSet.has(key)) continue;
-        edgeSet.add(key);
-        edges.push(a, b);
-      }
-    }
-
-    this.xrayEdgeIndices = new Uint16Array(edges);
-
-    const vertexCount = edges.length;
-    const positions = new Float32Array(vertexCount * 3);
-    const depths = new Float32Array(vertexCount);
-    this.xrayGeometry.setAttribute(
-      "position",
-      new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage),
-    );
-    this.xrayGeometry.setAttribute(
-      "aDepth",
-      new THREE.BufferAttribute(depths, 1).setUsage(THREE.DynamicDrawUsage),
-    );
-
-    this.xrayOuter = new THREE.LineSegments(
-      this.xrayGeometry,
-      this.xrayOuterMaterial,
-    );
-    this.xrayCore = new THREE.LineSegments(
-      this.xrayGeometry,
-      this.xrayCoreMaterial,
-    );
-
-    this.xrayGroup.add(this.xrayOuter, this.xrayCore);
-    this.xrayReady = true;
-  }
-
   private updateXrayMesh(
     landmarks: Float32Array,
     state: FaceVfxUniformState,
     facingMode: CameraFacingMode,
     timestamp: number,
   ): void {
-    this.buildXrayTopology(landmarks);
-
     const positionAttribute = this.xrayGeometry.getAttribute("position") as THREE.BufferAttribute;
     const depthAttribute = this.xrayGeometry.getAttribute("aDepth") as THREE.BufferAttribute;
 
