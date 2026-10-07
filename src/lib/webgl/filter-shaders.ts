@@ -13,6 +13,12 @@ import redroom from "@/shaders/camera/filters/redroom.frag.glsl?raw";
 import vamp from "@/shaders/camera/filters/vamp.frag.glsl?raw";
 import astroHaze from "@/shaders/camera/filters/astro-haze.frag.glsl?raw";
 import cyberMugshot from "@/shaders/camera/filters/cyber-mugshot.frag.glsl?raw";
+import threshold from "@/shaders/camera/filters/threshold.frag.glsl?raw";
+import xrayMesh from "@/shaders/camera/filters/xray-mesh.frag.glsl?raw";
+import cathodeCrt from "@/shaders/camera/filters/cathode-crt.frag.glsl?raw";
+import halation from "@/shaders/camera/filters/halation.frag.glsl?raw";
+import kineticMelt from "@/shaders/camera/filters/kinetic-melt.frag.glsl?raw";
+import paperFilm from "@/shaders/camera/filters/paper-film.frag.glsl?raw";
 
 const shared = [common, grain, distortion, chromatic, feedback].join("\n");
 
@@ -26,6 +32,12 @@ const BODIES: Record<FilterId, string> = {
   vamp,
   "astro-haze": astroHaze,
   "cyber-mugshot": cyberMugshot,
+  threshold,
+  "xray-mesh": xrayMesh,
+  "cathode-crt": cathodeCrt,
+  halation,
+  "kinetic-melt": kineticMelt,
+  "paper-film": paperFilm,
 };
 
 export function getFilterFragmentShader(id: FilterId): string {

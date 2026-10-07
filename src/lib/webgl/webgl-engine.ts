@@ -3,6 +3,8 @@ import { FrameBuffer } from "./frame-buffer";
 import { ShaderCache } from "./shader-cache";
 import { TextureManager } from "./texture-manager";
 import { getFilterFragmentShader } from "./filter-shaders";
+import { getFilterShaderContract } from "./filter-contract";
+import { CinematicPipeline } from "./cinematic-pipeline";
 import crossfadeShader from "@/shaders/camera/crossfade.frag.glsl?raw";
 import {
   ASTRO_LUT_HEIGHT,
@@ -17,6 +19,7 @@ import {
 import {
   type FaceVfxUniformState,
   type FilterId,
+  type MasterOverlayId,
   type RenderMetrics,
   type ShaderProgramHandle,
   type WebglEngineConfig,
@@ -65,6 +68,12 @@ export class WebGLEngine {
   private readonly textureManager = new TextureManager();
   private readonly transitionFrom = new FrameBuffer();
   private readonly transitionTo = new FrameBuffer();
+  private readonly finalOutput = new FrameBuffer();
+  private readonly cinematicPipeline = new CinematicPipeline();
+  private masterOverlays: Record<MasterOverlayId, boolean> = {
+    "cathode-crt": false,
+    "paper-film": false,
+  };
   private readonly uniforms = new Map<string, UniformValue>();
   private readonly uniformLocations = new Map<
     WebGLProgram,
@@ -252,6 +261,8 @@ export class WebGLEngine {
 
     this.transitionFrom.create(this.gl, this.canvas.width, this.canvas.height);
     this.transitionTo.create(this.gl, this.canvas.width, this.canvas.height);
+    this.finalOutput.create(this.gl, this.canvas.width, this.canvas.height);
+    this.cinematicPipeline.resize(this.canvas.width, this.canvas.height);
 
     this.metrics = {
       ...this.metrics,
@@ -274,6 +285,8 @@ export class WebGLEngine {
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     this.transitionFrom.create(this.gl, this.canvas.width, this.canvas.height);
     this.transitionTo.create(this.gl, this.canvas.width, this.canvas.height);
+    this.finalOutput.create(this.gl, this.canvas.width, this.canvas.height);
+    this.cinematicPipeline.resize(this.canvas.width, this.canvas.height);
   }
 
   async restorePreviewResolution(): Promise<void> {
@@ -285,6 +298,8 @@ export class WebGLEngine {
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     this.transitionFrom.create(this.gl, this.canvas.width, this.canvas.height);
     this.transitionTo.create(this.gl, this.canvas.width, this.canvas.height);
+    this.finalOutput.create(this.gl, this.canvas.width, this.canvas.height);
+    this.cinematicPipeline.resize(this.canvas.width, this.canvas.height);
   }
 
   async withOutputResolution<T>(
@@ -314,6 +329,10 @@ export class WebGLEngine {
 
   preloadFilters(vertexShaderSource: string): void {
     this.vertexShaderSource = vertexShaderSource;
+
+    if (this.gl) {
+      this.cinematicPipeline.init(this.gl, vertexShaderSource);
+    }
 
     for (const filter of FILTER_REGISTRY.listVisible()) {
       const handle = this.compileProgram(
@@ -370,6 +389,14 @@ export class WebGLEngine {
       to: filter,
       startedAt: now,
     };
+  }
+
+  setMasterOverlayEnabled(id: MasterOverlayId, enabled: boolean): void {
+    this.masterOverlays[id] = enabled;
+  }
+
+  getMasterOverlayState(): Record<MasterOverlayId, boolean> {
+    return { ...this.masterOverlays };
   }
 
   setUniform(name: string, value: UniformValue): void {
@@ -454,6 +481,9 @@ export class WebGLEngine {
     );
     const uploadTime = performance.now() - uploadStart;
 
+    const finalFramebuffer = this.finalOutput.get();
+    if (!finalFramebuffer) return;
+
     if (this.transition) {
       const progress = Math.min(
         1,
@@ -477,7 +507,12 @@ export class WebGLEngine {
       const toTexture = this.transitionTo.getTexture();
 
       if (fromTexture && toTexture && this.blendProgram) {
-        this.renderCrossfade(fromTexture, toTexture, progress);
+        this.renderCrossfade(
+          fromTexture,
+          toTexture,
+          progress,
+          finalFramebuffer,
+        );
       }
 
       if (progress >= 1) {
@@ -485,11 +520,29 @@ export class WebGLEngine {
         this.transition = null;
       }
     } else {
-      this.renderFilterPass(null, this.filter, timestamp, sourceSize);
+      this.renderFilterPass(
+        finalFramebuffer,
+        this.filter,
+        timestamp,
+        sourceSize,
+      );
     }
 
     if (this.sceneOverlaySource) {
-      this.renderSceneOverlayPass();
+      this.renderSceneOverlayPass(finalFramebuffer);
+    }
+
+    const finalTexture = this.finalOutput.getTexture();
+
+    if (finalTexture) {
+      this.cinematicPipeline.renderMasterOverlays(
+        finalTexture,
+        null,
+        timestamp / 1000,
+        this.masterOverlays["cathode-crt"],
+        this.masterOverlays["paper-film"],
+        Number(this.uniforms.get("u_faceMotionBurst") ?? 0),
+      );
     }
 
     if (this.overlayText || this.overlayDirty) {
@@ -594,6 +647,8 @@ export class WebGLEngine {
       this.textureManager.destroy(gl);
       this.transitionFrom.destroy(gl);
       this.transitionTo.destroy(gl);
+      this.finalOutput.destroy(gl);
+      this.cinematicPipeline.destroy();
       this.shaderCache.clear(gl);
     }
 
@@ -629,6 +684,8 @@ export class WebGLEngine {
     this.lutTexture = null;
     this.overlayCanvas = null;
     this.overlayProgram = null;
+    this.masterOverlays["cathode-crt"] = false;
+    this.masterOverlays["paper-film"] = false;
     this.overlayText = null;
     this.overlayDirty = false;
     this.gcObserver?.disconnect();
@@ -667,21 +724,47 @@ export class WebGLEngine {
     const canvas = this.canvas;
     const vertexBuffer = this.vertexBuffer;
     const programHandle = this.programs.get(filter);
+    const definition = FILTER_REGISTRY.get(filter);
 
     if (!gl || !canvas || !vertexBuffer || !programHandle) return;
+
+    const currentTexture = this.textureManager.getCurrent();
+    const previousTexture = this.textureManager.getPrevious();
+
+    if (!currentTexture || !previousTexture) return;
+
+    if (definition.pipeline === "halation") {
+      this.cinematicPipeline.renderHalation(
+        currentTexture,
+        framebuffer,
+        timestamp / 1000,
+        0.025,
+        0.3,
+        0.7,
+      );
+      return;
+    }
+
+    if (definition.pipeline === "kinetic-melt") {
+      this.cinematicPipeline.renderKineticMelt(
+        currentTexture,
+        previousTexture,
+        framebuffer,
+        this.getTargetTexture(framebuffer),
+        timestamp / 1000,
+        0.08,
+        0.02,
+        0.92,
+        Number(this.uniforms.get("u_faceMotion") ?? 0),
+        Number(this.uniforms.get("u_faceMotionBurst") ?? 0),
+      );
+      return;
+    }
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
-
-    const currentTexture = this.textureManager.getCurrent();
-    const previousTexture = this.textureManager.getPrevious();
-
-    if (!currentTexture || !previousTexture) {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      return;
-    }
 
     this.bindProgram(programHandle.program);
 
@@ -713,12 +796,30 @@ export class WebGLEngine {
 
     this.uniforms.set("u_time", timestamp / 1000);
 
-    const defaults = FILTER_REGISTRY.get(filter).defaults;
+    const defaults = definition.defaults;
     this.setProgramUniform(programHandle.program, "u_intensity", defaults.intensity);
     this.setProgramUniform(programHandle.program, "u_noise", defaults.noise);
     this.setProgramUniform(programHandle.program, "u_distortion", defaults.distortion);
     this.setProgramUniform(programHandle.program, "u_chromatic", defaults.chromatic);
     this.setProgramUniform(programHandle.program, "u_feedback", defaults.feedback);
+
+    const contract = getFilterShaderContract(filter);
+    for (const parameter of contract?.parameters ?? []) {
+      this.setProgramUniform(
+        programHandle.program,
+        parameter.name,
+        parameter.defaultValue,
+      );
+    }
+
+    if (filter === "cathode-crt") {
+      this.setProgramUniform(programHandle.program, "uScanlineIntensity", 0.13);
+      this.setProgramUniform(programHandle.program, "uApplyToAllFilters", 0);
+    }
+
+    if (filter === "paper-film") {
+      this.setProgramUniform(programHandle.program, "uApplyToAllFilters", 0);
+    }
 
     this.applyUniforms(programHandle.program);
 
@@ -740,6 +841,7 @@ export class WebGLEngine {
     fromTexture: WebGLTexture,
     toTexture: WebGLTexture,
     progress: number,
+    framebuffer: WebGLFramebuffer | null,
   ): void {
     const gl = this.gl;
     const canvas = this.canvas;
@@ -748,7 +850,7 @@ export class WebGLEngine {
 
     if (!gl || !canvas || !vertexBuffer || !programHandle) return;
 
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     gl.viewport(0, 0, canvas.width, canvas.height);
     this.bindProgram(programHandle.program);
 
@@ -771,6 +873,42 @@ export class WebGLEngine {
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     gl.useProgram(null);
+  }
+
+  private copyTextureToScreen(texture: WebGLTexture): void {
+    const gl = this.gl;
+    const canvas = this.canvas;
+    const vertexBuffer = this.vertexBuffer;
+    const programHandle = this.overlayProgram;
+
+    if (!gl || !canvas || !vertexBuffer || !programHandle) return;
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    this.bindProgram(programHandle.program);
+
+    gl.disable(gl.BLEND);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    this.setProgramUniform(programHandle.program, "u_overlay", 0);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    this.drawCallsThisFrame += 1;
+
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.useProgram(null);
+  }
+
+  private getTargetTexture(
+    framebuffer: WebGLFramebuffer | null,
+  ): WebGLTexture | null {
+    if (!framebuffer) return null;
+    if (framebuffer === this.finalOutput.get()) return this.finalOutput.getTexture();
+    if (framebuffer === this.transitionFrom.get()) return this.transitionFrom.getTexture();
+    if (framebuffer === this.transitionTo.get()) return this.transitionTo.getTexture();
+    return null;
   }
 
   private configureOverlayTexture(texture: WebGLTexture): void {
@@ -846,7 +984,7 @@ export class WebGLEngine {
     this.overlayDirty = false;
   }
 
-  private renderSceneOverlayPass(): void {
+  private renderSceneOverlayPass(framebuffer: WebGLFramebuffer | null = null): void {
     const gl = this.gl;
     const canvas = this.canvas;
     const texture = this.sceneOverlayTexture;
@@ -856,7 +994,7 @@ export class WebGLEngine {
 
     this.updateSceneOverlayTexture();
 
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
     gl.viewport(0, 0, canvas.width, canvas.height);
     this.bindProgram(programHandle.program);
 

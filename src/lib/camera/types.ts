@@ -10,7 +10,14 @@ export type FilterId =
   | "redroom"
   | "vamp"
   | "astro-haze"
-  | "cyber-mugshot";
+  | "cyber-mugshot"
+  | "threshold"
+  | "xray-mesh"
+  | "cathode-crt"
+  | "halation"
+  | "kinetic-melt"
+  | "paper-film";
+export type MasterOverlayId = "cathode-crt" | "paper-film";
 export type FlashMode = "off" | "hardware" | "software";
 export type PerformanceTier = "high" | "medium" | "low";
 export type CameraStatus = "idle" | "requesting" | "ready" | "active" | "error" | "stopped";
@@ -99,6 +106,16 @@ export type FilterDefinition = {
   supportsFeedback: boolean;
   enabled: boolean;
   defaults: FilterUniformDefaults;
+  pipeline?: "single" | "xray-mesh" | "halation" | "kinetic-melt";
+  passes?: readonly string[];
+  masterOverlay?: "cathode-crt" | "paper-film";
+  parameters?: readonly {
+    name: string;
+    defaultValue: number | number[];
+    min?: number;
+    max?: number;
+    step?: number;
+  }[];
 };
 
 export type CaptureFormat =

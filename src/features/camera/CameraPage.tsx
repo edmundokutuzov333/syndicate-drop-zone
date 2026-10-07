@@ -19,6 +19,7 @@ import {
   type CaptureStatus,
   type CaptureTimer,
   type FilterId,
+  type MasterOverlayId,
 } from "@/lib/camera/types";
 import { FILTER_REGISTRY } from "@/lib/webgl/filter-registry";
 import { type WebGLEngine } from "@/lib/webgl/webgl-engine";
@@ -47,6 +48,10 @@ export function CameraPage() {
   }));
   const [mode, setMode] = useState<CaptureMode>("photo");
   const [filter, setFilter] = useState<FilterId>("op1um");
+  const [masterOverlays, setMasterOverlays] = useState<Record<MasterOverlayId, boolean>>({
+    "cathode-crt": false,
+    "paper-film": false,
+  });
   const [timer, setTimer] = useState<CaptureTimer>("off");
   const [captureStatus, setCaptureStatus] =
     useState<CaptureStatus>("idle");
@@ -59,6 +64,19 @@ export function CameraPage() {
   const [engineReady, setEngineReady] = useState<WebGLEngine | null>(null);
 
   const selectedFilter = FILTER_REGISTRY.get(filter);
+
+  useEffect(() => {
+    if (!engineReady) return;
+
+    engineReady.setMasterOverlayEnabled(
+      "cathode-crt",
+      masterOverlays["cathode-crt"],
+    );
+    engineReady.setMasterOverlayEnabled(
+      "paper-film",
+      masterOverlays["paper-film"],
+    );
+  }, [engineReady, masterOverlays]);
 
   const selectedFilterRef = useRef(filter);
   const cameraFacingRef = useRef(camera.facingMode);
@@ -401,6 +419,13 @@ export function CameraPage() {
           <FilterRail
             selected={filter}
             onSelect={setFilter}
+            masterOverlays={masterOverlays}
+            onToggleMasterOverlay={(id) =>
+              setMasterOverlays((current) => ({
+                ...current,
+                [id]: !current[id],
+              }))
+            }
             locked={
               captureStatus === "countdown" ||
               captureStatus === "recording" ||
