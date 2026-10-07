@@ -254,8 +254,9 @@ Nenhuma PR foi aberta. As alterações foram executadas directamente na main, se
 - Lovable synced commit: b000af92fbfe8c4b12a598232e795238cb310c32
 - Vercel: build-rate-limit blocker
 - Supabase: sem tabelas de captura
-- Issue #3: Vercel production build rate limit
-- Issue #4: physical browser-device validation matrix
+- Issue #3: Vercel production build rate limit — OPEN
+- Issue #4: physical browser-device validation matrix — OPEN
+- Issues #1 and #2 — CLOSED as duplicates
 
 ## Critérios de aceitação
 
@@ -282,7 +283,7 @@ Nenhuma PR foi aberta. As alterações foram executadas directamente na main, se
 | Rotas antigas | build PASS; runtime físico PENDENTE |
 | docs/camera-engineering.md | UPDATED |
 | docs/camera-validation.md | UPDATED |
-| Issues | OPEN #1, #2 |
+| Issues | OPEN #3, #4 · CLOSED DUPLICATE #1, #2 |
 | PRs | NONE |
 | Estado production final | PENDENTE |
 
