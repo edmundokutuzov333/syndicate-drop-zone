@@ -15,6 +15,7 @@ type CameraViewportProps = {
   onReady: () => void | Promise<void>;
   onCanvasReady?: (canvas: HTMLCanvasElement | null) => void;
   onEngineReady?: (engine: WebGLEngine | null) => void;
+  recording?: boolean;
 };
 
 export function CameraViewport({
@@ -24,11 +25,15 @@ export function CameraViewport({
   onReady,
   onCanvasReady,
   onEngineReady,
+  recording = false,
 }: CameraViewportProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<WebGLEngine | null>(null);
+  const recordingRef = useRef(recording);
   const [engineReady, setEngineReady] = useState(false);
+
+  recordingRef.current = recording;
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -40,45 +45,17 @@ export function CameraViewport({
     video.className = "camera-native-video";
     stage.appendChild(video);
 
-    const engine = new WebGLEngine({
+    let engine = new WebGLEngine({
       alpha: false,
       antialias: false,
       preserveDrawingBuffer: false,
       targetFps: 60,
     });
-
     let ready = false;
-
-    try {
-      engine.init(canvas);
-      engine.setFrameSource(video);
-      engine.preloadFilters(vertexShader);
-      engine.setUniform("u_rotation", 0);
-      engine.setUniform(
-        "u_mirror",
-        facingMode === "user" ? 1 : 0,
-      );
-      engine.setFilter(filter);
-      engineRef.current = engine;
-      setEngineReady(true);
-      ready = true;
-      onCanvasReady?.(canvas);
-      onEngineReady?.(engine);
-    } catch {
-      engine.destroy();
-      setEngineReady(false);
-      onCanvasReady?.(null);
-      onEngineReady?.(null);
-    }
-
-    void onReady();
+    let destroyed = false;
 
     const orientation = new OrientationManager();
     orientation.start(0);
-
-    const unsubscribe = orientation.subscribe((state) => {
-      engine.setUniform("u_rotation", state.renderRotation);
-    });
 
     const resize = () => {
       if (engine.hasForcedOutputResolution) return;
@@ -86,26 +63,102 @@ export function CameraViewport({
       engine.resize(rect.width, rect.height);
     };
 
+    const applyEngineState = () => {
+      engine.setFrameSource(video);
+      engine.preloadFilters(vertexShader);
+      engine.setUniform("u_rotation", orientation.getState().renderRotation);
+      engine.setUniform("u_mirror", facingMode === "user" ? 1 : 0);
+      engine.setFilter(filter);
+      resize();
+    };
+
+    const initializeEngine = () => {
+      try {
+        engine.destroy();
+        engine = new WebGLEngine({
+          alpha: false,
+          antialias: false,
+          preserveDrawingBuffer: false,
+          targetFps: 60,
+        });
+        engine.init(canvas);
+        applyEngineState();
+        engineRef.current = engine;
+        ready = true;
+        setEngineReady(true);
+        onCanvasReady?.(canvas);
+        onEngineReady?.(engine);
+      } catch {
+        ready = false;
+        setEngineReady(false);
+        engineRef.current = null;
+        onCanvasReady?.(null);
+        onEngineReady?.(null);
+      }
+    };
+
+    const unsubscribe = orientation.subscribe((state) => {
+      engine.setUniform("u_rotation", state.renderRotation);
+    });
+
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(stage);
-    resize();
+
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+      ready = false;
+      setEngineReady(false);
+      onEngineReady?.(null);
+    };
+
+    const handleContextRestored = () => {
+      if (destroyed) return;
+      initializeEngine();
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        void onReady();
+      }
+    };
+
+    canvas.addEventListener("webglcontextlost", handleContextLost, false);
+    canvas.addEventListener("webglcontextrestored", handleContextRestored, false);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    initializeEngine();
+    void onReady();
 
     let raf = 0;
 
     const render = (timestamp: number) => {
-      if (ready) engine.render(timestamp);
+      if (
+        ready &&
+        (
+          document.visibilityState === "visible" ||
+          recordingRef.current
+        )
+      ) {
+        engine.render(timestamp);
+      }
       raf = requestAnimationFrame(render);
     };
 
+    resize();
     raf = requestAnimationFrame(render);
 
     return () => {
+      destroyed = true;
       cancelAnimationFrame(raf);
       resizeObserver.disconnect();
       unsubscribe();
       orientation.destroy();
+      canvas.removeEventListener("webglcontextlost", handleContextLost);
+      canvas.removeEventListener("webglcontextrestored", handleContextRestored);
+      document.removeEventListener("visibilitychange", handleVisibility);
       engine.destroy();
       engineRef.current = null;
+      setEngineReady(false);
       onCanvasReady?.(null);
       onEngineReady?.(null);
 
