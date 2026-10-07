@@ -292,6 +292,7 @@ export function ControlRoomModule({ module }: { module: keyof typeof MODULE_CONF
       await load();
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Não foi possível guardar.");
+      throw error;
     }
   };
 
