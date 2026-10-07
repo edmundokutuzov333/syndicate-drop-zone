@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { CameraManager } from "@/lib/camera/camera-manager";
 import {
   get4KCaptureDimensions,
+  getMaxCaptureDimensions,
   isReal4KSource,
 } from "@/lib/camera/capture-engine";
 import { DeviceManager } from "@/lib/camera/device-manager";
@@ -196,6 +197,17 @@ describe("camera engineering foundation", () => {
     expect(get4KCaptureDimensions(2160, 3840)).toEqual({
       width: 2160,
       height: 3840,
+    });
+  });
+
+  it("captures at maximum real source resolution when 4K is unavailable", () => {
+    expect(getMaxCaptureDimensions(1920, 1080)).toEqual({
+      width: 1920,
+      height: 1080,
+    });
+    expect(getMaxCaptureDimensions(1280, 720)).toEqual({
+      width: 1280,
+      height: 720,
     });
   });
 
