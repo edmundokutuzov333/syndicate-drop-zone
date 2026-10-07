@@ -137,7 +137,19 @@ function Revelacao() {
         Sala de Revelação
       </h1>
 
-      <section className="relative mt-10 overflow-hidden border border-blood">
+      <section
+        className="relative mt-10 overflow-hidden border border-blood outline-none focus-visible:ring-2 focus-visible:ring-blood"
+        role="button"
+        tabIndex={0}
+        aria-label="Abrir vídeo da revelação"
+        onClick={() => open(0)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            open(0);
+          }
+        }}
+      >
         <RevelationMediaSurface item={REVELACAO_MEDIA[0]!} />
         <div className="pointer-events-none absolute inset-0 bg-background/10" />
         <span className="absolute left-3 top-3 bg-blood px-2 py-1 font-stamp text-xs text-primary-foreground">
