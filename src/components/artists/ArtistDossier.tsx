@@ -41,10 +41,9 @@ export function ArtistDossier({ artist }: Props) {
   const currentIndex = ARTISTS.findIndex((item) => item.slug === artist.slug);
   const previous = ARTISTS[(currentIndex - 1 + ARTISTS.length) % ARTISTS.length]!;
   const next = ARTISTS[(currentIndex + 1) % ARTISTS.length]!;
-  const others = ARTISTS.filter((item) => item.slug !== artist.slug).slice(
-    Math.max(0, currentIndex - 1),
-    Math.max(0, currentIndex - 1) + 3,
-  );
+  const others = Array.from({ length: 3 }, (_, offset) => {
+    return ARTISTS[(currentIndex + 1 + offset) % ARTISTS.length]!;
+  });
 
   const copyLink = async () => {
     const url = window.location.href;
