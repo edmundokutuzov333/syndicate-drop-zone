@@ -143,6 +143,7 @@ export class CameraManager {
 
   stop(): void {
     ++this.requestToken;
+    void this.setHardwareTorch(false);
     this.stopStream(this.stream);
     this.stream = null;
 
