@@ -283,19 +283,25 @@ describe("camera engineering foundation", () => {
 
 
   it("controls a real hardware torch when the camera exposes torch capability", async () => {
-    const track = makeTrack("video", {
+    const track = {
+      kind: "video",
+      readyState: "live",
+      enabled: true,
       deviceId: "rear-1",
-      facingMode: "environment",
-      width: 3840,
-      height: 2160,
-      frameRate: 60,
-    }) as MediaStreamTrack & {
+      getSettings: vi.fn(() => ({
+        deviceId: "rear-1",
+        facingMode: "environment",
+        width: 3840,
+        height: 2160,
+        frameRate: 60,
+      })),
+      getCapabilities: vi.fn(() => ({ torch: true })),
+      applyConstraints: vi.fn().mockResolvedValue(undefined),
+      stop: vi.fn(),
+    } as unknown as MediaStreamTrack & {
       getCapabilities: () => { torch: boolean };
       applyConstraints: ReturnType<typeof vi.fn>;
     };
-
-    track.getCapabilities = () => ({ torch: true });
-    track.applyConstraints = vi.fn().mockResolvedValue(undefined);
 
     const audioTrack = makeTrack("audio", {});
     const stream = makeStream(track, audioTrack);
