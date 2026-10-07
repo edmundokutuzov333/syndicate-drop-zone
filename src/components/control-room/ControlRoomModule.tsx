@@ -14,6 +14,7 @@ import {
 import {
   adminQuery,
   getControlRoomSession,
+  isPublicPreviewSession,
   type ControlRoomRole,
 } from "@/lib/control-room-auth";
 
@@ -181,6 +182,7 @@ export function ControlRoomModule({ module }: { module: keyof typeof MODULE_CONF
   if (module === "media") return <MediaManager />;
   const config = MODULE_CONFIG[module];
   const [role, setRole] = useState<ControlRoomRole | null>(null);
+  const [previewMode, setPreviewMode] = useState(false);
   const [activeTable, setActiveTable] = useState(config.tables[0] ?? "");
   const [rowsByTable, setRowsByTable] = useState<Record<string, RowData[]>>({});
   const [selected, setSelected] = useState<RowData | null>(null);
@@ -189,7 +191,7 @@ export function ControlRoomModule({ module }: { module: keyof typeof MODULE_CONF
   const [busy, setBusy] = useState(true);
   const [notice, setNotice] = useState("");
 
-  const editable = canEditDefinition(config, role);
+  const editable = !previewMode && canEditDefinition(config, role);
 
   const load = async () => {
     setBusy(true);
@@ -197,6 +199,7 @@ export function ControlRoomModule({ module }: { module: keyof typeof MODULE_CONF
     try {
       const session = await getControlRoomSession();
       setRole(session?.role ?? null);
+      setPreviewMode(isPublicPreviewSession(session));
 
       const entries = await Promise.all(
         config.tables.map(async (table) => {
