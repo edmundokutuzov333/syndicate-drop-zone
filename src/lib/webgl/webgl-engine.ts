@@ -229,6 +229,7 @@ export class WebGLEngine {
     this.hudCanvas = document.createElement("canvas");
     this.hudCanvas.width = 1024;
     this.hudCanvas.height = 1024;
+    this.uniforms.set("u_filterStart", performance.now() / 1000);
   }
 
   get hasForcedOutputResolution(): boolean {
@@ -1176,10 +1177,6 @@ export class WebGLEngine {
     const cached = this.shaderCache.get(key);
 
     if (cached) return cached;
-
-    if (key === FILTER_REGISTRY.get("op1um").shaderKey) {
-      this.uniforms.set("u_filterStart", performance.now() / 1000);
-    }
 
     const compileStart = performance.now();
 
