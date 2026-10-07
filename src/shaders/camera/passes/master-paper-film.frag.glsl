@@ -56,5 +56,12 @@ void main() {
   float vignette = smoothstep(1.2, 0.18, length(p));
   color *= mix(0.92, 1.0, vignette);
 
-  gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
+  vec3 processed = clamp(color, 0.0, 1.0);
+  vec3 original = texture2D(u_input, v_uv).rgb;
+  float enabled = clamp(uApplyToAllFilters, 0.0, 1.0);
+
+  gl_FragColor = vec4(
+    mix(original, processed, enabled),
+    1.0
+  );
 }
