@@ -3,6 +3,8 @@ import { FrameBuffer } from "./frame-buffer";
 import { ShaderCache } from "./shader-cache";
 import { TextureManager } from "./texture-manager";
 import { getFilterFragmentShader } from "./filter-shaders";
+import { getFilterShaderContract } from "./filter-contract";
+import { CinematicPipeline } from "./cinematic-pipeline";
 import crossfadeShader from "@/shaders/camera/crossfade.frag.glsl?raw";
 import {
   ASTRO_LUT_HEIGHT,
@@ -17,6 +19,7 @@ import {
 import {
   type FaceVfxUniformState,
   type FilterId,
+  type MasterOverlayId,
   type RenderMetrics,
   type ShaderProgramHandle,
   type WebglEngineConfig,
@@ -65,6 +68,12 @@ export class WebGLEngine {
   private readonly textureManager = new TextureManager();
   private readonly transitionFrom = new FrameBuffer();
   private readonly transitionTo = new FrameBuffer();
+  private readonly finalOutput = new FrameBuffer();
+  private readonly cinematicPipeline = new CinematicPipeline();
+  private masterOverlays: Record<MasterOverlayId, boolean> = {
+    "cathode-crt": false,
+    "paper-film": false,
+  };
   private readonly uniforms = new Map<string, UniformValue>();
   private readonly uniformLocations = new Map<
     WebGLProgram,
@@ -252,6 +261,8 @@ export class WebGLEngine {
 
     this.transitionFrom.create(this.gl, this.canvas.width, this.canvas.height);
     this.transitionTo.create(this.gl, this.canvas.width, this.canvas.height);
+    this.finalOutput.create(this.gl, this.canvas.width, this.canvas.height);
+    this.cinematicPipeline.resize(this.canvas.width, this.canvas.height);
 
     this.metrics = {
       ...this.metrics,
@@ -274,6 +285,8 @@ export class WebGLEngine {
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     this.transitionFrom.create(this.gl, this.canvas.width, this.canvas.height);
     this.transitionTo.create(this.gl, this.canvas.width, this.canvas.height);
+    this.finalOutput.create(this.gl, this.canvas.width, this.canvas.height);
+    this.cinematicPipeline.resize(this.canvas.width, this.canvas.height);
   }
 
   async restorePreviewResolution(): Promise<void> {
@@ -285,6 +298,8 @@ export class WebGLEngine {
     this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     this.transitionFrom.create(this.gl, this.canvas.width, this.canvas.height);
     this.transitionTo.create(this.gl, this.canvas.width, this.canvas.height);
+    this.finalOutput.create(this.gl, this.canvas.width, this.canvas.height);
+    this.cinematicPipeline.resize(this.canvas.width, this.canvas.height);
   }
 
   async withOutputResolution<T>(
@@ -314,6 +329,10 @@ export class WebGLEngine {
 
   preloadFilters(vertexShaderSource: string): void {
     this.vertexShaderSource = vertexShaderSource;
+
+    if (this.gl) {
+      this.cinematicPipeline.init(this.gl, vertexShaderSource);
+    }
 
     for (const filter of FILTER_REGISTRY.listVisible()) {
       const handle = this.compileProgram(
@@ -370,6 +389,14 @@ export class WebGLEngine {
       to: filter,
       startedAt: now,
     };
+  }
+
+  setMasterOverlayEnabled(id: MasterOverlayId, enabled: boolean): void {
+    this.masterOverlays[id] = enabled;
+  }
+
+  getMasterOverlayState(): Record<MasterOverlayId, boolean> {
+    return { ...this.masterOverlays };
   }
 
   setUniform(name: string, value: UniformValue): void {
@@ -594,6 +621,8 @@ export class WebGLEngine {
       this.textureManager.destroy(gl);
       this.transitionFrom.destroy(gl);
       this.transitionTo.destroy(gl);
+      this.finalOutput.destroy(gl);
+      this.cinematicPipeline.destroy();
       this.shaderCache.clear(gl);
     }
 
@@ -629,6 +658,8 @@ export class WebGLEngine {
     this.lutTexture = null;
     this.overlayCanvas = null;
     this.overlayProgram = null;
+    this.masterOverlays["cathode-crt"] = false;
+    this.masterOverlays["paper-film"] = false;
     this.overlayText = null;
     this.overlayDirty = false;
     this.gcObserver?.disconnect();
