@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ARTISTS } from "@/lib/artists";
 import { Halftone } from "@/components/Halftone";
 import { hiss } from "@/lib/sfx";
@@ -64,11 +64,16 @@ function Membros() {
 
       <div className="mt-6 grid grid-cols-4 gap-2 md:grid-cols-9">
         {ARTISTS.map((x, i) => (
-          <button key={x.code} onClick={() => { navigate({ search: { a: i + 1 }, replace: true }); hiss(); }}
-            className={`relative aspect-[4/5] border-2 ${i === sel ? "border-blood" : "border-border opacity-60 hover:opacity-100"}`}>
+          <Link
+            key={x.code}
+            to="/membros/$slug"
+            params={{ slug: x.slug }}
+            onClick={() => hiss()}
+            className={`relative aspect-[4/5] border-2 ${i === sel ? "border-blood" : "border-border opacity-60 hover:opacity-100"}`}
+          >
             <Halftone src={x.img} alt={x.name} className="h-full w-full" />
             <span className="absolute bottom-1 left-1 bg-background px-1 text-[10px]">{x.name}</span>
-          </button>
+          </Link>
         ))}
       </div>
     </main>
