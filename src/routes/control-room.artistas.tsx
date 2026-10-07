@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Check, Edit3, ExternalLink, RefreshCw, Save, Search } from "lucide-react";
+import { Check, Edit3, ExternalLink, Plus, RefreshCw, Save, Search, Trash2 } from "lucide-react";
 import { adminQuery, type ControlRoomRole, getControlRoomSession } from "@/lib/control-room-auth";
 
 type Artist = {
@@ -136,7 +136,7 @@ function ControlRoomArtists() {
                     <span>•</span>
                     <span>SPOTIFY {artist.spotify_artist_id ? "✓" : "—"}</span>
                     <span>•</span>
-                    <span>YT {releases.filter((release) => release.artist_id === artist.id).length}/3</span>
+                    <span>YT {releases.filter((release) => release.artist_id === artist.id).length}</span>
                   </div>
                 </div>
                 <Edit3 size={14} className="shrink-0 text-white/20" />
@@ -179,17 +179,15 @@ function ArtistEditor({
 }) {
   const [form, setForm] = useState(artist);
   const [releaseForm, setReleaseForm] = useState(
-    [1, 2, 3].map((position) => {
-      const found = releases.find((release) => release.position === position);
-      return {
-        id: found?.id ?? null,
-        position,
-        title: found?.title ?? `Lançamento 0${position}`,
-        youtube_id: found?.youtube_id ?? "",
-        status: found?.status ?? "published",
-      };
-    }),
+    [...releases].sort((a, b) => a.position - b.position).map((release) => ({
+      id: release.id,
+      position: release.position,
+      title: release.title,
+      youtube_id: release.youtube_id ?? "",
+      status: release.status ?? "published",
+    })),
   );
+  const [removedReleaseIds, setRemovedReleaseIds] = useState<string[]>([]);
   const [status, setStatus] = useState("");
 
   const save = async () => {
@@ -200,6 +198,13 @@ function ArtistEditor({
       headers: { Prefer: "return=minimal" },
       body: JSON.stringify(form),
     });
+
+    for (const id of removedReleaseIds) {
+      await adminQuery("/rest/v1/artist_releases?id=eq." + encodeURIComponent(id), {
+        method: "DELETE",
+        headers: { Prefer: "return=minimal" },
+      });
+    }
 
     for (const release of releaseForm) {
       const payload = {
@@ -224,6 +229,7 @@ function ArtistEditor({
       }
     }
 
+    setRemovedReleaseIds([]);
     setStatus("GUARDADO");
     await onSaved();
     window.setTimeout(() => setStatus(""), 1800);
@@ -264,19 +270,30 @@ function ArtistEditor({
         </div>
 
         <div>
-          <div className="mb-3 flex items-end justify-between">
-            <div>
-              <p className="font-mono text-[9px] tracking-[0.24em] text-[#d71920]">YOUTUBE</p>
-              <h3 className="mt-1 font-gothic text-3xl">3 LANÇAMENTOS</h3>
-            </div>
-            <a href={"https://open.spotify.com/artist/" + encodeURIComponent(form.spotify_artist_id)} target="_blank" rel="noreferrer" className="font-mono text-[9px] text-white/40 hover:text-white">
-              SPOTIFY <ExternalLink size={11} className="inline" />
-            </a>
-          </div>
-          <div className="grid gap-3">
+                      <div className="flex items-end justify-between">
+                        <div>
+                          <p className="font-mono text-[9px] tracking-[0.24em] text-[#d71920]">YOUTUBE</p>
+                          <h3 className="mt-1 font-gothic text-3xl">{releaseForm.length} LANÇAMENTO{releaseForm.length === 1 ? "" : "S"}</h3>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <a href={"https://open.spotify.com/artist/" + encodeURIComponent(form.spotify_artist_id)} target="_blank" rel="noreferrer" className="font-mono text-[9px] text-white/40 hover:text-white">
+                            SPOTIFY <ExternalLink size={11} className="inline" />
+                          </a>
+                          {canEdit && (
+                            <button
+                              type="button"
+                              onClick={() => setReleaseForm((rows) => [...rows, { id: null, position: Math.max(0, ...rows.map((row) => row.position)) + 1, title: "Novo lançamento", youtube_id: "", status: "draft" }])}
+                              className="inline-flex items-center gap-1 border border-white/10 px-2 py-2 font-mono text-[9px] text-white/45 hover:border-[#d71920] hover:text-white"
+                            >
+                              <Plus size={12} /> ADICIONAR
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    <div className="grid gap-3">
             {releaseForm.map((release, index) => (
-              <div key={release.position} className="grid gap-3 border border-white/10 p-4 md:grid-cols-[80px_1fr_1fr_auto] md:items-center">
-                <span className="font-mono text-[9px] text-[#d71920]">0{release.position}</span>
+              <div key={release.id ?? "new-" + release.position} className="grid gap-3 border border-white/10 p-4 md:grid-cols-[80px_1fr_1fr_auto_auto] md:items-center">
+                <span className="font-mono text-[9px] text-[#d71920]">{String(release.position).padStart(2, "0")}</span>
                 <input
                   value={release.title}
                   disabled={!canEdit}
@@ -294,9 +311,20 @@ function ArtistEditor({
                   <a href={"https://youtu.be/" + release.youtube_id} target="_blank" rel="noreferrer" className="text-white/40 hover:text-white">
                     <ExternalLink size={14} />
                   </a>
-                ) : (
-                  <span />
-                )}
+                ) : <span />}
+                {canEdit ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReleaseForm((rows) => rows.filter((_, rowIndex) => rowIndex !== index));
+                      if (release.id) setRemovedReleaseIds((ids) => ids.includes(release.id as string) ? ids : [...ids, release.id as string]);
+                    }}
+                    className="text-white/25 hover:text-[#d71920]"
+                    title="Remover lançamento"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                ) : <span />}
               </div>
             ))}
           </div>
