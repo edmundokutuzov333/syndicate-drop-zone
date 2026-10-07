@@ -65,6 +65,12 @@ export class WebGLEngine {
   private surfaceWidth = 1;
   private surfaceHeight = 1;
   private forcedOutputResolution: { width: number; height: number } | null = null;
+  private readonly uniformValueCache = new Map<WebGLProgram, Map<string, UniformValue>>();
+  private readonly resolutionUniform: [number, number] = [1, 1];
+  private readonly videoResolutionUniform: [number, number] = [1, 1];
+  private drawCallsThisFrame = 0;
+  private gcObserver: PerformanceObserver | null = null;
+  private gcEvents = 0;
   private lastFrameAt = 0;
   private frameCounter = 0;
   private metrics: RenderMetrics = {
@@ -74,6 +80,11 @@ export class WebGLEngine {
     deviceTier: "medium",
     dpr: 1,
     renderScale: 1,
+    renderTimeMs: 0,
+    textureUploadTimeMs: 0,
+    shaderCompileTimeMs: 0,
+    drawCalls: 0,
+    gcEvents: 0,
   };
   private readonly config: Required<WebglEngineConfig>;
 
@@ -89,6 +100,7 @@ export class WebGLEngine {
   init(canvas: HTMLCanvasElement): void {
     this.canvas = canvas;
     this.metrics.deviceTier = detectPerformanceTier();
+    this.startGcObserver();
 
     const devicePixelRatio =
       typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
@@ -288,6 +300,9 @@ export class WebGLEngine {
 
     if (!gl || !this.canvas || !this.vertexBuffer || !this.frameSource) return;
 
+    const renderStart = performance.now();
+    this.drawCallsThisFrame = 0;
+
     const frameTime =
       this.lastFrameAt === 0 ? 0 : timestamp - this.lastFrameAt;
     this.lastFrameAt = timestamp;
@@ -315,13 +330,19 @@ export class WebGLEngine {
 
     if (sourceSize.width <= 0 || sourceSize.height <= 0) return;
 
+    this.videoResolutionUniform[0] = sourceSize.width;
+    this.videoResolutionUniform[1] = sourceSize.height;
+
     this.textureManager.beginFrame();
+
+    const uploadStart = performance.now();
     this.textureManager.uploadCurrent(
       gl,
       this.frameSource,
       sourceSize.width,
       sourceSize.height,
     );
+    const uploadTime = performance.now() - uploadStart;
 
     if (this.transition) {
       const progress = Math.min(
@@ -357,10 +378,42 @@ export class WebGLEngine {
       this.renderFilterPass(null, this.filter, timestamp, sourceSize);
     }
 
+    const renderTime = performance.now() - renderStart;
+    this.metrics = {
+      ...this.metrics,
+      renderTimeMs: this.metrics.renderTimeMs
+        ? this.metrics.renderTimeMs * 0.8 + renderTime * 0.2
+        : renderTime,
+      textureUploadTimeMs: this.metrics.textureUploadTimeMs
+        ? this.metrics.textureUploadTimeMs * 0.8 + uploadTime * 0.2
+        : uploadTime,
+      drawCalls: this.drawCallsThisFrame,
+      gcEvents: this.gcEvents,
+    };
+
     this.frameCounter += 1;
 
-    if (this.frameCounter % 30 === 0 && !this.forcedOutputResolution) {
-      this.applyAdaptivePolicy();
+    if (this.frameCounter % 30 === 0) {
+      const memory =
+        typeof performance !== "undefined" &&
+        "memory" in performance
+          ? Number(
+              (
+                performance as Performance & {
+                  memory?: { usedJSHeapSize?: number };
+                }
+              ).memory?.usedJSHeapSize ?? 0,
+            )
+          : 0;
+
+      this.metrics = {
+        ...this.metrics,
+        memoryUsedMb: memory > 0 ? memory / 1_000_000 : undefined,
+      };
+
+      if (!this.forcedOutputResolution) {
+        this.applyAdaptivePolicy();
+      }
     }
   }
 
@@ -407,6 +460,10 @@ export class WebGLEngine {
     this.uniforms.clear();
     this.uniformLocations.clear();
     this.attributeLocations.clear();
+    this.uniformValueCache.clear();
+    this.gcObserver?.disconnect();
+    this.gcObserver = null;
+    this.gcEvents = 0;
     this.lastFrameAt = 0;
     this.frameCounter = 0;
   }
@@ -489,6 +546,7 @@ export class WebGLEngine {
     this.applyUniforms(programHandle.program);
 
     gl.drawArrays(gl.TRIANGLES, 0, 3);
+    this.drawCallsThisFrame += 1;
 
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, null);
@@ -526,6 +584,7 @@ export class WebGLEngine {
     this.setProgramUniform(programHandle.program, "u_progress", progress);
 
     gl.drawArrays(gl.TRIANGLES, 0, 3);
+    this.drawCallsThisFrame += 1;
 
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, null);
@@ -589,6 +648,13 @@ export class WebGLEngine {
 
     if (location === null) return;
 
+    const cache = this.uniformValueCache.get(program) ?? new Map<string, UniformValue>();
+    const previous = cache.get(name);
+
+    if (previous !== undefined && this.uniformValuesEqual(previous, value)) {
+      return;
+    }
+
     if (
       name === "u_texture" ||
       name === "u_previousFrame" ||
@@ -629,12 +695,52 @@ export class WebGLEngine {
         value[3] ?? 0,
       );
     }
+
+    cache.set(name, Array.isArray(value) ? [...value] : value);
+    this.uniformValueCache.set(program, cache);
+  }
+
+  private uniformValuesEqual(
+    previous: UniformValue,
+    next: UniformValue,
+  ): boolean {
+    if (typeof previous === "number" || typeof next === "number") {
+      return previous === next;
+    }
+
+    if (previous.length !== next.length) return false;
+
+    for (let index = 0; index < previous.length; index += 1) {
+      if (previous[index] !== next[index]) return false;
+    }
+
+    return true;
   }
 
   private applyUniforms(program: WebGLProgram): void {
     this.uniforms.forEach((value, name) => {
       this.setProgramUniform(program, name, value);
     });
+  }
+
+  private startGcObserver(): void {
+    if (this.gcObserver || typeof PerformanceObserver === "undefined") return;
+
+    try {
+      const supported = PerformanceObserver.supportedEntryTypes?.includes("gc");
+      if (!supported) return;
+
+      this.gcObserver = new PerformanceObserver((list) => {
+        this.gcEvents += list.getEntries().length;
+      });
+
+      this.gcObserver.observe({
+        type: "gc",
+        buffered: true,
+      } as unknown as PerformanceObserverInit);
+    } catch {
+      this.gcObserver = null;
+    }
   }
 
   private applyAdaptivePolicy(): void {
@@ -665,6 +771,8 @@ export class WebGLEngine {
 
     if (cached) return cached;
 
+    const compileStart = performance.now();
+
     const vertex = this.compileShader(
       this.gl.VERTEX_SHADER,
       vertexSource,
@@ -691,6 +799,14 @@ export class WebGLEngine {
       this.gl.deleteProgram(program);
       throw new Error("WEBGL_PROGRAM_LINK_FAILED: " + info);
     }
+
+    const compileTime = performance.now() - compileStart;
+    this.metrics = {
+      ...this.metrics,
+      shaderCompileTimeMs: this.metrics.shaderCompileTimeMs
+        ? this.metrics.shaderCompileTimeMs * 0.7 + compileTime * 0.3
+        : compileTime,
+    };
 
     return this.shaderCache.set(key, program);
   }
