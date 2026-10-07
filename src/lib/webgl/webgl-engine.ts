@@ -523,15 +523,18 @@ export class WebGLEngine {
     gl.bindTexture(gl.TEXTURE_2D, previousTexture);
     this.setProgramUniform(programHandle.program, "u_previousFrame", 1);
 
+    this.resolutionUniform[0] = canvas.width;
+    this.resolutionUniform[1] = canvas.height;
+
     this.setProgramUniform(
       programHandle.program,
       "u_resolution",
-      [canvas.width, canvas.height],
+      this.resolutionUniform,
     );
     this.setProgramUniform(
       programHandle.program,
       "u_videoResolution",
-      [sourceSize.width, sourceSize.height],
+      this.videoResolutionUniform,
     );
 
     this.uniforms.set("u_time", timestamp / 1000);
