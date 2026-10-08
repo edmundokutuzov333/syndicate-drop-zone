@@ -172,11 +172,15 @@ const STATIC_RADIO_FALLBACK: LiveRadioTrack[] = STATIC_RADIO_TRACKS.map((track, 
 export async function getLiveRadioTracks(): Promise<LiveRadioTrack[]> {
   try {
     const rows = await tableRows("radio_tracks");
+    const allowedRadioSources = new Set(STATIC_RADIO_FALLBACK.map((track) => track.src));
     const mapped = rows
       .filter((row) => {
         const status = String(row.status ?? "").toLowerCase();
         const disabled = Boolean(row.temporarily_disabled);
-        return !disabled && (!status || ["published", "active", "live", "ready"].includes(status));
+        const src = stringValue(row, ["audio_url", "audio_src", "src", "url"]);
+        return !disabled
+          && allowedRadioSources.has(src)
+          && (!status || ["published", "active", "live", "ready"].includes(status));
       })
       .map((row, index) => ({
         id: stringValue(row, ["id", "uuid", "slug"], "radio-" + String(index + 1)),
@@ -191,7 +195,8 @@ export async function getLiveRadioTracks(): Promise<LiveRadioTrack[]> {
         temporarilyDisabled: Boolean(row.temporarily_disabled),
       }))
       .filter((track) => Boolean(track.src));
-    return mapped.length ? mapped : STATIC_RADIO_FALLBACK;
+    const ordered = [...STATIC_RADIO_FALLBACK].map((fallback) => mapped.find((track) => track.src === fallback.src) ?? fallback);
+    return ordered.filter((track) => Boolean(track.src));
   } catch {
     return STATIC_RADIO_FALLBACK;
   }
