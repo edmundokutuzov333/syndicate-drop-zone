@@ -29,7 +29,7 @@ revoke all on public.live_notifications from anon, authenticated;
 
 grant select on public.site_flags to anon, authenticated;
 grant select on public.artist_status to anon, authenticated;
-grant insert on public.live_notifications to anon, authenticated;
+revoke all on public.live_notifications from anon, authenticated;
 
 drop policy if exists "Public can read site flags" on public.site_flags;
 create policy "Public can read site flags"
@@ -54,6 +54,9 @@ select id,'ATIVO' from public.artists
 on conflict (artist_id) do nothing;
 
 drop policy if exists "Admins manage site flags" on public.site_flags;
+grant select, insert, update, delete on public.site_flags to authenticated;
+grant select, insert, update, delete on public.artist_status to authenticated;
+
 create policy "Admins manage site flags"
   on public.site_flags for all
   to authenticated
