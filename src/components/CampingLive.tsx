@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createPublicLiveNotification, normalizeLiveUrl, type LiveFlag, type CampingSessionRow } from "@/lib/camping-data";
 import { track } from "@/lib/track";
 
@@ -19,7 +19,6 @@ export function CampingLive({
   const [armed, setArmed] = useState(false);
   const [contact, setContact] = useState("");
   const [message, setMessage] = useState("");
-  const [currentLive, setCurrentLive] = useState(live);
 
   const onNotify = async () => {
     const value = contact.trim();
@@ -38,11 +37,9 @@ export function CampingLive({
     }
   };
 
-  useEffect(() => setCurrentLive(live), [live.on, live.url]);
+  const embedUrl = useMemo(() => normalizeLiveUrl(live.url), [live.url]);
 
-  const embedUrl = useMemo(() => normalizeLiveUrl(currentLive.url), [currentLive.url]);
-
-  if (currentLive.on && embedUrl) {
+  if (live.on && embedUrl) {
     return (
       <section className="border border-blood bg-black">
         <div className="flex items-center justify-between border-b border-blood/50 px-4 py-3">
