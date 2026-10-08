@@ -2,11 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Check, ExternalLink, RefreshCw, TriangleAlert } from "lucide-react";
 import { adminQuery, checkStorageBucket, getMediaBucket, publicQuery } from "@/lib/control-room-auth";
+import { getFrequencyClock, getFrequencyListenerCount } from "@/lib/frequency-api";
 
 const TABLES = [
   "artists","artist_releases","tapes","releases","camping_events","camping_sessions",
   "revelation_media","gallery_items","site_flags","artist_status","live_notifications","media_assets","merch_products","merch_variants","reservations",
-  "site_settings","site_sections","drop_campaigns","members",
+  "site_settings","site_sections","drop_campaigns","members","frequency_station","frequency_listeners","frequency_badges",
 ] as const;
 
 export const Route = createFileRoute("/control-room/sistema")({ component: System });
@@ -17,6 +18,7 @@ function System() {
   const [adminCount, setAdminCount] = useState<number | null>(null);
   const [checking, setChecking] = useState(true);
   const [platform, setPlatform] = useState({ database: false, auth: false, media: false, site: false });
+  const [frequencyInfo, setFrequencyInfo] = useState<{ startedAt: string | null; listeners: number; loaded: boolean }>({ startedAt: null, listeners: 0, loaded: false });
 
   const load = async () => {
     setChecking(true);
@@ -51,6 +53,12 @@ function System() {
       await publicQuery("/rest/v1/site_settings?select=id&limit=1");
       platformNext.site = true;
     } catch {}
+    try {
+      const [clock, listeners] = await Promise.all([getFrequencyClock(), getFrequencyListenerCount()]);
+      setFrequencyInfo({ startedAt: clock?.station_started_at ?? null, listeners, loaded: Boolean(clock) });
+    } catch {
+      setFrequencyInfo({ startedAt: null, listeners: 0, loaded: false });
+    }
     setChecks(next);
     setPlatform(platformNext);
     setChecking(false);
@@ -99,6 +107,23 @@ function System() {
         <Metric value={adminCount === null ? "--" : String(adminCount)} label="PERFIS ADMIN" />
       </section>
 
+      <section className="mt-8 border border-white/10 bg-[#0d0d0d]">
+        <div className="flex flex-col gap-2 border-b border-white/10 p-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="font-mono text-[10px] tracking-[0.22em] text-[#d71920]">FREQUÊNCIA 808</p>
+            <p className="mt-1 font-mono text-[10px] text-white/35">Estado operacional da estação e presença pública.</p>
+          </div>
+          <Link to="/frequencia" className="inline-flex min-h-11 items-center border border-white/10 px-3 font-mono text-[9px] tracking-[0.14em] text-white/50 hover:border-[#d71920] hover:text-white">
+            ABRIR ESTAÇÃO
+          </Link>
+        </div>
+        <div className="grid gap-px bg-white/10 md:grid-cols-3">
+          <Metric value={frequencyInfo.loaded ? frequencyInfo.listeners.toString() : "--"} label="OUVINTES <45S" />
+          <Metric value={frequencyInfo.startedAt ? new Date(frequencyInfo.startedAt).toLocaleString("pt-PT") : "--"} label="EMISSÃO INICIADA" />
+          <Metric value={checks.frequency_badges?.ok ? "RPC/TABELA" : "PENDING"} label="BADGE MADRUGADA" />
+        </div>
+      </section>
+
       <div className="mt-8 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <section className="border border-white/10 bg-[#0d0d0d]">
           <div className="border-b border-white/10 p-4">
@@ -134,6 +159,7 @@ function System() {
             <Cert label="MERCH → SITE" ok={checks.merch_products?.ok && checks.merch_variants?.ok && checks.reservations?.ok} />
             <Cert label="SITE SETTINGS → SITE" ok={checks.site_settings?.ok && checks.site_sections?.ok} />
             <Cert label="DROP → COUNTDOWN" ok={checks.drop_campaigns?.ok} />
+            <Cert label="FREQUÊNCIA 808 → STATION" ok={checks.frequency_station?.ok && checks.frequency_listeners?.ok} />
             <Cert label="AUDIT LOG TABLE" ok={auditCount !== null} />
           </div>
           <div className="border-t border-white/10 p-4">
