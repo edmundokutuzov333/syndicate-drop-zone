@@ -1030,3 +1030,18 @@
     text-align: center;
   }
 }
+
+
+/* Phase 1: synchronous gate boot. Without JS the document remains crawlable/visible. */
+html[data-gate="locked"] #site {
+  visibility: hidden;
+}
+
+.gate-error {
+  animation: shake 0.3s, gate-flash 0.3s;
+}
+
+@keyframes gate-flash {
+  0%, 100% { background-color: transparent; }
+  35% { background-color: rgba(183, 24, 20, 0.18); }
+}
