@@ -96,7 +96,9 @@ begin
     return false;
   end if;
 
-  if p_local_hour <> 3 then
+  -- Keep the public signature backward-compatible, but trust only the server clock.
+  -- The badge window is always 03:00–03:59 in Africa/Maputo.
+  if extract(hour from (now() at time zone 'Africa/Maputo'))::integer <> 3 then
     return false;
   end if;
 
