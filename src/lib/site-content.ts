@@ -219,30 +219,76 @@ export async function getLiveArtistsForSite() {
   return getLiveArtists();
 }
 
-export async function getLiveRevelationMedia(): Promise<RevelationMedia[]> {
-  try {
-    const [rawRows, mediaAssets] = await Promise.all([tableRows("revelation_media"), getMediaAssetIndex()]);
-    const rows = rawRows.filter(isPublic).sort((a, b) => orderValue(a, 0) - orderValue(b, 0));
-    const mapped = rows.map((row, index) => {
+function mapGalleryRows(rows: ContentRow[], mediaAssets: Map<string, string>): RevelationMedia[] {
+  return rows
+    .filter(isPublic)
+    .sort((a, b) => orderValue(a, 0) - orderValue(b, 0))
+    .map((row, index) => {
       const src = mediaAssetUrl(row, mediaAssets);
       if (!src) return null;
+
       const typeRaw = stringValue(row, ["type", "media_type"], "image").toLowerCase();
       const type: RevelationMediaType = typeRaw.includes("video") ? "video" : "image";
-      const ratio: RevelationMediaRatio = stringValue(row, ["ratio", "aspect_ratio"], index % 2 ? "3:4" : "4:3") === "3:4" ? "3:4" : "4:3";
+      const ratio: RevelationMediaRatio =
+        stringValue(row, ["ratio", "aspect_ratio"], index % 2 ? "3:4" : "4:3") === "3:4"
+          ? "3:4"
+          : "4:3";
+      const poster =
+        stringValue(row, ["poster_url", "poster", "poster_src", "thumbnail_url"], "") ||
+        mediaAssets.get(stringValue(row, ["poster_media_asset_id", "poster_asset_id"])) ||
+        undefined;
+      const downloadableRaw = value(row, ["downloadable", "is_downloadable"]);
+      const downloadable =
+        downloadableRaw === true ||
+        downloadableRaw === 1 ||
+        downloadableRaw === "1" ||
+        downloadableRaw === "true";
+
+      const roll = stringValue(
+        row,
+        ["roll", "reel", "category", "tag"],
+        ROLLS[index % ROLLS.length],
+      ).toUpperCase();
+
       return {
         id: stringValue(row, ["id", "slug"], "revelacao-" + String(index + 1).padStart(3, "0")),
         type,
         src,
+        poster,
         alt: stringValue(row, ["alt", "alt_text", "caption", "title"], "Registo visual da Sala de Revelação"),
+        caption: stringValue(row, ["caption", "description", "title"], ""),
+        tag: stringValue(row, ["tag", "roll", "label"], roll).toUpperCase(),
+        roll,
+        day: numberValue(row, ["day", "day_index", "recording_day"], Math.floor(index / 5) + 1),
+        timecode: stringValue(row, ["timecode", "timestamp", "time"], "00:00"),
         ratio,
-        downloadable: Boolean(value(row, ["downloadable", "is_downloadable"]) ?? false),
+        downloadable,
         downloadName: stringValue(row, ["download_name", "filename"], "") || undefined,
-      };
-    }).filter(Boolean) as unknown as RevelationMedia[];
-    return mapped.length ? mapped : STATIC_REVELACAO_MEDIA.filter((item) => item.src);
+      } satisfies RevelationMedia;
+    })
+    .filter((item): item is RevelationMedia => Boolean(item));
+}
+
+const ROLLS = ["CABINE", "ESTAMPA", "BEAT", "VISUALIZER", "LIVES"] as const;
+
+export async function getLiveRevelationMedia(): Promise<RevelationMedia[]> {
+  const mediaAssets = await getMediaAssetIndex();
+
+  try {
+    const gallery = mapGalleryRows(await tableRows("gallery_items"), mediaAssets);
+    if (gallery.length) return gallery;
   } catch {
-    return STATIC_REVELACAO_MEDIA.filter((item) => item.src);
+    // Fallback de compatibilidade: a migration da gallery pode ainda estar pendente.
   }
+
+  try {
+    const legacy = mapGalleryRows(await tableRows("revelation_media"), mediaAssets);
+    if (legacy.length) return legacy;
+  } catch {
+    // Fallback para o pacote estático abaixo.
+  }
+
+  return STATIC_REVELACAO_MEDIA;
 }
 
 export async function getLiveCamping() {
