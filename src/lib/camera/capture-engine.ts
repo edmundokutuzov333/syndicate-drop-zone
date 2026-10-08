@@ -4,7 +4,7 @@ import {
   createRecordingStream,
   getExtension,
 } from "./recorder";
-import { type CaptureFormat, type CaptureResult } from "./types";
+import { type CaptureFormat, type CaptureResult, type FilterId } from "./types";
 import { WebGLEngine } from "@/lib/webgl/webgl-engine";
 
 const MIN_4K_LONG_EDGE = 3840;
@@ -141,7 +141,7 @@ export class CaptureEngine {
     const webgl = this.webgl!;
     const target = getCaptureDimensions(this.videoWidth, this.videoHeight);
 
-    await webgl.waitForFilter(filterId);
+    await webgl.waitForFilter(filterId as FilterId);
 
     return webgl.withOutputResolution(
       target.width,
@@ -198,7 +198,7 @@ export class CaptureEngine {
 
     if (this.isRecording) return;
 
-    await this.webgl!.waitForFilter(filterId);
+    await this.webgl!.waitForFilter(filterId as FilterId);
 
     const sourceStream = this.options.getSourceStream();
     if (!sourceStream) throw new Error("CAMERA_STREAM_UNAVAILABLE");

@@ -286,7 +286,7 @@ function Field({
 }: {
   label: string;
   value: string;
-  error?: string;
+  error?: string | undefined;
   placeholder: string;
   onChange: (value: string) => void;
 }) {

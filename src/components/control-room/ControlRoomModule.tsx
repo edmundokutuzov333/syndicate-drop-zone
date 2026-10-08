@@ -182,6 +182,7 @@ export function ControlRoomModule({ module }: { module: keyof typeof MODULE_CONF
   if (module === "media") return <MediaManager />;
   const config = MODULE_CONFIG[module];
   const [role, setRole] = useState<ControlRoomRole | null>(null);
+  if (!config) return null;
   const [previewMode, setPreviewMode] = useState(false);
   const [activeTable, setActiveTable] = useState(config.tables[0] ?? "");
   const [rowsByTable, setRowsByTable] = useState<Record<string, RowData[]>>({});
@@ -608,7 +609,7 @@ function RecordEditor({
         <div>
           <p className="font-mono text-[9px] tracking-[0.22em] text-[#d71920]">{table.toUpperCase()}</p>
           <h2 className="mt-1 font-gothic text-4xl">{previewTitle}</h2>
-          {form.id && <p className="mt-1 font-mono text-[9px] text-white/25">{String(form.id)}</p>}
+          {form.id != null && form.id !== "" && <p className="mt-1 font-mono text-[9px] text-white/25">{String(form.id)}</p>}
         </div>
 
       {dirty && editable && (

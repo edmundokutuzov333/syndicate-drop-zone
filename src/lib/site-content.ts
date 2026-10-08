@@ -237,7 +237,7 @@ export async function getLiveRevelationMedia(): Promise<RevelationMedia[]> {
         downloadable: Boolean(value(row, ["downloadable", "is_downloadable"]) ?? false),
         downloadName: stringValue(row, ["download_name", "filename"], "") || undefined,
       };
-    }).filter((item): item is RevelationMedia => Boolean(item));
+    }).filter(Boolean) as unknown as RevelationMedia[];
     return mapped.length ? mapped : STATIC_REVELACAO_MEDIA.filter((item) => item.src);
   } catch {
     return STATIC_REVELACAO_MEDIA.filter((item) => item.src);

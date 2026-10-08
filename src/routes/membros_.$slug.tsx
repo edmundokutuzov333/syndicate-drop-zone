@@ -3,7 +3,7 @@ import { ArtistDossier } from "@/components/artists/ArtistDossier";
 import { getArtistBySlug } from "@/lib/artist-content";
 import { getLiveArtistBySlug, getLiveArtistChannels } from "@/lib/public-content";
 
-export const Route = createFileRoute("/membros/$slug")({
+export const Route = createFileRoute("/membros_/$slug")({
   head: ({ params }) => {
     const artist = getArtistBySlug(params.slug);
     return {
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/membros/$slug")({
         ...(artist
           ? [
               { property: "og:title", content: artist.name + " · O Sindicato do Trap" },
-              { property: "og:description", content: "Arquivo de convocados · " + artist.code },
+              { property: "og:description", content: "Arquivo de convocados · " + artist.slug.toUpperCase() },
               { property: "og:image", content: artist.img },
               { property: "og:type", content: "profile" },
             ]
@@ -45,6 +45,10 @@ export const Route = createFileRoute("/membros/$slug")({
 });
 
 function ArtistProfile() {
-  const { artist, channels } = Route.useLoaderData();
-  return <ArtistDossier artist={artist} channels={channels} />;
+  const data = Route.useLoaderData() as {
+    artist: NonNullable<Awaited<ReturnType<typeof getLiveArtistBySlug>>>;
+    channels: Awaited<ReturnType<typeof getLiveArtistChannels>>;
+  } | undefined;
+  if (!data) return null;
+  return <ArtistDossier artist={data.artist} channels={data.channels} />;
 }

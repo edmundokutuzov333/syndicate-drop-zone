@@ -39,7 +39,7 @@ async function handleRevelacaoDownload(request: Request): Promise<Response | nul
     });
   }
 
-  const mediaId = match[1];
+  const mediaId = match[1] ?? "";
   const authorized = REVELACAO_DOWNLOADS[mediaId];
   if (!authorized) {
     return new Response("Media not authorized for download", {

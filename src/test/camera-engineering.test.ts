@@ -1,3 +1,4 @@
+import { type WebGLEngine } from "@/lib/webgl/webgl-engine";
 import { describe, expect, it, vi } from "vitest";
 import { CameraManager } from "@/lib/camera/camera-manager";
 import {

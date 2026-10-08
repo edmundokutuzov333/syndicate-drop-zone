@@ -316,7 +316,7 @@ export class CameraManager {
 
   async setHardwareTorch(enabled: boolean): Promise<void> {
     const track = this.stream?.getVideoTracks()[0] as TorchTrack | undefined;
-    const capabilities = track?.getCapabilities?.();
+    const capabilities = track?.getCapabilities?.() as (MediaTrackCapabilities & { torch?: boolean }) | undefined;
 
     if (!track || !capabilities?.torch || !track.applyConstraints) {
       return;
@@ -502,7 +502,7 @@ export class CameraManager {
     if (!enabled) return "off";
 
     const track = this.stream?.getVideoTracks()[0] as TorchTrack | undefined;
-    const capabilities = track?.getCapabilities?.();
+    const capabilities = track?.getCapabilities?.() as (MediaTrackCapabilities & { torch?: boolean }) | undefined;
 
     return capabilities?.torch ? "hardware" : "software";
   }

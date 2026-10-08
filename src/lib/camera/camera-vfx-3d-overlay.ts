@@ -231,9 +231,9 @@ export class CameraVfx3DOverlay {
     );
     this.glasses.rotation.z += Math.sin(timestamp * 0.0018) * 0.006;
 
-    this.particleMaterial.uniforms.uTime.value = timestamp * 0.001;
-    this.particleMaterial.uniforms.uMotion.value = state.motion;
-    this.particleMaterial.uniforms.uAmbient.value = this.ambientTexture;
+    this.particleMaterial.uniforms.uTime!.value = timestamp * 0.001;
+    this.particleMaterial.uniforms.uMotion!.value = state.motion;
+    this.particleMaterial.uniforms.uAmbient!.value = this.ambientTexture;
 
     if (filter === "xray-mesh" && landmarks) {
       this.updateXrayMesh(
@@ -277,12 +277,12 @@ export class CameraVfx3DOverlay {
     lineWidth = 1.5,
     depthFade = 0.8,
   ): void {
-    this.xrayOuterMaterial.uniforms.uMeshColor.value.set(...meshColor);
-    this.xrayCoreMaterial.uniforms.uMeshColor.value.set(...meshColor);
-    this.xrayOuterMaterial.uniforms.uDepthFade.value = depthFade;
-    this.xrayCoreMaterial.uniforms.uDepthFade.value = depthFade;
-    this.xrayOuterMaterial.uniforms.uLineWidth.value = lineWidth;
-    this.xrayCoreMaterial.uniforms.uLineWidth.value = lineWidth;
+    this.xrayOuterMaterial.uniforms.uMeshColor!.value.set(...meshColor);
+    this.xrayCoreMaterial.uniforms.uMeshColor!.value.set(...meshColor);
+    this.xrayOuterMaterial.uniforms.uDepthFade!.value = depthFade;
+    this.xrayCoreMaterial.uniforms.uDepthFade!.value = depthFade;
+    this.xrayOuterMaterial.uniforms.uLineWidth!.value = lineWidth;
+    this.xrayCoreMaterial.uniforms.uLineWidth!.value = lineWidth;
   }
 
   private buildXrayTopology(landmarks: Float32Array): void {
@@ -398,13 +398,13 @@ export class CameraVfx3DOverlay {
       targetX += eyeFactor * (i % 2 === 0 ? -1 : 1);
 
       this.smoothedLandmarks[offset] =
-        this.smoothedLandmarks[offset] * (1 - smoothing) +
+        this.smoothedLandmarks[offset]! * (1 - smoothing) +
         targetX * smoothing;
       this.smoothedLandmarks[offset + 1] =
-        this.smoothedLandmarks[offset + 1] * (1 - smoothing) +
+        this.smoothedLandmarks[offset + 1]! * (1 - smoothing) +
         targetY * smoothing;
       this.smoothedLandmarks[offset + 2] =
-        this.smoothedLandmarks[offset + 2] * (1 - smoothing) +
+        this.smoothedLandmarks[offset + 2]! * (1 - smoothing) +
         targetZ * smoothing;
     }
 
@@ -434,8 +434,8 @@ export class CameraVfx3DOverlay {
     depthAttribute.needsUpdate = true;
 
     const pulse = 0.82 + 0.18 * Math.sin(timestamp * 0.005);
-    this.xrayOuterMaterial.uniforms.uTime.value = timestamp * 0.001 + pulse * 0.03;
-    this.xrayCoreMaterial.uniforms.uTime.value = timestamp * 0.001 + pulse * 0.03;
+    this.xrayOuterMaterial.uniforms.uTime!.value = timestamp * 0.001 + pulse * 0.03;
+    this.xrayCoreMaterial.uniforms.uTime!.value = timestamp * 0.001 + pulse * 0.03;
   }
 
   private buildGlasses(): void {
