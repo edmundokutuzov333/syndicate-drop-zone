@@ -194,6 +194,31 @@ export function getRoomAlias(raw: string) {
   return normalizeRoom(raw);
 }
 
+export function normalizeLiveUrl(raw: string) {
+  const value = raw.trim();
+  if (!value) return "";
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase();
+    if (host === "youtu.be") {
+      const id = url.pathname.replace(/^\//, "").split("/")[0];
+      return id ? "https://www.youtube.com/embed/" + encodeURIComponent(id) : "";
+    }
+    if (host === "youtube.com" || host === "www.youtube.com") {
+      const id = url.searchParams.get("v");
+      if (id) return "https://www.youtube.com/embed/" + encodeURIComponent(id);
+      if (url.pathname.startsWith("/embed/")) return url.toString();
+      return "";
+    }
+    if (host === "instagram.com" || host === "www.instagram.com") {
+      return value.replace(/\/$/, "") + (value.endsWith("/embed") ? "" : "/embed");
+    }
+  } catch {
+    return "";
+  }
+  return "";
+}
+
 export type LiveRealtimeHandler = (next: LiveFlag) => void;
 
 export function subscribeCampingLive(onChange: LiveRealtimeHandler): () => void {
