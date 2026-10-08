@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
+import { Radio } from "lucide-react";
 import { useEffect, useState } from "react";
 import { click, hiss } from "@/lib/sfx";
+import { frequency } from "@/lib/frequency";
 import { useMember } from "@/components/use-member";
 import logo from "@/assets/brand/sindicato-logo.png.asset.json";
 
@@ -44,12 +46,14 @@ export function TacticalNav() {
           ))}
         </nav>
         <div className="flex items-center gap-3">
+          <Link to="/frequencia" onClick={() => { void frequency.start(); setOpen(false); }} className="flex min-h-11 items-center gap-2 border-b border-border px-4 py-3 text-sm text-blood"><Radio size={14} /> FREQUÊNCIA 808</Link>
           {member && (
             <Link to="/carteira/$code" params={{ code: member.code }} className="hidden border border-blood px-2 py-1 font-mono text-[8px] tracking-[0.14em] text-blood lg:inline">
               SINDICALIZADO Nº {String(member.memberNumber).padStart(4, "0")}
             </Link>
           )}
           <span className="hidden text-muted-foreground sm:inline"><span className="text-blood" style={{ animation: "blink 1s steps(1) infinite" }}>●</span> {time}</span>
+          <Link to="/frequencia" onClick={() => { void frequency.start(); }} aria-label="Sintonizar Frequência 808" className="inline-flex min-h-11 min-w-11 items-center justify-center border border-blood text-blood transition hover:bg-blood hover:text-primary-foreground"><Radio size={16} /></Link>
           <button className="border border-border px-3 py-1.5 md:hidden" onClick={() => setOpen((o) => !o)} aria-label="Menu">{open ? "✕" : "≡"}</button>
         </div>
       </div>

@@ -23,6 +23,7 @@ import { TAPES } from "@/lib/data";
 import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/track";
+import { frequency } from "@/lib/frequency";
 
 type Props = {
   artist: Artist;
@@ -42,11 +43,13 @@ function socialLabel(name: string) {
 }
 
 export function ArtistDossier({ artist, channels: liveChannels }: Props) {
+  const [frequencyState, setFrequencyState] = useState(frequency.getState());
   const [shared, setShared] = useState(false);
   const channels = liveChannels ?? getArtistChannels(artist.slug);
 
   useEffect(() => {
     track("artist_view", { artist: artist.slug });
+    return frequency.subscribe(() => setFrequencyState(frequency.getState()));
   }, [artist.slug]);
   const currentIndex = ARTISTS.findIndex((item) => item.slug === artist.slug);
   const previous = ARTISTS[(currentIndex - 1 + ARTISTS.length) % ARTISTS.length]!;
@@ -120,9 +123,10 @@ export function ArtistDossier({ artist, channels: liveChannels }: Props) {
         </div>
 
         <div className="flex flex-col justify-end">
-          <p className="text-[10px] tracking-[0.28em] text-blood">
-            CONVOCADO Nº {String(currentIndex + 1).padStart(2, "0")} / {ARTISTS.length}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-[10px] tracking-[0.28em] text-blood">CONVOCADO Nº {String(currentIndex + 1).padStart(2, "0")} / {ARTISTS.length}</p>
+            {frequencyState.active && frequency.isOnAir(artist.name) && <span className="border border-blood px-2 py-1 font-mono text-[8px] tracking-[0.16em] text-blood">● NO AR AGORA</span>}
+          </div>
           <h2 className="mt-2 font-gothic text-7xl leading-[0.78] md:text-9xl">{artist.name}</h2>
 
           <div className="mt-8 border-y border-border py-5">

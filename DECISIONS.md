@@ -20,3 +20,12 @@
 ## FASE 12 · IMPLEMENTAÇÃO
 
 - Implementação consolidada em branch de execução e PR #10, sem reescrever histórico publicado.
+
+
+## FREQÜÊNCIA 808
+
+- A emissão é sincronizada por relógio de servidor e seed determinística. Cada ouvinte calcula localmente a mesma posição da grelha.
+- A rádio automática só reproduz áudio próprio/licenciado já servido pelo site. Os links e embeds Spotify são usados para descoberta e pré-visualização oficial; não são retransmitidos como emissão não-interactiva.
+- A identificação oficial fornecida pelo dono é a referência editorial da estação. Enquanto o binário não estiver disponível no armazenamento público do site, a grelha usa um stinger/kick fallback para nunca interromper a emissão.
+- A Frequência reutiliza o barramento de áudio e AnalyserNode existentes e o MiniPlayer global, mas bloqueia skip/seek no modo rádio.
+- O contador de ouvintes usa apenas um SID de sessão pseudónimo e heartbeat temporário, sem PII ou fingerprinting.

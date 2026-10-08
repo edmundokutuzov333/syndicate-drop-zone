@@ -65,3 +65,23 @@ export function thud(): void {
   gain.gain.setValueAtTime(0.6, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
   osc.connect(gain).connect(destination); osc.start(t); osc.stop(t + 0.16);
 }
+
+export function radioDial(): void {
+  const c = getCtx();
+  const destination = out();
+  if (!c || !destination) return;
+  const t = c.currentTime;
+  for (let i = 0; i < 10; i++) {
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(220 + i * 42, t + i * 0.045);
+    osc.frequency.exponentialRampToValueAtTime(90 + i * 12, t + i * 0.045 + 0.06);
+    gain.gain.setValueAtTime(0.02, t + i * 0.045);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.045 + 0.08);
+    osc.connect(gain).connect(destination);
+    osc.start(t + i * 0.045);
+    osc.stop(t + i * 0.045 + 0.09);
+  }
+  hiss(0.22);
+}

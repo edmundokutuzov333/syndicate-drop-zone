@@ -40,6 +40,10 @@ const STATIC_SEO: Record<string, Pick<RouteSeo, "title" | "description">> = {
     title: "Filiar-se — O Sindicato do Trap",
     description: "Assina o estatuto, recebe a tua carteira numerada e entra no Sindicato.",
   },
+  "/frequencia": {
+    title: "Frequência 808 — O Sindicato do Trap",
+    description: "Rádio pirata 24h do Sindicato do Trap, com prévias, estática e identificação 808.",
+  },
   "/camera": {
     title: "Camera — O Sindicato do Trap",
     description: "Câmara experimental do Sindicato do Trap com filtros de arquivo.",

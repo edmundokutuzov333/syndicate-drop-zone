@@ -2,6 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Copy, ExternalLink } from "lucide-react";
 import { memberPublic } from "@/lib/membership";
+import { hasNightListenerBadge } from "@/lib/frequency-api";
 import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 
 export const Route = createFileRoute("/carteira_/$code")({
@@ -32,8 +33,13 @@ export const Route = createFileRoute("/carteira_/$code")({
 function PublicCarteira() {
   const { member } = Route.useLoaderData();
   const [copied, setCopied] = useState(false);
+  const [nightBadge, setNightBadge] = useState(false);
   const publicUrl = typeof window === "undefined" ? "" : window.location.href;
   const since = new Date(member.since).toLocaleDateString("pt-PT");
+
+  useEffect(() => {
+    void hasNightListenerBadge(member.code).then(setNightBadge);
+  }, [member.code]);
 
   const copy = async () => {
     try {
