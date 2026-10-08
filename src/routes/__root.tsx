@@ -17,8 +17,8 @@ import { MiniPlayer } from "@/components/MiniPlayer";
 import { Classificado } from "@/components/NotFound";
 import { Toaster } from "@/components/ui/sonner";
 import xoyens from "@/assets/brand/xoyens.png.asset.json";
-import appCss from "@/styles.css?url";
-import phase12Css from "@/phase12.css?url";
+import "@/styles.css";
+import "@/phase12.css";
 import { GATE_BOOT, isGateOpen } from "@/lib/gate";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { getLiveSiteConfig } from "@/lib/site-content";
@@ -56,8 +56,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           rel: "stylesheet",
           href: "https://fonts.googleapis.com/css2?family=Pirata+One&family=Space+Mono:wght@400;700&family=Special+Elite&display=swap",
         },
-        { rel: "stylesheet", href: appCss },
-        { rel: "stylesheet", href: phase12Css },
         { rel: "manifest", href: "/manifest.webmanifest" },
         { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
         { rel: "icon", href: "/icons/sdt-192.png", sizes: "192x192", type: "image/png" },
