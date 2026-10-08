@@ -1,7 +1,13 @@
 import { getCtx, out } from "./audio-bus";
 import { track } from "./track";
 import { grantKey } from "./key";
-import { claimAudioOwner, getAudioOwner, releaseAudioOwner, ownsAudio } from "./audio-session";
+import {
+  claimAudioOwner,
+  getAudioOwner,
+  releaseAudioOwner,
+  ownsAudio,
+  subscribeAudioOwner,
+} from "./audio-session";
 
 export type Track = { id: string; title: string; feat: string; src: string };
 
@@ -19,6 +25,13 @@ export class TapeEngine {
   private state: TapeState = IDLE_STATE;
   private subscribers = new Set<() => void>();
   private tenSecondMarks = new Set<string>();
+  private ownerCleanup: (() => void) | null = null;
+
+  constructor() {
+    this.ownerCleanup = subscribeAudioOwner((next) => {
+      if (next === "radio") this.stop();
+    });
+  }
 
   getState = (): TapeState => this.state;
 
