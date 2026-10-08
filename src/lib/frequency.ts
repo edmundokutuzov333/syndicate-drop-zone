@@ -455,37 +455,44 @@ export class FrequencyEngine {
 
   private ensureMusicAudio(src: string, track: FrequencyTrack): HTMLAudioElement {
     if (this.audio && this.audio.src === src) return this.audio;
+
     if (this.preloaded?.trackId === track.id) {
       const prepared = this.preloaded.audio;
       this.preloaded = null;
+      this.audio = prepared;
       return prepared;
     }
+
     const audio = new Audio();
     audio.preload = "auto";
     audio.src = src;
     audio.addEventListener("error", () => {
-      if (this.currentTrack?.id === track.id) void this.handleTrackError(track, "audio_error");
-      else if (this.preloaded?.trackId === track.id) {
+      if (this.currentTrack?.id === track.id && this.audio === audio) {
+        void this.handleTrackError(track, "audio_error");
+      } else if (this.preloaded?.trackId === track.id) {
         this.preloaded = null;
         void this.handleTrackError(track, "preload_error");
       }
     });
     audio.addEventListener("ended", () => {
-      if (this.currentTrack?.id === track.id && this.state.active && this.state.playing) {
+      if (this.currentTrack?.id === track.id && this.audio === audio && this.state.active && this.state.playing) {
         analyticsTrack("radio_track_end", formatTrackProps(track));
         this.scheduleNext(0);
       }
     });
     audio.addEventListener("timeupdate", () => {
-      if (this.currentTrack?.id !== track.id || !this.state.playing) return;
+      if (this.currentTrack?.id !== track.id || this.audio !== audio || !this.state.playing) return;
       this.emitMilestones(track, audio.currentTime, Number.isFinite(audio.duration) ? audio.duration : track.durationSec);
     });
     audio.addEventListener("play", () => {
-      if (this.currentTrack?.id === track.id) this.set({ playing: true, error: null });
+      if (this.currentTrack?.id === track.id && this.audio === audio) this.set({ playing: true, error: null });
     });
     audio.addEventListener("pause", () => {
-      if (this.currentTrack?.id === track.id && this.state.phase === "music") this.set({ playing: false });
+      if (this.currentTrack?.id === track.id && this.audio === audio && (this.state.phase === "music" || this.state.phase === "jingle")) {
+        this.set({ playing: false });
+      }
     });
+    this.audio = audio;
     return audio;
   }
 
