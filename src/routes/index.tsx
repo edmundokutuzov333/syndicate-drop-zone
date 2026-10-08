@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { TapeEngine } from "@/lib/tape-engine";
+import { useEffect, useState } from "react";
 import { ARTISTS } from "@/lib/artists";
 import { getLiveHomeContent, type LiveMerchProduct, type LiveTape } from "@/lib/site-content";
-
+import { tape } from "@/lib/tape-engine";
+import { useTape } from "@/components/use-tape";
+import { useKey } from "@/components/use-key";
 import { Halftone } from "@/components/Halftone";
 import { Sponsors } from "@/components/Sponsors";
 import logo from "@/assets/brand/sindicato-logo.png.asset.json";
@@ -26,27 +27,27 @@ export const Route = createFileRoute("/")({
 
 function Hub() {
   const { artists, tapes, merch, site } = Route.useLoaderData();
-  const engine = useRef<TapeEngine | null>(null);
-  const [playing, setPlaying] = useState<string | null>(null);
-  const [lvl, setLvl] = useState(0);
+  const state = useTape();
+  const armed = useKey();
+  const [level, setLevel] = useState(0);
 
   useEffect(() => {
-    engine.current = new TapeEngine();
-    return () => engine.current?.stop();
-  }, []);
+    tape.setQueue(tapes);
+  }, [tapes]);
 
   useEffect(() => {
-    if (!playing) { setLvl(0); return; }
-    let raf = 0;
-    const loop = () => { setLvl(engine.current?.level() ?? 0); raf = requestAnimationFrame(loop); };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [playing]);
-
-  const toggle = (t: LiveTape) => {
-    if (playing === t.id) { engine.current?.stop(); setPlaying(null); }
-    else { engine.current?.start(t, () => setPlaying(null)); setPlaying(t.id); }
-  };
+    if (!state.playing) {
+      setLevel(0);
+      return;
+    }
+    let frame = 0;
+    const loop = () => {
+      setLevel(tape.level());
+      frame = requestAnimationFrame(loop);
+    };
+    frame = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(frame);
+  }, [state.playing]);
 
   return (
     <>
@@ -54,10 +55,10 @@ function Hub() {
       <main className="mx-auto max-w-7xl px-4 pb-24 md:px-8">
         <Hero title={site.heroTitle} subtitle={site.heroSubtitle} />
         <Countdown dropAt={site.dropAt} />
-        <Tapes tapes={tapes} playing={playing} toggle={toggle} lvl={lvl} />
+        <Tapes tapes={tapes} state={state} level={level} />
         <Artistas artists={artists} />
         <Sponsors />
-        <Merch merch={merch} armed={!!playing} />
+        <Merch merch={merch} armed={armed} />
       </main>
     </>
   );
@@ -118,10 +119,10 @@ function Countdown({ dropAt }: { dropAt: number }) {
           <p className="mt-2 font-stamp text-3xl">{new Date(dropAt).toLocaleDateString("pt-PT")}</p>
         </div>
         <div className="grid grid-cols-4 gap-2">
-          {parts.map(([l, v]) => (
-            <div key={l} className="border border-border bg-card p-3 text-center">
-              <div className="font-mono text-3xl font-bold tabular-nums md:text-6xl">{now ? String(v).padStart(2, "0") : "--"}</div>
-              <div className="mt-1 text-[10px] tracking-widest text-muted-foreground">{l}</div>
+          {parts.map(([label, value]) => (
+            <div key={label} className="border border-border bg-card p-3 text-center">
+              <div className="font-mono text-3xl font-bold tabular-nums md:text-6xl">{now ? String(value).padStart(2, "0") : "--"}</div>
+              <div className="mt-1 text-[10px] tracking-widest text-muted-foreground">{label}</div>
             </div>
           ))}
         </div>
@@ -131,29 +132,42 @@ function Countdown({ dropAt }: { dropAt: number }) {
   );
 }
 
-function Tapes({ tapes, playing, toggle, lvl }: { tapes: LiveTape[]; playing: string | null; toggle: (t: LiveTape) => void; lvl: number }) {
+function Tapes({ tapes, state, level }: { tapes: LiveTape[]; state: ReturnType<typeof useTape>; level: number }) {
   return (
     <section className="relative mb-24">
       <img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute -right-6 -top-10 w-28 rotate-[20deg] opacity-70 md:w-36" />
       <SectionTag label="Prévias Cruas" />
       <div className="mb-4 flex h-10 items-end gap-1">
-        {Array.from({ length: 32 }).map((_, i) => (
-          <div key={i} className="flex-1 bg-blood transition-all"
-            style={{ height: `${Math.max(4, lvl * 100 * (0.4 + Math.abs(Math.sin(i * 1.7 + lvl * 9))))}%` }} />
+        {Array.from({ length: 32 }).map((_, index) => (
+          <div key={index} className="flex-1 bg-blood transition-all" style={{ height: state.playing ? Math.max(4, level * 100 * (0.4 + Math.abs(Math.sin(index * 1.7 + level * 9)))) + "%" : "4%" }} />
         ))}
       </div>
       <ul className="divide-y divide-border border border-border">
         {tapes.map((t) => {
-          const on = playing === t.id;
+          const on = state.id === t.id;
+          const progress = on && state.dur ? Math.min(100, (state.t / state.dur) * 100) : 0;
           return (
             <li key={t.id}>
-              <button onClick={() => toggle(t)}
-                className={`flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-card ${on ? "bg-card" : ""}`}>
-                <span className={`flex h-10 w-10 items-center justify-center border ${on ? "border-blood bg-blood text-primary-foreground" : "border-border"}`}>
-                  {on ? "■" : "▶"}
+              <button
+                type="button"
+                onClick={() => tape.toggle(t)}
+                aria-pressed={on && state.playing}
+                className={
+                  "relative flex w-full items-center gap-4 p-4 text-left transition-colors hover:bg-card focus-visible:outline focus-visible:outline-1 focus-visible:outline-[var(--blood)] " +
+                  (on ? "bg-card" : "")
+                }
+              >
+                <span className={"flex h-10 w-10 items-center justify-center border " + (on ? "border-blood bg-blood text-primary-foreground" : "border-border")}>
+                  {on && state.playing ? "■" : "▶"}
                 </span>
-                <span className="flex-1"><span className="block font-stamp text-lg">{t.title}</span><span className="block text-[10px] tracking-widest text-muted-foreground">{t.feat}</span></span>
-                <span className="text-xs text-muted-foreground">{t.dur}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-stamp text-lg">{t.title}</span>
+                  <span className="block truncate text-[10px] tracking-widest text-muted-foreground">{t.feat}</span>
+                  <span className="mt-2 block h-1 bg-border">
+                    <span className="block h-full bg-blood transition-all" style={{ width: progress + "%" }} />
+                  </span>
+                </span>
+                <span className="text-xs text-muted-foreground">{on && state.dur ? formatClock(state.t) + " / " + formatClock(state.dur) : t.dur}</span>
               </button>
             </li>
           );
@@ -163,15 +177,20 @@ function Tapes({ tapes, playing, toggle, lvl }: { tapes: LiveTape[]; playing: st
   );
 }
 
+function formatClock(seconds: number): string {
+  const safe = Math.max(0, Math.floor(Number.isFinite(seconds) ? seconds : 0));
+  return String(Math.floor(safe / 60)).padStart(2, "0") + ":" + String(safe % 60).padStart(2, "0");
+}
+
 function Artistas({ artists }: { artists: typeof ARTISTS }) {
   return (
     <section className="relative mb-24 pb-40">
       <SectionTag label="Os Convocados" />
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
-        {artists.map((a) => (
-          <Link key={a.code} to="/membros/$slug" params={{ slug: a.slug }} preload="intent" className="group relative aspect-[4/5] hover:border-blood">
-            <Halftone src={a.img!} alt={a.name} className="h-full w-full" />
-            <span className="absolute bottom-1 left-1 bg-background px-1 font-stamp text-[10px]">{a.name}</span>
+        {artists.map((artist) => (
+          <Link key={artist.code} to="/membros/$slug" params={{ slug: artist.slug }} preload="intent" className="group relative aspect-[4/5] hover:border-blood">
+            <Halftone src={artist.img!} alt={artist.name} className="h-full w-full" />
+            <span className="absolute bottom-1 left-1 bg-background px-1 font-stamp text-[10px]">{artist.name}</span>
           </Link>
         ))}
       </div>
@@ -184,17 +203,19 @@ function Merch({ merch, armed }: { merch: LiveMerchProduct[]; armed: boolean }) 
   return (
     <section className="mb-12">
       <SectionTag label="Merch" to="/merch" />
-      <p className={`mb-6 border p-3 text-xs ${armed ? "border-blood text-blood" : "border-border text-muted-foreground"}`}>
-        {armed ? "▶ FITA RODANDO — LOJA ABERTA." : "■ LOJA FECHADA — dá play numa prévia pra abrir."}
+      <p className={"mb-6 border p-3 text-xs " + (armed ? "border-blood text-blood" : "border-border text-muted-foreground")}>
+        {armed ? "▶ CHAVE VALIDADA — LOJA ABERTA." : "■ COFRE FECHADO — ouve 10 segundos de uma prévia para abrir."}
       </p>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {merch.map((p) => (
-          <Link key={p.n} to="/merch" disabled={!armed}
-            className={`flex flex-col border border-border bg-card ${armed ? "hover:border-blood" : "pointer-events-none opacity-60"}`}>
-            <div className="relative aspect-square"><img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute right-2 top-2 z-10 w-14 rotate-[-15deg] opacity-75" /><Halftone src={p.img} alt={p.name} className="h-full w-full" /></div>
+        {merch.map((product) => (
+          <Link key={product.n} to="/merch" className={"flex flex-col border border-border bg-card transition-colors " + (armed ? "hover:border-blood" : "hover:border-blood opacity-70")}>
+            <div className="relative aspect-square">
+              <img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute right-2 top-2 z-10 w-14 rotate-[-15deg] opacity-75" />
+              <Halftone src={product.img} alt={product.name} className="h-full w-full" />
+            </div>
             <div className="flex items-center justify-between p-3">
-              <h3 className="font-stamp text-sm leading-tight">{p.name}</h3>
-              <span className="text-xs font-bold">R$ {p.price}</span>
+              <h3 className="font-stamp text-sm leading-tight">{product.name}</h3>
+              <span className="text-xs font-bold">R$ {product.price}</span>
             </div>
           </Link>
         ))}
