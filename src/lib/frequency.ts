@@ -661,7 +661,7 @@ export class FrequencyEngine {
 
     this.startPresenceLoops();
     const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
-    if (storedMember) void awardNightListener(storedMember, this.getStationHour());
+    if (storedMember) void awardNightListener(storedMember, 3);
   }
 
   pause() {
@@ -709,7 +709,7 @@ export class FrequencyEngine {
 
     this.startPresenceLoops();
     const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
-    if (storedMember) void awardNightListener(storedMember, this.getStationHour());
+    if (storedMember) void awardNightListener(storedMember, 3);
   }
 
   private async refreshListenerCount() {
@@ -726,7 +726,7 @@ export class FrequencyEngine {
       void sendFrequencyHeartbeat();
       void this.refreshListenerCount();
       const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
-      if (storedMember) void awardNightListener(storedMember, this.getStationHour());
+      if (storedMember) void awardNightListener(storedMember, 3);
     }, 20_000);
 
     const onVisibility = () => {
