@@ -163,7 +163,7 @@ function ControlRoomOverview() {
         </div>
       )}
 
-      <section className="mt-8 grid grid-cols-2 gap-px border border-white/10 bg-white/10 md:grid-cols-3 xl:grid-cols-6">
+      <section className="mt-8 grid grid-cols-2 gap-px border border-white/10 bg-white/10 md:grid-cols-3 xl:grid-cols-7">
         {stats.map(([value, label, to]) => (
           <Link key={label} to={to} className="group bg-[#0d0d0d] p-5 hover:bg-[#111]">
             <div className="font-mono text-4xl font-bold tabular-nums text-white">{loading ? "--" : value}</div>
