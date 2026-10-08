@@ -147,7 +147,7 @@ function FrequenciaPage() {
               <span>{formatTime(position.elapsed)}</span>
               <span>{formatTime(position.remaining)} RESTAM</span>
             </div>
-            <div className="mt-3 h-1.5 overflow-hidden bg-secondary" aria-hidden>
+            <div className="mt-3 h-1.5 overflow-hidden bg-secondary" role="progressbar" aria-label="Progresso da emissão" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}>
               <div
                 className="h-full bg-blood transition-[width] duration-200"
                 style={{ width: progress + "%" }}
