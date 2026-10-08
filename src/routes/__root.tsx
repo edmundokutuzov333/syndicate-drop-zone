@@ -16,6 +16,10 @@ import { CodeGate } from "@/components/CodeGate";
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { Classificado } from "@/components/NotFound";
 import { Toaster } from "@/components/ui/sonner";
+import "@fontsource/pirata-one/400.css";
+import "@fontsource/space-mono/400.css";
+import "@fontsource/space-mono/700.css";
+import "@fontsource/special-elite/400.css";
 import xoyens from "@/assets/brand/xoyens.png.asset.json";
 import "@/styles.css";
 import "@/phase12.css";
@@ -50,12 +54,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       ],
       links: [
         { rel: "canonical", href: seo.canonical },
-        { rel: "preconnect", href: "https://fonts.googleapis.com" },
-        { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-        {
-          rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Pirata+One&family=Space+Mono:wght@400;700&family=Special+Elite&display=swap",
-        },
         { rel: "manifest", href: "/manifest.webmanifest" },
         { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
         { rel: "icon", href: "/icons/sdt-192.png", sizes: "192x192", type: "image/png" },
