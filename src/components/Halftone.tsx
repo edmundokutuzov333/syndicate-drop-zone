@@ -19,7 +19,7 @@ export function Halftone({ src, alt, mode = "normal", className, width, height }
         : "grayscale(1) contrast(1.45) brightness(0.92)";
   return (
     <div className={cn("relative overflow-hidden bg-background", className)}>
-      <img src={src} alt={alt} width={width} height={height} loading="lazy"
+      <img src={src} alt={alt} width={width} height={height} loading="lazy" decoding="async"
         className="h-full w-full object-cover transition-[filter] duration-500" style={{ filter }} />
       <div className="halftone-overlay pointer-events-none absolute inset-0" />
       <div className="xerox-wear pointer-events-none absolute inset-0" />
