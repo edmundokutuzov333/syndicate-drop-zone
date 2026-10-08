@@ -5,7 +5,7 @@ import { adminQuery, checkStorageBucket, getMediaBucket, publicQuery } from "@/l
 
 const TABLES = [
   "artists","artist_releases","tapes","releases","camping_events","camping_sessions",
-  "revelation_media","gallery_items","media_assets","merch_products","merch_variants","reservations",
+  "revelation_media","gallery_items","site_flags","artist_status","live_notifications","media_assets","merch_products","merch_variants","reservations",
   "site_settings","site_sections","drop_campaigns","members",
 ] as const;
 
@@ -130,6 +130,7 @@ function System() {
             <Cert label="MÚSICA → SITE" ok={checks.tapes?.ok && checks.releases?.ok} />
             <Cert label="CAMPING → SITE" ok={checks.camping_events?.ok} />
             <Cert label="REVELAÇÃO → SITE" ok={checks.gallery_items?.ok || checks.revelation_media?.ok} />
+            <Cert label="CAMPING → LIVE" ok={checks.site_flags?.ok && checks.artist_status?.ok} />
             <Cert label="MERCH → SITE" ok={checks.merch_products?.ok && checks.merch_variants?.ok && checks.reservations?.ok} />
             <Cert label="SITE SETTINGS → SITE" ok={checks.site_settings?.ok && checks.site_sections?.ok} />
             <Cert label="DROP → COUNTDOWN" ok={checks.drop_campaigns?.ok} />
