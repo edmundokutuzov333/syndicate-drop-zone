@@ -45,7 +45,10 @@ export const Route = createFileRoute("/membros_/$slug")({
 });
 
 function ArtistProfile() {
-  const data = Route.useLoaderData();
+  const data = Route.useLoaderData() as {
+    artist: NonNullable<Awaited<ReturnType<typeof getLiveArtistBySlug>>>;
+    channels: Awaited<ReturnType<typeof getLiveArtistChannels>>;
+  } | undefined;
   if (!data) return null;
   return <ArtistDossier artist={data.artist} channels={data.channels} />;
 }
