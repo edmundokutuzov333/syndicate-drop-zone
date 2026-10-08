@@ -74,7 +74,7 @@ function ControlRoomOverview() {
         adminQuery<Array<{ id: string }>>("/rest/v1/media_assets?select=id"),
         adminQuery<PartnershipRow[]>("/rest/v1/partnership_requests?select=id,company,name,partnership_type,status,created_at&order=created_at.desc&limit=6"),
         adminQuery<VariantRow[]>("/rest/v1/merch_variants?select=stock_total,stock_reserved,stock_sold"),
-        adminQuery<Array<{ id: string }>>("/rest/v1/members?select=id"),
+        adminQuery<Array<{ id: string }>>("/rest/v1/members?select=id").catch(() => [] as Array<{ id: string }>),
       ]);
 
       setData({
