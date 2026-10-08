@@ -6,6 +6,7 @@ import { isMuted, setMuted, subscribeMute } from "@/lib/audio-bus";
 import { tape } from "@/lib/tape-engine";
 import { track } from "@/lib/track";
 import { useTape } from "./use-tape";
+import { frequency } from "@/lib/frequency";
 
 function mmss(seconds: number): string {
   const safe = Math.max(0, Math.floor(Number.isFinite(seconds) ? seconds : 0));
@@ -51,6 +52,44 @@ export function MiniPlayer() {
     frame = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frame);
   }, [state.playing]);
+
+  const frequencyState = frequency.getState();
+
+  if (frequencyState.active) {
+    return (
+      <div role="region" aria-label="Frequência 808" className="fixed inset-x-0 bottom-0 z-[55] border-t-2 border-blood bg-background/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2 md:px-8">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center border border-blood text-blood">808</span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-stamp text-sm">FREQUÊNCIA 808</p>
+            <p className="truncate text-[10px] tracking-widest text-muted-foreground">
+              {frequencyState.phase === "tag" ? "IDENTIFICAÇÃO 808" : frequencyState.phase === "static" ? "ESTÁTICA" : frequencyState.current?.title ?? "NO AR"}
+              {frequencyState.current?.artist ? " · " + frequencyState.current.artist : ""}
+            </p>
+          </div>
+          <span className="hidden text-xs tabular-nums text-muted-foreground sm:inline">{Math.floor(frequencyState.elapsed)}s / {Math.floor(frequencyState.duration)}s</span>
+          <button
+            type="button"
+            aria-label={frequencyState.playing ? "Pausar Frequência 808" : "Retomar Frequência 808"}
+            onClick={() => void (frequencyState.playing ? frequency.pause() : frequency.resume())}
+            className="min-h-11 border border-blood bg-blood px-3 py-1 text-xs text-primary-foreground"
+          >
+            {frequencyState.playing ? "■" : "▶"}
+          </button>
+          <button
+            type="button"
+            aria-label={muted ? "Ligar som" : "Silenciar"}
+            aria-pressed={muted}
+            onClick={() => setMuted(!muted)}
+            className="min-h-11 border border-border px-3 py-1 text-xs"
+          >
+            {muted ? "🔇" : "🔊"}
+          </button>
+          <button type="button" aria-label="Parar Frequência 808" onClick={() => frequency.stop()} className="min-h-11 border border-border px-3 py-1 text-xs">✕</button>
+        </div>
+      </div>
+    );
+  }
 
   const current = tape.getCurrentTrack();
   if (!current) return null;
