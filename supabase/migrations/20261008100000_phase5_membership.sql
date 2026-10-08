@@ -79,6 +79,10 @@ begin
     raise exception using errcode = '22023', message = 'CONTACTO_INVALIDO';
   end if;
 
+  if coalesce(p_signature_present, false) is not true then
+    raise exception using errcode = '22023', message = 'ASSINATURA_OBRIGATORIA';
+  end if;
+
   if char_length(v_contact_value) < 5 or char_length(v_contact_value) > 120 then
     raise exception using errcode = '22023', message = 'CONTACTO_INVALIDO';
   end if;
@@ -142,8 +146,11 @@ begin
     into v_number, v_since;
 
   return query select v_code, v_number, v_alias, v_since, false;
+exception
+  when unique_violation then
+    return query select null::text, null::bigint, null::text, null::timestamptz, true;
 end;
-$$;
+$;
 
 revoke all on function public.join_union(text,text,text,text,text,boolean) from public;
 grant execute on function public.join_union(text,text,text,text,text,boolean) to anon, authenticated;
