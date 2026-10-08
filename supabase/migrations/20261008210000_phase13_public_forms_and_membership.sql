@@ -239,7 +239,7 @@ create or replace function public.submit_partnership_request(
   p_company text,
   p_contact text,
   p_partnership_type text,
-  p_budget text default '',
+  p_budget text,
   p_message text
 )
 returns uuid
