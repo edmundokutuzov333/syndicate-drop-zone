@@ -9,6 +9,7 @@ import {
   getLiveCampingSessions,
   getLiveFlags,
   subscribeCampingLive,
+  campingDayRange,
   getRoomAlias,
   type CampingRoom,
   type CampingSessionRow,
@@ -57,17 +58,6 @@ export const Route = createFileRoute("/camping")({
   component: Camping,
 });
 
-const BUNKER_DAY = (start: string | null, end: string | null) => {
-  if (!start || !end) return null;
-  const startMs = new Date(start).getTime();
-  const endMs = new Date(end).getTime();
-  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return null;
-  const total = Math.max(1, Math.ceil((endMs - startMs) / 86400000));
-  const now = Date.now();
-  if (now < startMs) return { current: 0, total };
-  return { current: Math.min(total, Math.floor((now - startMs) / 86400000) + 1), total };
-};
-
 function Camping() {
   const navigate = useNavigate({ from: "/camping" });
   const { media } = Route.useSearch();
@@ -81,7 +71,7 @@ function Camping() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const day = BUNKER_DAY(camp.start, camp.end);
+  const day = campingDayRange(camp.start, camp.end, now);
   useEffect(() => subscribeCampingLive(setLive), []);
 
   const currentSession = useMemo(
