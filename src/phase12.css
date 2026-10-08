@@ -1,5 +1,9 @@
 /* FASE 12: performance, acessibilidade e modo leve. Mantém a linguagem visual industrial do site. */
 
+:root {
+  --muted-foreground: oklch(0.68 0.01 85);
+}
+
 html[data-lite] .grain::after {
   animation: none !important;
   opacity: 0 !important;
