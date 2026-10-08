@@ -90,6 +90,7 @@ type RadioCatalogRow = {
 export type RadioStationConfig = {
   station_name: string;
   station_tag_url: string;
+  active_block_id: string | null;
   forced_track_id: string | null;
   forced_started_at: string | null;
   autoplay: boolean;
