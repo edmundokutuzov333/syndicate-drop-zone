@@ -142,7 +142,7 @@ function SocialLinks({ social }: { social?: { whatsapp?: string; instagram?: str
     if (digits) links.push(["WHATSAPP", "https://wa.me/" + digits]);
   }
   if (instagram) {
-    const handle = instagram.replace(/^@/, "").replace(/^https?:\\/\\/instagram\\.com\\/?/i, "").replace(/\\/$/, "");
+    const handle = instagram.replace(/^@/, "").replace(/^https?:\/\/instagram\.com\/?/i, "").replace(/\/$/, "");
     if (handle) links.push(["INSTAGRAM", "https://instagram.com/" + handle]);
   }
   return links.map(([label, href]) => (
