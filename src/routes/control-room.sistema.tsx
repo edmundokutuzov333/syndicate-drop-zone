@@ -6,7 +6,7 @@ import { adminQuery, checkStorageBucket, getMediaBucket, publicQuery } from "@/l
 const TABLES = [
   "artists","artist_releases","tapes","releases","camping_events","camping_sessions",
   "revelation_media","media_assets","merch_products","merch_variants","reservations",
-  "site_settings","site_sections","drop_campaigns",
+  "site_settings","site_sections","drop_campaigns","members",
 ] as const;
 
 export const Route = createFileRoute("/control-room/sistema")({ component: System });
