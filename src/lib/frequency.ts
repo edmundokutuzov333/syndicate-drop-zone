@@ -881,7 +881,12 @@ export class FrequencyEngine {
     radioDial();
     if (!this.sessionStarted) {
       this.sessionStarted = true;
-      analyticsTrack("radio_session_start", { sid: getAnalyticsSessionId() });
+      let shouldEmitSession = true;
+      try {
+        shouldEmitSession = sessionStorage.getItem("sdt-radio-session") !== "1";
+        if (shouldEmitSession) sessionStorage.setItem("sdt-radio-session", "1");
+      } catch {}
+      if (shouldEmitSession) analyticsTrack("radio_session_start", { sid: getAnalyticsSessionId() });
     }
     analyticsTrack("radio_start");
     tape.stop();
