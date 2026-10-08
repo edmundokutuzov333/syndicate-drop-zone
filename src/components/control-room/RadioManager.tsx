@@ -394,6 +394,58 @@ export function RadioManager() {
           </div>
         </section>
       </div>
+
+      <section className="mt-6 border border-white/10 bg-[#0d0d0d] p-5">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="font-mono text-[9px] tracking-[0.2em] text-[#d71920]">BLOCOS DE ROTAÇÃO</p>
+            <h2 className="mt-1 font-gothic text-4xl">BLOCOS</h2>
+            <p className="mt-2 max-w-2xl font-mono text-[9px] leading-5 text-white/35">Cada bloco define um conjunto de faixas. A reprodução continua aleatória dentro do bloco activo.</p>
+          </div>
+          {station?.active_block_id && (
+            <button type="button" disabled={!editable} onClick={() => void activateBlock(null)} className="border border-white/10 px-3 py-2 font-mono text-[9px] text-white/45 disabled:opacity-30">ROTAÇÃO GERAL</button>
+          )}
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-[1fr_auto]">
+          <Field label="NOME DO BLOCO" value={blockName} onChange={setBlockName} disabled={!editable} />
+          <button type="button" disabled={!editable || !blockName.trim()} onClick={() => void saveBlock()} className="self-end inline-flex min-h-11 items-center justify-center gap-2 border border-[#d71920] bg-[#d71920] px-4 font-mono text-[9px] text-white disabled:opacity-40"><Check size={13} /> CRIAR BLOCO</button>
+        </div>
+
+        <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {tracks.filter((track) => track.kind === "music").map((track) => (
+            <label key={track.id} className="flex items-center gap-3 border border-white/10 px-3 py-2 font-mono text-[9px] text-white/50">
+              <input
+                type="checkbox"
+                checked={blockTracks.includes(track.id)}
+                disabled={!editable}
+                onChange={(event) =>
+                  setBlockTracks((current) =>
+                    event.target.checked ? [...current, track.id] : current.filter((id) => id !== track.id),
+                  )
+                }
+              />
+              {track.title}
+            </label>
+          ))}
+        </div>
+
+        <div className="mt-5 divide-y divide-white/10 border border-white/10">
+          {blocks.map((block) => (
+            <div key={block.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="font-gothic text-2xl">{block.name}</p>
+                <p className="mt-1 font-mono text-[8px] text-white/30">{block.track_ids.length} FAIXAS · {block.randomize ? "ALEATÓRIO" : "SEQUENCIAL"}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" disabled={!editable} onClick={() => void activateBlock(block.id)} className={"border px-3 py-2 font-mono text-[8px] " + (station?.active_block_id === block.id ? "border-[#d71920] text-[#d71920]" : "border-white/10 text-white/45")}>{station?.active_block_id === block.id ? "ACTIVO" : "ACTIVAR"}</button>
+                <button type="button" disabled={!editable} onClick={() => void deleteBlock(block.id)} className="border border-white/10 px-3 py-2 font-mono text-[8px] text-white/35 hover:border-[#d71920] hover:text-[#d71920] disabled:opacity-30">ELIMINAR</button>
+              </div>
+            </div>
+          ))}
+          {!blocks.length && <div className="p-5 font-mono text-[9px] text-white/30">SEM BLOCOS. A ROTAÇÃO GERAL ALEATÓRIA ESTÁ ACTIVA.</div>}
+        </div>
+      </section>
     </div>
   );
 }
