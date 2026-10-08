@@ -17,6 +17,7 @@ import { Route as MembrosRouteImport } from './routes/membros'
 import { Route as MerchRouteImport } from './routes/merch'
 import { Route as RevelacaoRouteImport } from './routes/revelacao'
 import { Route as FiliarRouteImport } from './routes/filiar'
+import { Route as FrequenciaRouteImport } from './routes/frequencia'
 import { Route as CarteiraCodeRouteImport } from './routes/carteira_.$code'
 import { Route as ControlRoomIndexRouteImport } from './routes/control-room.index'
 import { Route as ControlRoomActividadeRouteImport } from './routes/control-room.actividade'
@@ -79,6 +80,11 @@ const FiliarRoute = FiliarRouteImport.update({
 const CarteiraCodeRoute = CarteiraCodeRouteImport.update({
   id: '/carteira_/$code',
   path: '/carteira/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FrequenciaRoute = FrequenciaRouteImport.update({
+  id: '/frequencia',
+  path: '/frequencia',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ControlRoomIndexRoute = ControlRoomIndexRouteImport.update({
@@ -176,8 +182,8 @@ export interface FileRoutesByFullPath {
   '/merch': typeof MerchRoute
   '/revelacao': typeof RevelacaoRoute
   '/filiar': typeof FiliarRoute
+  '/frequencia': typeof FrequenciaRoute
   '/carteira_/$code': typeof CarteiraCodeRoute
-  '/filiar': typeof FiliarRoute
   '/carteira/$code': typeof CarteiraCodeRoute
   '/filiar': typeof FiliarRoute
   '/carteira/$code': typeof CarteiraCodeRoute
@@ -207,6 +213,7 @@ export interface FileRoutesByTo {
   '/merch': typeof MerchRoute
   '/revelacao': typeof RevelacaoRoute
   '/filiar': typeof FiliarRoute
+  '/frequencia': typeof FrequenciaRoute
   '/carteira/$code': typeof CarteiraCodeRoute
   '/control-room/actividade': typeof ControlRoomActividadeRoute
   '/control-room/artistas': typeof ControlRoomArtistasRoute
@@ -234,6 +241,7 @@ export interface FileRoutesById {
   '/membros': typeof MembrosRoute
   '/merch': typeof MerchRoute
   '/revelacao': typeof RevelacaoRoute
+  '/frequencia': typeof FrequenciaRoute
   '/control-room/actividade': typeof ControlRoomActividadeRoute
   '/control-room/artistas': typeof ControlRoomArtistasRoute
   '/control-room/camping': typeof ControlRoomCampingRoute
@@ -262,6 +270,7 @@ export interface FileRouteTypes {
     | '/merch'
     | '/revelacao'
     | '/filiar'
+    | '/frequencia'
     | '/carteira/$code'
     | '/control-room/actividade'
     | '/control-room/artistas'
@@ -289,6 +298,7 @@ export interface FileRouteTypes {
     | '/membros'
     | '/merch'
     | '/revelacao'
+    | '/frequencia'
     | '/control-room/actividade'
     | '/control-room/artistas'
     | '/control-room/camping'
@@ -314,6 +324,7 @@ export interface FileRouteTypes {
     | '/membros'
     | '/merch'
     | '/revelacao'
+    | '/frequencia'
     | '/control-room/actividade'
     | '/control-room/artistas'
     | '/control-room/camping'
@@ -343,6 +354,7 @@ export interface RootRouteChildren {
   ControlRoomLoginRoute: typeof ControlRoomLoginRoute
   MembrosSlugRoute: typeof MembrosSlugRoute
   FiliarRoute: typeof FiliarRoute
+  FrequenciaRoute: typeof FrequenciaRoute
   CarteiraCodeRoute: typeof CarteiraCodeRoute
 }
 
@@ -402,6 +414,13 @@ declare module '@tanstack/react-router' {
       path: '/filiar'
       fullPath: '/filiar'
       preLoaderRoute: typeof FiliarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/frequencia': {
+      id: '/frequencia'
+      path: '/frequencia'
+      fullPath: '/frequencia'
+      preLoaderRoute: typeof FrequenciaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/carteira_/$code': {
@@ -584,6 +603,7 @@ const rootRouteChildren: RootRouteChildren = {
   ControlRoomLoginRoute: ControlRoomLoginRoute,
   MembrosSlugRoute: MembrosSlugRoute,
   FiliarRoute: FiliarRoute,
+  FrequenciaRoute: FrequenciaRoute,
   CarteiraCodeRoute: CarteiraCodeRoute,
 }
 export const routeTree = rootRouteImport
