@@ -1,6 +1,7 @@
 import { getCtx, out } from "./audio-bus";
 import { track } from "./track";
 import { grantKey } from "./key";
+import { claimAudioOwner, getAudioOwner, releaseAudioOwner, ownsAudio } from "./audio-session";
 
 export type Track = { id: string; title: string; feat: string; src: string };
 
@@ -113,6 +114,8 @@ export class TapeEngine {
   }
 
   play(trackValue: Track): void {
+    if (getAudioOwner() === "radio") return;
+    claimAudioOwner("tape");
     const audio = this.boot();
     if (!audio) return;
     this.setQueue(this.queue.length ? this.queue : [trackValue]);
@@ -146,6 +149,7 @@ export class TapeEngine {
     if (this.audio) this.audio.removeAttribute("src");
     this.current = null;
     this.set({ ...IDLE_STATE });
+    if (ownsAudio("tape")) releaseAudioOwner("tape");
   }
 
   seek(seconds: number): void {
