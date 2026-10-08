@@ -6,29 +6,33 @@ const ONE_PIXEL_PNG = Buffer.from(
 );
 
 async function mockPublicBackend(page: Page) {
-  await page.route("**/rest/v1/rpc/join_union", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        code: "ABC123",
-        member_number: 42,
-        alias: "TESTE",
-        since: "2026-10-08T20:00:00.000Z",
-        already_member: false,
-      }),
-    });
-  });
-
-  await page.route("**/rest/v1/rpc/submit_partnership_request", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify("00000000-0000-4000-8000-000000000001"),
-    });
-  });
-
   await page.route("**/rest/v1/**", async (route) => {
+    const url = route.request().url();
+
+    if (url.endsWith("/rest/v1/rpc/join_union")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          code: "ABC123",
+          member_number: 42,
+          alias: "TESTE",
+          since: "2026-10-08T20:00:00.000Z",
+          already_member: false,
+        }),
+      });
+      return;
+    }
+
+    if (url.endsWith("/rest/v1/rpc/submit_partnership_request")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify("00000000-0000-4000-8000-000000000001"),
+      });
+      return;
+    }
+
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -36,6 +40,7 @@ async function mockPublicBackend(page: Page) {
     });
   });
 }
+
 
 async function unlock(page: Page) {
   await page.addInitScript(() => {
