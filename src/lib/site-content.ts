@@ -333,6 +333,16 @@ export async function getLiveSiteConfig() {
       return null;
     };
 
+    const socialRow = settings.find((row) => stringValue(row, ["key", "name", "slug", "setting_key"]) === "social");
+    const socialRaw = value(socialRow ?? {}, ["value", "content", "text"]);
+    const social =
+      socialRaw && typeof socialRaw === "object" && !Array.isArray(socialRaw)
+        ? {
+            instagram: String((socialRaw as Record<string, unknown>).instagram ?? "").trim(),
+            whatsapp: String((socialRaw as Record<string, unknown>).whatsapp ?? "").trim(),
+          }
+        : { instagram: "", whatsapp: "" };
+
     const campaign = campaigns.filter(isPublic).sort((a, b) => orderValue(b, 0) - orderValue(a, 0))[0];
     const dateRaw =
       stringValue(campaign ?? {}, ["drop_at", "release_at", "launch_at", "starts_at", "date"], "") ||
@@ -345,6 +355,7 @@ export async function getLiveSiteConfig() {
       marquee: extract(settings, ["marquee", "announcement"]) ?? extract(sections, ["marquee", "announcement"]),
       heroTitle: extract(settings, ["hero_title", "title"]) ?? extract(sections, ["hero_title", "title"]),
       heroSubtitle: extract(settings, ["hero_subtitle", "subtitle"]) ?? extract(sections, ["hero_subtitle", "subtitle"]),
+      social,
     };
   } catch {
     return fallback;

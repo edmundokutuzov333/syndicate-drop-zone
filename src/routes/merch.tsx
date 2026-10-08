@@ -9,21 +9,26 @@ import { tape } from "@/lib/tape-engine";
 import { track } from "@/lib/track";
 import { useKey } from "@/components/use-key";
 import { useMember } from "@/components/use-member";
+import { merchProductJsonLd } from "@/lib/seo";
 
 export const Route = createFileRoute("/merch")({
   loader: async () => {
     const [merch, tapes] = await Promise.all([getLiveMerchProducts(), getLiveTapes()]);
     return { merch, tapes };
   },
-  head: () => ({
+  head: ({ loaderData }) => ({
     meta: [
       { title: "Merch — O Sindicato do Trap" },
-      { name: "description", content: "Inspecione as peças do drop em visão normal, noturna ou raio-x e reserve sua unidade numerada." },
+      { name: "description", content: "Inspecione as peças do drop em visão normal, noturna ou raio-x e reserve a sua unidade numerada." },
       { property: "og:title", content: "Merch — O Sindicato do Trap" },
       { property: "og:description", content: "Fardamento numerado do Sindicato. Reserve antes que o cofre feche." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    scripts: loaderData.merch.slice(0, 4).map((product) => ({
+      type: "application/ld+json",
+      children: JSON.stringify(merchProductJsonLd(product)),
+    })),
   }),
   component: Merch,
 });
@@ -72,6 +77,7 @@ function Merch() {
     setReservationState("sending");
     setReservationMessage("");
     try {
+      track("cart_add", { product: p.id, size: p.n === "04" ? "ÚNICO" : size });
       const variant = p.variants.find((item) => item.size === (p.n === "04" ? "ÚNICO" : size)) ?? p.variants[0];
       const row = await createPublicMerchReservation({
         productId: p.id,
@@ -107,14 +113,14 @@ function Merch() {
   return (
     <main className="relative mx-auto max-w-7xl px-4 pb-24 pt-12 md:px-8">
       {!canOpen && (
-        <div className="fixed inset-0 z-[70] overflow-y-auto bg-black/60 p-4 backdrop-blur-sm md:p-8" role="dialog" aria-modal="true" aria-label="Cofre fechado">
+        <dialog open aria-labelledby="merch-gate-title" className="fixed inset-0 z-[70] h-full w-full overflow-y-auto border-0 bg-black/60 p-4 backdrop-blur-sm md:p-8">
           <div className="mx-auto flex min-h-full max-w-4xl items-center justify-center py-12">
             <section className="w-full border-2 border-blood bg-background/95 shadow-[0_30px_100px_rgba(0,0,0,.75)]">
               <div className="hazard h-3" />
               <div className="grid gap-8 p-6 md:p-10">
                 <div className="text-center">
                   <p className="font-mono text-[10px] tracking-[0.3em] text-blood">COFRE 001 · ACESSO RESTRITO</p>
-                  <h2 className="mt-3 font-gothic text-5xl leading-none md:text-7xl">COFRE FECHADO</h2>
+                  <h2 id="merch-gate-title" className="mt-3 font-gothic text-5xl leading-none md:text-7xl">COFRE FECHADO</h2>
                   <p className="mx-auto mt-4 max-w-xl font-stamp text-sm text-muted-foreground">O catálogo está em baixo do aço. Ouve 10 segundos de qualquer fita para receber a chave.</p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-3">
@@ -143,7 +149,7 @@ function Merch() {
               <div className="hazard h-3" />
             </section>
           </div>
-        </div>
+        </dialog>
       )}
 
       <p className="text-xs tracking-widest text-blood">1ª EDIÇÃO · MERCH OFICIAL</p>
@@ -167,7 +173,7 @@ function Merch() {
               </button>
             ))}
           </div>
-          <div className="mt-4 grid grid-cols-4 gap-2">
+          <div className="cv-auto mt-4 grid grid-cols-4 gap-2">
             {merch.map((item, index) => (
               <button key={item.n} type="button" onClick={() => { setSel(index); setReceipt(null); }} className={"aspect-square border-2 " + (index === sel ? "border-blood" : "border-border opacity-60 hover:opacity-100")}>
                 <HalftoneCanvas src={item.img} alt={item.name} className="h-full w-full" />
@@ -179,7 +185,7 @@ function Merch() {
         <div className="flex flex-col">
           <p className="text-xs text-blood">{p.sub}</p>
           <h2 className="font-stamp text-3xl">{p.name}</h2>
-          <p className="mt-2 text-2xl font-bold">R$ {p.price}</p>
+          <p className="mt-2 text-2xl font-bold">MT {p.price.toLocaleString("pt-MZ")}</p>
           <ul className="mt-6 space-y-2 border-y border-border py-4 text-sm">{p.detail.map((detail) => <li key={detail}><span className="text-blood">▸</span> {detail}</li>)}</ul>
           {p.n !== "04" && (
             <div className="mt-6">
@@ -204,7 +210,7 @@ function Merch() {
                 <p>LOTE: {receipt.item.n} · TAM: {receipt.size}</p>
                 {receipt.serial > 0 && <p>UNIDADE Nº {String(receipt.serial).padStart(3, "0")}/333</p>}
                 <p className="my-2 text-center">--------------------------------</p>
-                <p className="flex justify-between font-bold"><span>TOTAL</span><span>R$ {receipt.item.price},00</span></p>
+                <p className="flex justify-between font-bold"><span>TOTAL</span><span>MT {receipt.item.price.toLocaleString("pt-MZ")}</span></p>
                 <p className="my-2 text-center">--------------------------------</p>
                 <p className="text-center">CÓDIGO DE RETIRADA</p>
                 <p className="text-center text-2xl font-bold tracking-[0.3em]">{receipt.code}</p>

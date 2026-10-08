@@ -11,10 +11,11 @@ import { Halftone } from "@/components/Halftone";
 import { Sponsors } from "@/components/Sponsors";
 import logo from "@/assets/brand/sindicato-logo.png.asset.json";
 import selo from "@/assets/brand/sindicato-selo.png.asset.json";
+import { musicEventJsonLd } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
   loader: async () => getLiveHomeContent(),
-  head: () => ({
+  head: ({ loaderData }) => ({
     meta: [
       { title: "O Sindicato do Trap — 1ª Edição" },
       { name: "description", content: "Camping de estúdio na XOYENS. 17 artistas, prévias cruas, merch e lançamento a 18.12.2026." },
@@ -22,6 +23,9 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "A união do trap. Lançamento 18.12.2026." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+    ],
+    scripts: [
+      { type: "application/ld+json", children: JSON.stringify(musicEventJsonLd(loaderData.site.dropAt)) },
     ],
   }),
   component: Hub,
@@ -138,7 +142,7 @@ function Countdown({ dropAt }: { dropAt: number }) {
 
 function Tapes({ tapes, state, level }: { tapes: LiveTape[]; state: ReturnType<typeof useTape>; level: number }) {
   return (
-    <section className="relative mb-24">
+    <section className="cv-auto relative mb-24">
       <img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute -right-6 -top-10 w-28 rotate-[20deg] opacity-70 md:w-36" />
       <SectionTag label="Prévias Cruas" />
       <div className="mb-4 flex h-10 items-end gap-1">
@@ -188,7 +192,7 @@ function formatClock(seconds: number): string {
 
 function Artistas({ artists }: { artists: typeof ARTISTS }) {
   return (
-    <section className="relative mb-24 pb-40">
+    <section className="cv-auto relative mb-24 pb-40">
       <SectionTag label="Os Convocados" />
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
         {artists.map((artist) => (
@@ -205,7 +209,7 @@ function Artistas({ artists }: { artists: typeof ARTISTS }) {
 
 function Merch({ merch, armed, member }: { merch: LiveMerchProduct[]; armed: boolean; member: boolean }) {
   return (
-    <section className="mb-12">
+    <section className="cv-auto mb-12">
       <SectionTag label="Merch" to="/merch" />
       <p className={"mb-6 border p-3 text-xs " + (armed ? "border-blood text-blood" : "border-border text-muted-foreground")}>
         {member ? "▶ SINDICALIZADO — PRÉ-RESERVA ABERTA." : armed ? "▶ CHAVE VALIDADA — LOJA ABERTA." : "■ COFRE FECHADO — ouve 10 segundos de uma prévia para abrir."}

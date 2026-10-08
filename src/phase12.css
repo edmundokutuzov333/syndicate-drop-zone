@@ -1,0 +1,70 @@
+/* FASE 12: performance, acessibilidade e modo leve. Mantém a linguagem visual industrial do site. */
+
+:root {
+  --muted-foreground: oklch(0.68 0.01 85);
+}
+
+html[data-lite] .grain::after {
+  animation: none !important;
+  opacity: 0 !important;
+}
+
+.grain::after {
+  animation: none;
+}
+
+@media (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  html:not([data-lite]) .grain::after {
+    animation: grain 0.6s steps(6) infinite;
+  }
+}
+
+@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+  .grain::after {
+    animation: none !important;
+    opacity: 0.04 !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
+
+:where(button, a, [role="button"], summary, input[type="submit"], input[type="button"]) {
+  min-height: 44px;
+}
+
+:where(button, a, [role="button"], summary, input[type="submit"], input[type="button"]):focus-visible {
+  outline: 2px solid var(--blood);
+  outline-offset: 3px;
+}
+
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 640px;
+}
+
+dialog {
+  max-width: none;
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.68);
+  backdrop-filter: blur(4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flicker,
+  .scan-sweep,
+  .develop[data-dev="1"] {
+    animation: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .sdt-footer-link {
+    min-height: 44px;
+  }
+}

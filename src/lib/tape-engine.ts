@@ -1,5 +1,6 @@
 import { getCtx, out } from "./audio-bus";
 import { track } from "./track";
+import { grantKey } from "./key";
 
 export type Track = { id: string; title: string; feat: string; src: string };
 
@@ -16,6 +17,7 @@ export class TapeEngine {
   private queue: Track[] = [];
   private state: TapeState = IDLE_STATE;
   private subscribers = new Set<() => void>();
+  private tenSecondMarks = new Set<string>();
 
   getState = (): TapeState => this.state;
 
@@ -48,7 +50,7 @@ export class TapeEngine {
     if (!c || !destination) return null;
 
     const audio = new Audio();
-    audio.preload = "metadata";
+    audio.preload = "none";
     audio.crossOrigin = "anonymous";
 
     const source = c.createMediaElementSource(audio);
@@ -71,7 +73,15 @@ export class TapeEngine {
     hissSource.connect(highPass).connect(hissGain).connect(destination);
     hissSource.start();
 
-    audio.addEventListener("timeupdate", () => this.set({ t: audio.currentTime }));
+    audio.addEventListener("timeupdate", () => {
+      this.set({ t: audio.currentTime });
+      if (this.current && audio.currentTime >= 10 && !this.tenSecondMarks.has(this.current.id)) {
+        this.tenSecondMarks.add(this.current.id);
+        grantKey();
+        track("tape_10s", { tape: this.current.id });
+        track("key_earned", { tape: this.current.id });
+      }
+    });
     audio.addEventListener("loadedmetadata", () => this.set({ dur: Number.isFinite(audio.duration) ? audio.duration : 0 }));
     audio.addEventListener("play", () => {
       this.set({ playing: true, error: false });

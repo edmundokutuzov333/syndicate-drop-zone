@@ -16,3 +16,7 @@
 - O projector usa `dialog` nativo, navegação por teclado/swipe e vídeo mudo por defeito. O autoplay é desligado em `data-lite`.
 - O halftone real usa canvas com cache e mantém `Halftone` CSS como fallback de primeiro paint/rede.
 - A luz vermelha é um estado de UI temporário apenas na rota de Revelação e é removida ao sair da rota.
+
+## FASE 12 · IMPLEMENTAÇÃO
+
+- Implementação consolidada em branch de execução e PR #10, sem reescrever histórico publicado.

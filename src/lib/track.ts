@@ -16,18 +16,43 @@ type Sink = (rows: EventRow[]) => void | Promise<void>;
 let sink: Sink | null = null;
 let buffer: EventRow[] = [];
 let timer: number | null = null;
+let volatileSid: string | null = null;
 
 function sid(): string {
   try {
     let value = sessionStorage.getItem("sdt-sid");
     if (!value) {
-      value = Math.random().toString(36).slice(2, 10);
+      value =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID().replace(/-/g, "").slice(0, 16)
+          : Math.random().toString(36).slice(2, 18);
       sessionStorage.setItem("sdt-sid", value);
     }
     return value;
   } catch {
-    return "anon";
+    if (!volatileSid) {
+      volatileSid =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID().replace(/-/g, "").slice(0, 16)
+          : Math.random().toString(36).slice(2, 18);
+    }
+    return volatileSid;
   }
+}
+
+function safeProps(props: EventRow["props"]): EventRow["props"] {
+  const result: EventRow["props"] = {};
+  for (const [key, value] of Object.entries(props ?? {})) {
+    if (!/^[a-zA-Z0-9_]{1,32}$/.test(key)) continue;
+    if (typeof value === "string") {
+      result[key] = value.slice(0, 120);
+    } else if (typeof value === "number" && Number.isFinite(value)) {
+      result[key] = value;
+    } else if (typeof value === "boolean") {
+      result[key] = value;
+    }
+  }
+  return result;
 }
 
 export const setSink = (next: Sink | null): void => {
@@ -36,7 +61,7 @@ export const setSink = (next: Sink | null): void => {
 
 export function track(name: EventName, props: EventRow["props"] = {}): void {
   if (typeof window === "undefined") return;
-  buffer.push({ sid: sid(), name, props });
+  buffer.push({ sid: sid(), name, props: safeProps(props) });
   window.clearTimeout(timer ?? 0);
   timer = window.setTimeout(() => {
     timer = null;
