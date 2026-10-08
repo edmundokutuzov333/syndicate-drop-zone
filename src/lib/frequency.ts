@@ -16,6 +16,7 @@ import {
 } from "@/lib/frequency-api";
 import { kick808, radioDial } from "@/lib/sfx";
 import { tape } from "@/lib/tape-engine";
+import { claimAudioOwner, releaseAudioOwner, ownsAudio } from "@/lib/audio-session";
 import { RADIO_TRACKS } from "@/lib/data";
 import { track as analyticsTrack, getAnalyticsSessionId } from "@/lib/track";
 
@@ -898,6 +899,8 @@ export class FrequencyEngine {
 
     const lifecycle = ++this.lifecycleVersion;
     this.invalidatePlayback();
+    claimAudioOwner("radio");
+    tape.stop();
     this.set({ active: true, playing: true, error: null });
     radioDial();
     kick808();
@@ -913,7 +916,6 @@ export class FrequencyEngine {
     }
 
     analyticsTrack("radio_start");
-    tape.stop();
 
     const primeTrack = this.tracks.find((track) => track.kind === "music" && !track.temporarilyDisabled) ?? null;
     if (primeTrack) {
@@ -995,6 +997,7 @@ export class FrequencyEngine {
     this.lifecycleVersion += 1;
     this.invalidatePlayback();
     this.clearMediaSession();
+    if (ownsAudio("radio")) releaseAudioOwner("radio");
     this.currentTrack = null;
     this.queue = [];
     this.queueIndex = -1;
