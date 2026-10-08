@@ -361,10 +361,9 @@ export class FrequencyEngine {
     return Promise.all([program, clock]).then(() => undefined);
   };
 
-  autoStart = async () => {
-    await this.prepare();
+  autoStart = () => {
     if (!this.station.autoplay || (this.state.active && this.state.playing)) return;
-    await this.start();
+    void this.start();
   };
 
   getSpectrum = (): number[] => {
