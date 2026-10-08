@@ -3,6 +3,7 @@ import { getLiveTapes } from "@/lib/site-content";
 import { track } from "@/lib/track";
 import { getFrequencyClock, getFrequencyListenerCount, sendFrequencyHeartbeat, awardNightListener } from "@/lib/frequency-api";
 import { kick808, radioDial } from "@/lib/sfx";
+import { tape } from "@/lib/tape-engine";
 
 export type FrequencyTrack = {
   id: string;
@@ -313,6 +314,7 @@ export class FrequencyEngine {
 
   async start() {
     if (this.state.active && this.state.playing) return;
+    tape.stop();
     radioDial();
     await this.loadProgram();
     await this.clock();
@@ -322,7 +324,7 @@ export class FrequencyEngine {
     this.startPresenceLoops();
     const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
     if (storedMember) void awardNightListener(storedMember, new Date().getHours());
-    track("frequency_tune" as never, { station: "808" });
+
   }
 
   pause() {
@@ -360,7 +362,11 @@ export class FrequencyEngine {
   private startPresenceLoops() {
     if (this.heartbeat) window.clearInterval(this.heartbeat);
     if (this.listenerTimer) window.clearInterval(this.listenerTimer);
-    this.heartbeat = window.setInterval(() => void sendFrequencyHeartbeat(), 20_000);
+    this.heartbeat = window.setInterval(() => {
+      void sendFrequencyHeartbeat();
+      const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
+      if (storedMember) void awardNightListener(storedMember, new Date().getHours());
+    }, 20_000);
     this.listenerTimer = window.setInterval(async () => {
       const count = await getFrequencyListenerCount();
       this.set({ listenerCount: count });
