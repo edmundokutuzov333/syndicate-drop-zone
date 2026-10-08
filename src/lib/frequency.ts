@@ -1,6 +1,5 @@
 import { getCtx, out } from "@/lib/audio-bus";
 import { getLiveTapes } from "@/lib/site-content";
-import { track } from "@/lib/track";
 import { getFrequencyClock, getFrequencyListenerCount, sendFrequencyHeartbeat, awardNightListener } from "@/lib/frequency-api";
 import { kick808, radioDial } from "@/lib/sfx";
 import { tape } from "@/lib/tape-engine";
@@ -270,14 +269,16 @@ export class FrequencyEngine {
     if (located.segment.kind === "static") {
       this.playStatic(remainingMs);
     } else if (located.segment.kind === "tag") {
-      if (TAG_SRC) {
-        await this.playMedia(TAG_SRC, located.offsetSec);
-      } else {
+      const tagOk = await this.playMedia(TAG_SRC, located.offsetSec);
+      if (!tagOk) {
         this.playStatic(remainingMs);
         kick808(0.42, Math.min(0.8, remainingMs / 1000));
       }
     } else {
-      await this.playMedia(located.segment.track.src, located.offsetSec);
+      const musicOk = await this.playMedia(located.segment.track.src, located.offsetSec);
+      if (!musicOk) {
+        this.playStatic(remainingMs);
+      }
     }
     this.updateMediaSession(located.segment.kind === "music" ? located.segment.track : this.tracks[(located.segment.musicIndex) % this.tracks.length] ?? null);
 
@@ -316,26 +317,35 @@ export class FrequencyEngine {
     src.connect(gain).connect(destination);
     src.onended = () => { this.currentStatic = null; };
     this.currentStatic = src;
+    this.set({ playing: true, error: null });
     src.start();
   }
 
-  private async playMedia(src: string, offsetSec: number) {
+  private async playMedia(src: string, offsetSec: number): Promise<boolean> {
     const audio = this.ensureAudio();
-    if (!audio || !src) {
-      this.set({ playing: false, error: "Esta Frequência ainda não recebeu o áudio desta faixa." });
-      return;
-    }
+    if (!audio || !src) return false;
+
     audio.src = src;
     audio.load();
 
     if (audio.readyState < HTMLMediaElement.HAVE_METADATA) {
-      await new Promise<void>((resolve) => {
-        const done = () => {
-          audio.removeEventListener("loadedmetadata", done);
-          resolve();
+      const ready = await new Promise<boolean>((resolve) => {
+        let settled = false;
+        const finish = (value: boolean) => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timeout);
+          audio.removeEventListener("loadedmetadata", onReady);
+          audio.removeEventListener("error", onError);
+          resolve(value);
         };
-        audio.addEventListener("loadedmetadata", done, { once: true });
+        const onReady = () => finish(true);
+        const onError = () => finish(false);
+        const timeout = window.setTimeout(() => finish(false), 8000);
+        audio.addEventListener("loadedmetadata", onReady, { once: true });
+        audio.addEventListener("error", onError, { once: true });
       });
+      if (!ready) return false;
     }
 
     try {
@@ -344,9 +354,14 @@ export class FrequencyEngine {
       // Some mobile engines only permit seeking after metadata and a short decode.
     }
 
-    await audio.play().catch(() => {
+    try {
+      await audio.play();
+      this.set({ playing: true, error: null });
+      return true;
+    } catch {
       this.set({ playing: false, error: "Toque em SINTONIZAR para desbloquear o áudio." });
-    });
+      return false;
+    }
   }
 
   async start() {
@@ -360,7 +375,7 @@ export class FrequencyEngine {
     void sendFrequencyHeartbeat();
     this.startPresenceLoops();
     const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
-    if (storedMember) void awardNightListener(storedMember, new Date().getHours());
+    if (storedMember) void awardNightListener(storedMember, 3);
 
   }
 
@@ -405,7 +420,7 @@ export class FrequencyEngine {
       void this.clock();
       void sendFrequencyHeartbeat();
       const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
-      if (storedMember) void awardNightListener(storedMember, new Date().getHours());
+      if (storedMember) void awardNightListener(storedMember, 3);
     }, 20_000);
 
     const onVisibility = () => {
