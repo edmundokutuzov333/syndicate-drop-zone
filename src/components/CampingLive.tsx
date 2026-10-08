@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPublicLiveNotification, normalizeLiveUrl, type LiveFlag, type CampingSessionRow } from "@/lib/camping-data";
 import { track } from "@/lib/track";
-import { cn } from "@/lib/utils";
 
 function isLikelyEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
