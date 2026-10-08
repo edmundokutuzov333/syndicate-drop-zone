@@ -54,10 +54,19 @@ export function MiniPlayer() {
   }, [state.playing]);
 
   const [frequencyState, setFrequencyState] = useState(frequency.getState());
+  const [frequencyPosition, setFrequencyPosition] = useState(() => frequency.getPlaybackPosition());
 
   useEffect(() => {
     return frequency.subscribe(() => setFrequencyState(frequency.getState()));
   }, []);
+
+  useEffect(() => {
+    if (!frequencyState.active || !frequencyState.playing) return;
+    const tick = () => setFrequencyPosition(frequency.getPlaybackPosition());
+    tick();
+    const interval = window.setInterval(tick, 500);
+    return () => window.clearInterval(interval);
+  }, [frequencyState.active, frequencyState.playing, frequencyState.phase]);
 
   if (frequencyState.active) {
     return (
@@ -71,7 +80,7 @@ export function MiniPlayer() {
               {frequencyState.current?.artist ? " · " + frequencyState.current.artist : ""}
             </p>
           </div>
-          <span className="hidden text-xs tabular-nums text-muted-foreground sm:inline">{Math.floor(frequencyState.elapsed)}s / {Math.floor(frequencyState.duration)}s</span>
+          <span className="hidden text-xs tabular-nums text-muted-foreground sm:inline">{Math.floor(frequencyPosition.elapsed)}s / {Math.floor(frequencyPosition.duration)}s</span>
           <button
             type="button"
             aria-label={frequencyState.playing ? "Pausar Frequência 808" : "Retomar Frequência 808"}
