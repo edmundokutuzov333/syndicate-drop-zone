@@ -53,7 +53,7 @@ describe("frequency scheduler", () => {
     expect(located.offsetSec).toBeLessThan(located.segment.durationSec);
   });
 
-  it("uses exactly the nine supplied direct Discord audio sources", () => {
+  it("uses exactly the nine supplied bundled audio sources", () => {
     expect(RADIO_TRACKS.map((track) => track.src)).toEqual([
       "/audio/KHRYIS - A Bag.wav",
       "/audio/KHRYIS - Chopper.mp3",
