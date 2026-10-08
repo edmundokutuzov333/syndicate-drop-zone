@@ -12,34 +12,40 @@ export const PartnershipRequestSchema = z.object({
 
 export type PartnershipRequest = z.infer<typeof PartnershipRequestSchema>;
 
+type PartnershipInsertResult = { id: string };
+
+async function rpc<T>(name: string, body: Record<string, unknown>): Promise<T> {
+  const { url, key } = getPublicSupabaseConfig();
+  const response = await fetch(url + "/rest/v1/rpc/" + name, {
+    method: "POST",
+    headers: {
+      apikey: key,
+      Authorization: "Bearer " + key,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const detail = (await response.text()).trim();
+    throw new Error(detail || "Serviço de parcerias indisponível.");
+  }
+
+  return (await response.json()) as T;
+}
+
 export async function submitPartnershipRequest(input: PartnershipRequest): Promise<void> {
   const parsed = PartnershipRequestSchema.safeParse(input);
   if (!parsed.success) {
     throw new Error(parsed.error.issues[0]?.message ?? "Dados inválidos.");
   }
 
-  const { url, key } = getPublicSupabaseConfig();
-
-  const response = await fetch(url + "/rest/v1/partnership_requests", {
-    method: "POST",
-    headers: {
-      apikey: key,
-      Authorization: "Bearer " + key,
-      "Content-Type": "application/json",
-      Prefer: "return=minimal",
-    },
-    body: JSON.stringify({
-      name: parsed.data.name,
-      company: parsed.data.company,
-      contact: parsed.data.contact,
-      partnership_type: parsed.data.partnershipType,
-      budget: parsed.data.budget ?? "",
-      message: parsed.data.message,
-    }),
+  await rpc<PartnershipInsertResult>("submit_partnership_request", {
+    p_name: parsed.data.name,
+    p_company: parsed.data.company,
+    p_contact: parsed.data.contact,
+    p_partnership_type: parsed.data.partnershipType,
+    p_budget: parsed.data.budget ?? "",
+    p_message: parsed.data.message,
   });
-
-  if (!response.ok) {
-    console.error("Partnership proposal submission failed:", response.status);
-    throw new Error("Não foi possível enviar a proposta. Tente novamente.");
-  }
 }
