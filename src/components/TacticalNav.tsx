@@ -53,7 +53,6 @@ export function TacticalNav() {
             </Link>
           )}
           <span className="hidden text-muted-foreground sm:inline"><span className="text-blood" style={{ animation: "blink 1s steps(1) infinite" }}>●</span> {time}</span>
-          <Link to="/frequencia" onClick={() => { void frequency.start(); }} aria-label="Sintonizar Frequência 808" className="inline-flex min-h-11 min-w-11 items-center justify-center border border-blood text-blood transition hover:bg-blood hover:text-primary-foreground"><Radio size={16} /></Link>
           <button className="border border-border px-3 py-1.5 md:hidden" onClick={() => setOpen((o) => !o)} aria-label="Menu">{open ? "✕" : "≡"}</button>
         </div>
       </div>

@@ -75,7 +75,7 @@ function FrequenciaPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2 font-mono text-[9px]">
             <span className="border border-border px-3 py-2">● {state.listenerCount || 0} OUVINTES</span>
-            <span className="border border-border px-3 py-2">17 CONVOCADOS · PRÉVIAS SPOTIFY</span>
+            <span className="border border-border px-3 py-2">17 CONVOCADOS · PLAYERS SPOTIFY OFICIAIS</span>
             {nightBadge && <span className="border border-blood px-3 py-2 text-blood">OUVINTE DA MADRUGADA</span>}
           </div>
         </div>
@@ -144,28 +144,21 @@ function FrequenciaPage() {
             const open = expanded === artist.slug;
             return (
               <article key={artist.slug} className={"border " + (open ? "border-blood" : "border-border") + " bg-card"}>
-                <button type="button" onClick={() => setExpanded(open ? null : artist.slug)} className="flex min-h-16 w-full items-center justify-between gap-3 px-4 py-3 text-left">
+                <button
+                  type="button"
+                  aria-expanded={open}
+                  aria-controls={"spotify-" + artist.slug}
+                  onClick={() => setExpanded(open ? null : artist.slug)}
+                  className="flex min-h-16 w-full items-center justify-between gap-3 px-4 py-3 text-left"
+                >
                   <span>
                     <span className="block font-stamp text-lg">{artist.name}</span>
                     <span className="font-mono text-[8px] tracking-[0.18em] text-muted-foreground">SPOTIFY · {artist.spotifyArtistId}</span>
                   </span>
                   <span className="text-blood">{open ? "—" : "+"}</span>
                 </button>
-                {open && (
-                  <div className="border-t border-border p-3">
-                    <iframe
-                      title={"Prévia Spotify oficial de " + artist.name}
-                      src={"https://open.spotify.com/embed/artist/" + encodeURIComponent(artist.spotifyArtistId) + "?utm_source=generator&theme=0"}
-                      loading="lazy"
-                      className="h-[352px] w-full border-0"
-                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                      referrerPolicy="origin"
-                    />
-                    <a href={"https://open.spotify.com/artist/" + encodeURIComponent(artist.spotifyArtistId)} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-11 items-center gap-2 border border-border px-3 text-[9px] tracking-[0.16em] hover:border-blood">
-                      ABRIR NO SPOTIFY <ExternalLink size={12} />
-                    </a>
-                  </div>
-                )}
+                {open && <SpotifyPreview artist={artist} />}
+
               </article>
             );
           })}
@@ -175,7 +168,7 @@ function FrequenciaPage() {
       <section className="mt-14 border border-border bg-card/50 p-5 md:p-7">
         <p className="text-[9px] tracking-[0.22em] text-blood">SINAL DA CASA</p>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-          A emissão automática usa áudio próprio do Sindicato. O catálogo Spotify aparece como pré-visualização oficial e descoberta do artista; não é retransmitido pela rádio.
+          A emissão automática usa áudio próprio do Sindicato. Os 17 artistas têm players oficiais do Spotify nesta página para ouvir e descobrir as faixas no serviço; o áudio do Spotify não é retransmitido pela rádio.
         </p>
       </section>
 
@@ -183,6 +176,63 @@ function FrequenciaPage() {
         SID · {typeof window === "undefined" ? "--------" : getAnalyticsSessionId().slice(0, 8)} · 808
       </div>
     </main>
+  );
+}
+
+function SpotifyPreview({ artist }: { artist: (typeof ARTIST_PROFILES)[number] }) {
+  const [loaded, setLoaded] = useState(false);
+  const [slow, setSlow] = useState(false);
+
+  useEffect(() => {
+    setLoaded(false);
+    setSlow(false);
+    const timeout = window.setTimeout(() => setSlow(true), 5000);
+    return () => window.clearTimeout(timeout);
+  }, [artist.spotifyArtistId]);
+
+  const embedUrl = "https://open.spotify.com/embed/artist/" + encodeURIComponent(artist.spotifyArtistId) + "?utm_source=generator&theme=0";
+  const panelId = "spotify-" + artist.slug;
+
+  return (
+    <div id={panelId} className="border-t border-border p-3">
+      <div className="relative overflow-hidden border border-border bg-black/30">
+        {!loaded && (
+          <div className="absolute inset-0 z-10 flex min-h-[352px] items-center justify-center p-5 text-center">
+            <div>
+              <p className="font-mono text-[9px] tracking-[0.2em] text-blood">
+                {slow ? "SPOTIFY DEMORA A RESPONDER" : "A CARREGAR PLAYER OFICIAL"}
+              </p>
+              <p className="mt-2 max-w-xs text-[10px] leading-5 text-muted-foreground">
+                {slow ? "O player externo pode estar bloqueado pela rede ou pelo browser. Use ABRIR NO SPOTIFY abaixo." : "Pré-visualização oficial de " + artist.name + "."}
+              </p>
+            </div>
+          </div>
+        )}
+        <iframe
+          title={"Player Spotify oficial de " + artist.name}
+          src={embedUrl}
+          loading="eager"
+          className="h-[352px] w-full border-0"
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          allowFullScreen
+          referrerPolicy="origin"
+          onLoad={() => setLoaded(true)}
+        />
+      </div>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[9px] leading-4 text-muted-foreground">
+          PLAYER OFICIAL SPOTIFY · AS FAIXAS TOCAM NO PLAYER DO SPOTIFY.
+        </p>
+        <a
+          href={"https://open.spotify.com/artist/" + encodeURIComponent(artist.spotifyArtistId)}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex min-h-11 items-center gap-2 border border-border px-3 text-[9px] tracking-[0.16em] hover:border-blood"
+        >
+          ABRIR NO SPOTIFY <ExternalLink size={12} />
+        </a>
+      </div>
+    </div>
   );
 }
 

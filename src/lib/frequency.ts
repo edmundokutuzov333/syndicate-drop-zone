@@ -147,6 +147,9 @@ export class FrequencyEngine {
   private listenerTimer: number | null = null;
   private visibilityCleanup: (() => void) | null = null;
   private staticTimer: number | null = null;
+  private mediaWaitCleanup: (() => void) | null = null;
+  private syncVersion = 0;
+  private mediaRequestVersion = 0;
   private state: FrequencyState = {
     active: false,
     playing: false,
@@ -244,13 +247,50 @@ export class FrequencyEngine {
     this.timer = window.setTimeout(() => void this.syncToClock(), Math.max(40, delayMs + 10));
   }
 
+  private stopPresenceLoops() {
+    if (this.heartbeat) window.clearInterval(this.heartbeat);
+    if (this.listenerTimer) window.clearInterval(this.listenerTimer);
+    this.heartbeat = null;
+    this.listenerTimer = null;
+    this.visibilityCleanup?.();
+    this.visibilityCleanup = null;
+  }
+
+  private invalidatePlayback() {
+    this.syncVersion += 1;
+    this.mediaRequestVersion += 1;
+    this.mediaWaitCleanup?.();
+    this.mediaWaitCleanup = null;
+    if (this.timer) window.clearTimeout(this.timer);
+    this.timer = null;
+    this.audio?.pause();
+    this.currentStatic?.stop();
+    this.currentStatic = null;
+    if (this.staticTimer) window.clearTimeout(this.staticTimer);
+    this.staticTimer = null;
+  }
+
+  private setMediaSessionState(state: MediaSessionPlaybackState) {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    try {
+      navigator.mediaSession.playbackState = state;
+    } catch {}
+  }
+
   private async syncToClock() {
     if (!this.state.active || !this.state.playing) return;
+    const syncVersion = ++this.syncVersion;
     const serverNow = Date.now() + this.serverOffsetMs;
     const elapsedSec = Math.max(0, (serverNow - this.stationStartedAt) / 1000);
     if (!this.tracks.length) return;
 
     const located = locateFrequencySegment(elapsedSec, this.tracks, this.seed);
+
+    this.audio?.pause();
+    this.currentStatic?.stop();
+    this.currentStatic = null;
+    if (this.staticTimer) window.clearTimeout(this.staticTimer);
+    this.staticTimer = null;
     const current = located.segment.kind === "music" || located.segment.kind === "tag"
       ? located.segment.kind === "music" ? located.segment.track : this.tracks[(located.segment.musicIndex) % this.tracks.length]
       : this.tracks[(located.segment.musicIndex) % this.tracks.length];
@@ -270,19 +310,21 @@ export class FrequencyEngine {
     if (located.segment.kind === "static") {
       this.playStatic(remainingMs);
     } else if (located.segment.kind === "tag") {
-      const tagOk = await this.playMedia(TAG_SRC, located.offsetSec);
-      if (!tagOk) {
+      const tagOk = await this.playMedia(TAG_SRC, located.offsetSec, syncVersion);
+      if (!tagOk && syncVersion === this.syncVersion && this.state.active && this.state.playing) {
         this.playStatic(remainingMs);
         kick808(0.42, Math.min(0.8, remainingMs / 1000));
       }
     } else {
-      const musicOk = await this.playMedia(located.segment.track.src, located.offsetSec);
-      if (!musicOk) {
+      const musicOk = await this.playMedia(located.segment.track.src, located.offsetSec, syncVersion);
+      if (!musicOk && syncVersion === this.syncVersion && this.state.active && this.state.playing) {
         this.playStatic(remainingMs);
       }
     }
-    this.updateMediaSession(located.segment.kind === "music" ? located.segment.track : this.tracks[(located.segment.musicIndex) % this.tracks.length] ?? null);
 
+    if (syncVersion !== this.syncVersion || !this.state.active || !this.state.playing) return;
+
+    this.updateMediaSession(located.segment.kind === "music" ? located.segment.track : this.tracks[(located.segment.musicIndex) % this.tracks.length] ?? null);
     this.scheduleNext(remainingMs);
   }
 
@@ -295,6 +337,7 @@ export class FrequencyEngine {
         artist: trackValue.artist,
         album: "O Sindicato do Trap — Rádio Pirata",
       });
+      session.playbackState = this.state.playing ? "playing" : "paused";
       session.setActionHandler("play", () => void this.resume());
       session.setActionHandler("pause", () => this.pause());
       for (const action of ["nexttrack", "previoustrack", "seekbackward", "seekforward", "seekto"] as MediaSessionAction[]) {
@@ -344,6 +387,7 @@ export class FrequencyEngine {
     this.currentStatic = src;
     this.set({ playing: true, error: null });
     src.start();
+    this.setMediaSessionState("playing");
     if (src.loop) {
       this.staticTimer = window.setTimeout(() => {
         try { src.stop(); } catch {}
@@ -351,9 +395,13 @@ export class FrequencyEngine {
     }
   }
 
-  private async playMedia(src: string, offsetSec: number): Promise<boolean> {
+  private async playMedia(src: string, offsetSec: number, syncVersion: number): Promise<boolean> {
     const audio = this.ensureAudio();
     if (!audio || !src) return false;
+
+    const requestVersion = ++this.mediaRequestVersion;
+    this.mediaWaitCleanup?.();
+    this.mediaWaitCleanup = null;
 
     audio.src = src;
     audio.load();
@@ -367,93 +415,121 @@ export class FrequencyEngine {
           window.clearTimeout(timeout);
           audio.removeEventListener("loadedmetadata", onReady);
           audio.removeEventListener("error", onError);
+          if (this.mediaWaitCleanup === cleanup) this.mediaWaitCleanup = null;
           resolve(value);
         };
         const onReady = () => finish(true);
         const onError = () => finish(false);
         const timeout = window.setTimeout(() => finish(false), 8000);
+        const cleanup = () => finish(false);
+        this.mediaWaitCleanup = cleanup;
         audio.addEventListener("loadedmetadata", onReady, { once: true });
         audio.addEventListener("error", onError, { once: true });
       });
-      if (!ready) return false;
+
+      if (!ready || requestVersion !== this.mediaRequestVersion || syncVersion !== this.syncVersion) return false;
+    }
+
+    if (requestVersion !== this.mediaRequestVersion || syncVersion !== this.syncVersion || !this.state.active || !this.state.playing) {
+      return false;
     }
 
     try {
-      audio.currentTime = Math.max(0, offsetSec);
+      const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+      const safeOffset = duration > 0 ? Math.min(Math.max(0, offsetSec), Math.max(0, duration - 0.05)) : Math.max(0, offsetSec);
+      audio.currentTime = safeOffset;
     } catch {
       // Some mobile engines only permit seeking after metadata and a short decode.
     }
 
     try {
       await audio.play();
-      this.set({ playing: true, error: null });
-      return true;
     } catch {
+      if (requestVersion !== this.mediaRequestVersion || syncVersion !== this.syncVersion) return false;
       this.set({ playing: false, error: "Toque em SINTONIZAR para desbloquear o áudio." });
+      this.setMediaSessionState("paused");
       return false;
     }
+
+    if (requestVersion !== this.mediaRequestVersion || syncVersion !== this.syncVersion || !this.state.active || !this.state.playing) {
+      audio.pause();
+      return false;
+    }
+
+    this.set({ playing: true, error: null });
+    this.setMediaSessionState("playing");
+    return true;
   }
 
   async start() {
     if (this.state.active && this.state.playing) return;
+    this.invalidatePlayback();
     tape.stop();
     radioDial();
     await this.loadProgram();
     await this.clock();
     this.set({ active: true, playing: true, error: null });
     await this.syncToClock();
-    void sendFrequencyHeartbeat();
     this.startPresenceLoops();
+    void sendFrequencyHeartbeat();
+    void this.refreshListenerCount();
     const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
     if (storedMember) void awardNightListener(storedMember, 3);
-
   }
 
   pause() {
     if (!this.state.active) return;
-    this.audio?.pause();
-    this.currentStatic?.stop();
-    if (this.staticTimer) window.clearTimeout(this.staticTimer);
-    this.staticTimer = null;
-    this.set({ playing: false });
+    this.syncVersion += 1;
+    this.mediaRequestVersion += 1;
+    this.mediaWaitCleanup?.();
+    this.mediaWaitCleanup = null;
     if (this.timer) window.clearTimeout(this.timer);
     this.timer = null;
-  }
-
-  stop() {
     this.audio?.pause();
-    if (this.audio) this.audio.removeAttribute("src");
     this.currentStatic?.stop();
     this.currentStatic = null;
     if (this.staticTimer) window.clearTimeout(this.staticTimer);
     this.staticTimer = null;
-    if (this.timer) window.clearTimeout(this.timer);
-    if (this.heartbeat) window.clearInterval(this.heartbeat);
-    if (this.listenerTimer) window.clearInterval(this.listenerTimer);
-    this.timer = null;
-    this.heartbeat = null;
-    this.listenerTimer = null;
-    this.visibilityCleanup?.();
-    this.visibilityCleanup = null;
+    this.stopPresenceLoops();
+    this.set({ playing: false });
+    this.setMediaSessionState("paused");
+  }
+
+  stop() {
+    this.invalidatePlayback();
+    this.stopPresenceLoops();
+
+    if (this.audio) this.audio.removeAttribute("src");
     this.clearMediaSession();
     this.set({ active: false, playing: false, phase: null, current: null, next: null, elapsed: 0, duration: 0 });
   }
 
   async resume() {
     if (!this.state.active) return this.start();
+    this.invalidatePlayback();
     await this.clock();
     this.set({ playing: true, error: null });
     await this.syncToClock();
-    void sendFrequencyHeartbeat();
     this.startPresenceLoops();
+    void sendFrequencyHeartbeat();
+    void this.refreshListenerCount();
+    const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
+    if (storedMember) void awardNightListener(storedMember, 3);
+  }
+
+  private async refreshListenerCount() {
+    const count = await getFrequencyListenerCount();
+    if (this.state.active) this.set({ listenerCount: count });
   }
 
   private startPresenceLoops() {
-    if (this.heartbeat) window.clearInterval(this.heartbeat);
-    if (this.listenerTimer) window.clearInterval(this.listenerTimer);
+    this.stopPresenceLoops();
+
     this.heartbeat = window.setInterval(() => {
+      if (!this.state.active || !this.state.playing) return;
       void this.clock();
       void sendFrequencyHeartbeat();
+      void this.refreshListenerCount();
       const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
       if (storedMember) void awardNightListener(storedMember, 3);
     }, 20_000);
@@ -464,13 +540,13 @@ export class FrequencyEngine {
       }
     };
     document.addEventListener("visibilitychange", onVisibility);
-    const previous = this.visibilityCleanup;
-    previous?.();
     this.visibilityCleanup = () => document.removeEventListener("visibilitychange", onVisibility);
-    this.listenerTimer = window.setInterval(async () => {
-      const count = await getFrequencyListenerCount();
-      this.set({ listenerCount: count });
+    this.listenerTimer = window.setInterval(() => {
+      if (this.state.active && this.state.playing) void this.refreshListenerCount();
     }, 10_000);
+
+    void sendFrequencyHeartbeat();
+    void this.refreshListenerCount();
   }
 
   level() {
@@ -483,7 +559,11 @@ export class FrequencyEngine {
 
   isOnAir(artistName: string) {
     const current = this.state.current;
-    return Boolean(current && current.artist.toLowerCase().includes(artistName.toLowerCase()));
+    return Boolean(
+      this.state.phase === "music" &&
+        current &&
+        current.artist.toLowerCase().includes(artistName.toLowerCase()),
+    );
   }
 }
 
