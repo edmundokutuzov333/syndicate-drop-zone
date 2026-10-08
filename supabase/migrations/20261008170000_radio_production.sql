@@ -109,12 +109,10 @@ returns table (
 language sql
 security definer
 set search_path = ''
-as $
-  select id, name, track_ids, active, randomize
+as '  select id, name, track_ids, active, randomize
   from public.radio_blocks
   where active = true
-  order by created_at asc;
-$;
+  order by created_at asc;';
 
 revoke all on function public.frequency_radio_blocks() from public;
 grant execute on function public.frequency_radio_blocks() to anon, authenticated;
