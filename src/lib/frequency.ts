@@ -34,7 +34,7 @@ export type FrequencyState = {
 const TAG_SECONDS = 3.0;
 const STATIC_SECONDS = 0.9;
 const DEFAULT_DURATION = 30;
-const TAG_SRC = "/audio/frequency-808-tag.mp3";
+const TAG_SRC = ""; // The owner-supplied tag is wired as an optional asset; fallback keeps the station continuous until binary media is stored.
 
 function parseDuration(label: string): number {
   const parts = String(label).split(":").map(Number);
