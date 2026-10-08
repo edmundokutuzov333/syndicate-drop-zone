@@ -29,7 +29,7 @@ test("serves all nine bundled Frequencia 808 sources as complete audio files", a
 
     const headers = response.headers();
     const contentType = (headers["content-type"] ?? "").toLowerCase();
-    expect(contentType, track.src).toContain(track.type);
+    expect(contentType, track.src).toMatch(track.type === "audio/wav" ? /audio\/(wav|x-wav)/ : /audio\/mpeg/);
 
     const contentLength = Number(headers["content-length"] ?? 0);
     expect(contentLength, track.src).toBeGreaterThan(1_000_000);
