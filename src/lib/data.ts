@@ -8,14 +8,14 @@ import p1 from "@/assets/p1.jpg";
 import p2 from "@/assets/p2.jpg";
 import p3 from "@/assets/p3.jpg";
 import p4 from "@/assets/p4.jpg";
-import type { TapeSpec } from "./tape-engine";
+import type { Track } from "./tape-engine";
 
 import t1 from "@/assets/tapes/nova-wave.mp3.asset.json";
 import t2 from "@/assets/tapes/phantom-mode.mp3.asset.json";
 import t3 from "@/assets/tapes/fashiion.mp3.asset.json";
 import t4 from "@/assets/tapes/intro.mp3.asset.json";
 
-export const TAPES: (TapeSpec & { id: string; title: string; feat: string; dur: string })[] = [
+export const TAPES: (Track & { dur: string })[] = [
   { id: "T1", title: "A NOVA WAVE", feat: "Bruno The GOAT, Elton Penicela, Alemão Wavv", dur: "0:30", src: t1.url },
   { id: "T2", title: "PHANTOM MODE", feat: "INF8M8US", dur: "0:30", src: t2.url },
   { id: "T3", title: "FASHIION D'PHANTOM", feat: "Kingston Siriro, Kaká Machava, Elton Penicela", dur: "0:30", src: t3.url },
