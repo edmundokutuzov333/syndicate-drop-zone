@@ -148,6 +148,7 @@ export type LiveRadioTrack = {
 
 export type LiveRadioStation = {
   forcedTrackId: string | null;
+  activeBlockId: string | null;
   autoplay: boolean;
   stationSeed: number;
   crossfadeMs: number;
@@ -198,6 +199,7 @@ export async function getLiveRadioTracks(): Promise<LiveRadioTrack[]> {
 export async function getLiveRadioStation(): Promise<LiveRadioStation> {
   const fallback: LiveRadioStation = {
     forcedTrackId: null,
+    activeBlockId: null,
     autoplay: true,
     stationSeed: 8080808,
     crossfadeMs: 650,
@@ -209,6 +211,7 @@ export async function getLiveRadioStation(): Promise<LiveRadioStation> {
     if (!row) return fallback;
     return {
       forcedTrackId: stringValue(row, ["forced_track_id"], "") || null,
+      activeBlockId: stringValue(row, ["active_block_id"], "") || null,
       autoplay: Boolean(row.autoplay ?? true),
       stationSeed: Number(row.station_seed ?? fallback.stationSeed) || fallback.stationSeed,
       crossfadeMs: Math.min(1200, Math.max(0, numberValue(row, ["crossfade_ms"], fallback.crossfadeMs))),
@@ -216,6 +219,32 @@ export async function getLiveRadioStation(): Promise<LiveRadioStation> {
     };
   } catch {
     return fallback;
+  }
+}
+
+export type LiveRadioBlock = {
+  id: string;
+  name: string;
+  trackIds: string[];
+  active: boolean;
+  randomize: boolean;
+};
+
+export async function getLiveRadioBlocks(): Promise<LiveRadioBlock[]> {
+  try {
+    const rows = await tableRows("radio_blocks");
+    return rows
+      .filter((row) => row.active !== false)
+      .map((row) => ({
+        id: stringValue(row, ["id", "uuid"]),
+        name: stringValue(row, ["name", "title"], "BLOCO 808"),
+        trackIds: arrayValue(row, ["track_ids"], []),
+        active: row.active !== false,
+        randomize: row.randomize !== false,
+      }))
+      .filter((row) => Boolean(row.id));
+  } catch {
+    return [];
   }
 }
 
