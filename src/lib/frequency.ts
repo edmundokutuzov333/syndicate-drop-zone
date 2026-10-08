@@ -498,7 +498,7 @@ export class FrequencyEngine {
 
     const audio = new Audio();
     audio.preload = "auto";
-    audio.crossOrigin = "anonymous";
+    // Catbox is a direct media host. Do not opt into CORS mode here: the radio only needs native media playback, not pixel/audio-buffer access.
     audio.src = track.src;
     this.attachAudioListeners(audio, track);
     this.audio = audio;
@@ -565,7 +565,6 @@ export class FrequencyEngine {
 
     const audio = new Audio();
     audio.preload = "auto";
-    audio.crossOrigin = "anonymous";
     audio.src = track.src;
     this.preloaded = { audio, trackId: track.id };
     this.attachAudioListeners(audio, track);
