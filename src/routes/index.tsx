@@ -4,7 +4,9 @@ import { ARTISTS } from "@/lib/artists";
 import { getLiveHomeContent, type LiveMerchProduct, type LiveTape } from "@/lib/site-content";
 import { tape } from "@/lib/tape-engine";
 import { useTape } from "@/components/use-tape";
+import { canEnterMerch } from "@/lib/key";
 import { useKey } from "@/components/use-key";
+import { useMember } from "@/components/use-member";
 import { Halftone } from "@/components/Halftone";
 import { Sponsors } from "@/components/Sponsors";
 import logo from "@/assets/brand/sindicato-logo.png.asset.json";
@@ -26,9 +28,10 @@ export const Route = createFileRoute("/")({
 });
 
 function Hub() {
-  const { artists, tapes, merch, site } = Route.useLoaderData();
+  const { artists, tapes, merch, site, memberCount } = Route.useLoaderData();
   const state = useTape();
   const armed = useKey();
+  const { member } = useMember();
   const [level, setLevel] = useState(0);
 
   useEffect(() => {
@@ -51,25 +54,25 @@ function Hub() {
 
   return (
     <>
-      <Marquee text={site.marquee} />
+      <Marquee text={site.marquee} memberCount={memberCount} />
       <main className="mx-auto max-w-7xl px-4 pb-24 md:px-8">
-        <Hero title={site.heroTitle} subtitle={site.heroSubtitle} />
+        <Hero title={site.heroTitle} subtitle={site.heroSubtitle} memberCount={memberCount} />
         <Countdown dropAt={site.dropAt} />
         <Tapes tapes={tapes} state={state} level={level} />
         <Artistas artists={artists} />
         <Sponsors />
-        <Merch merch={merch} armed={armed} />
+        <Merch merch={merch} armed={canEnterMerch(armed, { isSyndicateMember: Boolean(member) })} member={Boolean(member)} />
       </main>
     </>
   );
 }
 
-function Marquee({ text }: { text: string | null }) {
+function Marquee({ text, memberCount }: { text: string | null; memberCount: number }) {
   const t = text || "1ª EDIÇÃO ✕ 17 ARTISTAS ✕ STUDIO XOYENS ✕ 18.12.2026 ✕ TUDO OU NADA ✕ ";
   return (
     <div className="overflow-hidden border-b border-border bg-blood py-2 font-stamp text-sm text-primary-foreground">
       <div className="flex w-max" style={{ animation: "marquee 30s linear infinite" }}>
-        <span className="whitespace-nowrap">{t.repeat(4)}</span>
+        <span className="whitespace-nowrap">{t.repeat(3)} ✕ {memberCount} SINDICALIZADOS ✕ {t.repeat(3)}</span>
         <span className="whitespace-nowrap">{t.repeat(4)}</span>
       </div>
     </div>
@@ -85,13 +88,14 @@ function SectionTag({ label, to }: { label: string; to?: "/membros" | "/merch" |
   );
 }
 
-function Hero({ title, subtitle }: { title: string | null; subtitle: string | null }) {
+function Hero({ title, subtitle, memberCount }: { title: string | null; subtitle: string | null; memberCount: number }) {
   return (
     <section className="relative flex flex-col items-center py-16 text-center md:py-24">
       <img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute right-0 top-10 hidden w-40 -rotate-12 opacity-20 md:block" />
       <img src={logo.url} alt="O Sindicato do Trap" className="flicker w-48 md:w-64" />
       <h1 className="mt-8 font-gothic text-6xl leading-[0.85] md:text-8xl">{title || "O Sindicato do Trap"}</h1>
       <p className="mt-4 font-stamp text-lg text-blood">{subtitle || "A união do trap. Gravado no camping."}</p>
+      <div className="mt-6 border border-border bg-card px-4 py-2 font-mono text-[9px] tracking-[0.2em] text-muted-foreground">SINDICALIZADOS <span className="text-blood">{String(memberCount).padStart(4, "0")}</span></div>
     </section>
   );
 }
@@ -199,12 +203,12 @@ function Artistas({ artists }: { artists: typeof ARTISTS }) {
   );
 }
 
-function Merch({ merch, armed }: { merch: LiveMerchProduct[]; armed: boolean }) {
+function Merch({ merch, armed, member }: { merch: LiveMerchProduct[]; armed: boolean; member: boolean }) {
   return (
     <section className="mb-12">
       <SectionTag label="Merch" to="/merch" />
       <p className={"mb-6 border p-3 text-xs " + (armed ? "border-blood text-blood" : "border-border text-muted-foreground")}>
-        {armed ? "▶ CHAVE VALIDADA — LOJA ABERTA." : "■ COFRE FECHADO — ouve 10 segundos de uma prévia para abrir."}
+        {member ? "▶ SINDICALIZADO — PRÉ-RESERVA ABERTA." : armed ? "▶ CHAVE VALIDADA — LOJA ABERTA." : "■ COFRE FECHADO — ouve 10 segundos de uma prévia para abrir."}
       </p>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {merch.map((product) => (

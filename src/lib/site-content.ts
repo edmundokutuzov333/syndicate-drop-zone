@@ -4,6 +4,7 @@ import { REVELACAO_MEDIA as STATIC_REVELACAO_MEDIA, type RevelationMedia } from 
 import type { RevelationMediaRatio, RevelationMediaType } from "@/lib/revelacao-media";
 import { getLiveArtists } from "@/lib/public-content";
 import { getPublicSupabaseConfig } from "@/lib/supabase-public";
+import { getMemberCount } from "@/lib/membership";
 
 export type ContentRow = Record<string, unknown>;
 
@@ -305,13 +306,14 @@ export async function getLiveSiteConfig() {
 }
 
 export async function getLiveHomeContent() {
-  const [artists, tapes, merch, site] = await Promise.all([
+  const [artists, tapes, merch, site, memberCount] = await Promise.all([
     getLiveArtistsForSite(),
     getLiveTapes(),
     getLiveMerchProducts(),
     getLiveSiteConfig(),
+    getMemberCount(),
   ]);
-  return { artists, tapes, merch, site };
+  return { artists, tapes, merch, site, memberCount };
 }
 
 
