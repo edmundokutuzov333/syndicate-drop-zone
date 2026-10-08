@@ -255,7 +255,7 @@ async function probeDuration(src: string): Promise<number> {
 function isAutoplayBlocked(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const candidate = error as { name?: unknown };
-  return candidate.name === "NotAllowedError" || candidate.name === "AbortError";
+  return candidate.name === "NotAllowedError";
 }
 
 function effectiveVolume(volume: number): number {
