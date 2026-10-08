@@ -5,7 +5,7 @@ import { ARTIST_PROFILES } from "@/lib/artist-profiles";
 import { FrequencyDial } from "@/components/FrequencyDial";
 import { frequency } from "@/lib/frequency";
 import { isMuted, setMuted, subscribeMute } from "@/lib/audio-bus";
-import { getFrequencyListenerCount, hasNightListenerBadge } from "@/lib/frequency-api";
+import { hasNightListenerBadge } from "@/lib/frequency-api";
 import { getStoredMemberCode } from "@/lib/membership";
 import { getAnalyticsSessionId } from "@/lib/track";
 
@@ -32,21 +32,29 @@ function FrequenciaPage() {
   const muted = useSyncExternalStore(subscribeMute, isMuted, () => false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [nightBadge, setNightBadge] = useState(false);
-  const [listenerCount, setListenerCount] = useState(state.listenerCount);
-  const spectrum = frequency.getSpectrum();
+  const [visual, setVisual] = useState({ level: 0, spectrum: [] as number[] });
   const artists = useMemo(
     () => ARTIST_ORDER.map((slug) => ARTIST_PROFILES.find((artist) => artist.slug === slug)).filter(Boolean),
     [],
   );
 
   useEffect(() => {
-    if (!state.active) return;
-    const id = window.setInterval(async () => {
-      setListenerCount(await getFrequencyListenerCount());
-    }, 10000);
-    void getFrequencyListenerCount().then(setListenerCount);
-    return () => window.clearInterval(id);
-  }, [state.active]);
+    if (!state.playing) {
+      setVisual({ level: 0, spectrum: [] });
+      return;
+    }
+
+    let frame = 0;
+    const loop = () => {
+      setVisual({
+        level: frequency.level(),
+        spectrum: frequency.getSpectrum(),
+      });
+      frame = requestAnimationFrame(loop);
+    };
+    frame = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(frame);
+  }, [state.playing]);
 
   useEffect(() => {
     const code = getStoredMemberCode();
@@ -63,14 +71,14 @@ function FrequenciaPage() {
             <h1 className="mt-2 font-gothic text-6xl leading-none md:text-9xl">FREQUÊNCIA 808</h1>
           </div>
           <div className="flex items-center gap-2 font-mono text-[9px]">
-            <span className="border border-border px-3 py-2">● {listenerCount || 0} OUVINTES</span>
+            <span className="border border-border px-3 py-2">● {state.listenerCount || 0} OUVINTES</span>
             {nightBadge && <span className="border border-blood px-3 py-2 text-blood">OUVINTE DA MADRUGADA</span>}
           </div>
         </div>
       </div>
 
       <section className="grid items-center gap-10 py-10 lg:grid-cols-[1.15fr_.85fr]">
-        <FrequencyDial level={state.playing ? Math.max(frequency.level(), .01) : 0} spectrum={spectrum} playing={state.playing} />
+        <FrequencyDial level={state.playing ? Math.max(visual.level, .01) : 0} spectrum={visual.spectrum} playing={state.playing} />
 
         <div className="border border-border bg-card p-5 md:p-7">
           <div className="flex items-center justify-between border-b border-border pb-4">
