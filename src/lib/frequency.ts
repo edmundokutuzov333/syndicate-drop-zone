@@ -1,9 +1,9 @@
-import { getCtx } from "@/lib/audio-bus";
-import { isMuted, subscribeMute } from "@/lib/audio-bus";
+import { getCtx, getRadioVolume, isMuted, subscribeMute } from "@/lib/audio-bus";
 import { getLiveRadioStation, getLiveRadioTracks, type LiveRadioStation, type LiveRadioTrack } from "@/lib/site-content";
 import { getFrequencyClock, getFrequencyListenerCount, getRadioStationConfig, markRadioTrackFailure, sendFrequencyHeartbeat, awardNightListener } from "@/lib/frequency-api";
 import { kick808, radioDial } from "@/lib/sfx";
 import { tape } from "@/lib/tape-engine";
+import { RADIO_TRACKS } from "@/lib/data";
 import { track as analyticsTrack, getAnalyticsSessionId } from "@/lib/track";
 
 export type FrequencyTrack = {
@@ -265,7 +265,19 @@ export class FrequencyEngine {
   private stationStartedAt = Date.now() - 6 * 3600_000;
   private seed = 8080808;
   private serverOffsetMs = 0;
-  private tracks: FrequencyTrack[] = [];
+  private tracks: FrequencyTrack[] = RADIO_TRACKS.map((track, index) => ({
+    id: track.id,
+    title: track.title,
+    artist: track.artist,
+    src: track.src,
+    durationSec: DEFAULT_DURATION,
+    kind: track.kind,
+    rotationWeight: 1,
+    position: index + 1,
+    failureCount: 0,
+    temporarilyDisabled: false,
+    source: "radio",
+  }));
   private station: LiveRadioStation = {
     forcedTrackId: null,
     autoplay: true,
@@ -308,7 +320,6 @@ export class FrequencyEngine {
 
   constructor() {
     if (typeof window !== "undefined") {
-      const { getRadioVolume } = requireRadioVolume();
       this.state.volume = getRadioVolume();
       this.muteCleanup = subscribeMute(() => this.applyVolumes());
     }
@@ -601,15 +612,30 @@ export class FrequencyEngine {
   private async playMusic(track: FrequencyTrack, offsetSec: number, syncVersion: number) {
     const previous = this.audio;
     const audio = this.ensureMusicAudio(track.src, track);
-    const isNewSource = previous !== audio || previous?.src !== audio.src;
+    const sameTrackAlreadyPlaying =
+      this.currentTrack?.id === track.id &&
+      previous === audio &&
+      !audio.paused;
+
     this.currentTrack = track;
     this.set({ phase: "music", current: track, duration: track.durationSec, elapsed: offsetSec, error: null });
+
+    if (sameTrackAlreadyPlaying) {
+      const safeOffset = clamp(offsetSec, 0, Math.max(0, track.durationSec - 0.05));
+      if (Math.abs(audio.currentTime - safeOffset) > 1.2) {
+        try { audio.currentTime = safeOffset; } catch {}
+      }
+      this.applyVolumes();
+      this.setMediaSession(track);
+      await this.preloadNext(this.findNextMusic(track));
+      return;
+    }
 
     try {
       audio.currentTime = clamp(offsetSec, 0, Math.max(0, track.durationSec - 0.05));
     } catch {}
 
-    const firstPlay = !this.state.active || !this.sessionStarted;
+    const firstPlay = !this.state.active || !this.sessionStarted || !previous;
     audio.volume = firstPlay ? effectiveVolume(this.state.volume) : 0;
     this.applyVolumes();
 
@@ -636,6 +662,7 @@ export class FrequencyEngine {
     } else {
       audio.volume = effectiveVolume(this.state.volume);
     }
+
     await this.preloadNext(this.findNextMusic(track));
   }
 
@@ -911,19 +938,6 @@ export class FrequencyEngine {
     this.muteCleanup?.();
     this.muteCleanup = null;
   }
-}
-
-function requireRadioVolume() {
-  return {
-    getRadioVolume: () => {
-      try {
-        const raw = Number(window.localStorage.getItem("sdt-radio-volume"));
-        return Number.isFinite(raw) ? clamp(raw, 0, 1) : 0.82;
-      } catch {
-        return 0.82;
-      }
-    },
-  };
 }
 
 export const frequency = new FrequencyEngine();
