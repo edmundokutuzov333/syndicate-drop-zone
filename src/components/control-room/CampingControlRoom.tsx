@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ControlRoomModule } from "@/components/control-room/ControlRoomModule";
-import { adminQuery, getControlRoomSession, isPublicPreviewSession } from "@/lib/control-room-auth";
-import { getLiveFlags, type ArtistPresenceRow } from "@/lib/camping-data";
+import { adminQuery, getControlRoomSession } from "@/lib/control-room-auth";
+import { getLiveFlags } from "@/lib/camping-data";
 import { cn } from "@/lib/utils";
 
 const STATUS = ["ATIVO", "ISOLADO", "VIGIADO", "DESAPARECIDO"] as const;
@@ -108,7 +108,7 @@ export function CampingControlRoom() {
               LIVE, calendário CAMP e presença dos 17 artistas. As alterações entram no site via Realtime.
             </p>
           </div>
-          <span className="font-mono text-[8px] text-white/30">{isPublicPreviewSession(null) ? "PREVIEW" : role || "SEM SESSÃO"}</span>
+          <span className="font-mono text-[8px] text-white/30">{role || "SEM SESSÃO"}</span>
         </div>
       </section>
 
