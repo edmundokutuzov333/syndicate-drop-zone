@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { SIZES, TAPES } from "@/lib/data";
 import { canEnterMerch, keyLeftMs } from "@/lib/key";
 import { createPublicMerchReservation, getLiveMerchProducts, getLiveTapes, type LiveMerchProduct } from "@/lib/site-content";
-import { Halftone } from "@/components/Halftone";
+import { HalftoneCanvas } from "@/components/HalftoneCanvas";
 import { hiss, printer, thud } from "@/lib/sfx";
 import { tape } from "@/lib/tape-engine";
 import { track } from "@/lib/track";
@@ -155,7 +155,7 @@ function Merch() {
       <div className="mt-10 grid gap-8 lg:grid-cols-[1.3fr_1fr]">
         <div>
           <div className="relative aspect-square border border-border">
-            <Halftone src={p.img} alt={p.name} mode={mode} className="h-full w-full" />
+            <HalftoneCanvas src={p.img} alt={p.name} mode={mode} className="h-full w-full" />
             <div className="pointer-events-none absolute inset-4 border border-foreground/20" />
             <span className="absolute left-6 top-6 text-xs">{mode === "normal" ? "ÓPTICA PADRÃO" : mode === "noturna" ? "VISÃO NOTURNA · IR 850nm" : "RAIO-X · INSPEÇÃO DE COSTURAS"}</span>
             <span className="absolute bottom-6 right-6 text-xs text-blood">LOTE {p.n} · {p.left}/333</span>
@@ -170,7 +170,7 @@ function Merch() {
           <div className="mt-4 grid grid-cols-4 gap-2">
             {merch.map((item, index) => (
               <button key={item.n} type="button" onClick={() => { setSel(index); setReceipt(null); }} className={"aspect-square border-2 " + (index === sel ? "border-blood" : "border-border opacity-60 hover:opacity-100")}>
-                <Halftone src={item.img} alt={item.name} className="h-full w-full" />
+                <HalftoneCanvas src={item.img} alt={item.name} className="h-full w-full" />
               </button>
             ))}
           </div>
