@@ -1,3 +1,15 @@
+const RADIO_SOURCES = [
+  "https://files.catbox.moe/b5ypxy.wav",
+  "https://files.catbox.moe/alftc5.mp3",
+  "https://files.catbox.moe/qj0i9z.mp3",
+  "https://files.catbox.moe/fije61.mp3",
+  "https://files.catbox.moe/o47a3g.mp3",
+  "https://files.catbox.moe/9b0rq5.mp3",
+  "https://files.catbox.moe/0kg9v2.mp3",
+  "https://files.catbox.moe/g9nczk.mp3",
+  "https://files.catbox.moe/6hit4n.wav",
+];
+
 import { test, expect } from "@playwright/test";
 
 function wavBody(seconds = 1) {
@@ -51,9 +63,20 @@ async function mockBackend(page: import("@playwright/test").Page) {
 }
 
 async function openUnlocked(page: import("@playwright/test").Page) {
-  await page.addInitScript(() => {
+  await page.addInitScript((sources) => {
     sessionStorage.setItem("sdt-open", "1");
-  });
+    (window as Window & { __radioPlaySources?: string[] }).__radioPlaySources = [];
+    const originalPlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function () {
+      if (this instanceof HTMLAudioElement) {
+        const src = this.currentSrc || this.src;
+        if (src) (window as Window & { __radioPlaySources?: string[] }).__radioPlaySources?.push(src);
+      }
+      return originalPlay.call(this);
+    };
+    void sources;
+  }, RADIO_SOURCES);
+
   await page.goto("/frequencia");
   await expect(page.getByRole("heading", { name: "FREQUÊNCIA 808" })).toBeVisible();
 }
@@ -65,6 +88,19 @@ test.describe("Frequência 808 browser smoke", () => {
 
     await expect.poll(async () => await page.evaluate(() => navigator.mediaSession?.playbackState ?? "none")).toBe("playing");
     await expect(page.getByText("NO AR AGORA")).toBeVisible();
+
+    await expect.poll(async () => page.evaluate(() => {
+      const sources = (window as Window & { __radioPlaySources?: string[] }).__radioPlaySources ?? [];
+      return sources.find((src) => src.includes("files.catbox.moe")) ?? "";
+    })).not.toBe("");
+
+    const source = await page.evaluate(() => {
+      const sources = (window as Window & { __radioPlaySources?: string[] }).__radioPlaySources ?? [];
+      return sources.find((src) => src.includes("files.catbox.moe")) ?? "";
+    });
+    expect(RADIO_SOURCES).toContain(source);
+    expect(source).not.toContain("nova-wave.mp3");
+    expect(source).not.toContain("phantom-mode.mp3");
 
     const progress = page.getByRole("slider", { name: "Volume da Rádio Sindicato do Trap" });
     await expect(progress).toBeVisible();

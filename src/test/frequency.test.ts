@@ -53,6 +53,20 @@ describe("frequency scheduler", () => {
     expect(located.offsetSec).toBeLessThan(located.segment.durationSec);
   });
 
+  it("uses exactly the nine supplied direct audio sources", () => {
+    expect(RADIO_TRACKS.map((track) => track.src)).toEqual([
+      "https://files.catbox.moe/b5ypxy.wav",
+      "https://files.catbox.moe/alftc5.mp3",
+      "https://files.catbox.moe/qj0i9z.mp3",
+      "https://files.catbox.moe/fije61.mp3",
+      "https://files.catbox.moe/o47a3g.mp3",
+      "https://files.catbox.moe/9b0rq5.mp3",
+      "https://files.catbox.moe/0kg9v2.mp3",
+      "https://files.catbox.moe/g9nczk.mp3",
+      "https://files.catbox.moe/6hit4n.wav",
+    ]);
+  });
+
   it("keeps the nine production radio URLs separate from the site preview tapes", () => {
     expect(RADIO_TRACKS).toHaveLength(9);
     expect(RADIO_TRACKS.every((track) => track.src.includes("files.catbox.moe"))).toBe(true);
