@@ -29,6 +29,10 @@ const ARTIST_ORDER = [
 
 function FrequenciaPage() {
   const state = useFrequencyState();
+
+  useEffect(() => {
+    void frequency.prepare();
+  }, []);
   const muted = useSyncExternalStore(subscribeMute, isMuted, () => false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [nightBadge, setNightBadge] = useState(false);
@@ -91,10 +95,14 @@ function FrequenciaPage() {
           </div>
 
           <p className="mt-8 text-[9px] tracking-[0.28em] text-blood">
-            {state.phase === "tag" ? "IDENTIFICAÇÃO 808" : state.phase === "static" ? "ESTÁTICA" : "NO AR AGORA"}
+            {!state.active ? "FORA DO AR" : state.error ? "SINAL DE EMERGÊNCIA" : state.phase === "tag" ? "IDENTIFICAÇÃO 808" : state.phase === "static" ? "ESTÁTICA" : state.playing ? "NO AR AGORA" : "PAUSADA"}
           </p>
-          <h2 className="mt-2 font-stamp text-3xl md:text-4xl">{state.current?.title ?? "AGUARDA SINTONIA"}</h2>
-          <p className="mt-2 text-xs text-muted-foreground">{state.current?.artist ?? "FREQUÊNCIA 808 · O SINDICATO DO TRAP"}</p>
+          <h2 className="mt-2 font-stamp text-3xl md:text-4xl">
+            {state.error ? "INTERFERÊNCIA 808" : state.phase === "tag" ? "SINDICATO DO TRAP" : state.phase === "static" ? "ESTÁTICA 808" : state.current?.title ?? "AGUARDA SINTONIA"}
+          </h2>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {state.error ? "A emissão mantém sinal de emergência enquanto recupera a faixa." : state.phase === "tag" ? "IDENTIFICAÇÃO DA ESTAÇÃO" : state.phase === "static" ? "RUÍDO ANALÓGICO DE EMERGÊNCIA" : state.current?.artist ?? "FREQUÊNCIA 808 · O SINDICATO DO TRAP"}
+          </p>
 
           <div className="mt-7 border-y border-border py-4">
             <p className="text-[9px] tracking-[0.2em] text-muted-foreground">A SEGUIR</p>
@@ -133,7 +141,7 @@ function FrequenciaPage() {
             <p className="text-[9px] tracking-[0.28em] text-blood">CATÁLOGO DE CONVOCADOS</p>
             <h2 className="mt-1 font-gothic text-5xl md:text-6xl">PRÉ-VISUALIZAR</h2>
           </div>
-          <a href="https://open.spotify.com" target="_blank" rel="noreferrer" className="hidden items-center gap-1 text-[9px] tracking-[0.18em] text-muted-foreground hover:text-blood md:flex">
+          <a href="https://open.spotify.com" target="_blank" rel="noopener noreferrer" className="hidden items-center gap-1 text-[9px] tracking-[0.18em] text-muted-foreground hover:text-blood md:flex">
             SPOTIFY <ExternalLink size={12} />
           </a>
         </div>
@@ -149,11 +157,11 @@ function FrequenciaPage() {
                   aria-expanded={open}
                   aria-controls={"spotify-" + artist.slug}
                   onClick={() => setExpanded(open ? null : artist.slug)}
-                  className="flex min-h-16 w-full items-center justify-between gap-3 px-4 py-3 text-left"
+                  className="flex min-h-16 w-full items-center justify-between gap-3 px-4 py-3 text-left focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blood"
                 >
                   <span>
                     <span className="block font-stamp text-lg">{artist.name}</span>
-                    <span className="font-mono text-[8px] tracking-[0.18em] text-muted-foreground">SPOTIFY · {artist.spotifyArtistId}</span>
+                    <span className="font-mono text-[8px] tracking-[0.18em] text-muted-foreground">PLAYER OFICIAL · SPOTIFY</span>
                   </span>
                   <span className="text-blood">{open ? "—" : "+"}</span>
                 </button>
@@ -182,10 +190,12 @@ function FrequenciaPage() {
 function SpotifyPreview({ artist }: { artist: (typeof ARTIST_PROFILES)[number] }) {
   const [loaded, setLoaded] = useState(false);
   const [slow, setSlow] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     setLoaded(false);
     setSlow(false);
+    setFailed(false);
     const timeout = window.setTimeout(() => setSlow(true), 5000);
     return () => window.clearTimeout(timeout);
   }, [artist.spotifyArtistId]);
@@ -195,15 +205,18 @@ function SpotifyPreview({ artist }: { artist: (typeof ARTIST_PROFILES)[number] }
 
   return (
     <div id={panelId} className="border-t border-border p-3">
-      <div className="relative overflow-hidden border border-border bg-black/30">
+      <div
+        className="relative overflow-hidden border border-border bg-black/30"
+        aria-busy={!loaded}
+      >
         {!loaded && (
-          <div className="absolute inset-0 z-10 flex min-h-[352px] items-center justify-center p-5 text-center">
+          <div className="pointer-events-none absolute inset-0 z-10 flex min-h-[352px] items-center justify-center p-5 text-center">
             <div>
               <p className="font-mono text-[9px] tracking-[0.2em] text-blood">
-                {slow ? "SPOTIFY DEMORA A RESPONDER" : "A CARREGAR PLAYER OFICIAL"}
+                {failed ? "PLAYER SPOTIFY INDISPONÍVEL" : slow ? "SPOTIFY DEMORA A RESPONDER" : "A CARREGAR PLAYER OFICIAL"}
               </p>
               <p className="mt-2 max-w-xs text-[10px] leading-5 text-muted-foreground">
-                {slow ? "O player externo pode estar bloqueado pela rede ou pelo browser. Use ABRIR NO SPOTIFY abaixo." : "Pré-visualização oficial de " + artist.name + "."}
+                {failed ? "Abra o perfil oficial do artista no Spotify para ouvir as faixas." : slow ? "A rede ou o browser pode estar a bloquear o player externo." : "Pré-visualização oficial de " + artist.name + "."}
               </p>
             </div>
           </div>
@@ -211,22 +224,26 @@ function SpotifyPreview({ artist }: { artist: (typeof ARTIST_PROFILES)[number] }
         <iframe
           title={"Player Spotify oficial de " + artist.name}
           src={embedUrl}
-          loading="eager"
+          loading="lazy"
           className="h-[352px] w-full border-0"
           allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
           allowFullScreen
-          referrerPolicy="origin"
+          referrerPolicy="strict-origin-when-cross-origin"
           onLoad={() => setLoaded(true)}
+          onError={() => {
+            setFailed(true);
+            setLoaded(false);
+          }}
         />
       </div>
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
         <p className="text-[9px] leading-4 text-muted-foreground">
           PLAYER OFICIAL SPOTIFY · AS FAIXAS TOCAM NO PLAYER DO SPOTIFY.
         </p>
         <a
           href={"https://open.spotify.com/artist/" + encodeURIComponent(artist.spotifyArtistId)}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className="inline-flex min-h-11 items-center gap-2 border border-border px-3 text-[9px] tracking-[0.16em] hover:border-blood"
         >
           ABRIR NO SPOTIFY <ExternalLink size={12} />

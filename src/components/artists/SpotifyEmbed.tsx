@@ -11,6 +11,7 @@ export function SpotifyEmbed({ artistName, spotifyArtistId }: Props) {
     encodeURIComponent(spotifyArtistId) +
     "?utm_source=generator&theme=0";
   const spotifyUrl = "https://open.spotify.com/artist/" + encodeURIComponent(spotifyArtistId);
+  const panelId = "spotify-profile-" + encodeURIComponent(spotifyArtistId);
 
   return (
     <section className="border border-border bg-card p-4 md:p-5" aria-labelledby="spotify-title">
@@ -22,25 +23,29 @@ export function SpotifyEmbed({ artistName, spotifyArtistId }: Props) {
         <a
           href={spotifyUrl}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className="hidden items-center gap-1 text-[10px] tracking-widest text-muted-foreground transition hover:text-blood md:flex"
         >
           ABRIR NO SPOTIFY <ExternalLink size={12} />
         </a>
       </div>
 
-      <iframe
-        title={"Spotify de " + artistName}
-        src={embedUrl}
-        loading="eager"
-        className="h-[352px] w-full border-0"
-        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-      />
+      <div id={panelId} className="relative overflow-hidden border border-border bg-black/30">
+        <iframe
+          title={"Spotify de " + artistName}
+          src={embedUrl}
+          loading="lazy"
+          className="h-[352px] w-full border-0"
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
+      </div>
 
       <a
         href={spotifyUrl}
         target="_blank"
-        rel="noreferrer"
+        rel="noopener noreferrer"
         className="mt-3 inline-flex items-center gap-2 text-[10px] tracking-widest text-blood md:hidden"
       >
         ABRIR NO SPOTIFY <ExternalLink size={12} />

@@ -46,7 +46,15 @@ export function TacticalNav() {
           ))}
         </nav>
         <div className="flex items-center gap-3">
-          <Link to="/frequencia" onClick={() => { void frequency.start(); setOpen(false); }} className="flex min-h-11 items-center gap-2 border-b border-border px-4 py-3 text-sm text-blood"><Radio size={14} /> FREQUÊNCIA 808</Link>
+          <Link
+            to="/frequencia"
+            aria-label="Abrir Frequência 808"
+            onClick={() => { void frequency.start(); setOpen(false); }}
+            className="flex min-h-11 min-w-11 items-center justify-center gap-2 border-b border-border px-3 py-3 text-blood md:min-w-0 md:px-4"
+          >
+            <Radio size={14} />
+            <span className="hidden md:inline">FREQUÊNCIA 808</span>
+          </Link>
           {member && (
             <Link to="/carteira/$code" params={{ code: member.code }} className="hidden border border-blood px-2 py-1 font-mono text-[8px] tracking-[0.14em] text-blood lg:inline">
               SINDICALIZADO Nº {String(member.memberNumber).padStart(4, "0")}
