@@ -40,9 +40,10 @@ test("serves all nine bundled Frequencia 808 sources as complete audio files", a
 });
 
 test("decodes every bundled radio file and never applies a 30-second duration cap", async ({ page }) => {
+  await page.goto("/");
   for (const track of RADIO_SOURCES) {
     const result = await page.evaluate(async (src) => {
-      const response = await fetch(src, { cache: "no-store" });
+      const response = await fetch(new URL(src, window.location.href), { cache: "no-store" });
       if (!response.ok) throw new Error("asset fetch failed: " + src + " (" + response.status + ")");
       const blob = await response.blob();
       const audio = document.createElement("audio");
