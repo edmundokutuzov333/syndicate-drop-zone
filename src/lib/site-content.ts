@@ -5,6 +5,7 @@ import type { RevelationMediaRatio, RevelationMediaType } from "@/lib/revelacao-
 import { getLiveArtists } from "@/lib/public-content";
 import { getPublicSupabaseConfig } from "@/lib/supabase-public";
 import { getMemberCount } from "@/lib/membership";
+import { getRadioCatalog, getRadioStationConfig } from "@/lib/frequency-api";
 
 export type ContentRow = Record<string, unknown>;
 
@@ -170,32 +171,33 @@ const STATIC_RADIO_FALLBACK: LiveRadioTrack[] = STATIC_RADIO_TRACKS.map((track, 
 }));
 
 export async function getLiveRadioTracks(): Promise<LiveRadioTrack[]> {
+  const allowedRadioSources = new Set(STATIC_RADIO_FALLBACK.map((track) => track.src));
+
   try {
-    const rows = await tableRows("radio_tracks");
-    const allowedRadioSources = new Set(STATIC_RADIO_FALLBACK.map((track) => track.src));
+    const rows = await getRadioCatalog();
     const mapped = rows
-      .filter((row) => {
-        const status = String(row.status ?? "").toLowerCase();
-        const disabled = Boolean(row.temporarily_disabled);
-        const src = stringValue(row, ["audio_url", "audio_src", "src", "url"]);
-        return !disabled
-          && allowedRadioSources.has(src)
-          && (!status || ["published", "active", "live", "ready"].includes(status));
+      .map((row, index) => {
+        const src = String(row.audio_url ?? "").trim();
+        if (!src || !allowedRadioSources.has(src)) return null;
+        return {
+          id: String(row.id ?? "radio-" + String(index + 1)),
+          title: String(row.title ?? "FAIXA " + String(index + 1).padStart(2, "0")),
+          artist: String(row.artist ?? "SINDICATO 808"),
+          src,
+          durationSec: numberValue(row as unknown as ContentRow, ["duration_seconds"], 0),
+          kind: (String(row.kind ?? "music") as LiveRadioTrack["kind"]),
+          rotationWeight: Math.max(1, Math.floor(Number(row.rotation_weight ?? 1))),
+          position: Number(row.position ?? index + 1),
+          failureCount: Math.max(0, Math.floor(Number(row.failure_count ?? 0))),
+          temporarilyDisabled: Boolean(row.temporarily_disabled),
+        } satisfies LiveRadioTrack;
       })
-      .map((row, index) => ({
-        id: stringValue(row, ["id", "uuid", "slug"], "radio-" + String(index + 1)),
-        title: stringValue(row, ["title", "name", "label"], "FAIXA " + String(index + 1).padStart(2, "0")),
-        artist: stringValue(row, ["artist", "artist_name", "feat"], "SINDICATO 808"),
-        src: stringValue(row, ["audio_url", "audio_src", "src", "url"]),
-        durationSec: numberValue(row, ["duration_seconds", "duration_sec", "duration"], 0),
-        kind: (stringValue(row, ["kind", "type"], "music") as LiveRadioTrack["kind"]),
-        rotationWeight: Math.max(1, Math.floor(numberValue(row, ["rotation_weight", "weight"], 1))),
-        position: orderValue(row, index + 1),
-        failureCount: Math.max(0, Math.floor(numberValue(row, ["failure_count"], 0))),
-        temporarilyDisabled: Boolean(row.temporarily_disabled),
-      }))
-      .filter((track) => Boolean(track.src));
-    const ordered = [...STATIC_RADIO_FALLBACK].map((fallback) => mapped.find((track) => track.src === fallback.src) ?? fallback);
+      .filter((track): track is LiveRadioTrack => Boolean(track && track.src && !track.temporarilyDisabled));
+
+    const ordered = [...STATIC_RADIO_FALLBACK].map(
+      (fallback) => mapped.find((track) => track.src === fallback.src) ?? fallback,
+    );
+
     return ordered.filter((track) => Boolean(track.src));
   } catch {
     return STATIC_RADIO_FALLBACK;
@@ -212,18 +214,19 @@ export async function getLiveRadioStation(): Promise<LiveRadioStation> {
     crossfadeMs: 650,
     tagInterval: 3,
   };
+
   try {
-    const rows = await tableRows("radio_station");
-    const row = rows[0];
+    const row = await getRadioStationConfig();
     if (!row) return fallback;
+
     return {
-      forcedTrackId: stringValue(row, ["forced_track_id"], "") || null,
-      forcedStartedAt: stringValue(row, ["forced_started_at"], "") || null,
-      activeBlockId: stringValue(row, ["active_block_id"], "") || null,
-      autoplay: Boolean(row.autoplay ?? true),
-      stationSeed: Number(row.station_seed ?? fallback.stationSeed) || fallback.stationSeed,
-      crossfadeMs: Math.min(1200, Math.max(0, numberValue(row, ["crossfade_ms"], fallback.crossfadeMs))),
-      tagInterval: Math.min(9, Math.max(1, Math.floor(numberValue(row, ["tag_interval"], fallback.tagInterval)))),
+      forcedTrackId: row.forced_track_id ?? null,
+      forcedStartedAt: row.forced_started_at ?? null,
+      activeBlockId: row.active_block_id ?? null,
+      autoplay: Boolean(row.autoplay),
+      stationSeed: Number(row.station_seed) || fallback.stationSeed,
+      crossfadeMs: Math.min(1200, Math.max(0, Number(row.crossfade_ms) || fallback.crossfadeMs)),
+      tagInterval: Math.min(9, Math.max(1, Math.floor(Number(row.tag_interval) || fallback.tagInterval))),
     };
   } catch {
     return fallback;
