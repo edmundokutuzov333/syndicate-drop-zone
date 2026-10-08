@@ -42,6 +42,7 @@ const MODULES = [
   ["MEDIA", "/control-room/media"],
   ["MERCH", "/control-room/merch"],
   ["PARCERIAS", "/control-room/parcerias"],
+  ["SINDICALIZADOS", "/control-room/sindicalizados"],
 ] as const;
 
 export const Route = createFileRoute("/control-room/")({
@@ -56,6 +57,7 @@ function ControlRoomOverview() {
     variants: [] as VariantRow[],
     tapes: 0,
     media: 0,
+    members: 0,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -65,13 +67,14 @@ function ControlRoomOverview() {
     setLoading(true);
     setError("");
     try {
-      const [artists, releases, tapes, media, partnerships, variants] = await Promise.all([
+      const [artists, releases, tapes, media, partnerships, variants, members] = await Promise.all([
         adminQuery<ArtistRow[]>("/rest/v1/artists?select=id,name,code,status,spotify_artist_id&order=code.asc"),
         adminQuery<ReleaseRow[]>("/rest/v1/artist_releases?select=artist_id,status,position,youtube_id&order=artist_id.asc,position.asc"),
         adminQuery<Array<{ id: string }>>("/rest/v1/tapes?select=id"),
         adminQuery<Array<{ id: string }>>("/rest/v1/media_assets?select=id"),
         adminQuery<PartnershipRow[]>("/rest/v1/partnership_requests?select=id,company,name,partnership_type,status,created_at&order=created_at.desc&limit=6"),
         adminQuery<VariantRow[]>("/rest/v1/merch_variants?select=stock_total,stock_reserved,stock_sold"),
+        adminQuery<Array<{ id: string }>>("/rest/v1/members?select=id"),
       ]);
 
       setData({
@@ -81,6 +84,7 @@ function ControlRoomOverview() {
         media: media.length,
         partnerships,
         variants,
+        members: members.length,
       });
       setLastSync(new Date().toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
     } catch (requestError) {
@@ -120,6 +124,7 @@ function ControlRoomOverview() {
     [String(data.media).padStart(2, "0"), "MEDIA", "/control-room/media"],
     [String(data.partnerships.length).padStart(2, "0"), "PROPOSTAS", "/control-room/parcerias"],
     [String(stockAvailable).padStart(2, "0"), "UNIDADES", "/control-room/merch"],
+    [String(data.members).padStart(2, "0"), "SINDICALIZADOS", "/control-room/sindicalizados"],
   ] as const;
 
   return (
