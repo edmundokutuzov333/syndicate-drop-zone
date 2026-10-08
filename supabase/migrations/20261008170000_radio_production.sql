@@ -175,7 +175,7 @@ returns table (
   duration_seconds numeric,
   kind text,
   rotation_weight integer,
-  position integer,
+  track_position integer,
   failure_count integer,
   temporarily_disabled boolean
 )
@@ -192,7 +192,7 @@ as $$
     t.duration_seconds,
     t.kind,
     t.rotation_weight,
-    t.position,
+    t.position as track_position,
     t.failure_count,
     t.temporarily_disabled
   from public.radio_tracks t
