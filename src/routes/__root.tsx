@@ -188,6 +188,10 @@ function RootComponent() {
   const { site } = Route.useLoaderData();
 
   useEffect(() => {
+    void frequency.prepare();
+  }, []);
+
+  useEffect(() => {
     if (!open) return;
     void frequency.autoStart();
   }, [open]);
