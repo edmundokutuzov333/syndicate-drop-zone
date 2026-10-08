@@ -33,23 +33,6 @@ create index if not exists members_status_idx on public.members(status);
 alter table public.members enable row level security;
 
 revoke all on public.members from anon, authenticated;
-grant select, update on public.members to authenticated;
-
-drop policy if exists "Admins can read members" on public.members;
-create policy "Admins can read members"
-  on public.members
-  for select
-  to authenticated
-  using (current_admin_role() in ('OWNER','ADMIN','EDITOR','PARTNERSHIPS'));
-
-drop policy if exists "Admins can update members" on public.members;
-create policy "Admins can update members"
-  on public.members
-  for update
-  to authenticated
-  using (current_admin_role() in ('OWNER','ADMIN','EDITOR'))
-  with check (current_admin_role() in ('OWNER','ADMIN','EDITOR'));
-
 create or replace function public.join_union(
   p_alias text,
   p_contact_type text,
@@ -237,17 +220,60 @@ grant execute on function public.delegados() to anon, authenticated;
 
 -- Sponsorship proposals use a security-definer RPC so the public form
 -- never depends on an RLS INSERT policy being interpreted by a specific proxy.
-alter table public.partnership_requests
-  add constraint partnership_requests_name_length
-    check (char_length(btrim(name)) between 2 and 120),
-  add constraint partnership_requests_company_length
-    check (char_length(btrim(company)) between 2 and 160),
-  add constraint partnership_requests_contact_length
-    check (char_length(btrim(contact)) between 3 and 160),
-  add constraint partnership_requests_type_length
-    check (char_length(btrim(partnership_type)) between 2 and 80),
-  add constraint partnership_requests_message_length
-    check (char_length(btrim(message)) between 10 and 4000);
+do $
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.partnership_requests'::regclass
+      and conname = 'partnership_requests_name_length'
+  ) then
+    alter table public.partnership_requests
+      add constraint partnership_requests_name_length
+      check (char_length(btrim(name)) between 2 and 120);
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.partnership_requests'::regclass
+      and conname = 'partnership_requests_company_length'
+  ) then
+    alter table public.partnership_requests
+      add constraint partnership_requests_company_length
+      check (char_length(btrim(company)) between 2 and 160);
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.partnership_requests'::regclass
+      and conname = 'partnership_requests_contact_length'
+  ) then
+    alter table public.partnership_requests
+      add constraint partnership_requests_contact_length
+      check (char_length(btrim(contact)) between 3 and 160);
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.partnership_requests'::regclass
+      and conname = 'partnership_requests_type_length'
+  ) then
+    alter table public.partnership_requests
+      add constraint partnership_requests_type_length
+      check (char_length(btrim(partnership_type)) between 2 and 80);
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.partnership_requests'::regclass
+      and conname = 'partnership_requests_message_length'
+  ) then
+    alter table public.partnership_requests
+      add constraint partnership_requests_message_length
+      check (char_length(btrim(message)) between 10 and 4000);
+  end if;
+end $;
+
+drop policy if exists "partnership_requests_public_insert" on public.partnership_requests;
 
 create or replace function public.submit_partnership_request(
   p_name text,
