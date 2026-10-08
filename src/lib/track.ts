@@ -55,6 +55,10 @@ function safeProps(props: EventRow["props"]): EventRow["props"] {
   return result;
 }
 
+export function getAnalyticsSessionId(): string {
+  return sid();
+}
+
 export const setSink = (next: Sink | null): void => {
   sink = next;
 };
