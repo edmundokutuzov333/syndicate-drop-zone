@@ -110,10 +110,16 @@ export async function getLiveTapes(): Promise<LiveTape[]> {
       .map((row, index) => {
         const src = mediaAssetUrl(row, mediaAssets);
         if (!src) return null;
+        const title = stringValue(row, ["title", "name", "label"], "TAPE " + String(index + 1).padStart(2, "0"));
+        const staticMatch = STATIC_TAPE_DATA.find((item) => item.title.toLowerCase() === title.toLowerCase());
         return {
           id: stringValue(row, ["id", "slug", "code"], "T" + String(index + 1)),
-          title: stringValue(row, ["title", "name", "label"], "TAPE " + String(index + 1).padStart(2, "0")),
-          feat: stringValue(row, ["feat", "artists", "artist_names", "subtitle", "contributors"], "SINDICATO"),
+          title,
+          feat: stringValue(
+            row,
+            ["feat", "artists", "artist_names", "subtitle", "contributors"],
+            staticMatch?.feat ?? "SINDICATO",
+          ),
           dur: stringValue(row, ["dur", "duration_label", "duration"], "0:30"),
           src,
           position: orderValue(row, index),
