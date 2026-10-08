@@ -884,7 +884,6 @@ export class FrequencyEngine {
   }
 
   private invalidatePlayback() {
-    this.lifecycleVersion += 1;
     this.mediaRequestVersion += 1;
     this.audio?.pause();
     this.preloaded?.audio.pause();
@@ -929,6 +928,12 @@ export class FrequencyEngine {
     if (lifecycle !== this.lifecycleVersion || !this.state.active) return;
 
     this.rebuildQueue(true);
+    if (primeTrack) {
+      const preferredIndex = this.queue.findIndex((track) => track.id === primeTrack.id);
+      if (preferredIndex > 0) {
+        [this.queue[0], this.queue[preferredIndex]] = [this.queue[preferredIndex]!, this.queue[0]!];
+      }
+    }
     const first = this.selectNextTrack();
     if (!first) {
       this.set({
