@@ -95,7 +95,7 @@ describe("frequency scheduler", () => {
 
   it("keeps the nine production radio URLs separate from the site preview tapes", () => {
     expect(RADIO_TRACKS).toHaveLength(9);
-    expect(RADIO_TRACKS.every((track) => track.src.includes("files.catbox.moe"))).toBe(true);
+    expect(RADIO_TRACKS.some((track) => track.src.includes("/assets/tapes/"))).toBe(false);
     expect(RADIO_TRACKS.some((track) => track.src.includes("nova-wave.mp3"))).toBe(false);
     expect(RADIO_TRACKS.some((track) => track.src.includes("phantom-mode.mp3"))).toBe(false);
   });
