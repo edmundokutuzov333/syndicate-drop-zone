@@ -5,12 +5,13 @@ import {
   locateFrequencySegment,
   type FrequencyTrack,
 } from "@/lib/frequency";
+import { RADIO_TRACKS } from "@/lib/data";
 
 const tracks: FrequencyTrack[] = [
-  { id: "1", title: "A", artist: "A", src: "/a.mp3", durationSec: 30, source: "site" },
-  { id: "2", title: "B", artist: "B", src: "/b.mp3", durationSec: 31, source: "site" },
-  { id: "3", title: "C", artist: "C", src: "/c.mp3", durationSec: 29, source: "site" },
-  { id: "4", title: "D", artist: "D", src: "/d.mp3", durationSec: 30, source: "site" },
+  { id: "1", title: "A", artist: "A", src: "/a.mp3", durationSec: 30, kind: "music", rotationWeight: 1, position: 1, failureCount: 0, temporarilyDisabled: false, source: "radio" },
+  { id: "2", title: "B", artist: "B", src: "/b.mp3", durationSec: 31, kind: "music", rotationWeight: 1, position: 2, failureCount: 0, temporarilyDisabled: false, source: "radio" },
+  { id: "3", title: "C", artist: "C", src: "/c.mp3", durationSec: 29, kind: "music", rotationWeight: 1, position: 3, failureCount: 0, temporarilyDisabled: false, source: "radio" },
+  { id: "4", title: "D", artist: "D", src: "/d.mp3", durationSec: 30, kind: "music", rotationWeight: 1, position: 4, failureCount: 0, temporarilyDisabled: false, source: "radio" },
 ];
 
 describe("frequency scheduler", () => {
@@ -21,7 +22,7 @@ describe("frequency scheduler", () => {
     expect(a).toEqual(b);
   });
 
-  it("changes shuffle order with the cycle seed", () => {
+  it("changes the randomized order with the cycle seed", () => {
     const a = buildFrequencyCycle(tracks, 808, 1).filter((x) => x.kind === "music").map((x) => x.track.id);
     const b = buildFrequencyCycle(tracks, 808, 2).filter((x) => x.kind === "music").map((x) => x.track.id);
     expect(a).not.toEqual(b);
@@ -50,5 +51,12 @@ describe("frequency scheduler", () => {
     expect(located.cycle).toBe(1);
     expect(located.offsetSec).toBeGreaterThanOrEqual(0);
     expect(located.offsetSec).toBeLessThan(located.segment.durationSec);
+  });
+
+  it("keeps the nine production radio URLs separate from the site preview tapes", () => {
+    expect(RADIO_TRACKS).toHaveLength(9);
+    expect(RADIO_TRACKS.every((track) => track.src.includes("files.catbox.moe"))).toBe(true);
+    expect(RADIO_TRACKS.some((track) => track.src.includes("nova-wave.mp3"))).toBe(false);
+    expect(RADIO_TRACKS.some((track) => track.src.includes("phantom-mode.mp3"))).toBe(false);
   });
 });
