@@ -252,6 +252,12 @@ async function probeDuration(src: string): Promise<number> {
   return duration;
 }
 
+function isAutoplayBlocked(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const candidate = error as { name?: unknown };
+  return candidate.name === "NotAllowedError" || candidate.name === "AbortError";
+}
+
 function effectiveVolume(volume: number): number {
   return isMuted() ? 0 : clamp(volume, 0, 1);
 }
@@ -663,7 +669,16 @@ export class FrequencyEngine {
     const requestVersion = ++this.mediaRequestVersion;
     try {
       if (audio.paused) await audio.play();
-    } catch {
+    } catch (error) {
+      if (isAutoplayBlocked(error)) {
+        analyticsTrack("radio_track_error", { ...formatTrackProps(track), reason: "autoplay_blocked" });
+        this.set({
+          playing: false,
+          error: "O browser bloqueou a reprodução automática. Prima RETOMAR para iniciar a emissão.",
+        });
+        this.setMediaSessionState("paused");
+        return;
+      }
       return this.handleTrackError(track, "play_rejected");
     }
 
