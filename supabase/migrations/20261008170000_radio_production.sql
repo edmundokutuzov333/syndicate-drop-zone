@@ -37,6 +37,24 @@ create table if not exists public.radio_station (
 alter table public.radio_tracks enable row level security;
 alter table public.radio_station enable row level security;
 
+create or replace function public.is_radio_editor()
+returns boolean
+language sql
+security definer
+set search_path = ''
+as $
+  select exists(
+    select 1
+    from public.admin_profiles
+    where user_id = auth.uid()
+      and active = true
+      and role in ('OWNER','ADMIN','EDITOR')
+  );
+$;
+
+revoke all on function public.is_radio_editor() from public;
+grant execute on function public.is_radio_editor() to authenticated;
+
 drop policy if exists "radio_tracks_public_read" on public.radio_tracks;
 create policy "radio_tracks_public_read"
 on public.radio_tracks
@@ -100,6 +118,30 @@ $;
 
 revoke all on function public.frequency_radio_blocks() from public;
 grant execute on function public.frequency_radio_blocks() to anon, authenticated;
+
+drop policy if exists "radio_tracks_editor_write" on public.radio_tracks;
+create policy "radio_tracks_editor_write"
+on public.radio_tracks
+for all
+to authenticated
+using (public.is_radio_editor())
+with check (public.is_radio_editor());
+
+drop policy if exists "radio_station_editor_write" on public.radio_station;
+create policy "radio_station_editor_write"
+on public.radio_station
+for all
+to authenticated
+using (public.is_radio_editor())
+with check (public.is_radio_editor());
+
+drop policy if exists "radio_blocks_editor_write" on public.radio_blocks;
+create policy "radio_blocks_editor_write"
+on public.radio_blocks
+for all
+to authenticated
+using (public.is_radio_editor())
+with check (public.is_radio_editor());
 
 insert into public.radio_tracks (id, title, artist, audio_url, duration_seconds, kind, status, rotation_weight, position)
 values
