@@ -1,12 +1,12 @@
 import { Pause, Play, Radio } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import type { TapeSpec } from "@/lib/tape-engine";
+import type { Track } from "@/lib/tape-engine";
 import { TapeEngine } from "@/lib/tape-engine";
 import { cn } from "@/lib/utils";
 
 type Props = {
   title: string;
-  tape: TapeSpec | null;
+  tape: Track | null;
 };
 
 export function ArtistTapePlayer({ title, tape }: Props) {
@@ -16,17 +16,23 @@ export function ArtistTapePlayer({ title, tape }: Props) {
   const [level, setLevel] = useState(0);
 
   useEffect(() => {
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      engineRef.current?.stop();
-    };
+    const engine = engineRef.current;
+    if (!engine) return;
+    return engine.subscribe(() => {
+      const state = engine.getState();
+      setPlaying(state.playing);
+      if (!state.playing) setLevel(0);
+    });
   }, []);
 
   useEffect(() => {
     if (!playing) return;
 
+    const engine = engineRef.current;
+    if (!engine) return;
+
     const tick = () => {
-      setLevel(engineRef.current?.level() ?? 0);
+      setLevel(engine.level());
       rafRef.current = requestAnimationFrame(tick);
     };
 
@@ -36,23 +42,25 @@ export function ArtistTapePlayer({ title, tape }: Props) {
     };
   }, [playing]);
 
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      engineRef.current?.stop();
+    };
+  }, []);
+
   if (!tape) return null;
 
   const toggle = () => {
-    if (playing) {
-      engineRef.current?.stop();
-      setPlaying(false);
-      setLevel(0);
+    const engine = engineRef.current ?? new TapeEngine();
+    engineRef.current = engine;
+
+    if (engine.getState().id === tape.id && engine.getState().playing) {
+      engine.pause();
       return;
     }
 
-    const engine = engineRef.current ?? new TapeEngine();
-    engineRef.current = engine;
-    engine.start(tape, () => {
-      setPlaying(false);
-      setLevel(0);
-    });
-    setPlaying(true);
+    engine.play(tape);
   };
 
   return (
