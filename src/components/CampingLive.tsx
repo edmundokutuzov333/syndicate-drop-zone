@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createPublicLiveNotification, type LiveFlag, type CampingSessionRow } from "@/lib/camping-data";
+import { createPublicLiveNotification, normalizeLiveUrl, subscribeCampingLive, type LiveFlag, type CampingSessionRow } from "@/lib/camping-data";
 import { track } from "@/lib/track";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,7 @@ export function CampingLive({
   const [armed, setArmed] = useState(false);
   const [contact, setContact] = useState("");
   const [message, setMessage] = useState("");
+  const [currentLive, setCurrentLive] = useState(live);
 
   const onNotify = async () => {
     const value = contact.trim();
@@ -38,9 +39,13 @@ export function CampingLive({
     }
   };
 
-  const embedUrl = useMemo(() => live.url?.trim() || "", [live.url]);
+  useEffect(() => subscribeCampingLive(setCurrentLive), []);
 
-  if (live.on && embedUrl) {
+  useEffect(() => setCurrentLive(live), [live.on, live.url]);
+
+  const embedUrl = useMemo(() => normalizeLiveUrl(currentLive.url), [currentLive.url]);
+
+  if (currentLive.on && embedUrl) {
     return (
       <section className="border border-blood bg-black">
         <div className="flex items-center justify-between border-b border-blood/50 px-4 py-3">
