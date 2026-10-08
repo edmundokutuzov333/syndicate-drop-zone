@@ -689,10 +689,32 @@ export class FrequencyEngine {
 
   private findNextMusic(current: FrequencyTrack | null): FrequencyTrack | null {
     if (!current || !this.tracks.length) return null;
-    const cycle = buildFrequencyCycle(this.tracks, this.seed, 0, this.station.tagInterval);
-    const index = cycle.findIndex((segment) => (segment.kind === "music" || segment.kind === "jingle") && segment.track.id === current.id);
-    if (index < 0) return cycle.find((segment) => segment.kind === "music")?.track ?? null;
-    return cycle.slice(index + 1).find((segment) => segment.kind === "music")?.track ?? cycle.find((segment) => segment.kind === "music")?.track ?? null;
+
+    const elapsedSec = Math.max(
+      0,
+      (Date.now() + this.serverOffsetMs - this.stationStartedAt) / 1000,
+    );
+    const located = locateFrequencySegment(
+      elapsedSec,
+      this.tracks,
+      this.seed,
+      this.station.tagInterval,
+    );
+
+    const sameCycleNext = located.cycleSegments
+      .slice(located.segmentIndex + 1)
+      .find((segment) => segment.kind === "music");
+
+    if (sameCycleNext?.kind === "music") return sameCycleNext.track;
+
+    const nextCycle = buildFrequencyCycle(
+      this.tracks,
+      this.seed,
+      located.cycle + 1,
+      this.station.tagInterval,
+    ).find((segment) => segment.kind === "music");
+
+    return nextCycle?.kind === "music" ? nextCycle.track : null;
   }
 
   private emitMilestones(track: FrequencyTrack, elapsed: number, duration: number) {
