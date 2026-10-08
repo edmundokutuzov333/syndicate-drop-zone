@@ -32,6 +32,50 @@ jobs:
       - name: Production build
         run: npm run build
 
+      - name: Inspect bundled radio WAV header and duration
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = "public/audio/KHRYIS - A Bag.wav";
+          const b = fs.readFileSync(path);
+          if (b.toString("ascii", 0, 4) !== "RIFF" || b.toString("ascii", 8, 12) !== "WAVE") {
+            throw new Error("Invalid RIFF/WAVE header");
+          }
+          let offset = 12;
+          let audioFormat = null;
+          let channels = null;
+          let sampleRate = null;
+          let byteRate = null;
+          let blockAlign = null;
+          let bitsPerSample = null;
+          let dataBytes = null;
+          while (offset + 8 <= b.length) {
+            const id = b.toString("ascii", offset, offset + 4);
+            const size = b.readUInt32LE(offset + 4);
+            const body = offset + 8;
+            if (id === "fmt " && size >= 16) {
+              audioFormat = b.readUInt16LE(body);
+              channels = b.readUInt16LE(body + 2);
+              sampleRate = b.readUInt32LE(body + 4);
+              byteRate = b.readUInt32LE(body + 8);
+              blockAlign = b.readUInt16LE(body + 12);
+              bitsPerSample = b.readUInt16LE(body + 14);
+            }
+            if (id === "data") {
+              dataBytes = size;
+              break;
+            }
+            offset = body + size + (size % 2);
+          }
+          if (!audioFormat || !channels || !sampleRate || !byteRate || !blockAlign || !bitsPerSample || !dataBytes) {
+            throw new Error("Incomplete WAV metadata");
+          }
+          const duration = dataBytes / byteRate;
+          console.log({ audioFormat, channels, sampleRate, byteRate, blockAlign, bitsPerSample, dataBytes, duration });
+          if (duration <= 30) throw new Error("A Bag is not a full-length source");
+          if (![1, 3].includes(audioFormat)) throw new Error("Unsupported WAV format for native browser playback: " + audioFormat);
+          NODE
+
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 

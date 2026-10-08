@@ -143,15 +143,15 @@ with check (public.is_radio_editor());
 
 insert into public.radio_tracks (id, title, artist, audio_url, duration_seconds, kind, status, rotation_weight, position)
 values
-  ('00000000-0000-4000-8000-000000000001', 'FAIXA 01', 'SINDICATO 808', 'https://files.catbox.moe/b5ypxy.wav', null, 'music', 'published', 1, 1),
-  ('00000000-0000-4000-8000-000000000002', 'FAIXA 02', 'SINDICATO 808', 'https://files.catbox.moe/alftc5.mp3', null, 'music', 'published', 1, 2),
-  ('00000000-0000-4000-8000-000000000003', 'FAIXA 03', 'SINDICATO 808', 'https://files.catbox.moe/qj0i9z.mp3', null, 'music', 'published', 1, 3),
-  ('00000000-0000-4000-8000-000000000004', 'FAIXA 04', 'SINDICATO 808', 'https://files.catbox.moe/fije61.mp3', null, 'music', 'published', 1, 4),
-  ('00000000-0000-4000-8000-000000000005', 'FAIXA 05', 'SINDICATO 808', 'https://files.catbox.moe/o47a3g.mp3', null, 'music', 'published', 1, 5),
-  ('00000000-0000-4000-8000-000000000006', 'FAIXA 06', 'SINDICATO 808', 'https://files.catbox.moe/9b0rq5.mp3', null, 'music', 'published', 1, 6),
-  ('00000000-0000-4000-8000-000000000007', 'FASHIIION D’PHANTOM', 'PHANTOM, Kingston Siriro, Elton Penicela', 'https://files.catbox.moe/0kg9v2.mp3', null, 'music', 'published', 1, 7),
-  ('00000000-0000-4000-8000-000000000008', 'A Nova Wave', 'PHANTOM, Bruno The GOAT, Alemão Wav, Elton Penicela', 'https://files.catbox.moe/g9nczk.mp3', null, 'music', 'published', 1, 8),
-  ('00000000-0000-4000-8000-000000000009', 'Phantom Mode (The final movie)', 'PHANTOM, INF8M8US, HeyyG, Kingston Siriro', 'https://files.catbox.moe/6hit4n.wav', null, 'music', 'published', 1, 9)
+  ('00000000-0000-4000-8000-000000000001', 'FAIXA 01', 'SINDICATO 808', '/audio/KHRYIS - A Bag.wav', null, 'music', 'published', 1, 1),
+  ('00000000-0000-4000-8000-000000000002', 'FAIXA 02', 'SINDICATO 808', '/audio/KHRYIS - Chopper.mp3', null, 'music', 'published', 1, 2),
+  ('00000000-0000-4000-8000-000000000003', 'FAIXA 03', 'SINDICATO 808', '/audio/KHRYIS - Freestyle Sujo.mp3', null, 'music', 'published', 1, 3),
+  ('00000000-0000-4000-8000-000000000004', 'FAIXA 04', 'SINDICATO 808', '/audio/KHRYIS - I’M Flexin up.mp3', null, 'music', 'published', 1, 4),
+  ('00000000-0000-4000-8000-000000000005', 'FAIXA 05', 'SINDICATO 808', '/audio/KHRYIS - Money Talk.mp3', null, 'music', 'published', 1, 5),
+  ('00000000-0000-4000-8000-000000000006', 'FAIXA 06', 'SINDICATO 808', '/audio/KHRYIS - Tsanto Dough.mp3', null, 'music', 'published', 1, 6),
+  ('00000000-0000-4000-8000-000000000007', 'FASHIIION D’PHANTOM', 'PHANTOM, Kingston Siriro, Elton Penicela', '/audio/(Unmastered) PHANTOM, Kingston Siriro, Elton Penicela - Fashion de Phantom.mp3', null, 'music', 'published', 1, 7),
+  ('00000000-0000-4000-8000-000000000008', 'A Nova Wave', 'PHANTOM, Bruno The GOAT, Alemão Wav, Elton Penicela', '/audio/Phantom, Bruno The Goat, Alemão Wav & Elton Penicela - A Nova Wave.mp3', null, 'music', 'published', 1, 8),
+  ('00000000-0000-4000-8000-000000000009', 'Phantom Mode (The final movie)', 'PHANTOM, INF8M8US, HeyyG, Kingston Siriro', '/audio/PHANTOM Mode 2 - The Final Movie W_ INF8M8US, HEYYG, KINGSTON SIRIRO.mp3', null, 'music', 'published', 1, 9)
 on conflict (id) do update set
   title = excluded.title,
   artist = excluded.artist,
@@ -267,39 +267,39 @@ grant execute on function public.frequency_mark_track_failure(uuid) to anon, aut
 update public.radio_tracks
 set
   title = case audio_url
-    when 'https://files.catbox.moe/b5ypxy.wav' then 'A Bag'
-    when 'https://files.catbox.moe/alftc5.mp3' then 'Chopper'
-    when 'https://files.catbox.moe/qj0i9z.mp3' then 'Freestyle Sujo'
-    when 'https://files.catbox.moe/fije61.mp3' then 'I''M Flexin up'
-    when 'https://files.catbox.moe/o47a3g.mp3' then 'Money Talk'
-    when 'https://files.catbox.moe/9b0rq5.mp3' then 'Tsanto Dough'
-    when 'https://files.catbox.moe/0kg9v2.mp3' then 'FASHIIION D’PHANTOM'
-    when 'https://files.catbox.moe/g9nczk.mp3' then 'A Nova Wave'
-    when 'https://files.catbox.moe/6hit4n.wav' then 'Phantom Mode (The final movie)'
+    when '/audio/KHRYIS - A Bag.wav' then 'A Bag'
+    when '/audio/KHRYIS - Chopper.mp3' then 'Chopper'
+    when '/audio/KHRYIS - Freestyle Sujo.mp3' then 'Freestyle Sujo'
+    when '/audio/KHRYIS - I’M Flexin up.mp3' then 'I''M Flexin up'
+    when '/audio/KHRYIS - Money Talk.mp3' then 'Money Talk'
+    when '/audio/KHRYIS - Tsanto Dough.mp3' then 'Tsanto Dough'
+    when '/audio/(Unmastered) PHANTOM, Kingston Siriro, Elton Penicela - Fashion de Phantom.mp3' then 'FASHIIION D’PHANTOM'
+    when '/audio/Phantom, Bruno The Goat, Alemão Wav & Elton Penicela - A Nova Wave.mp3' then 'A Nova Wave'
+    when '/audio/PHANTOM Mode 2 - The Final Movie W_ INF8M8US, HEYYG, KINGSTON SIRIRO.mp3' then 'Phantom Mode (The final movie)'
     else title
   end,
   artist = case audio_url
-    when 'https://files.catbox.moe/b5ypxy.wav' then 'KHRYIS'
-    when 'https://files.catbox.moe/alftc5.mp3' then 'KHRYIS'
-    when 'https://files.catbox.moe/qj0i9z.mp3' then 'KHRYIS'
-    when 'https://files.catbox.moe/fije61.mp3' then 'KHRYIS'
-    when 'https://files.catbox.moe/o47a3g.mp3' then 'KHRYIS'
-    when 'https://files.catbox.moe/9b0rq5.mp3' then 'KHRYIS'
-    when 'https://files.catbox.moe/0kg9v2.mp3' then 'PHANTOM, Kingston Siriro, Elton Penicela'
-    when 'https://files.catbox.moe/g9nczk.mp3' then 'PHANTOM, Bruno The GOAT, Alemão Wav, Elton Penicela'
-    when 'https://files.catbox.moe/6hit4n.wav' then 'PHANTOM, INF8M8US, HeyyG, Kingston Siriro'
+    when '/audio/KHRYIS - A Bag.wav' then 'KHRYIS'
+    when '/audio/KHRYIS - Chopper.mp3' then 'KHRYIS'
+    when '/audio/KHRYIS - Freestyle Sujo.mp3' then 'KHRYIS'
+    when '/audio/KHRYIS - I’M Flexin up.mp3' then 'KHRYIS'
+    when '/audio/KHRYIS - Money Talk.mp3' then 'KHRYIS'
+    when '/audio/KHRYIS - Tsanto Dough.mp3' then 'KHRYIS'
+    when '/audio/(Unmastered) PHANTOM, Kingston Siriro, Elton Penicela - Fashion de Phantom.mp3' then 'PHANTOM, Kingston Siriro, Elton Penicela'
+    when '/audio/Phantom, Bruno The Goat, Alemão Wav & Elton Penicela - A Nova Wave.mp3' then 'PHANTOM, Bruno The GOAT, Alemão Wav, Elton Penicela'
+    when '/audio/PHANTOM Mode 2 - The Final Movie W_ INF8M8US, HEYYG, KINGSTON SIRIRO.mp3' then 'PHANTOM, INF8M8US, HeyyG, Kingston Siriro'
     else artist
   end,
   status = 'published',
   temporarily_disabled = false
 where audio_url in (
-  'https://files.catbox.moe/b5ypxy.wav',
-  'https://files.catbox.moe/alftc5.mp3',
-  'https://files.catbox.moe/qj0i9z.mp3',
-  'https://files.catbox.moe/fije61.mp3',
-  'https://files.catbox.moe/o47a3g.mp3',
-  'https://files.catbox.moe/9b0rq5.mp3',
-  'https://files.catbox.moe/0kg9v2.mp3',
-  'https://files.catbox.moe/g9nczk.mp3',
-  'https://files.catbox.moe/6hit4n.wav'
+  '/audio/KHRYIS - A Bag.wav',
+  '/audio/KHRYIS - Chopper.mp3',
+  '/audio/KHRYIS - Freestyle Sujo.mp3',
+  '/audio/KHRYIS - I’M Flexin up.mp3',
+  '/audio/KHRYIS - Money Talk.mp3',
+  '/audio/KHRYIS - Tsanto Dough.mp3',
+  '/audio/(Unmastered) PHANTOM, Kingston Siriro, Elton Penicela - Fashion de Phantom.mp3',
+  '/audio/Phantom, Bruno The Goat, Alemão Wav & Elton Penicela - A Nova Wave.mp3',
+  '/audio/PHANTOM Mode 2 - The Final Movie W_ INF8M8US, HEYYG, KINGSTON SIRIRO.mp3'
 );

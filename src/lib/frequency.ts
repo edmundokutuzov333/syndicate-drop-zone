@@ -498,7 +498,7 @@ export class FrequencyEngine {
 
     const audio = new Audio();
     audio.preload = "auto";
-    // Catbox is a direct media host. Do not opt into CORS mode here: the radio only needs native media playback, not pixel/audio-buffer access.
+    // Radio music is served from the application's bundled /public/audio assets. Native media playback is sufficient.
     audio.src = track.src;
     this.attachAudioListeners(audio, track);
     this.audio = audio;

@@ -55,15 +55,15 @@ describe("frequency scheduler", () => {
 
   it("uses exactly the nine supplied direct audio sources", () => {
     expect(RADIO_TRACKS.map((track) => track.src)).toEqual([
-      "https://files.catbox.moe/b5ypxy.wav",
-      "https://files.catbox.moe/alftc5.mp3",
-      "https://files.catbox.moe/qj0i9z.mp3",
-      "https://files.catbox.moe/fije61.mp3",
-      "https://files.catbox.moe/o47a3g.mp3",
-      "https://files.catbox.moe/9b0rq5.mp3",
-      "https://files.catbox.moe/0kg9v2.mp3",
-      "https://files.catbox.moe/g9nczk.mp3",
-      "https://files.catbox.moe/6hit4n.wav",
+      "/audio/KHRYIS - A Bag.wav",
+      "/audio/KHRYIS - Chopper.mp3",
+      "/audio/KHRYIS - Freestyle Sujo.mp3",
+      "/audio/KHRYIS - I’M Flexin up.mp3",
+      "/audio/KHRYIS - Money Talk.mp3",
+      "/audio/KHRYIS - Tsanto Dough.mp3",
+      "/audio/(Unmastered) PHANTOM, Kingston Siriro, Elton Penicela - Fashion de Phantom.mp3",
+      "/audio/Phantom, Bruno The Goat, Alemão Wav & Elton Penicela - A Nova Wave.mp3",
+      "/audio/PHANTOM Mode 2 - The Final Movie W_ INF8M8US, HEYYG, KINGSTON SIRIRO.mp3",
     ]);
     expect(RADIO_TRACKS.map((track) => track.title)).toEqual([
       "A Bag",
@@ -89,9 +89,11 @@ describe("frequency scheduler", () => {
     ]);
   });
 
-  it("keeps the nine production radio URLs separate from the site preview tapes", () => {
+  it("keeps the nine production radio sources separate from the site preview tapes", () => {
     expect(RADIO_TRACKS).toHaveLength(9);
-    expect(RADIO_TRACKS.every((track) => track.src.includes("files.catbox.moe"))).toBe(true);
+    expect(RADIO_TRACKS.every((track) => track.src.startsWith("/audio/"))).toBe(true);
+    expect(RADIO_TRACKS.every((track) => !track.src.includes("files.catbox.moe") && !track.src.includes("cdn.discordapp.com"))).toBe(true);
+    expect(RADIO_TRACKS.some((track) => track.src.includes("/assets/tapes/"))).toBe(false);
     expect(RADIO_TRACKS.some((track) => track.src.includes("nova-wave.mp3"))).toBe(false);
     expect(RADIO_TRACKS.some((track) => track.src.includes("phantom-mode.mp3"))).toBe(false);
   });

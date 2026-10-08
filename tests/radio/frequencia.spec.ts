@@ -1,13 +1,13 @@
 const RADIO_SOURCES = [
-  "https://files.catbox.moe/b5ypxy.wav",
-  "https://files.catbox.moe/alftc5.mp3",
-  "https://files.catbox.moe/qj0i9z.mp3",
-  "https://files.catbox.moe/fije61.mp3",
-  "https://files.catbox.moe/o47a3g.mp3",
-  "https://files.catbox.moe/9b0rq5.mp3",
-  "https://files.catbox.moe/0kg9v2.mp3",
-  "https://files.catbox.moe/g9nczk.mp3",
-  "https://files.catbox.moe/6hit4n.wav",
+  "/audio/KHRYIS - A Bag.wav",
+  "/audio/KHRYIS - Chopper.mp3",
+  "/audio/KHRYIS - Freestyle Sujo.mp3",
+  "/audio/KHRYIS - I’M Flexin up.mp3",
+  "/audio/KHRYIS - Money Talk.mp3",
+  "/audio/KHRYIS - Tsanto Dough.mp3",
+  "/audio/(Unmastered) PHANTOM, Kingston Siriro, Elton Penicela - Fashion de Phantom.mp3",
+  "/audio/Phantom, Bruno The Goat, Alemão Wav & Elton Penicela - A Nova Wave.mp3",
+  "/audio/PHANTOM Mode 2 - The Final Movie W_ INF8M8US, HEYYG, KINGSTON SIRIRO.mp3",
 ];
 
 import { test, expect } from "@playwright/test";
@@ -49,7 +49,7 @@ async function mockBackend(page: import("@playwright/test").Page) {
   });
 
   const wav = wavBody();
-  await page.route("https://files.catbox.moe/**", async (route) => {
+  await page.route("**/audio/*", async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "audio/wav",
@@ -91,16 +91,16 @@ test.describe("Frequência 808 browser smoke", () => {
 
     await expect.poll(async () => page.evaluate(() => {
       const sources = (window as Window & { __radioPlaySources?: string[] }).__radioPlaySources ?? [];
-      return sources.find((src) => src.includes("files.catbox.moe")) ?? "";
+      return sources.find((src) => src.startsWith("/audio/") || src.includes("/audio/")) ?? "";
     })).not.toBe("");
 
     const source = await page.evaluate(() => {
       const sources = (window as Window & { __radioPlaySources?: string[] }).__radioPlaySources ?? [];
-      return sources.find((src) => src.includes("files.catbox.moe")) ?? "";
+      return sources.find((src) => src.startsWith("/audio/") || src.includes("/audio/")) ?? "";
     });
-    expect(RADIO_SOURCES).toContain(source);
-    expect(source).not.toContain("nova-wave.mp3");
-    expect(source).not.toContain("phantom-mode.mp3");
+    expect(RADIO_SOURCES).toContain(decodeURIComponent(new URL(source).pathname));
+    expect(source).not.toContain("/assets/tapes/");
+    expect(source).not.toContain("cdn.discordapp.com");
 
     const progress = page.getByRole("slider", { name: "Volume da Rádio Sindicato do Trap" });
     await expect(progress).toBeVisible();
@@ -108,10 +108,10 @@ test.describe("Frequência 808 browser smoke", () => {
     await expect.poll(async () => page.evaluate(() => localStorage.getItem("sdt-radio-volume"))).toBe("0.35");
 
     await page.getByRole("button", { name: "PAUSAR", exact: true }).click();
-    await expect(page.getByRole("button", { name: "RETOMAR" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "RETOMAR", exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: "RETOMAR", exact: true }).click();
-    await expect(page.getByRole("button", { name: "PAUSAR" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "PAUSAR", exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: "DESLIGAR RÁDIO" }).click();
     await expect(page.getByText("FORA DO AR")).toBeVisible();
@@ -128,7 +128,7 @@ test.describe("Frequência 808 browser smoke", () => {
     await page.route("**/rest/v1/**", async (route) => {
       await route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
     });
-    await page.route("https://files.catbox.moe/**", async (route) => {
+    await page.route("**/audio/*", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: route.request().url().endsWith(".wav") ? "audio/wav" : "audio/mpeg",
@@ -167,7 +167,7 @@ test.describe("Frequência 808 browser smoke", () => {
     await page.route("**/rest/v1/**", async (route) => {
       await route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
     });
-    await page.route("https://files.catbox.moe/**", async (route) => {
+    await page.route("**/audio/*", async (route) => {
       await route.abort();
     });
 
