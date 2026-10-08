@@ -398,9 +398,13 @@ export class FrequencyEngine {
     this.seed = rawStation.stationSeed || 8080808;
 
     const activeBlock = rawBlocks.find((block) => block.id === rawStation.activeBlockId);
+    const forcedSource = rawStation.forcedTrackId
+      ? rawTracks.find((track) => track.id === rawStation.forcedTrackId)
+      : null;
     const catalog = activeBlock && activeBlock.trackIds.length
-      ? rawTracks.filter((track) => activeBlock.trackIds.includes(track.id))
+      ? rawTracks.filter((track) => activeBlock.trackIds.includes(track.id) || track.id === rawStation.forcedTrackId)
       : rawTracks;
+    if (forcedSource && !catalog.some((track) => track.id === forcedSource.id)) catalog.push(forcedSource);
 
     this.tracks = await Promise.all(
       catalog
@@ -742,7 +746,23 @@ export class FrequencyEngine {
     const syncVersion = ++this.syncVersion;
     const now = Date.now() + this.serverOffsetMs;
     const elapsedSec = Math.max(0, (now - this.stationStartedAt) / 1000);
-    const located = locateFrequencySegment(elapsedSec, this.tracks, this.seed, this.station.tagInterval);
+    const forcedTrack = this.station.forcedTrackId
+      ? this.tracks.find((track) => track.id === this.station.forcedTrackId) ?? null
+      : null;
+    const forcedStartedAt = this.station.forcedTrackId && this.station.forcedTrackId === forcedTrack?.id && this.station.forcedTrackId
+      ? Number(this.station.forcedStartedAt ? new Date(this.station.forcedStartedAt).getTime() : 0)
+      : 0;
+    const forcedElapsed = forcedStartedAt ? Math.max(0, (now - forcedStartedAt) / 1000) : Number.POSITIVE_INFINITY;
+    const located = forcedTrack && Number.isFinite(forcedElapsed) && forcedElapsed < forcedTrack.durationSec
+      ? {
+          segment: { kind: "music" as const, durationSec: forcedTrack.durationSec, track: forcedTrack, musicIndex: 1 },
+          segmentIndex: 0,
+          offsetSec: forcedElapsed,
+          cycle: 0,
+          cycleSegments: [{ kind: "music" as const, durationSec: forcedTrack.durationSec, track: forcedTrack, musicIndex: 1 }],
+          cycleDuration: forcedTrack.durationSec,
+        }
+      : locateFrequencySegment(elapsedSec, this.tracks, this.seed, this.station.tagInterval);
     const current = located.segment.kind === "music" || located.segment.kind === "jingle"
       ? located.segment.track
       : this.currentTrack;
