@@ -21,6 +21,7 @@ import appCss from "@/styles.css?url";
 import { GATE_BOOT, isGateOpen } from "@/lib/gate";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { getLiveSiteConfig } from "@/lib/site-content";
+import { getDelegates } from "@/lib/membership";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   loader: async () => ({ site: await getLiveSiteConfig() }),
@@ -92,6 +93,33 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   );
 }
 
+function DelegatesFooter() {
+  const [rows, setRows] = useState<Array<{ alias: string; referrals: number }>>([]);
+
+  useEffect(() => {
+    void getDelegates().then(setRows);
+  }, []);
+
+  if (!rows.length) return null;
+
+  return (
+    <div className="mx-auto mt-8 max-w-2xl border-t border-border pt-5 text-left">
+      <div className="flex items-center justify-between">
+        <p className="font-mono text-[9px] tracking-[0.2em] text-blood">DELEGADOS</p>
+        <span className="font-mono text-[8px] text-muted-foreground">TOP 10 RECRUTADORES</span>
+      </div>
+      <div className="mt-3 grid gap-1 sm:grid-cols-2">
+        {rows.map((row, index) => (
+          <div key={row.alias + index} className="flex items-center justify-between border border-border px-3 py-2 font-mono text-[8px]">
+            <span><span className="text-blood">#{String(index + 1).padStart(2, "0")}</span> {row.alias}</span>
+            <span className="text-muted-foreground">{row.referrals}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const isCameraSurface = useRouterState({
@@ -120,6 +148,7 @@ function RootComponent() {
               <span className="text-blood">✕</span>
               <img src={xoyens.url} alt="XOYENS" className="h-10 w-auto opacity-80" />
             </div>
+          <DelegatesFooter />
           </footer>
         )}
         <MiniPlayer />
