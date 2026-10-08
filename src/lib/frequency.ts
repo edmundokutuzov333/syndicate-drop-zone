@@ -268,11 +268,32 @@ export class FrequencyEngine {
 
     if (located.segment.kind === "static") {
       this.playStatic(remainingMs);
+    } else if (located.segment.kind === "tag") {
+      if (TAG_SRC) {
+        await this.playMedia(TAG_SRC, located.offsetSec);
+      } else {
+        this.playStatic(remainingMs);
+        kick808(0.42, Math.min(0.8, remainingMs / 1000));
+      }
     } else {
-      await this.playMedia(located.segment.kind === "tag" ? TAG_SRC : located.segment.track.src, located.offsetSec);
+      await this.playMedia(located.segment.track.src, located.offsetSec);
     }
+    this.updateMediaSession(located.segment.kind === "music" ? located.segment.track : this.tracks[(located.segment.musicIndex) % this.tracks.length] ?? null);
 
     this.scheduleNext(remainingMs);
+  }
+
+  private updateMediaSession(trackValue: FrequencyTrack | null) {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator) || !trackValue) return;
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: "Frequência 808 · " + trackValue.title,
+        artist: trackValue.artist,
+        album: "O Sindicato do Trap — Rádio Pirata",
+      });
+      navigator.mediaSession.setActionHandler("play", () => void this.resume());
+      navigator.mediaSession.setActionHandler("pause", () => this.pause());
+    } catch {}
   }
 
   private playStatic(remainingMs: number) {
@@ -295,7 +316,6 @@ export class FrequencyEngine {
     src.onended = () => { this.currentStatic = null; };
     this.currentStatic = src;
     src.start();
-    kick808(0.12, Math.min(0.3, remainingMs / 1000));
   }
 
   private async playMedia(src: string, offsetSec: number) {
