@@ -53,7 +53,11 @@ export function MiniPlayer() {
     return () => cancelAnimationFrame(frame);
   }, [state.playing]);
 
-  const frequencyState = frequency.getState();
+  const [frequencyState, setFrequencyState] = useState(frequency.getState());
+
+  useEffect(() => {
+    return frequency.subscribe(() => setFrequencyState(frequency.getState()));
+  }, []);
 
   if (frequencyState.active) {
     return (
