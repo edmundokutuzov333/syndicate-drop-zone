@@ -354,8 +354,11 @@ export class FrequencyEngine {
       this.station = {
         ...this.station,
         ...station,
+        // The Frequência 808 tag is a bundled asset and must never be replaced by remote configuration.
+        station_tag_url: "/audio/Frequencia_808_tag.mp3",
         autoplay: true,
         crossfadeMs: 0,
+        tagInterval: 3,
       };
     } catch {
       // Static radio configuration remains authoritative.
@@ -498,7 +501,7 @@ export class FrequencyEngine {
 
     const audio = new Audio();
     audio.preload = "auto";
-    // Catbox is a direct media host. Do not opt into CORS mode here: the radio only needs native media playback, not pixel/audio-buffer access.
+    // Radio music is served from the application bundled assets. Native media playback is sufficient.
     audio.src = track.src;
     this.attachAudioListeners(audio, track);
     this.audio = audio;
