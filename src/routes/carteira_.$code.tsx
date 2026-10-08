@@ -83,6 +83,14 @@ function PublicCarteira() {
           <p>Contacto privado. Não é exposto nesta página.</p>
         </div>
 
+        {nightBadge && (
+          <div className="mt-6 border border-blood bg-blood/5 p-4">
+            <p className="font-mono text-[9px] tracking-[0.22em] text-blood">BADGE DE RÁDIO</p>
+            <p className="mt-2 font-stamp text-2xl text-foreground">OUVINTE DA MADRUGADA</p>
+            <p className="mt-1 font-mono text-[8px] tracking-[0.16em] text-muted-foreground">CONQUISTADO ENTRE 03:00 E 03:59 · ÁFRICA/MAPUTO</p>
+          </div>
+        )}
+
         <div className="mt-6 flex flex-wrap gap-3">
           <button type="button" onClick={() => void copy()} className="inline-flex items-center gap-2 border border-blood px-4 py-3 font-mono text-[10px] tracking-[0.18em] hover:bg-blood hover:text-primary-foreground">
             <Copy size={14} /> {copied ? "COPIADO" : "COPIAR LINK"}

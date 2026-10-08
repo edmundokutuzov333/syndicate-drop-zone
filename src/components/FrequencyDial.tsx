@@ -22,6 +22,24 @@ export function FrequencyDial({ level, spectrum, playing }: { level: number; spe
         <svg viewBox="0 0 360 360" role="img" aria-label="Dial analógico da Frequência 808" className="h-full w-full">
           <circle cx="180" cy="180" r="153" fill="none" stroke="currentColor" strokeOpacity=".12" strokeWidth="1" />
           <circle cx="180" cy="180" r="133" fill="none" stroke="currentColor" strokeOpacity=".2" strokeWidth="1" />
+          <g aria-hidden>
+            {(() => {
+              const angle = -140 + ((808 - 760) / (860 - 760)) * 280;
+              const rad = (angle - 90) * (Math.PI / 180);
+              const x1 = 180 + Math.cos(rad) * 128;
+              const y1 = 180 + Math.sin(rad) * 128;
+              const x2 = 180 + Math.cos(rad) * 145;
+              const y2 = 180 + Math.sin(rad) * 145;
+              const tx = 180 + Math.cos(rad) * 116;
+              const ty = 184 + Math.sin(rad) * 116;
+              return (
+                <>
+                  <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--blood)" strokeWidth="3" />
+                  <text x={tx} y={ty} textAnchor="middle" fontSize="9" fontWeight="700" fill="var(--blood)">808</text>
+                </>
+              );
+            })()}
+          </g>
           {ticks.map((tick) => {
             const rad = (tick.angle - 90) * (Math.PI / 180);
             const r1 = tick.major ? 132 : 137;

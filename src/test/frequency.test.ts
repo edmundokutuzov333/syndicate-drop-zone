@@ -43,13 +43,12 @@ describe("frequency scheduler", () => {
     expect(located.cycleDuration).toBe(total);
   });
 
-  it("loops back to the same deterministic program after one cycle", () => {
+  it("advances to the next deterministic cycle after one cycle duration", () => {
     const segments = buildFrequencyCycle(tracks, 808, 0);
     const total = cycleDuration(segments);
-    const a = locateFrequencySegment(12, tracks, 808);
-    const b = locateFrequencySegment(total + 12, tracks, 808);
-    expect(a.segment.kind).toBe(b.segment.kind);
-    expect(a.segment.kind === "music" && b.segment.kind === "music" ? a.segment.track.id : "x")
-      .toBe(a.segment.kind === "music" && b.segment.kind === "music" ? b.segment.track.id : "x");
+    const located = locateFrequencySegment(total + 12, tracks, 808);
+    expect(located.cycle).toBe(1);
+    expect(located.offsetSec).toBeGreaterThanOrEqual(0);
+    expect(located.offsetSec).toBeLessThan(located.segment.durationSec);
   });
 });

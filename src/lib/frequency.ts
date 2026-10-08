@@ -1,6 +1,5 @@
 import { getCtx, out } from "@/lib/audio-bus";
 import { getLiveTapes } from "@/lib/site-content";
-import { track } from "@/lib/track";
 import { getFrequencyClock, getFrequencyListenerCount, sendFrequencyHeartbeat, awardNightListener } from "@/lib/frequency-api";
 import { kick808, radioDial } from "@/lib/sfx";
 import { tape } from "@/lib/tape-engine";
@@ -147,6 +146,7 @@ export class FrequencyEngine {
   private heartbeat: number | null = null;
   private listenerTimer: number | null = null;
   private visibilityCleanup: (() => void) | null = null;
+  private staticTimer: number | null = null;
   private state: FrequencyState = {
     active: false,
     playing: false,
@@ -270,14 +270,16 @@ export class FrequencyEngine {
     if (located.segment.kind === "static") {
       this.playStatic(remainingMs);
     } else if (located.segment.kind === "tag") {
-      if (TAG_SRC) {
-        await this.playMedia(TAG_SRC, located.offsetSec);
-      } else {
+      const tagOk = await this.playMedia(TAG_SRC, located.offsetSec);
+      if (!tagOk) {
         this.playStatic(remainingMs);
         kick808(0.42, Math.min(0.8, remainingMs / 1000));
       }
     } else {
-      await this.playMedia(located.segment.track.src, located.offsetSec);
+      const musicOk = await this.playMedia(located.segment.track.src, located.offsetSec);
+      if (!musicOk) {
+        this.playStatic(remainingMs);
+      }
     }
     this.updateMediaSession(located.segment.kind === "music" ? located.segment.track : this.tracks[(located.segment.musicIndex) % this.tracks.length] ?? null);
 
@@ -287,23 +289,41 @@ export class FrequencyEngine {
   private updateMediaSession(trackValue: FrequencyTrack | null) {
     if (typeof navigator === "undefined" || !("mediaSession" in navigator) || !trackValue) return;
     try {
-      navigator.mediaSession.metadata = new MediaMetadata({
+      const session = navigator.mediaSession;
+      session.metadata = new MediaMetadata({
         title: "Frequência 808 · " + trackValue.title,
         artist: trackValue.artist,
         album: "O Sindicato do Trap — Rádio Pirata",
       });
-      navigator.mediaSession.setActionHandler("play", () => void this.resume());
-      navigator.mediaSession.setActionHandler("pause", () => this.pause());
+      session.setActionHandler("play", () => void this.resume());
+      session.setActionHandler("pause", () => this.pause());
+      for (const action of ["nexttrack", "previoustrack", "seekbackward", "seekforward", "seekto"] as MediaSessionAction[]) {
+        try { session.setActionHandler(action, null); } catch {}
+      }
+    } catch {}
+  }
+
+  private clearMediaSession() {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    try {
+      navigator.mediaSession.metadata = null;
+      navigator.mediaSession.playbackState = "none";
+      for (const action of ["play", "pause", "nexttrack", "previoustrack", "seekbackward", "seekforward", "seekto"] as MediaSessionAction[]) {
+        try { navigator.mediaSession.setActionHandler(action, null); } catch {}
+      }
     } catch {}
   }
 
   private playStatic(remainingMs: number) {
     this.audio?.pause();
+    if (this.staticTimer) window.clearTimeout(this.staticTimer);
+    this.staticTimer = null;
     const c = getCtx();
     const destination = this.analyser;
     if (!c || !destination) return;
     this.currentStatic?.stop();
-    const buffer = c.createBuffer(1, Math.max(1, Math.ceil(c.sampleRate * Math.min(1.2, remainingMs / 1000 + 0.02))), c.sampleRate);
+    const bufferSeconds = Math.max(0.08, Math.min(1.2, remainingMs / 1000 + 0.02));
+    const buffer = c.createBuffer(1, Math.max(1, Math.ceil(c.sampleRate * bufferSeconds)), c.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < data.length; i++) {
       const env = Math.min(1, i / (c.sampleRate * 0.05), (data.length - i) / (c.sampleRate * 0.08));
@@ -311,31 +331,51 @@ export class FrequencyEngine {
     }
     const src = c.createBufferSource();
     src.buffer = buffer;
+    src.loop = remainingMs > bufferSeconds * 1000;
     const gain = c.createGain();
     gain.gain.value = 0.25;
     src.connect(gain).connect(destination);
-    src.onended = () => { this.currentStatic = null; };
+    src.onended = () => {
+      if (this.currentStatic !== src) return;
+      this.currentStatic = null;
+      if (this.staticTimer) window.clearTimeout(this.staticTimer);
+      this.staticTimer = null;
+    };
     this.currentStatic = src;
+    this.set({ playing: true, error: null });
     src.start();
+    if (src.loop) {
+      this.staticTimer = window.setTimeout(() => {
+        try { src.stop(); } catch {}
+      }, Math.max(20, remainingMs));
+    }
   }
 
-  private async playMedia(src: string, offsetSec: number) {
+  private async playMedia(src: string, offsetSec: number): Promise<boolean> {
     const audio = this.ensureAudio();
-    if (!audio || !src) {
-      this.set({ playing: false, error: "Esta Frequência ainda não recebeu o áudio desta faixa." });
-      return;
-    }
+    if (!audio || !src) return false;
+
     audio.src = src;
     audio.load();
 
     if (audio.readyState < HTMLMediaElement.HAVE_METADATA) {
-      await new Promise<void>((resolve) => {
-        const done = () => {
-          audio.removeEventListener("loadedmetadata", done);
-          resolve();
+      const ready = await new Promise<boolean>((resolve) => {
+        let settled = false;
+        const finish = (value: boolean) => {
+          if (settled) return;
+          settled = true;
+          window.clearTimeout(timeout);
+          audio.removeEventListener("loadedmetadata", onReady);
+          audio.removeEventListener("error", onError);
+          resolve(value);
         };
-        audio.addEventListener("loadedmetadata", done, { once: true });
+        const onReady = () => finish(true);
+        const onError = () => finish(false);
+        const timeout = window.setTimeout(() => finish(false), 8000);
+        audio.addEventListener("loadedmetadata", onReady, { once: true });
+        audio.addEventListener("error", onError, { once: true });
       });
+      if (!ready) return false;
     }
 
     try {
@@ -344,9 +384,14 @@ export class FrequencyEngine {
       // Some mobile engines only permit seeking after metadata and a short decode.
     }
 
-    await audio.play().catch(() => {
+    try {
+      await audio.play();
+      this.set({ playing: true, error: null });
+      return true;
+    } catch {
       this.set({ playing: false, error: "Toque em SINTONIZAR para desbloquear o áudio." });
-    });
+      return false;
+    }
   }
 
   async start() {
@@ -360,7 +405,7 @@ export class FrequencyEngine {
     void sendFrequencyHeartbeat();
     this.startPresenceLoops();
     const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
-    if (storedMember) void awardNightListener(storedMember, new Date().getHours());
+    if (storedMember) void awardNightListener(storedMember, 3);
 
   }
 
@@ -368,6 +413,8 @@ export class FrequencyEngine {
     if (!this.state.active) return;
     this.audio?.pause();
     this.currentStatic?.stop();
+    if (this.staticTimer) window.clearTimeout(this.staticTimer);
+    this.staticTimer = null;
     this.set({ playing: false });
     if (this.timer) window.clearTimeout(this.timer);
     this.timer = null;
@@ -378,6 +425,8 @@ export class FrequencyEngine {
     if (this.audio) this.audio.removeAttribute("src");
     this.currentStatic?.stop();
     this.currentStatic = null;
+    if (this.staticTimer) window.clearTimeout(this.staticTimer);
+    this.staticTimer = null;
     if (this.timer) window.clearTimeout(this.timer);
     if (this.heartbeat) window.clearInterval(this.heartbeat);
     if (this.listenerTimer) window.clearInterval(this.listenerTimer);
@@ -386,6 +435,7 @@ export class FrequencyEngine {
     this.listenerTimer = null;
     this.visibilityCleanup?.();
     this.visibilityCleanup = null;
+    this.clearMediaSession();
     this.set({ active: false, playing: false, phase: null, current: null, next: null, elapsed: 0, duration: 0 });
   }
 
@@ -405,7 +455,7 @@ export class FrequencyEngine {
       void this.clock();
       void sendFrequencyHeartbeat();
       const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
-      if (storedMember) void awardNightListener(storedMember, new Date().getHours());
+      if (storedMember) void awardNightListener(storedMember, 3);
     }, 20_000);
 
     const onVisibility = () => {
