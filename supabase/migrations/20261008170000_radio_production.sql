@@ -23,6 +23,7 @@ create table if not exists public.radio_station (
   id smallint primary key default 1,
   station_name text not null default 'RÁDIO SINDICATO DO TRAP',
   station_tag_url text not null default '/audio/Frequencia_808_tag.mp3',
+  active_block_id uuid,
   forced_track_id uuid references public.radio_tracks(id) on delete set null,
   forced_started_at timestamptz,
   autoplay boolean not null default true,
@@ -52,6 +53,53 @@ on public.radio_station
 for select
 to anon, authenticated
 using (id = 1);
+
+create table if not exists public.radio_blocks (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  track_ids uuid[] not null default '{}'::uuid[],
+  active boolean not null default true,
+  randomize boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.radio_blocks enable row level security;
+
+drop policy if exists "radio_blocks_public_read" on public.radio_blocks;
+create policy "radio_blocks_public_read"
+on public.radio_blocks
+for select
+to anon, authenticated
+using (active = true);
+
+alter table public.radio_station
+  drop constraint if exists radio_station_active_block_fk;
+
+alter table public.radio_station
+  add constraint radio_station_active_block_fk
+  foreign key (active_block_id) references public.radio_blocks(id) on delete set null;
+
+create or replace function public.frequency_radio_blocks()
+returns table (
+  id uuid,
+  name text,
+  track_ids uuid[],
+  active boolean,
+  randomize boolean
+)
+language sql
+security definer
+set search_path = ''
+as $
+  select id, name, track_ids, active, randomize
+  from public.radio_blocks
+  where active = true
+  order by created_at asc;
+$;
+
+revoke all on function public.frequency_radio_blocks() from public;
+grant execute on function public.frequency_radio_blocks() to anon, authenticated;
 
 insert into public.radio_tracks (id, title, artist, audio_url, duration_seconds, kind, status, rotation_weight, position)
 values
@@ -173,47 +221,3 @@ $$;
 
 revoke all on function public.frequency_mark_track_failure(uuid) from public;
 grant execute on function public.frequency_mark_track_failure(uuid) to anon, authenticated;
-
-
-create table if not exists public.radio_blocks (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  track_ids uuid[] not null default '{}'::uuid[],
-  active boolean not null default true,
-  randomize boolean not null default true,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-alter table public.radio_blocks enable row level security;
-
-drop policy if exists "radio_blocks_public_read" on public.radio_blocks;
-create policy "radio_blocks_public_read"
-on public.radio_blocks
-for select
-to anon, authenticated
-using (active = true);
-
-alter table public.radio_station add column if not exists active_block_id uuid references public.radio_blocks(id) on delete set null;
-
-create or replace function public.frequency_radio_blocks()
-returns table (
-  id uuid,
-  name text,
-  track_ids uuid[],
-  active boolean,
-  randomize boolean
-)
-language sql
-security definer
-set search_path = ''
-as $$
-  select id, name, track_ids, active, randomize
-  from public.radio_blocks
-  where active = true
-  order by created_at asc;
-$$;
-
-revoke all on function public.frequency_radio_blocks() from public;
-grant execute on function public.frequency_radio_blocks() to anon, authenticated;
-
