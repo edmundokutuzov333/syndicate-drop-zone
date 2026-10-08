@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/__l5e/assets-v1/:path*",
+      "destination": "https://sindicato-do-trap.lovable.app/__l5e/assets-v1/:path*"
+    }
+  ]
+}
