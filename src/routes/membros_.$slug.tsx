@@ -3,7 +3,7 @@ import { ArtistDossier } from "@/components/artists/ArtistDossier";
 import { getArtistBySlug } from "@/lib/artist-content";
 import { getLiveArtistBySlug, getLiveArtistChannels } from "@/lib/public-content";
 
-export const Route = createFileRoute("/membros/$slug")({
+export const Route = createFileRoute("/membros_/$slug")({
   head: ({ params }) => {
     const artist = getArtistBySlug(params.slug);
     return {

@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { FormEvent, useState } from "react";
 import logo from "@/assets/brand/sindicato-logo.png.asset.json";
 
-export const Route = createFileRoute("/control-room/login")({
+export const Route = createFileRoute("/control-room_/login")({
   component: ControlRoomLogin,
 });
 
