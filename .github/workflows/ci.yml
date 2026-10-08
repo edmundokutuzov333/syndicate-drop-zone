@@ -26,8 +26,8 @@ jobs:
       - name: Camera lint
         run: "npx eslint src/lib/camera src/lib/webgl src/features/camera src/routes/camera.tsx --rule 'prettier/prettier: off'"
 
-      - name: Camera tests
-        run: npm run test -- src/test/camera-engineering.test.ts
+      - name: Engineering tests
+        run: npm run test -- src/test/camera-engineering.test.ts src/test/frequency.test.ts
 
       - name: Production build
         run: npm run build
