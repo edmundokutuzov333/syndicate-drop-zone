@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Power, Radio, RefreshCw, RotateCcw, Save, Trash2 } from "lucide-react";
+import { Check, Power, RefreshCw, RotateCcw, Save, Trash2 } from "lucide-react";
 import {
   adminQuery,
   getControlRoomSession,
