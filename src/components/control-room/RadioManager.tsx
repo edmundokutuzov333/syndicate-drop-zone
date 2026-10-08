@@ -29,10 +29,20 @@ type Station = {
   station_tag_url: string;
   forced_track_id: string | null;
   forced_started_at: string | null;
+  active_block_id: string | null;
   autoplay: boolean;
   station_seed: number;
   crossfade_ms: number;
   tag_interval: number;
+};
+
+
+type RadioBlock = {
+  id: string;
+  name: string;
+  track_ids: string[];
+  active: boolean;
+  randomize: boolean;
 };
 
 const EDIT_ROLES: ControlRoomRole[] = ["OWNER", "ADMIN", "EDITOR"];
@@ -61,6 +71,9 @@ export function RadioManager() {
   const [previewMode, setPreviewMode] = useState(false);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [station, setStation] = useState<Station | null>(null);
+  const [blocks, setBlocks] = useState<RadioBlock[]>([]);
+  const [blockName, setBlockName] = useState("");
+  const [blockTracks, setBlockTracks] = useState<string[]>([]);
   const [selected, setSelected] = useState<Track | null>(null);
   const [form, setForm] = useState<Track>(EMPTY_TRACK);
   const [busy, setBusy] = useState(true);
@@ -76,15 +89,17 @@ export function RadioManager() {
     setBusy(true);
     setNotice("");
     try {
-      const [session, nextTracks, nextStation] = await Promise.all([
+      const [session, nextTracks, nextStation, nextBlocks] = await Promise.all([
         getControlRoomSession(),
         adminQuery<Track[]>("/rest/v1/radio_tracks?select=*&order=position.asc,created_at.asc"),
         adminQuery<Station[]>("/rest/v1/radio_station?select=*&id=eq.1"),
+        adminQuery<RadioBlock[]>("/rest/v1/radio_blocks?select=*&order=created_at.asc"),
       ]);
       setRole(session?.role ?? null);
       setPreviewMode(isPublicPreviewSession(session));
       setTracks(nextTracks);
       setStation(nextStation[0] ?? null);
+      setBlocks(nextBlocks);
       setSelected((current) => current ? nextTracks.find((track) => track.id === current.id) ?? current : nextTracks[0] ?? null);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Não foi possível carregar a rádio.");
@@ -117,6 +132,7 @@ export function RadioManager() {
           station_seed: station.station_seed,
           crossfade_ms: station.crossfade_ms,
           tag_interval: station.tag_interval,
+          active_block_id: station.active_block_id,
         }),
       });
       setNotice("ESTAÇÃO ACTUALIZADA");
@@ -207,6 +223,65 @@ export function RadioManager() {
       await load();
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Não foi possível reiniciar as falhas.");
+    }
+  };
+
+  const saveBlock = async () => {
+    if (!editable || !blockName.trim()) return;
+    try {
+      const payload = {
+        name: blockName.trim(),
+        track_ids: blockTracks,
+        active: true,
+        randomize: true,
+      };
+      await adminQuery("/rest/v1/radio_blocks", {
+        method: "POST",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify(payload),
+      });
+      setBlockName("");
+      setBlockTracks([]);
+      setNotice("BLOCO CRIADO");
+      await load();
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Não foi possível criar o bloco.");
+    }
+  };
+
+  const deleteBlock = async (blockId: string) => {
+    if (!editable) return;
+    if (!window.confirm("Eliminar este bloco?")) return;
+    try {
+      await adminQuery("/rest/v1/radio_blocks?id=eq." + encodeURIComponent(blockId), {
+        method: "DELETE",
+        headers: { Prefer: "return=minimal" },
+      });
+      if (station?.active_block_id === blockId) {
+        await adminQuery("/rest/v1/radio_station?id=eq.1", {
+          method: "PATCH",
+          headers: { Prefer: "return=minimal" },
+          body: JSON.stringify({ active_block_id: null }),
+        });
+      }
+      await load();
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Não foi possível eliminar o bloco.");
+    }
+  };
+
+  const activateBlock = async (blockId: string | null) => {
+    if (!editable || !station) return;
+    try {
+      await adminQuery("/rest/v1/radio_station?id=eq.1", {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ active_block_id: blockId }),
+      });
+      setNotice(blockId ? "BLOCO ACTIVO" : "ROTAÇÃO GERAL ACTIVA");
+      await load();
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Não foi possível activar o bloco.");
     }
   };
 
