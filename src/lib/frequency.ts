@@ -354,8 +354,12 @@ export class FrequencyEngine {
       this.station = {
         ...this.station,
         ...station,
+        // Frequência 808 audio is fully bundled with the site. Remote station config
+        // may not replace the local tag or alter the agreed three-track cadence.
+        station_tag_url: "/audio/Frequencia_808_tag.mp3",
         autoplay: true,
         crossfadeMs: 0,
+        tagInterval: 3,
       };
     } catch {
       // Static radio configuration remains authoritative.
