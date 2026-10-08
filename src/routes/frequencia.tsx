@@ -58,7 +58,10 @@ function FrequenciaPage() {
 
   useEffect(() => {
     const code = getStoredMemberCode();
-    if (!code || new Date().getHours() !== 3) return;
+    if (!code) {
+      setNightBadge(false);
+      return;
+    }
     void hasNightListenerBadge(code).then(setNightBadge);
   }, [state.active]);
 
@@ -70,8 +73,9 @@ function FrequenciaPage() {
             <p className="font-mono text-[10px] tracking-[0.3em] text-blood">RÁDIO PIRATA · 24 H</p>
             <h1 className="mt-2 font-gothic text-6xl leading-none md:text-9xl">FREQUÊNCIA 808</h1>
           </div>
-          <div className="flex items-center gap-2 font-mono text-[9px]">
+          <div className="flex flex-wrap items-center gap-2 font-mono text-[9px]">
             <span className="border border-border px-3 py-2">● {state.listenerCount || 0} OUVINTES</span>
+            <span className="border border-border px-3 py-2">17 CONVOCADOS · PRÉVIAS SPOTIFY</span>
             {nightBadge && <span className="border border-blood px-3 py-2 text-blood">OUVINTE DA MADRUGADA</span>}
           </div>
         </div>
@@ -150,11 +154,12 @@ function FrequenciaPage() {
                 {open && (
                   <div className="border-t border-border p-3">
                     <iframe
-                      title={"Spotify de " + artist.name}
+                      title={"Prévia Spotify oficial de " + artist.name}
                       src={"https://open.spotify.com/embed/artist/" + encodeURIComponent(artist.spotifyArtistId) + "?utm_source=generator&theme=0"}
                       loading="lazy"
                       className="h-[352px] w-full border-0"
                       allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                      referrerPolicy="origin"
                     />
                     <a href={"https://open.spotify.com/artist/" + encodeURIComponent(artist.spotifyArtistId)} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-11 items-center gap-2 border border-border px-3 text-[9px] tracking-[0.16em] hover:border-blood">
                       ABRIR NO SPOTIFY <ExternalLink size={12} />
