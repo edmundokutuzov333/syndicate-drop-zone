@@ -228,3 +228,14 @@ export function subscribeCampingLive(onChange: LiveRealtimeHandler): () => void 
     if (channel && client) void client.removeChannel(channel);
   };
 }
+
+
+export function campingDayRange(start: string | null, end: string | null, now = Date.now()) {
+  if (!start || !end) return null;
+  const startMs = new Date(start).getTime();
+  const endMs = new Date(end).getTime();
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) return null;
+  const total = Math.max(1, Math.ceil((endMs - startMs) / 86400000));
+  if (now < startMs) return { current: 0, total };
+  return { current: Math.min(total, Math.floor((now - startMs) / 86400000) + 1), total };
+}
