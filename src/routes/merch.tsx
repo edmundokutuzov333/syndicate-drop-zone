@@ -149,7 +149,7 @@ function Merch() {
               <div className="hazard h-3" />
             </section>
           </div>
-        </div>
+        </dialog>
       )}
 
       <p className="text-xs tracking-widest text-blood">1ª EDIÇÃO · MERCH OFICIAL</p>
