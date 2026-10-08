@@ -148,6 +148,7 @@ export type LiveRadioTrack = {
 
 export type LiveRadioStation = {
   forcedTrackId: string | null;
+  forcedStartedAt: string | null;
   activeBlockId: string | null;
   autoplay: boolean;
   stationSeed: number;
@@ -199,6 +200,7 @@ export async function getLiveRadioTracks(): Promise<LiveRadioTrack[]> {
 export async function getLiveRadioStation(): Promise<LiveRadioStation> {
   const fallback: LiveRadioStation = {
     forcedTrackId: null,
+    forcedStartedAt: null,
     activeBlockId: null,
     autoplay: true,
     stationSeed: 8080808,
@@ -211,6 +213,7 @@ export async function getLiveRadioStation(): Promise<LiveRadioStation> {
     if (!row) return fallback;
     return {
       forcedTrackId: stringValue(row, ["forced_track_id"], "") || null,
+      forcedStartedAt: stringValue(row, ["forced_started_at"], "") || null,
       activeBlockId: stringValue(row, ["active_block_id"], "") || null,
       autoplay: Boolean(row.autoplay ?? true),
       stationSeed: Number(row.station_seed ?? fallback.stationSeed) || fallback.stationSeed,
