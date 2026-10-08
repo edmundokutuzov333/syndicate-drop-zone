@@ -265,7 +265,7 @@ function Filiacao() {
                   key={clause}
                   type="button"
                   onClick={() => stampClause(index)}
-                  className={"relative min-h-40 overflow-hidden border p-6 text-left transition " + (stamped ? "border-blood bg-blood/5" : "border-border bg-card hover:border-blood")}
+                  className={"grain xerox-wear relative min-h-40 overflow-hidden border p-6 text-left transition " + (stamped ? "border-blood bg-blood/5" : "border-border bg-card hover:border-blood")}
                   aria-pressed={stamped}
                 >
                   <span className="absolute right-4 top-4 font-mono text-[9px] tracking-[0.2em] text-blood">
@@ -479,9 +479,10 @@ function Filiacao() {
             </div>
           </div>
 
-          <Delegates />
         </section>
       )}
+
+      <Delegates />
     </main>
   );
 }
