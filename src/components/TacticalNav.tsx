@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { click, hiss } from "@/lib/sfx";
+import { useMember } from "@/components/use-member";
 import logo from "@/assets/brand/sindicato-logo.png.asset.json";
 
 const LINKS = [
@@ -10,11 +11,13 @@ const LINKS = [
   { to: "/revelacao", label: "REVELAÇÃO", k: "03" },
   { to: "/camera", label: "CAMERA", k: "04" },
   { to: "/merch", label: "MERCH", k: "05" },
+  { to: "/filiar", label: "FILIAR", k: "06" },
 ] as const;
 
 export function TacticalNav() {
   const [time, setTime] = useState("--:--:--");
   const [open, setOpen] = useState(false);
+  const { member } = useMember();
   useEffect(() => {
     const f = () => setTime(new Date().toLocaleTimeString("pt-BR"));
     f();
@@ -41,6 +44,11 @@ export function TacticalNav() {
           ))}
         </nav>
         <div className="flex items-center gap-3">
+          {member && (
+            <Link to="/carteira/$code" params={{ code: member.code }} className="hidden border border-blood px-2 py-1 font-mono text-[8px] tracking-[0.14em] text-blood lg:inline">
+              SINDICALIZADO Nº {String(member.memberNumber).padStart(4, "0")}
+            </Link>
+          )}
           <span className="hidden text-muted-foreground sm:inline"><span className="text-blood" style={{ animation: "blink 1s steps(1) infinite" }}>●</span> {time}</span>
           <button className="border border-border px-3 py-1.5 md:hidden" onClick={() => setOpen((o) => !o)} aria-label="Menu">{open ? "✕" : "≡"}</button>
         </div>
@@ -52,6 +60,11 @@ export function TacticalNav() {
               {l.k} // {l.label}
             </Link>
           ))}
+          {member && (
+            <Link to="/carteira/$code" params={{ code: member.code }} onClick={() => setOpen(false)} className="border-b border-border px-4 py-3 text-sm text-blood">
+              SINDICALIZADO Nº {String(member.memberNumber).padStart(4, "0")}
+            </Link>
+          )}
         </nav>
       )}
     </header>
