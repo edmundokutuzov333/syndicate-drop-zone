@@ -49,7 +49,7 @@ async function mockBackend(page: import("@playwright/test").Page) {
   });
 
   const wav = wavBody();
-  await page.route("https://files.catbox.moe/**", async (route) => {
+  await page.route("**/audio/*", async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "audio/wav",
@@ -91,12 +91,12 @@ test.describe("Frequência 808 browser smoke", () => {
 
     await expect.poll(async () => page.evaluate(() => {
       const sources = (window as Window & { __radioPlaySources?: string[] }).__radioPlaySources ?? [];
-      return sources.find((src) => src.includes("files.catbox.moe")) ?? "";
+      return sources.find((src) => src.startsWith("/audio/") || src.includes("/audio/")) ?? "";
     })).not.toBe("");
 
     const source = await page.evaluate(() => {
       const sources = (window as Window & { __radioPlaySources?: string[] }).__radioPlaySources ?? [];
-      return sources.find((src) => src.includes("files.catbox.moe")) ?? "";
+      return sources.find((src) => src.startsWith("/audio/") || src.includes("/audio/")) ?? "";
     });
     expect(RADIO_SOURCES).toContain(source);
     expect(source).not.toContain("/assets/tapes/");
@@ -128,7 +128,7 @@ test.describe("Frequência 808 browser smoke", () => {
     await page.route("**/rest/v1/**", async (route) => {
       await route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
     });
-    await page.route("https://files.catbox.moe/**", async (route) => {
+    await page.route("**/audio/*", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: route.request().url().endsWith(".wav") ? "audio/wav" : "audio/mpeg",
@@ -167,7 +167,7 @@ test.describe("Frequência 808 browser smoke", () => {
     await page.route("**/rest/v1/**", async (route) => {
       await route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
     });
-    await page.route("https://files.catbox.moe/**", async (route) => {
+    await page.route("**/audio/*", async (route) => {
       await route.abort();
     });
 
