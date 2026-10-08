@@ -8,6 +8,7 @@ import {
   getLiveCampingGallery,
   getLiveCampingSessions,
   getLiveFlags,
+  subscribeCampingLive,
   getRoomAlias,
   type CampingRoom,
   type CampingSessionRow,
@@ -70,7 +71,8 @@ const BUNKER_DAY = (start: string | null, end: string | null) => {
 function Camping() {
   const navigate = useNavigate({ from: "/camping" });
   const { media } = Route.useSearch();
-  const { sessions, camp, gallery } = Route.useLoaderData();
+  const { sessions, camp, gallery, live: initialLive } = Route.useLoaderData();
+  const [live, setLive] = useState(initialLive);
   const [selectedRoom, setSelectedRoom] = useState("estudio");
   const [now, setNow] = useState(Date.now());
 
@@ -79,8 +81,9 @@ function Camping() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const liveInitial = Route.useLoaderData().live;
   const day = BUNKER_DAY(camp.start, camp.end);
+  useEffect(() => subscribeCampingLive(setLive), []);
+
   const currentSession = useMemo(
     () => sessions.find((session) => new Date(session.startsAt).getTime() <= now && new Date(session.endsAt).getTime() > now) ?? null,
     [now, sessions],
@@ -116,7 +119,7 @@ function Camping() {
 
       <section className="mt-8">
         <BunkerMap
-          liveOn={liveInitial.on}
+          liveOn={live.on}
           selectedRoomId={selectedRoom}
           galleryByRoom={gallery}
           onPick={pickRoom}
@@ -127,7 +130,7 @@ function Camping() {
       <section className="mt-8 grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
         <CampingSessions sessions={sessions} selectedRoomId={selectedRoom} onPickRoom={pickRoom} />
         <div className="space-y-8">
-          <CampingLive live={liveInitial} nextSession={nextSession} />
+          <CampingLive live={live} nextSession={nextSession} />
           {currentSession && (
             <div className="border border-blood bg-blood/5 p-4">
               <p className="font-mono text-[9px] tracking-[0.2em] text-blood">● AGORA</p>
