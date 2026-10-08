@@ -398,13 +398,13 @@ export class CameraVfx3DOverlay {
       targetX += eyeFactor * (i % 2 === 0 ? -1 : 1);
 
       this.smoothedLandmarks[offset] =
-        this.smoothedLandmarks[offset] * (1 - smoothing) +
+        this.smoothedLandmarks[offset]! * (1 - smoothing) +
         targetX * smoothing;
       this.smoothedLandmarks[offset + 1] =
-        this.smoothedLandmarks[offset + 1] * (1 - smoothing) +
+        this.smoothedLandmarks[offset + 1]! * (1 - smoothing) +
         targetY * smoothing;
       this.smoothedLandmarks[offset + 2] =
-        this.smoothedLandmarks[offset + 2] * (1 - smoothing) +
+        this.smoothedLandmarks[offset + 2]! * (1 - smoothing) +
         targetZ * smoothing;
     }
 
