@@ -383,6 +383,84 @@ export type Database = {
           },
         ]
       }
+      events: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          props: Json
+          sid: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          props?: Json
+          sid: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          props?: Json
+          sid?: string
+        }
+        Relationships: []
+      }
+      frequency_badges: {
+        Row: {
+          badge: string
+          code: string
+          earned_at: string
+        }
+        Insert: {
+          badge?: string
+          code: string
+          earned_at?: string
+        }
+        Update: {
+          badge?: string
+          code?: string
+          earned_at?: string
+        }
+        Relationships: []
+      }
+      frequency_listeners: {
+        Row: {
+          last_seen: string
+          sid: string
+        }
+        Insert: {
+          last_seen?: string
+          sid: string
+        }
+        Update: {
+          last_seen?: string
+          sid?: string
+        }
+        Relationships: []
+      }
+      frequency_station: {
+        Row: {
+          id: number
+          program_seed: number
+          station_started_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          program_seed?: number
+          station_started_at: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          program_seed?: number
+          station_started_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inventory_movements: {
         Row: {
           actor_user_id: string | null
@@ -591,6 +669,153 @@ export type Database = {
           partnership_type?: string
           priority?: boolean
           status?: string
+        }
+        Relationships: []
+      }
+      radio_blocks: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          randomize: boolean
+          track_ids: string[]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          randomize?: boolean
+          track_ids?: string[]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          randomize?: boolean
+          track_ids?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      radio_station: {
+        Row: {
+          active_block_id: string | null
+          autoplay: boolean
+          crossfade_ms: number
+          forced_started_at: string | null
+          forced_track_id: string | null
+          id: number
+          station_name: string
+          station_seed: number
+          station_tag_url: string
+          tag_interval: number
+          updated_at: string
+        }
+        Insert: {
+          active_block_id?: string | null
+          autoplay?: boolean
+          crossfade_ms?: number
+          forced_started_at?: string | null
+          forced_track_id?: string | null
+          id?: number
+          station_name?: string
+          station_seed?: number
+          station_tag_url?: string
+          tag_interval?: number
+          updated_at?: string
+        }
+        Update: {
+          active_block_id?: string | null
+          autoplay?: boolean
+          crossfade_ms?: number
+          forced_started_at?: string | null
+          forced_track_id?: string | null
+          id?: number
+          station_name?: string
+          station_seed?: number
+          station_tag_url?: string
+          tag_interval?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "radio_station_active_block_fk"
+            columns: ["active_block_id"]
+            isOneToOne: false
+            referencedRelation: "radio_blocks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "radio_station_forced_track_id_fkey"
+            columns: ["forced_track_id"]
+            isOneToOne: false
+            referencedRelation: "radio_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      radio_tracks: {
+        Row: {
+          artist: string
+          artist_slug: string | null
+          audio_url: string
+          created_at: string
+          duration_seconds: number | null
+          effects_enabled: boolean
+          failure_count: number
+          id: string
+          kind: string
+          last_failure_at: string | null
+          position: number
+          rotation_weight: number
+          status: string
+          tags_enabled: boolean
+          temporarily_disabled: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          artist?: string
+          artist_slug?: string | null
+          audio_url: string
+          created_at?: string
+          duration_seconds?: number | null
+          effects_enabled?: boolean
+          failure_count?: number
+          id?: string
+          kind?: string
+          last_failure_at?: string | null
+          position?: number
+          rotation_weight?: number
+          status?: string
+          tags_enabled?: boolean
+          temporarily_disabled?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          artist?: string
+          artist_slug?: string | null
+          audio_url?: string
+          created_at?: string
+          duration_seconds?: number | null
+          effects_enabled?: boolean
+          failure_count?: number
+          id?: string
+          kind?: string
+          last_failure_at?: string | null
+          position?: number
+          rotation_weight?: number
+          status?: string
+          tags_enabled?: boolean
+          temporarily_disabled?: boolean
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -832,6 +1057,66 @@ export type Database = {
     }
     Functions: {
       current_admin_role: { Args: never; Returns: string }
+      frequency_award_night: {
+        Args: { p_code: string; p_local_hour: number }
+        Returns: boolean
+      }
+      frequency_clock: {
+        Args: never
+        Returns: {
+          program_seed: number
+          server_now: string
+          station_started_at: string
+        }[]
+      }
+      frequency_has_night_badge: { Args: { p_code: string }; Returns: boolean }
+      frequency_heartbeat: { Args: { p_sid: string }; Returns: undefined }
+      frequency_listener_count: { Args: never; Returns: number }
+      frequency_mark_track_failure: {
+        Args: { p_track_id: string }
+        Returns: number
+      }
+      frequency_radio_blocks: {
+        Args: never
+        Returns: {
+          active: boolean
+          id: string
+          name: string
+          randomize: boolean
+          track_ids: string[]
+        }[]
+      }
+      frequency_radio_catalog: {
+        Args: never
+        Returns: {
+          artist: string
+          artist_slug: string
+          audio_url: string
+          duration_seconds: number
+          failure_count: number
+          id: string
+          kind: string
+          rotation_weight: number
+          temporarily_disabled: boolean
+          title: string
+          track_position: number
+        }[]
+      }
+      frequency_radio_station: {
+        Args: never
+        Returns: {
+          active_block_id: string
+          autoplay: boolean
+          crossfade_ms: number
+          forced_started_at: string
+          forced_track_id: string
+          station_name: string
+          station_seed: number
+          station_tag_url: string
+          tag_interval: number
+        }[]
+      }
+      is_radio_editor: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
