@@ -1,6 +1,6 @@
 import { getCtx, getRadioVolume, isMuted, subscribeMute } from "@/lib/audio-bus";
 import { getLiveRadioBlocks, getLiveRadioStation, getLiveRadioTracks, type LiveRadioBlock, type LiveRadioStation, type LiveRadioTrack } from "@/lib/site-content";
-import { getFrequencyClock, getFrequencyListenerCount, getRadioStationConfig, markRadioTrackFailure, sendFrequencyHeartbeat, awardNightListener } from "@/lib/frequency-api";
+import { getFrequencyClock, getFrequencyListenerCount, markRadioTrackFailure, sendFrequencyHeartbeat, awardNightListener } from "@/lib/frequency-api";
 import { kick808, radioDial } from "@/lib/sfx";
 import { tape } from "@/lib/tape-engine";
 import { RADIO_TRACKS } from "@/lib/data";
