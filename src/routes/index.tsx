@@ -4,6 +4,7 @@ import { ARTISTS } from "@/lib/artists";
 import { getLiveHomeContent, type LiveMerchProduct, type LiveTape } from "@/lib/site-content";
 import { tape } from "@/lib/tape-engine";
 import { useTape } from "@/components/use-tape";
+import { canEnterMerch } from "@/lib/key";
 import { useKey } from "@/components/use-key";
 import { useMember } from "@/components/use-member";
 import { Halftone } from "@/components/Halftone";
@@ -93,7 +94,8 @@ function Hero({ title, subtitle, memberCount }: { title: string | null; subtitle
       <img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute right-0 top-10 hidden w-40 -rotate-12 opacity-20 md:block" />
       <img src={logo.url} alt="O Sindicato do Trap" className="flicker w-48 md:w-64" />
       <h1 className="mt-8 font-gothic text-6xl leading-[0.85] md:text-8xl">{title || "O Sindicato do Trap"}</h1>
-      <p className="mt-4 font-stamp text-lg text-blood">{subtitle || "A união do trap. Gravado no camping."}</p>\n      <div className="mt-6 border border-border bg-card px-4 py-2 font-mono text-[9px] tracking-[0.2em] text-muted-foreground">SINDICALIZADOS <span className="text-blood">{String(memberCount).padStart(4, "0")}</span></div>
+      <p className="mt-4 font-stamp text-lg text-blood">{subtitle || "A união do trap. Gravado no camping."}</p>
+      <div className="mt-6 border border-border bg-card px-4 py-2 font-mono text-[9px] tracking-[0.2em] text-muted-foreground">SINDICALIZADOS <span className="text-blood">{String(memberCount).padStart(4, "0")}</span></div>
     </section>
   );
 }
