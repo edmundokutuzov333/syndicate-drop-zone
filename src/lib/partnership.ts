@@ -12,7 +12,7 @@ export const PartnershipRequestSchema = z.object({
 
 export type PartnershipRequest = z.infer<typeof PartnershipRequestSchema>;
 
-type PartnershipInsertResult = { id: string };
+type PartnershipInsertResult = string;
 
 async function rpc<T>(name: string, body: Record<string, unknown>): Promise<T> {
   const { url, key } = getPublicSupabaseConfig();

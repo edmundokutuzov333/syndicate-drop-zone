@@ -7,9 +7,11 @@ export function getPublicSupabaseConfig(): PublicSupabaseConfig {
   const configuredUrl = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
   const directUrl =
     (import.meta.env.VITE_SUPABASE_DIRECT_URL as string | undefined)?.trim() || DIRECT_SUPABASE_URL;
-  const shouldUseDirectBackend =
-    browserHost.endsWith(".vercel.app") ||
-    browserHost === "syndicate-drop-zone.vercel.app";
+  const isLovableHost =
+    browserHost.endsWith(".lovable.app") ||
+    browserHost.endsWith(".lovable.dev");
+  const isLocalHost = browserHost === "localhost" || browserHost === "127.0.0.1";
+  const shouldUseDirectBackend = Boolean(browserHost) && !isLovableHost && !isLocalHost;
   const url = (shouldUseDirectBackend ? directUrl : configuredUrl || directUrl)?.replace(/\/+$/, "");
   const key =
     (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)?.trim() ||
