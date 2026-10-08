@@ -108,10 +108,10 @@ test.describe("Frequência 808 browser smoke", () => {
     await expect.poll(async () => page.evaluate(() => localStorage.getItem("sdt-radio-volume"))).toBe("0.35");
 
     await page.getByRole("button", { name: "PAUSAR", exact: true }).click();
-    await expect(page.getByRole("button", { name: "RETOMAR" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "RETOMAR", exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: "RETOMAR", exact: true }).click();
-    await expect(page.getByRole("button", { name: "PAUSAR" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "PAUSAR", exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: "DESLIGAR RÁDIO" }).click();
     await expect(page.getByText("FORA DO AR")).toBeVisible();
