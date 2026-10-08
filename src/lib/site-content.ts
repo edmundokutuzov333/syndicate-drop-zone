@@ -148,6 +148,7 @@ export type LiveRadioTrack = {
 };
 
 export type LiveRadioStation = {
+  station_tag_url: string;
   forcedTrackId: string | null;
   forcedStartedAt: string | null;
   activeBlockId: string | null;
@@ -206,6 +207,7 @@ export async function getLiveRadioTracks(): Promise<LiveRadioTrack[]> {
 
 export async function getLiveRadioStation(): Promise<LiveRadioStation> {
   const fallback: LiveRadioStation = {
+    station_tag_url: "/audio/Frequencia_808_tag.mp3",
     forcedTrackId: null,
     forcedStartedAt: null,
     activeBlockId: null,
@@ -220,6 +222,7 @@ export async function getLiveRadioStation(): Promise<LiveRadioStation> {
     if (!row) return fallback;
 
     return {
+      station_tag_url: row.station_tag_url || fallback.station_tag_url,
       forcedTrackId: row.forced_track_id ?? null,
       forcedStartedAt: row.forced_started_at ?? null,
       activeBlockId: row.active_block_id ?? null,
