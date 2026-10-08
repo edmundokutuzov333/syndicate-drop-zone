@@ -281,6 +281,7 @@ export class FrequencyEngine {
   }));
   private station: LiveRadioStation = {
     forcedTrackId: null,
+    forcedStartedAt: null,
     activeBlockId: null,
     autoplay: true,
     stationSeed: 8080808,
