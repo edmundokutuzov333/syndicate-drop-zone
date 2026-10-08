@@ -25,8 +25,6 @@ alter table public.live_notifications enable row level security;
 
 revoke all on public.site_flags from anon, authenticated;
 revoke all on public.artist_status from anon, authenticated;
-revoke all on public.live_notifications from anon, authenticated;
-
 grant select on public.site_flags to anon, authenticated;
 grant select on public.artist_status to anon, authenticated;
 revoke all on public.live_notifications from anon, authenticated;
