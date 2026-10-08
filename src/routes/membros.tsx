@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ARTISTS } from "@/lib/artists";
 import { getLiveArtists } from "@/lib/public-content";
-import { Halftone } from "@/components/Halftone";
+import { HalftoneCanvas } from "@/components/HalftoneCanvas";
 import { hiss } from "@/lib/sfx";
 import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 
@@ -59,7 +59,7 @@ function Membros() {
               onClick={() => { try { hiss(); } catch { /* navigation must never depend on SFX */ } }}
               className="group overflow-hidden transition"
             >
-              <Halftone
+              <HalftoneCanvas
                 src={artist.img}
                 alt={artist.name}
                 className="aspect-[4/5] transition duration-500 group-hover:scale-[1.02]"

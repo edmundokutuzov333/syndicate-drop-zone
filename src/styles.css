@@ -1068,3 +1068,30 @@ html[data-gate="locked"] #site {
   background-size: 11px 13px, 17px 19px;
   mix-blend-mode: screen;
 }
+
+
+/* Phase 7: chemical development + darkroom safety light. */
+.develop {
+  filter: invert(1) grayscale(1) contrast(1.55) brightness(1.1);
+  transform: translateZ(0);
+}
+.develop[data-dev="1"] {
+  animation: develop-reveal 1.8s steps(9, end) var(--develop-delay, 0ms) both;
+}
+@keyframes develop-reveal {
+  0% { filter: invert(1) grayscale(1) contrast(1.55) brightness(1.1); }
+  100% { filter: none; }
+}
+html[data-lite] .develop {
+  filter: none;
+  animation: none;
+}
+html[data-safelight] body {
+  background: #160000;
+}
+html[data-safelight] #site {
+  filter: sepia(.68) saturate(1.55) hue-rotate(315deg) brightness(.72);
+}
+html[data-safelight] .halftone-overlay {
+  opacity: .28;
+}

@@ -28,6 +28,7 @@ type ModuleDefinition = {
   tables: string[];
   readOnly?: boolean;
   roles?: ControlRoomRole[];
+  optionalTables?: string[];
 };
 
 export const MODULE_CONFIG: Record<string, ModuleDefinition> = {
@@ -51,8 +52,9 @@ export const MODULE_CONFIG: Record<string, ModuleDefinition> = {
     code: "05",
     title: "REVELAÇÃO",
     eyebrow: "SALA DE REVELAÇÃO",
-    description: "Slots de media e conteúdo da sala de revelação, ligados directamente ao banco.",
-    tables: ["revelation_media"],
+    description: "Galeria publicada e slots legados da sala de revelação, ligados directamente ao banco.",
+    tables: ["gallery_items", "revelation_media"],
+    optionalTables: ["gallery_items"],
     roles: ["OWNER", "ADMIN", "EDITOR"],
   },
   media: {
@@ -202,17 +204,30 @@ export function ControlRoomModule({ module }: { module: keyof typeof MODULE_CONF
       setRole(session?.role ?? null);
       setPreviewMode(isPublicPreviewSession(session));
 
+      const optionalWarnings: string[] = [];
       const entries = await Promise.all(
         config.tables.map(async (table) => {
-          const rows = await adminQuery<RowData[]>(
-            "/rest/v1/" + table + "?select=*&limit=1000",
-          );
-          return [table, rows.map(normaliseRecord)] as const;
+          try {
+            const rows = await adminQuery<RowData[]>(
+              "/rest/v1/" + table + "?select=*&limit=1000",
+            );
+            return [table, rows.map(normaliseRecord)] as const;
+          } catch (error) {
+            if (!config.optionalTables?.includes(table)) throw error;
+            optionalWarnings.push(table);
+            return [table, [] as RowData[]] as const;
+          }
         }),
       );
 
       const next = Object.fromEntries(entries);
       setRowsByTable(next);
+      if (optionalWarnings.length) {
+        setNotice(
+          optionalWarnings.join(", ") +
+            " indisponível(is); a sala mantém a fonte legada quando disponível.",
+        );
+      }
       const currentRows = next[activeTable] ?? [];
       setSelected((current) => {
         if (!current) return currentRows[0] ?? null;
