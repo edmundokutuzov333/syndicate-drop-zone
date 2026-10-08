@@ -167,7 +167,7 @@ function FrequenciaPage() {
       </section>
 
       <div className="mt-8 font-mono text-[8px] tracking-[0.18em] text-muted-foreground">
-        SID · {getAnalyticsSessionId().slice(0, 8)} · 808
+        SID · {typeof window === "undefined" ? "--------" : getAnalyticsSessionId().slice(0, 8)} · 808
       </div>
     </main>
   );
