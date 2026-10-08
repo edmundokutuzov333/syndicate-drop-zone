@@ -120,6 +120,46 @@ test.describe("Frequência 808 browser smoke", () => {
     await expect.poll(async () => await page.evaluate(() => navigator.mediaSession?.playbackState ?? "none")).toBe("playing");
   });
 
+
+  test("blocks legacy 30-second preview audio while radio is on air", async ({ page }) => {
+    await page.addInitScript(() => {
+      sessionStorage.setItem("sdt-open", "1");
+    });
+    await page.route("**/rest/v1/**", async (route) => {
+      await route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
+    });
+    await page.route("https://files.catbox.moe/**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: route.request().url().endsWith(".wav") ? "audio/wav" : "audio/mpeg",
+        body: wavBody(),
+        headers: { "Accept-Ranges": "bytes", "Cache-Control": "no-store" },
+      });
+    });
+
+    await page.goto("/frequencia");
+    await expect(page.getByRole("heading", { name: "FREQUÊNCIA 808" })).toBeVisible();
+    await expect.poll(async () => page.evaluate(() => navigator.mediaSession?.playbackState ?? "none")).toBe("playing");
+
+    const blocked = await page.evaluate(async () => {
+      const legacy = new Audio();
+      legacy.src = "/assets/tapes/nova-wave.mp3";
+      try {
+        await legacy.play();
+        return { rejected: false, paused: legacy.paused };
+      } catch (error) {
+        return {
+          rejected: true,
+          paused: legacy.paused,
+          name: error instanceof DOMException ? error.name : "",
+        };
+      }
+    });
+
+    expect(blocked.rejected).toBe(true);
+    expect(blocked.paused).toBe(true);
+  });
+
   test("keeps the radio alive with emergency static when a track fails", async ({ page }) => {
     await page.addInitScript(() => {
       sessionStorage.setItem("sdt-open", "1");
