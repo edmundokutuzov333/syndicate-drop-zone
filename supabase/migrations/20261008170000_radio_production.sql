@@ -42,15 +42,15 @@ returns boolean
 language sql
 security definer
 set search_path = ''
-as $
+as '
   select exists(
     select 1
     from public.admin_profiles
     where user_id = auth.uid()
       and active = true
-      and role in ('OWNER','ADMIN','EDITOR')
+      and role in (''OWNER'',''ADMIN'',''EDITOR'')
   );
-$;
+';
 
 revoke all on function public.is_radio_editor() from public;
 grant execute on function public.is_radio_editor() to authenticated;
