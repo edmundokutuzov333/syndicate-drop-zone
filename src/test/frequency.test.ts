@@ -65,6 +65,28 @@ describe("frequency scheduler", () => {
       "https://files.catbox.moe/g9nczk.mp3",
       "https://files.catbox.moe/6hit4n.wav",
     ]);
+    expect(RADIO_TRACKS.map((track) => track.title)).toEqual([
+      "A Bag",
+      "Chopper",
+      "Freestyle Sujo",
+      "I'M Flexin up",
+      "Money Talk",
+      "Tsanto Dough",
+      "FASHIIION D’PHANTOM",
+      "A Nova Wave",
+      "Phantom Mode (The final movie)",
+    ]);
+    expect(RADIO_TRACKS.map((track) => track.artist)).toEqual([
+      "KHRYIS",
+      "KHRYIS",
+      "KHRYIS",
+      "KHRYIS",
+      "KHRYIS",
+      "KHRYIS",
+      "PHANTOM, Kingston Siriro, Elton Penicela",
+      "PHANTOM, Bruno The GOAT, Alemão Wav, Elton Penicela",
+      "PHANTOM, INF8M8US, HeyyG, Kingston Siriro",
+    ]);
   });
 
   it("keeps the nine production radio URLs separate from the site preview tapes", () => {
