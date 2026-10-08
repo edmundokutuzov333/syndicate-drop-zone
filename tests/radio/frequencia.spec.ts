@@ -96,7 +96,7 @@ test.describe("Frequência 808 browser smoke", () => {
 
     const source = await page.evaluate(() => {
       const sources = (window as Window & { __radioPlaySources?: string[] }).__radioPlaySources ?? [];
-      return sources.find((src) => src.includes("cdn.discordapp.com/attachments/")) ?? "";
+      return sources.find((src) => src.includes("/audio/")) ?? "";
     });
     expect(RADIO_SOURCES).toContain(new URL(source).pathname);
     expect(source).not.toContain("/assets/tapes/");
