@@ -239,6 +239,8 @@ export function getControlRoomStaticRows(table: string): Row[] | null {
       return dropRows();
     case "partnership_requests":
       return [];
+    case "members":
+      return [];
     case "reservations":
     case "inventory_movements":
     case "audit_logs":
