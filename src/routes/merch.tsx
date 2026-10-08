@@ -8,6 +8,7 @@ import { hiss, printer, thud } from "@/lib/sfx";
 import { tape } from "@/lib/tape-engine";
 import { track } from "@/lib/track";
 import { useKey } from "@/components/use-key";
+import { useMember } from "@/components/use-member";
 
 export const Route = createFileRoute("/merch")({
   loader: async () => {
@@ -40,6 +41,8 @@ function Merch() {
   const [reservationMessage, setReservationMessage] = useState("");
   const [openedStamp, setOpenedStamp] = useState(false);
   const armed = useKey();
+  const { member } = useMember();
+  const canOpen = canEnterMerch(armed, { isSyndicateMember: Boolean(member) });
   const previousKey = useRef(armed);
   const { merch, tapes } = Route.useLoaderData();
   const p = merch[sel]!;
@@ -61,7 +64,7 @@ function Merch() {
   }, [armed]);
 
   useEffect(() => {
-    track("merch_view");
+    track("merch_view", { member: Boolean(member) ? 1 : 0 });
   }, []);
 
   const reserve = async () => {
@@ -103,7 +106,7 @@ function Merch() {
 
   return (
     <main className="relative mx-auto max-w-7xl px-4 pb-24 pt-12 md:px-8">
-      {!canEnterMerch(armed) && (
+      {!canOpen && (
         <div className="fixed inset-0 z-[70] overflow-y-auto bg-black/60 p-4 backdrop-blur-sm md:p-8" role="dialog" aria-modal="true" aria-label="Cofre fechado">
           <div className="mx-auto flex min-h-full max-w-4xl items-center justify-center py-12">
             <section className="w-full border-2 border-blood bg-background/95 shadow-[0_30px_100px_rgba(0,0,0,.75)]">
@@ -146,7 +149,7 @@ function Merch() {
       <p className="text-xs tracking-widest text-blood">1ª EDIÇÃO · MERCH OFICIAL</p>
       <div className="mt-2 flex items-end justify-between gap-4">
         <h1 className="font-gothic text-6xl leading-[0.85] md:text-8xl">Merch</h1>
-        {armed && <span className="border border-blood px-2 py-1 font-mono text-[9px] tracking-widest text-blood">{openedStamp ? "ABERTO" : keyLabel}</span>}
+        {canOpen && <span className="border border-blood px-2 py-1 font-mono text-[9px] tracking-widest text-blood">{openedStamp ? "ABERTO" : keyLabel}</span>}
       </div>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[1.3fr_1fr]">
@@ -186,8 +189,8 @@ function Merch() {
           )}
           <label className="mt-6 text-xs text-muted-foreground" htmlFor="merch-alias">CODINOME DO RECEPTOR</label>
           <input id="merch-alias" value={alias} onChange={(event) => setAlias(event.target.value.toUpperCase())} maxLength={20} placeholder="ANÔNIMO" className="mt-2 border border-border bg-transparent px-3 py-3 text-sm outline-none focus:border-blood" />
-          <button type="button" onClick={() => void reserve()} disabled={reservationState === "sending" || !armed} className="mt-6 bg-blood py-4 font-stamp text-lg text-primary-foreground hover:opacity-85 disabled:cursor-wait disabled:opacity-60">RESERVAR UNIDADE</button>
-          <p className="mt-2 text-[10px] text-muted-foreground">{reservationState === "sending" ? "a registar a reserva..." : "reserva real no Control Room — pagamento liberado no dia do drop."}</p>
+          <button type="button" onClick={() => void reserve()} disabled={reservationState === "sending" || !canOpen} className="mt-6 bg-blood py-4 font-stamp text-lg text-primary-foreground hover:opacity-85 disabled:cursor-wait disabled:opacity-60">RESERVAR UNIDADE</button>
+          <p className="mt-2 text-[10px] text-muted-foreground">{reservationState === "sending" ? "a registar a reserva..." : member ? "pré-reserva de sindicalizado — registo real no Control Room." : "reserva real no Control Room — pagamento liberado no dia do drop."}</p>
           {reservationState === "error" && <p className="mt-2 border border-blood/50 bg-blood/5 p-3 text-[10px] text-blood">{reservationMessage}</p>}
           {receipt && (
             <div className="mt-8 flex justify-center">
