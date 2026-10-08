@@ -3,6 +3,7 @@ import { getLiveTapes } from "@/lib/site-content";
 import { getFrequencyClock, getFrequencyListenerCount, sendFrequencyHeartbeat, awardNightListener } from "@/lib/frequency-api";
 import { kick808, radioDial } from "@/lib/sfx";
 import { tape } from "@/lib/tape-engine";
+import { TAPES as STATIC_TAPES } from "@/lib/data";
 
 export type FrequencyTrack = {
   id: string;
@@ -115,19 +116,29 @@ export function locateFrequencySegment(
   };
 }
 
+function sameFrequencySegment(a: FrequencySegment, b: FrequencySegment): boolean {
+  if (a.kind !== b.kind) return false;
+  if (a.kind === "music" && b.kind === "music") return a.track.id === b.track.id;
+  return a.musicIndex === b.musicIndex;
+}
+
+function sameAudioSource(audio: HTMLAudioElement, src: string): boolean {
+  const current = audio.currentSrc || audio.src;
+  if (!current) return false;
+  try {
+    return new URL(current, document.baseURI).href === new URL(src, document.baseURI).href;
+  } catch {
+    return current === src;
+  }
+}
+
 function makeSiteQueue(): FrequencyTrack[] {
-  const staticTracks = [
-    ["T1", "A NOVA WAVE", "Bruno The GOAT, Elton Penicela, Alemão Wavv"],
-    ["T2", "PHANTOM MODE", "INF8M8US"],
-    ["T3", "FASHIION D'PHANTOM", "Kingston Siriro, Kaká Machava, Elton Penicela"],
-    ["T4", "ph4nt0mmm_intr0", "PHANTOM"],
-  ];
-  return staticTracks.map(([id, title, artist]) => ({
-    id,
-    title,
-    artist,
-    src: "",
-    durationSec: DEFAULT_DURATION,
+  return STATIC_TAPES.map((item) => ({
+    id: item.id,
+    title: item.title,
+    artist: item.feat,
+    src: item.src,
+    durationSec: parseDuration(item.dur),
     source: "site" as const,
   }));
 }
@@ -150,6 +161,9 @@ export class FrequencyEngine {
   private mediaWaitCleanup: (() => void) | null = null;
   private syncVersion = 0;
   private mediaRequestVersion = 0;
+  private lifecycleVersion = 0;
+  private programPromise: Promise<void> | null = null;
+  private clockPromise: Promise<void> | null = null;
   private state: FrequencyState = {
     active: false,
     playing: false,
@@ -167,6 +181,20 @@ export class FrequencyEngine {
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  };
+
+  prepare = (): Promise<void> => {
+    const program = this.programPromise ?? (
+      this.programPromise = this.loadProgram().finally(() => {
+        this.programPromise = null;
+      })
+    );
+    const clock = this.clockPromise ?? (
+      this.clockPromise = this.clock().finally(() => {
+        this.clockPromise = null;
+      })
+    );
+    return Promise.all([program, clock]).then(() => undefined);
   };
 
   getSpectrum = (): number[] => {
@@ -205,10 +233,15 @@ export class FrequencyEngine {
     source.connect(analyser).connect(destination);
 
     audio.addEventListener("loadedmetadata", () => this.set({ duration: Number.isFinite(audio.duration) ? audio.duration : this.state.duration }));
-    audio.addEventListener("error", () => this.set({ playing: false, error: "Áudio indisponível nesta frequência." }));
+    audio.addEventListener("error", () => {
+      this.set({ error: "A faixa da emissão não respondeu. A rádio activa o sinal de emergência." });
+    });
     audio.addEventListener("play", () => this.set({ playing: true }));
     audio.addEventListener("pause", () => {
       if (this.state.phase !== "static") this.set({ playing: false });
+    });
+    audio.addEventListener("ended", () => {
+      if (this.state.active && this.state.playing) this.scheduleNext(0);
     });
 
     this.audio = audio;
@@ -279,28 +312,26 @@ export class FrequencyEngine {
 
   private async syncToClock() {
     if (!this.state.active || !this.state.playing) return;
+
     const syncVersion = ++this.syncVersion;
     const serverNow = Date.now() + this.serverOffsetMs;
     const elapsedSec = Math.max(0, (serverNow - this.stationStartedAt) / 1000);
     if (!this.tracks.length) return;
 
     const located = locateFrequencySegment(elapsedSec, this.tracks, this.seed);
-
-    this.audio?.pause();
-    this.currentStatic?.stop();
-    this.currentStatic = null;
-    if (this.staticTimer) window.clearTimeout(this.staticTimer);
-    this.staticTimer = null;
-    const current = located.segment.kind === "music" || located.segment.kind === "tag"
-      ? located.segment.kind === "music" ? located.segment.track : this.tracks[(located.segment.musicIndex) % this.tracks.length]
-      : this.tracks[(located.segment.musicIndex) % this.tracks.length];
-    const nextMusic = located.cycleSegments.slice(located.segmentIndex + 1).find((segment) => segment.kind === "music");
+    const current =
+      located.segment.kind === "music"
+        ? located.segment.track
+        : this.tracks[(located.segment.musicIndex) % this.tracks.length];
+    const nextMusic = located.cycleSegments
+      .slice(located.segmentIndex + 1)
+      .find((segment) => segment.kind === "music");
     const next = nextMusic?.kind === "music" ? nextMusic.track : this.tracks[0] ?? null;
-
     const remainingMs = Math.max(0, (located.segment.durationSec - located.offsetSec) * 1000);
+
     this.set({
       phase: located.segment.kind,
-      current: located.segment.kind === "music" ? located.segment.track : current,
+      current,
       next,
       elapsed: located.offsetSec,
       duration: located.segment.durationSec,
@@ -308,24 +339,67 @@ export class FrequencyEngine {
     });
 
     if (located.segment.kind === "static") {
+      this.audio?.pause();
       this.playStatic(remainingMs);
-    } else if (located.segment.kind === "tag") {
-      const tagOk = await this.playMedia(TAG_SRC, located.offsetSec, syncVersion);
-      if (!tagOk && syncVersion === this.syncVersion && this.state.active && this.state.playing) {
-        this.playStatic(remainingMs);
-        kick808(0.42, Math.min(0.8, remainingMs / 1000));
-      }
     } else {
-      const musicOk = await this.playMedia(located.segment.track.src, located.offsetSec, syncVersion);
-      if (!musicOk && syncVersion === this.syncVersion && this.state.active && this.state.playing) {
+      this.currentStatic?.stop();
+      this.currentStatic = null;
+      if (this.staticTimer) window.clearTimeout(this.staticTimer);
+      this.staticTimer = null;
+
+      const targetSrc = located.segment.kind === "tag" ? TAG_SRC : located.segment.track.src;
+      const mediaOk = await this.playMedia(targetSrc, located.offsetSec, syncVersion);
+
+      if (!mediaOk && syncVersion === this.syncVersion && this.state.active && this.state.playing) {
         this.playStatic(remainingMs);
+        this.set({
+          error:
+            located.segment.kind === "tag"
+              ? "A identificação 808 não respondeu. A rádio segue em sinal de emergência."
+              : "A faixa não respondeu. A rádio segue em sinal de emergência.",
+        });
+        if (located.segment.kind === "tag") {
+          kick808(0.42, Math.min(0.8, remainingMs / 1000));
+        }
       }
     }
 
     if (syncVersion !== this.syncVersion || !this.state.active || !this.state.playing) return;
 
-    this.updateMediaSession(located.segment.kind === "music" ? located.segment.track : this.tracks[(located.segment.musicIndex) % this.tracks.length] ?? null);
-    this.scheduleNext(remainingMs);
+    const nowElapsed = Math.max(
+      0,
+      (Date.now() + this.serverOffsetMs - this.stationStartedAt) / 1000,
+    );
+    const nowLocated = locateFrequencySegment(nowElapsed, this.tracks, this.seed);
+
+    if (
+      located.segment.kind !== "static" &&
+      nowLocated.segment.kind !== "static" &&
+      sameFrequencySegment(nowLocated.segment, located.segment) &&
+      this.audio &&
+      !this.audio.paused
+    ) {
+      try {
+        const duration = Number.isFinite(this.audio.duration) ? this.audio.duration : 0;
+        const offset = duration > 0
+          ? Math.min(nowLocated.offsetSec, Math.max(0, duration - 0.05))
+          : nowLocated.offsetSec;
+        if (Math.abs(this.audio.currentTime - offset) > 0.25) {
+          this.audio.currentTime = offset;
+        }
+      } catch {}
+    }
+
+    this.updateMediaSession(
+      located.segment.kind === "music"
+        ? located.segment.track
+        : this.tracks[(located.segment.musicIndex) % this.tracks.length] ?? null,
+    );
+
+    const delay = sameFrequencySegment(nowLocated.segment, located.segment)
+      ? Math.max(0, (nowLocated.segment.durationSec - nowLocated.offsetSec) * 1000)
+      : 0;
+    this.scheduleNext(delay);
   }
 
   private updateMediaSession(trackValue: FrequencyTrack | null) {
@@ -403,8 +477,11 @@ export class FrequencyEngine {
     this.mediaWaitCleanup?.();
     this.mediaWaitCleanup = null;
 
-    audio.src = src;
-    audio.load();
+    const sourceAlreadyLoaded = sameAudioSource(audio, src);
+    if (!sourceAlreadyLoaded) {
+      audio.src = src;
+      audio.load();
+    }
 
     if (audio.readyState < HTMLMediaElement.HAVE_METADATA) {
       const ready = await new Promise<boolean>((resolve) => {
@@ -427,32 +504,49 @@ export class FrequencyEngine {
         audio.addEventListener("error", onError, { once: true });
       });
 
-      if (!ready || requestVersion !== this.mediaRequestVersion || syncVersion !== this.syncVersion) return false;
+      if (!ready || requestVersion !== this.mediaRequestVersion || syncVersion !== this.syncVersion) {
+        return false;
+      }
     }
 
-    if (requestVersion !== this.mediaRequestVersion || syncVersion !== this.syncVersion || !this.state.active || !this.state.playing) {
+    if (
+      requestVersion !== this.mediaRequestVersion ||
+      syncVersion !== this.syncVersion ||
+      !this.state.active ||
+      !this.state.playing
+    ) {
       return false;
     }
 
     try {
       const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
-      const safeOffset = duration > 0 ? Math.min(Math.max(0, offsetSec), Math.max(0, duration - 0.05)) : Math.max(0, offsetSec);
+      const safeOffset = duration > 0
+        ? Math.min(Math.max(0, offsetSec), Math.max(0, duration - 0.05))
+        : Math.max(0, offsetSec);
       audio.currentTime = safeOffset;
-    } catch {
-      // Some mobile engines only permit seeking after metadata and a short decode.
+    } catch {}
+
+    if (audio.paused) {
+      try {
+        await audio.play();
+      } catch {
+        if (requestVersion !== this.mediaRequestVersion || syncVersion !== this.syncVersion) {
+          return false;
+        }
+        this.set({
+          error:
+            "O browser bloqueou esta faixa externa. A emissão continua com sinal de emergência.",
+        });
+        return false;
+      }
     }
 
-    try {
-      await audio.play();
-    } catch {
-      if (requestVersion !== this.mediaRequestVersion || syncVersion !== this.syncVersion) return false;
-      this.set({ playing: false, error: "Toque em SINTONIZAR para desbloquear o áudio." });
-      this.setMediaSessionState("paused");
-      return false;
-    }
-
-    if (requestVersion !== this.mediaRequestVersion || syncVersion !== this.syncVersion || !this.state.active || !this.state.playing) {
-      audio.pause();
+    if (
+      requestVersion !== this.mediaRequestVersion ||
+      syncVersion !== this.syncVersion ||
+      !this.state.active ||
+      !this.state.playing
+    ) {
       return false;
     }
 
@@ -461,24 +555,118 @@ export class FrequencyEngine {
     return true;
   }
 
+  private startLocalPlaybackForGesture() {
+    const audio = this.ensureAudio();
+    if (!audio) {
+      this.set({
+        playing: false,
+        error: "O motor de áudio não está disponível neste browser.",
+      });
+      return;
+    }
+
+    const elapsedSec = Math.max(
+      0,
+      (Date.now() + this.serverOffsetMs - this.stationStartedAt) / 1000,
+    );
+    const located = locateFrequencySegment(elapsedSec, this.tracks, this.seed);
+    const current =
+      located.segment.kind === "music"
+        ? located.segment.track
+        : this.tracks[(located.segment.musicIndex) % this.tracks.length];
+    const nextMusic = located.cycleSegments
+      .slice(located.segmentIndex + 1)
+      .find((segment) => segment.kind === "music");
+    const next = nextMusic?.kind === "music" ? nextMusic.track : this.tracks[0] ?? null;
+    const remainingMs = Math.max(0, (located.segment.durationSec - located.offsetSec) * 1000);
+
+    this.set({
+      active: true,
+      playing: true,
+      phase: located.segment.kind,
+      current,
+      next,
+      elapsed: located.offsetSec,
+      duration: located.segment.durationSec,
+      error: null,
+    });
+
+    if (located.segment.kind === "static") {
+      this.playStatic(remainingMs);
+      this.scheduleNext(remainingMs);
+      return;
+    }
+
+    this.currentStatic?.stop();
+    this.currentStatic = null;
+    if (this.staticTimer) window.clearTimeout(this.staticTimer);
+    this.staticTimer = null;
+
+    const targetSrc = located.segment.kind === "tag" ? TAG_SRC : located.segment.track.src;
+    if (!targetSrc) {
+      this.playStatic(remainingMs);
+      this.set({ error: "Sem faixa local disponível. A rádio entrou em sinal de emergência." });
+      this.scheduleNext(remainingMs);
+      return;
+    }
+
+    const requestVersion = ++this.mediaRequestVersion;
+    this.mediaWaitCleanup?.();
+    this.mediaWaitCleanup = null;
+    audio.src = targetSrc;
+    audio.load();
+    try {
+      audio.currentTime = located.offsetSec;
+    } catch {}
+
+    void audio.play().catch(() => {
+      if (requestVersion !== this.mediaRequestVersion || !this.state.active || !this.state.playing) return;
+      this.playStatic(remainingMs);
+      this.set({
+        error:
+          "O browser bloqueou o áudio. A emissão continua com sinal de emergência.",
+      });
+    });
+
+    this.updateMediaSession(
+      located.segment.kind === "music"
+        ? located.segment.track
+        : this.tracks[(located.segment.musicIndex) % this.tracks.length] ?? null,
+    );
+    this.setMediaSessionState("playing");
+    this.scheduleNext(remainingMs);
+  }
+
+  private getStationHour() {
+    return new Date(Date.now() + this.serverOffsetMs).getHours();
+  }
+
   async start() {
     if (this.state.active && this.state.playing) return;
+
+    const lifecycle = ++this.lifecycleVersion;
     this.invalidatePlayback();
     tape.stop();
-    radioDial();
-    await this.loadProgram();
-    await this.clock();
     this.set({ active: true, playing: true, error: null });
+    radioDial();
+
+    // Prime the real local tape during the user's click before any awaited network work.
+    this.startLocalPlaybackForGesture();
+
+    await this.prepare();
+    if (lifecycle !== this.lifecycleVersion || !this.state.active || !this.state.playing) return;
+
     await this.syncToClock();
+    if (lifecycle !== this.lifecycleVersion || !this.state.active || !this.state.playing) return;
+
     this.startPresenceLoops();
-    void sendFrequencyHeartbeat();
-    void this.refreshListenerCount();
     const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
-    if (storedMember) void awardNightListener(storedMember, 3);
+    if (storedMember) void awardNightListener(storedMember, this.getStationHour());
   }
 
   pause() {
     if (!this.state.active) return;
+    this.lifecycleVersion += 1;
     this.syncVersion += 1;
     this.mediaRequestVersion += 1;
     this.mediaWaitCleanup?.();
@@ -496,6 +684,7 @@ export class FrequencyEngine {
   }
 
   stop() {
+    this.lifecycleVersion += 1;
     this.invalidatePlayback();
     this.stopPresenceLoops();
 
@@ -506,15 +695,21 @@ export class FrequencyEngine {
 
   async resume() {
     if (!this.state.active) return this.start();
+
+    const lifecycle = ++this.lifecycleVersion;
     this.invalidatePlayback();
-    await this.clock();
     this.set({ playing: true, error: null });
+    this.startLocalPlaybackForGesture();
+
+    await this.prepare();
+    if (lifecycle !== this.lifecycleVersion || !this.state.active || !this.state.playing) return;
+
     await this.syncToClock();
+    if (lifecycle !== this.lifecycleVersion || !this.state.active || !this.state.playing) return;
+
     this.startPresenceLoops();
-    void sendFrequencyHeartbeat();
-    void this.refreshListenerCount();
     const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
-    if (storedMember) void awardNightListener(storedMember, 3);
+    if (storedMember) void awardNightListener(storedMember, this.getStationHour());
   }
 
   private async refreshListenerCount() {
@@ -531,7 +726,7 @@ export class FrequencyEngine {
       void sendFrequencyHeartbeat();
       void this.refreshListenerCount();
       const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
-      if (storedMember) void awardNightListener(storedMember, 3);
+      if (storedMember) void awardNightListener(storedMember, this.getStationHour());
     }, 20_000);
 
     const onVisibility = () => {
