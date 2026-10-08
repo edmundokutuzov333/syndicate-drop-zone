@@ -379,30 +379,33 @@ export class FrequencyEngine {
     this.blocks = rawBlocks;
     this.stationStartedAt = Date.now();
 
-    const activeBlock = rawBlocks.find((block) => block.id === rawStation.activeBlockId);
-    const forcedSource = rawStation.forcedTrackId
-      ? rawTracks.find((track) => track.id === rawStation.forcedTrackId)
-      : null;
+    const metadataBySource = new Map(
+      rawTracks
+        .filter((track) => ALLOWED_RADIO_SOURCES.has(track.src))
+        .map((track) => [track.src, track]),
+    );
 
-    const catalog = activeBlock && activeBlock.trackIds.length
-      ? rawTracks.filter((track) => activeBlock.trackIds.includes(track.id) || track.id === rawStation.forcedTrackId)
-      : rawTracks;
-
-    if (forcedSource && !catalog.some((track) => track.id === forcedSource.id)) catalog.push(forcedSource);
-
-    const sanitized = catalog
-      .filter((track) => track.src && ALLOWED_RADIO_SOURCES.has(track.src) && !track.temporarilyDisabled)
-      .map(mapRadioTrack);
-
-    this.tracks = sanitized.length ? sanitized : RADIO_TRACKS.map((track, index) => ({
-      ...track,
-      durationSec: DEFAULT_DURATION,
-      rotationWeight: 1,
-      position: index + 1,
-      failureCount: 0,
-      temporarilyDisabled: false,
-      source: "radio" as const,
-    }));
+    // A rádio é um catálogo fechado. Os únicos áudios elegíveis são os nove
+    // ficheiros fornecidos para a Frequência 808. Blocos editoriais nunca podem
+    // introduzir previews, assets ou outras fontes no player.
+    this.tracks = RADIO_TRACKS
+      .map((seed, index) => {
+        const metadata = metadataBySource.get(seed.src);
+        return {
+          id: metadata?.id ?? seed.id,
+          title: metadata?.title ?? seed.title,
+          artist: metadata?.artist ?? seed.artist,
+          src: seed.src,
+          durationSec: parseDuration(metadata?.durationSec) || DEFAULT_DURATION,
+          kind: "music" as const,
+          rotationWeight: Math.max(1, metadata?.rotationWeight ?? 1),
+          position: metadata?.position ?? index + 1,
+          failureCount: metadata?.failureCount ?? 0,
+          temporarilyDisabled: metadata?.temporarilyDisabled ?? false,
+          source: "radio" as const,
+        };
+      })
+      .filter((track) => !track.temporarilyDisabled && ALLOWED_RADIO_SOURCES.has(track.src));
 
     this.rebuildQueue(true);
     if (this.tracks.length === 0) {
