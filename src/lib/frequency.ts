@@ -1,5 +1,5 @@
 import { getCtx, getRadioVolume, isMuted, subscribeMute } from "@/lib/audio-bus";
-import { getLiveRadioStation, getLiveRadioTracks, type LiveRadioStation, type LiveRadioTrack } from "@/lib/site-content";
+import { getLiveRadioBlocks, getLiveRadioStation, getLiveRadioTracks, type LiveRadioBlock, type LiveRadioStation, type LiveRadioTrack } from "@/lib/site-content";
 import { getFrequencyClock, getFrequencyListenerCount, getRadioStationConfig, markRadioTrackFailure, sendFrequencyHeartbeat, awardNightListener } from "@/lib/frequency-api";
 import { kick808, radioDial } from "@/lib/sfx";
 import { tape } from "@/lib/tape-engine";
@@ -265,6 +265,7 @@ export class FrequencyEngine {
   private stationStartedAt = Date.now() - 6 * 3600_000;
   private seed = 8080808;
   private serverOffsetMs = 0;
+  private blocks: LiveRadioBlock[] = [];
   private tracks: FrequencyTrack[] = RADIO_TRACKS.map((track, index) => ({
     id: track.id,
     title: track.title,
@@ -280,6 +281,7 @@ export class FrequencyEngine {
   }));
   private station: LiveRadioStation = {
     forcedTrackId: null,
+    activeBlockId: null,
     autoplay: true,
     stationSeed: 8080808,
     crossfadeMs: 650,
@@ -386,14 +388,22 @@ export class FrequencyEngine {
   }
 
   private async loadProgram() {
-    const [rawTracks, rawStation] = await Promise.all([
+    const [rawTracks, rawStation, rawBlocks] = await Promise.all([
       getLiveRadioTracks(),
       getLiveRadioStation(),
+      getLiveRadioBlocks(),
     ]);
     this.station = rawStation;
+    this.blocks = rawBlocks;
     this.seed = rawStation.stationSeed || 8080808;
+
+    const activeBlock = rawBlocks.find((block) => block.id === rawStation.activeBlockId);
+    const catalog = activeBlock && activeBlock.trackIds.length
+      ? rawTracks.filter((track) => activeBlock.trackIds.includes(track.id))
+      : rawTracks;
+
     this.tracks = await Promise.all(
-      rawTracks
+      catalog
         .filter((track) => track.src && !track.temporarilyDisabled)
         .map(async (track) => {
           const duration = parseDuration(track.durationSec) || await probeDuration(track.src);
