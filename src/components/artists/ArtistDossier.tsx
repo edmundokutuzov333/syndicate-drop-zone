@@ -10,7 +10,7 @@ import {
   Share2,
   Youtube,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Halftone } from "@/components/Halftone";
 import { SpotifyEmbed } from "@/components/artists/SpotifyEmbed";
@@ -22,6 +22,7 @@ import type { ArtistVideo } from "@/lib/artist-profiles";
 import { TAPES } from "@/lib/data";
 import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 import { cn } from "@/lib/utils";
+import { track } from "@/lib/track";
 
 type Props = {
   artist: Artist;
@@ -43,6 +44,10 @@ function socialLabel(name: string) {
 export function ArtistDossier({ artist, channels: liveChannels }: Props) {
   const [shared, setShared] = useState(false);
   const channels = liveChannels ?? getArtistChannels(artist.slug);
+
+  useEffect(() => {
+    track("artist_view", { artist: artist.slug });
+  }, [artist.slug]);
   const currentIndex = ARTISTS.findIndex((item) => item.slug === artist.slug);
   const previous = ARTISTS[(currentIndex - 1 + ARTISTS.length) % ARTISTS.length]!;
   const next = ARTISTS[(currentIndex + 1) % ARTISTS.length]!;
