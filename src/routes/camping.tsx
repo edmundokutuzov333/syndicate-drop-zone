@@ -13,7 +13,6 @@ import {
   getRoomAlias,
 } from "@/lib/camping-data";
 import { getLiveRevelationMedia } from "@/lib/site-content";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/camping")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -42,7 +41,7 @@ export const Route = createFileRoute("/camping")({
       }
     }
     return { sessions, live: flags.live, camp: flags.camp, gallery: galleryFallback };
-  }),
+  },
   head: () => ({
     meta: [
       { title: "Camping — O Sindicato do Trap" },
