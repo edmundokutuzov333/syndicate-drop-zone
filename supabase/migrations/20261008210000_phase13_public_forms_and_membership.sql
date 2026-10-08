@@ -62,6 +62,7 @@ declare
   v_code text;
   v_number bigint;
   v_since timestamptz;
+  v_digits text;
 begin
   if char_length(v_alias) < 2 or char_length(v_alias) > 20 then
     raise exception using errcode = '22023', message = 'CODINOME_INVALIDO';
@@ -81,20 +82,22 @@ begin
 
   if v_contact_type = 'email' then
     v_contact_value := lower(v_contact_value);
+    if position('@' in v_contact_value) <= 1
+      or position('@' in reverse(v_contact_value)) <= 1
+      or position('.' in split_part(v_contact_value, '@', 2)) <= 1
+      or v_contact_value ~ '[[:space:]]' then
+      raise exception using errcode = '22023', message = 'EMAIL_INVALIDO';
+    end if;
+  else
+    v_digits := regexp_replace(v_contact_value, '[^0-9]', '', 'g');
+    if char_length(v_digits) < 5
+      or v_contact_value ~ '[^0-9 .()+-]' then
+      raise exception using errcode = '22023', message = 'WHATSAPP_INVALIDO';
+    end if;
   end if;
 
   v_contact_key := v_contact_type || ':' ||
     lower(regexp_replace(v_contact_value, '[^a-zA-Z0-9@._+]', '', 'g'));
-
-  if v_contact_type = 'email'
-     and v_contact_value !~* '^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+$' then
-    raise exception using errcode = '22023', message = 'EMAIL_INVALIDO';
-  end if;
-
-  if v_contact_type = 'whatsapp'
-     and v_contact_value !~ '^\\+?[0-9][0-9 .()\\-]{4,}$' then
-    raise exception using errcode = '22023', message = 'WHATSAPP_INVALIDO';
-  end if;
 
   select m.id
     into v_referred_by
