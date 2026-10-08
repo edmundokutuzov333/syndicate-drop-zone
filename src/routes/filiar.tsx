@@ -76,6 +76,8 @@ function Filiacao() {
   const previewRef = useRef<HTMLCanvasElement>(null);
   const cardRef = useRef<HTMLCanvasElement>(null);
   const objectUrl = useRef<string | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -146,16 +148,31 @@ function Filiacao() {
     setClauses((current) => new Set([...current, index]));
   };
 
-  const selectPhoto = async (file: File | undefined) => {
-    if (!file || !file.type.startsWith("image/")) return;
+  const selectPhoto = async (file: File | undefined, input?: HTMLInputElement | null) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("SELECCIONE UMA IMAGEM VÁLIDA.");
+      if (input) input.value = "";
+      return;
+    }
+    if (file.size > 12 * 1024 * 1024) {
+      setError("A fotografia deve ter no máximo 12 MB.");
+      if (input) input.value = "";
+      return;
+    }
+
+    setError("");
     if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
     const url = URL.createObjectURL(file);
     objectUrl.current = url;
+
     try {
       const image = await loadImage(url);
       setPhoto(image);
     } catch {
       setError("Não foi possível ler a fotografia.");
+    } finally {
+      if (input) input.value = "";
     }
   };
 
@@ -209,7 +226,13 @@ function Filiacao() {
         ? "CODINOME INVÁLIDO."
         : raw.includes("CONTACTO_INVALIDO") || raw.includes("WHATSAPP_INVALIDO") || raw.includes("EMAIL_INVALIDO")
           ? "CONTACTO INVÁLIDO."
-          : "NÃO FOI POSSÍVEL REGISTAR A FILIAÇÃO. TENTA NOVAMENTE.";
+          : raw.includes("ASSINATURA_OBRIGATORIA")
+            ? "ASSINATURA OBRIGATÓRIA."
+            : raw.includes("MEMBRO_JA_EXISTE")
+              ? "ESTE CONTACTO JÁ TEM UMA FILIAÇÃO ACTIVA."
+              : raw.includes("SUPABASE") || raw.includes("SERVIÇO") || raw.includes("PGRST") || raw.includes("function")
+                ? "O SERVIÇO DO SINDICATO ESTÁ TEMPORARIAMENTE INDISPONÍVEL. TENTA NOVAMENTE."
+                : "NÃO FOI POSSÍVEL REGISTAR A FILIAÇÃO. TENTA NOVAMENTE.";
       setError(message);
     } finally {
       setBusy(false);
@@ -357,17 +380,63 @@ function Filiacao() {
                 <p className="mt-2 text-[9px] leading-5 text-muted-foreground">Só o Sindicato vê isto. Este contacto impede uma segunda filiação.</p>
               </div>
 
-              <label className="mt-6 grid gap-2 font-mono text-[9px] tracking-[0.18em] text-muted-foreground" htmlFor="member-photo">
-                FOTOGRAFIA
+              <div className="mt-6">
+                <p className="font-mono text-[9px] tracking-[0.18em] text-muted-foreground">FOTOGRAFIA</p>
+                <p className="mt-2 text-[10px] leading-5 text-muted-foreground">
+                  No telemóvel pode escolher uma fotografia da galeria ou abrir a câmara. No computador pode seleccionar um ficheiro.
+                </p>
+
                 <input
-                  id="member-photo"
+                  ref={galleryInputRef}
+                  id="member-photo-gallery"
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => void selectPhoto(event.target.files?.[0], event.currentTarget)}
+                  className="sr-only"
+                />
+                <input
+                  ref={cameraInputRef}
+                  id="member-photo-camera"
                   type="file"
                   accept="image/*"
                   capture="user"
-                  onChange={(event) => void selectPhoto(event.target.files?.[0])}
-                  className="block w-full border border-border bg-background px-3 py-3 text-xs file:mr-3 file:border-0 file:bg-blood file:px-3 file:py-2 file:text-primary-foreground"
+                  onChange={(event) => void selectPhoto(event.target.files?.[0], event.currentTarget)}
+                  className="sr-only"
                 />
-              </label>
+
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => galleryInputRef.current?.click()}
+                    className="min-h-12 border border-border bg-background px-4 py-3 font-mono text-[10px] tracking-[0.16em] hover:border-blood hover:text-blood"
+                  >
+                    ESCOLHER FOTO
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => cameraInputRef.current?.click()}
+                    className="min-h-12 border border-blood bg-blood px-4 py-3 font-mono text-[10px] tracking-[0.16em] text-primary-foreground hover:opacity-90"
+                  >
+                    ABRIR CÂMARA
+                  </button>
+                </div>
+
+                {photo && (
+                  <div className="mt-3 flex items-center justify-between gap-3 border border-border bg-background px-3 py-2">
+                    <span className="truncate font-mono text-[9px] tracking-[0.12em] text-blood">FOTOGRAFIA CARREGADA</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPhoto(null);
+                        setError("");
+                      }}
+                      className="shrink-0 border border-border px-2 py-1 font-mono text-[8px] tracking-[0.12em] hover:border-blood"
+                    >
+                      REMOVER
+                    </button>
+                  </div>
+                )}
+              </div>
 
               <div className="mt-6">
                 <p className="font-mono text-[9px] tracking-[0.18em] text-muted-foreground">ASSINATURA</p>
