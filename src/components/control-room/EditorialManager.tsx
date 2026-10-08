@@ -79,7 +79,7 @@ export function EditorialManager({ mode }: { mode: keyof typeof DISPLAY_GROUPS }
       setRole(session?.role ?? null);
       setPreviewMode(isPublicPreviewSession(session));
       const next = Object.fromEntries(cfg.tables.map((name, index) => [name, sets[index]]));
-      setRowsByTable(next);
+      setRowsByTable(next as Record<string, Row[]>);
       setSelected((current) => {
         const fresh = next[table] ?? [];
         return current ? fresh.find((row) => String(row.id) === String(current.id)) ?? fresh[0] ?? null : fresh[0] ?? null;
@@ -184,7 +184,7 @@ export function EditorialManager({ mode }: { mode: keyof typeof DISPLAY_GROUPS }
     {notice && <div className="mt-5 border border-white/10 bg-[#0d0d0d] px-4 py-3 font-mono text-[10px] tracking-[0.12em] text-[#d71920]">{notice}</div>}
 
     <div className="mt-6 flex flex-wrap gap-2">
-      {cfg.tables.map((name) => <button key={name} type="button" onClick={() => setTable(name)} className={"border px-3 py-2 font-mono text-[9px] tracking-[0.14em] " + (table === name ? "border-[#d71920] bg-[#d71920]/10 text-white" : "border-white/10 text-white/35 hover:text-white")}>{name.toUpperCase()}</button>)}
+      {cfg.tables.map((name) => <button key={name} type="button" onClick={() => setTable(name as typeof table)} className={"border px-3 py-2 font-mono text-[9px] tracking-[0.14em] " + (table === name ? "border-[#d71920] bg-[#d71920]/10 text-white" : "border-white/10 text-white/35 hover:text-white")}>{name.toUpperCase()}</button>)}
       {canEdit && <button type="button" onClick={create} className="inline-flex items-center gap-2 border border-white/10 px-3 py-2 font-mono text-[9px] tracking-[0.14em] text-white/45 hover:border-[#d71920] hover:text-white"><Plus size={13} /> NOVO</button>}
     </div>
 
@@ -205,7 +205,7 @@ export function EditorialManager({ mode }: { mode: keyof typeof DISPLAY_GROUPS }
           <div><p className="font-mono text-[9px] tracking-[0.22em] text-[#d71920]">{table.toUpperCase()}</p><h2 className="mt-1 font-gothic text-4xl">{titleOf(form)}</h2></div>
           <div className="flex flex-wrap gap-2">
             <button type="button" disabled={!selected} onClick={() => setPreview((value) => !value)} className="inline-flex items-center gap-2 border border-white/10 px-3 py-2 font-mono text-[9px] text-white/50 disabled:opacity-30"><Eye size={13} /> {preview ? "EDITOR" : "PRÉ-VISUALIZAR"}</button>
-            {canEdit && selected?.id && (
+            {canEdit && selected?.id != null && (
               <>
                 {typeof form.status === "string" && <button type="button" onClick={() => void save("draft")} className="border border-white/10 px-3 py-2 font-mono text-[9px] text-white/50">GUARDAR RASCUNHO</button>}
                 {typeof form.status === "string" && <button type="button" onClick={() => void save("published")} className="border border-[#d71920] bg-[#d71920] px-3 py-2 font-mono text-[9px] text-white">PUBLICAR</button>}

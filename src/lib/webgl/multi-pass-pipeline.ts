@@ -41,6 +41,7 @@ export class MultiPassPipeline {
 
     for (let passIndex = 0; passIndex < passCount; passIndex += 1) {
       const target = this.buffers[targetIndex];
+      if (!target) return null;
       const framebuffer = target.get();
 
       if (!framebuffer) return null;

@@ -22,7 +22,7 @@ export const Route = createFileRoute("/membros_/$slug")({
         ...(artist
           ? [
               { property: "og:title", content: artist.name + " · O Sindicato do Trap" },
-              { property: "og:description", content: "Arquivo de convocados · " + artist.code },
+              { property: "og:description", content: "Arquivo de convocados · " + artist.slug.toUpperCase() },
               { property: "og:image", content: artist.img },
               { property: "og:type", content: "profile" },
             ]
@@ -45,6 +45,7 @@ export const Route = createFileRoute("/membros_/$slug")({
 });
 
 function ArtistProfile() {
-  const { artist, channels } = Route.useLoaderData();
-  return <ArtistDossier artist={artist} channels={channels} />;
+  const data = Route.useLoaderData();
+  if (!data) return null;
+  return <ArtistDossier artist={data.artist} channels={data.channels} />;
 }

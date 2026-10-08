@@ -284,7 +284,7 @@ function ArtistEditor({
                           {canEdit && (
                             <button
                               type="button"
-                              onClick={() => setReleaseForm((rows) => [...rows, { id: null, position: Math.max(0, ...rows.map((row) => row.position)) + 1, title: "Novo lançamento", youtube_id: "", status: "draft" }])}
+                              onClick={() => setReleaseForm((rows) => [...rows, { id: null as unknown as string, position: Math.max(0, ...rows.map((row) => row.position)) + 1, title: "Novo lançamento", youtube_id: "", status: "draft" }])}
                               className="inline-flex items-center gap-1 border border-white/10 px-2 py-2 font-mono text-[9px] text-white/45 hover:border-[#d71920] hover:text-white"
                             >
                               <Plus size={12} /> ADICIONAR

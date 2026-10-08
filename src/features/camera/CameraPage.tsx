@@ -29,6 +29,8 @@ const INITIAL_CAMERA_STATE: CameraState = {
   devices: [],
   facingMode: "user",
   microphoneEnabled: false,
+  flashEnabled: false,
+  flashMode: "off",
   width: 0,
   height: 0,
   frameRate: 0,
@@ -304,7 +306,7 @@ export function CameraPage() {
         return;
       }
 
-      captureEngine.setPreferredFormat(format);
+      captureEngine.setPreferredFormat(format as "mkv" | "mov" | "mp4" | "webm");
 
       if (camera.flashEnabled && camera.flashMode === "hardware") {
         await cameraManager.syncVideoFlash(true);
