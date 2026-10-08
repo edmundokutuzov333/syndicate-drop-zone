@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { BunkerMap, ROOMS, type Room } from "@/components/BunkerMap";
+import { BunkerMap, type Room } from "@/components/BunkerMap";
 import { ArtistPresence } from "@/components/ArtistPresence";
 import { CampingLive } from "@/components/CampingLive";
 import { CampingSessions } from "@/components/CampingSessions";
@@ -11,8 +11,6 @@ import {
   subscribeCampingLive,
   campingDayRange,
   getRoomAlias,
-  type CampingRoom,
-  type CampingSessionRow,
 } from "@/lib/camping-data";
 import { getLiveRevelationMedia } from "@/lib/site-content";
 import { cn } from "@/lib/utils";
@@ -60,7 +58,6 @@ export const Route = createFileRoute("/camping")({
 
 function Camping() {
   const navigate = useNavigate({ from: "/camping" });
-  const { media } = Route.useSearch();
   const { sessions, camp, gallery, live: initialLive } = Route.useLoaderData();
   const [live, setLive] = useState(initialLive);
   const [selectedRoom, setSelectedRoom] = useState("estudio");
