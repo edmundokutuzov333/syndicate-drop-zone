@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 import { Projector } from "@/components/Projector";
 import { RevelationMediaSurface } from "@/components/revelacao/MediaSurface";
@@ -87,7 +87,7 @@ function GalleryItem({
         <div
           ref={ready ? developRef : undefined}
           className={cn("relative h-full overflow-hidden develop", !ready && "border border-background/20")}
-          style={{ "--develop-delay": String(index * 90) + "ms" } as React.CSSProperties}
+          style={{ "--develop-delay": String(index * 90) + "ms" } as CSSProperties}
         >
           <RevelationMediaSurface item={item} />
           <span className="pointer-events-none absolute inset-3 border border-foreground/20" />
