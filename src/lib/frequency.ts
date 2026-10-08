@@ -178,6 +178,21 @@ export class FrequencyEngine {
   private listeners = new Set<() => void>();
 
   getState = () => this.state;
+
+  getPlaybackPosition() {
+    if (!this.state.active || !this.tracks.length) {
+      return { elapsed: 0, duration: this.state.duration, phase: this.state.phase };
+    }
+    const serverNow = Date.now() + this.serverOffsetMs;
+    const elapsedSec = Math.max(0, (serverNow - this.stationStartedAt) / 1000);
+    const located = locateFrequencySegment(elapsedSec, this.tracks, this.seed);
+    return {
+      elapsed: located.offsetSec,
+      duration: located.segment.durationSec,
+      phase: located.segment.kind,
+    };
+  }
+
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
