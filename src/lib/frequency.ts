@@ -146,6 +146,7 @@ export class FrequencyEngine {
   private timer: number | null = null;
   private heartbeat: number | null = null;
   private listenerTimer: number | null = null;
+  private visibilityCleanup: (() => void) | null = null;
   private state: FrequencyState = {
     active: false,
     playing: false,
@@ -326,7 +327,23 @@ export class FrequencyEngine {
     }
     audio.src = src;
     audio.load();
-    audio.currentTime = Math.max(0, offsetSec);
+
+    if (audio.readyState < HTMLMediaElement.HAVE_METADATA) {
+      await new Promise<void>((resolve) => {
+        const done = () => {
+          audio.removeEventListener("loadedmetadata", done);
+          resolve();
+        };
+        audio.addEventListener("loadedmetadata", done, { once: true });
+      });
+    }
+
+    try {
+      audio.currentTime = Math.max(0, offsetSec);
+    } catch {
+      // Some mobile engines only permit seeking after metadata and a short decode.
+    }
+
     await audio.play().catch(() => {
       this.set({ playing: false, error: "Toque em SINTONIZAR para desbloquear o áudio." });
     });
@@ -367,6 +384,8 @@ export class FrequencyEngine {
     this.timer = null;
     this.heartbeat = null;
     this.listenerTimer = null;
+    this.visibilityCleanup?.();
+    this.visibilityCleanup = null;
     this.set({ active: false, playing: false, phase: null, current: null, next: null, elapsed: 0, duration: 0 });
   }
 
@@ -383,10 +402,21 @@ export class FrequencyEngine {
     if (this.heartbeat) window.clearInterval(this.heartbeat);
     if (this.listenerTimer) window.clearInterval(this.listenerTimer);
     this.heartbeat = window.setInterval(() => {
+      void this.clock();
       void sendFrequencyHeartbeat();
       const storedMember = typeof window !== "undefined" ? window.localStorage.getItem("sdt-member") : null;
       if (storedMember) void awardNightListener(storedMember, new Date().getHours());
     }, 20_000);
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible" && this.state.active && this.state.playing) {
+        void this.clock().then(() => this.syncToClock());
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    const previous = this.visibilityCleanup;
+    previous?.();
+    this.visibilityCleanup = () => document.removeEventListener("visibilitychange", onVisibility);
     this.listenerTimer = window.setInterval(async () => {
       const count = await getFrequencyListenerCount();
       this.set({ listenerCount: count });
