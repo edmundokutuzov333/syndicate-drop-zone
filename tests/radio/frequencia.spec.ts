@@ -107,10 +107,10 @@ test.describe("Frequência 808 browser smoke", () => {
     await progress.fill("0.35");
     await expect.poll(async () => page.evaluate(() => localStorage.getItem("sdt-radio-volume"))).toBe("0.35");
 
-    await page.getByRole("button", { name: "PAUSAR" }).click();
+    await page.getByRole("button", { name: "PAUSAR", exact: true }).click();
     await expect(page.getByRole("button", { name: "RETOMAR" })).toBeVisible();
 
-    await page.getByRole("button", { name: "RETOMAR" }).click();
+    await page.getByRole("button", { name: "RETOMAR", exact: true }).click();
     await expect(page.getByRole("button", { name: "PAUSAR" })).toBeVisible();
 
     await page.getByRole("button", { name: "DESLIGAR RÁDIO" }).click();
@@ -174,6 +174,6 @@ test.describe("Frequência 808 browser smoke", () => {
     await page.goto("/frequencia");
     await expect(page.getByRole("heading", { name: "FREQUÊNCIA 808" })).toBeVisible();
     await expect.poll(async () => await page.evaluate(() => navigator.mediaSession?.playbackState ?? "none"), { timeout: 15_000 }).toBe("playing");
-    await expect(page.getByText(/SINAL DE EMERGÊNCIA|INTERFERÊNCIA 808/)).toBeVisible();
+    await expect(page.getByText("SINAL DE EMERGÊNCIA", { exact: true })).toBeVisible();
   });
 });
