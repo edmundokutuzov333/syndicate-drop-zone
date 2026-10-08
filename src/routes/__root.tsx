@@ -28,6 +28,7 @@ import { reportLovableError } from "@/lib/lovable-error-reporting";
 import { getLiveSiteConfig } from "@/lib/site-content";
 import { getDelegates } from "@/lib/membership";
 import { buildRouteSeo } from "@/lib/seo";
+import { frequency } from "@/lib/frequency";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   loader: async () => ({ site: await getLiveSiteConfig() }),
@@ -185,6 +186,15 @@ function RootComponent() {
   });
   const [open, setOpen] = useState(() => isGateOpen());
   const { site } = Route.useLoaderData();
+
+  useEffect(() => {
+    void frequency.prepare();
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    void frequency.autoStart();
+  }, [open]);
 
   return (
     <QueryClientProvider client={queryClient}>

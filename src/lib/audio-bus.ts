@@ -50,6 +50,39 @@ export function out(): GainNode | null {
   return c ? ensureBus(c) : null;
 }
 
+const VOLUME_KEY = "sdt-radio-volume";
+
+function readVolume(): number {
+  try {
+    const raw = Number(window.localStorage.getItem(VOLUME_KEY));
+    return Number.isFinite(raw) ? Math.min(1, Math.max(0, raw)) : 0.82;
+  } catch {
+    return 0.82;
+  }
+}
+
+function writeVolume(value: number): void {
+  try { window.localStorage.setItem(VOLUME_KEY, String(value)); } catch {}
+}
+
+export function getRadioVolume(): number {
+  if (typeof window === "undefined") return 0.82;
+  return readVolume();
+}
+
+export function setRadioVolume(value: number): void {
+  if (typeof window === "undefined") return;
+  const safe = Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0.82));
+  writeVolume(safe);
+  window.dispatchEvent(new Event("sdt-radio-volume"));
+}
+
+export function subscribeRadioVolume(listener: () => void): () => void {
+  if (typeof window === "undefined") return () => undefined;
+  window.addEventListener("sdt-radio-volume", listener);
+  return () => window.removeEventListener("sdt-radio-volume", listener);
+}
+
 export function isMuted(): boolean {
   if (typeof window === "undefined") return false;
   return readStoredMute();

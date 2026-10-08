@@ -1,5 +1,5 @@
 import { ARTISTS } from "@/lib/artists";
-import { MERCH as STATIC_MERCH, SIZES, TAPES as STATIC_TAPE_DATA } from "@/lib/data";
+import { MERCH as STATIC_MERCH, SIZES, TAPES as STATIC_TAPE_DATA, RADIO_TRACKS as STATIC_RADIO_TRACKS } from "@/lib/data";
 import { REVELACAO_MEDIA as STATIC_REVELACAO_MEDIA, type RevelationMedia } from "@/lib/revelacao-media";
 import type { RevelationMediaRatio, RevelationMediaType } from "@/lib/revelacao-media";
 import { getLiveArtists } from "@/lib/public-content";
@@ -130,6 +130,124 @@ export async function getLiveTapes(): Promise<LiveTape[]> {
     return tapes.length ? tapes : STATIC_TAPES;
   } catch {
     return STATIC_TAPES;
+  }
+}
+
+export type LiveRadioTrack = {
+  id: string;
+  title: string;
+  artist: string;
+  src: string;
+  durationSec: number;
+  kind: "music" | "jingle" | "sfx";
+  rotationWeight: number;
+  position: number;
+  failureCount: number;
+  temporarilyDisabled: boolean;
+};
+
+export type LiveRadioStation = {
+  forcedTrackId: string | null;
+  forcedStartedAt: string | null;
+  activeBlockId: string | null;
+  autoplay: boolean;
+  stationSeed: number;
+  crossfadeMs: number;
+  tagInterval: number;
+};
+
+const STATIC_RADIO_FALLBACK: LiveRadioTrack[] = STATIC_RADIO_TRACKS.map((track, index) => ({
+  id: track.id,
+  title: track.title,
+  artist: track.artist,
+  src: track.src,
+  durationSec: 0,
+  kind: track.kind,
+  rotationWeight: 1,
+  position: index + 1,
+  failureCount: 0,
+  temporarilyDisabled: false,
+}));
+
+export async function getLiveRadioTracks(): Promise<LiveRadioTrack[]> {
+  try {
+    const rows = await tableRows("radio_tracks");
+    const mapped = rows
+      .filter((row) => {
+        const status = String(row.status ?? "").toLowerCase();
+        const disabled = Boolean(row.temporarily_disabled);
+        return !disabled && (!status || ["published", "active", "live", "ready"].includes(status));
+      })
+      .map((row, index) => ({
+        id: stringValue(row, ["id", "uuid", "slug"], "radio-" + String(index + 1)),
+        title: stringValue(row, ["title", "name", "label"], "FAIXA " + String(index + 1).padStart(2, "0")),
+        artist: stringValue(row, ["artist", "artist_name", "feat"], "SINDICATO 808"),
+        src: stringValue(row, ["audio_url", "audio_src", "src", "url"]),
+        durationSec: numberValue(row, ["duration_seconds", "duration_sec", "duration"], 0),
+        kind: (stringValue(row, ["kind", "type"], "music") as LiveRadioTrack["kind"]),
+        rotationWeight: Math.max(1, Math.floor(numberValue(row, ["rotation_weight", "weight"], 1))),
+        position: orderValue(row, index + 1),
+        failureCount: Math.max(0, Math.floor(numberValue(row, ["failure_count"], 0))),
+        temporarilyDisabled: Boolean(row.temporarily_disabled),
+      }))
+      .filter((track) => Boolean(track.src));
+    return mapped.length ? mapped : STATIC_RADIO_FALLBACK;
+  } catch {
+    return STATIC_RADIO_FALLBACK;
+  }
+}
+
+export async function getLiveRadioStation(): Promise<LiveRadioStation> {
+  const fallback: LiveRadioStation = {
+    forcedTrackId: null,
+    forcedStartedAt: null,
+    activeBlockId: null,
+    autoplay: true,
+    stationSeed: 8080808,
+    crossfadeMs: 650,
+    tagInterval: 3,
+  };
+  try {
+    const rows = await tableRows("radio_station");
+    const row = rows[0];
+    if (!row) return fallback;
+    return {
+      forcedTrackId: stringValue(row, ["forced_track_id"], "") || null,
+      forcedStartedAt: stringValue(row, ["forced_started_at"], "") || null,
+      activeBlockId: stringValue(row, ["active_block_id"], "") || null,
+      autoplay: Boolean(row.autoplay ?? true),
+      stationSeed: Number(row.station_seed ?? fallback.stationSeed) || fallback.stationSeed,
+      crossfadeMs: Math.min(1200, Math.max(0, numberValue(row, ["crossfade_ms"], fallback.crossfadeMs))),
+      tagInterval: Math.min(9, Math.max(1, Math.floor(numberValue(row, ["tag_interval"], fallback.tagInterval)))),
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+export type LiveRadioBlock = {
+  id: string;
+  name: string;
+  trackIds: string[];
+  active: boolean;
+  randomize: boolean;
+};
+
+export async function getLiveRadioBlocks(): Promise<LiveRadioBlock[]> {
+  try {
+    const rows = await tableRows("radio_blocks");
+    return rows
+      .filter((row) => row.active !== false)
+      .map((row) => ({
+        id: stringValue(row, ["id", "uuid"]),
+        name: stringValue(row, ["name", "title"], "BLOCO 808"),
+        trackIds: arrayValue(row, ["track_ids"], []),
+        active: row.active !== false,
+        randomize: row.randomize !== false,
+      }))
+      .filter((row) => Boolean(row.id));
+  } catch {
+    return [];
   }
 }
 

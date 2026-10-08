@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { TAPES } from "@/lib/data";
 import { KEY_LISTEN_SECONDS } from "@/lib/config";
 import { grantKey, keyLeftMs } from "@/lib/key";
-import { isMuted, setMuted, subscribeMute } from "@/lib/audio-bus";
+import { getRadioVolume, isMuted, setMuted, setRadioVolume, subscribeMute } from "@/lib/audio-bus";
 import { tape } from "@/lib/tape-engine";
 import { track } from "@/lib/track";
 import { useTape } from "./use-tape";
@@ -25,6 +25,7 @@ export function MiniPlayer() {
   const state = useTape();
   const muted = useSyncExternalStore(subscribeMute, isMuted, () => false);
   const [level, setLevel] = useState(0);
+  const [radioVolume, setRadioVolumeState] = useState(getRadioVolume());
   const earnedTracks = useRef(new Set<string>());
 
   useEffect(() => {
@@ -89,6 +90,21 @@ export function MiniPlayer() {
           >
             {frequencyState.playing ? "■" : "▶"}
           </button>
+          <input
+            aria-label="Volume da Frequência 808"
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={radioVolume}
+            onChange={(event) => {
+              const value = Number(event.target.value);
+              setRadioVolume(value);
+              setRadioVolumeState(value);
+              frequency.setVolume(value);
+            }}
+            className="hidden w-20 accent-[var(--blood)] sm:block"
+          />
           <button
             type="button"
             aria-label={muted ? "Ligar som" : "Silenciar"}

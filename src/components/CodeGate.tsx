@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { click, hiss, kick808 } from "@/lib/sfx";
 import { openGate } from "@/lib/gate";
+import { frequency } from "@/lib/frequency";
 import { track } from "@/lib/track";
 import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 import logo from "@/assets/brand/sindicato-logo.png.asset.json";
@@ -21,7 +22,7 @@ export function CodeGate({ onOpen }: { onOpen: () => void }) {
     if(key==="C"){setValue("");return;}
     if(key==="OK"){
       if(value===CODE){
-        setAccepted(true); buzz([60,40,60,40,220]); openGate(); kick808(); track("gate_open"); hiss(0.6); window.setTimeout(onOpen,900);
+        setAccepted(true); buzz([60,40,60,40,220]); openGate(); kick808(); track("gate_open"); hiss(0.6); void frequency.start(); window.setTimeout(onOpen,900);
       }else{
         buzz([180,60,180]); setError(true); setValue("");
       }

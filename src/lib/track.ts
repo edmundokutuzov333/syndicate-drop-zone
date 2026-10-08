@@ -3,7 +3,10 @@ import { getPublicSupabaseConfig } from "@/lib/supabase-public";
 export type EventName =
   | "gate_open" | "tape_play" | "tape_10s" | "key_earned" | "merch_view" | "cart_add" | "reserve"
   | "proof_sent" | "join_start" | "join_done" | "card_share" | "selo_found" | "live_notify" | "artist_view"
-  | "sponsor_click";
+  | "sponsor_click"
+  | "radio_session_start" | "radio_start" | "radio_pause" | "radio_resume" | "radio_stop"
+  | "radio_track_start" | "radio_track_25" | "radio_track_50" | "radio_track_75" | "radio_track_end"
+  | "radio_track_error" | "radio_skip" | "spotify_open";
 
 export type EventRow = {
   sid: string;

@@ -43,3 +43,24 @@ export const MERCH = [
 ];
 
 export const SIZES = ["P", "M", "G", "GG", "XG"];
+
+
+export type RadioTrackSeed = {
+  id: string;
+  title: string;
+  artist: string;
+  src: string;
+  kind: "music";
+};
+
+export const RADIO_TRACKS: RadioTrackSeed[] = [
+  { id: "radio-01", title: "FAIXA 01", artist: "SINDICATO 808", src: "https://files.catbox.moe/b5ypxy.wav", kind: "music" },
+  { id: "radio-02", title: "FAIXA 02", artist: "SINDICATO 808", src: "https://files.catbox.moe/alftc5.mp3", kind: "music" },
+  { id: "radio-03", title: "FAIXA 03", artist: "SINDICATO 808", src: "https://files.catbox.moe/qj0i9z.mp3", kind: "music" },
+  { id: "radio-04", title: "FAIXA 04", artist: "SINDICATO 808", src: "https://files.catbox.moe/fije61.mp3", kind: "music" },
+  { id: "radio-05", title: "FAIXA 05", artist: "SINDICATO 808", src: "https://files.catbox.moe/o47a3g.mp3", kind: "music" },
+  { id: "radio-06", title: "FAIXA 06", artist: "SINDICATO 808", src: "https://files.catbox.moe/9b0rq5.mp3", kind: "music" },
+  { id: "radio-07", title: "FAIXA 07", artist: "SINDICATO 808", src: "https://files.catbox.moe/0kg9v2.mp3", kind: "music" },
+  { id: "radio-08", title: "FAIXA 08", artist: "SINDICATO 808", src: "https://files.catbox.moe/g9nczk.mp3", kind: "music" },
+  { id: "radio-09", title: "FAIXA 09", artist: "SINDICATO 808", src: "https://files.catbox.moe/6hit4n.wav", kind: "music" },
+];

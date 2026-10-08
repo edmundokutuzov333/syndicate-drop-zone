@@ -50,6 +50,7 @@ const GROUPS: NavGroup[] = [
       { code: "13", label: "UTILIZADORES", to: "/control-room/utilizadores", roles: ["OWNER", "ADMIN"] },
       { code: "14", label: "ACTIVIDADE", to: "/control-room/actividade", roles: ["OWNER", "ADMIN", "EDITOR"] },
       { code: "15", label: "SISTEMA", to: "/control-room/sistema", roles: ["OWNER", "ADMIN"] },
+      { code: "16", label: "RADIO", to: "/control-room/radio", roles: ["OWNER", "ADMIN", "EDITOR"] },
     ],
   },
 ];
