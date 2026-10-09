@@ -139,6 +139,18 @@ export function CampingStudioExperience({
         className="camping-studio__canvas"
         aria-label="Estúdio 3D. Arraste para olhar à volta e clique nos objectos identificados."
         tabIndex={0}
+        onKeyDown={(event) => {
+          if (access.phase !== "LOCKED" && access.phase !== "CODE_ENTRY") return;
+          if (/^\\d$/.test(event.key)) {
+            event.preventDefault();
+            event.stopPropagation();
+            engineRef.current?.pressAccessibleKey(event.key);
+          } else if (event.key === "Enter" || event.key === "NumpadEnter") {
+            event.preventDefault();
+            event.stopPropagation();
+            engineRef.current?.pressAccessibleKey("ENTER");
+          }
+        }}
       />
 
       <div className="camping-studio__vignette" aria-hidden="true" />

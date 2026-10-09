@@ -26,3 +26,7 @@ O saco é mantido em `localStorage`, permite alterar/remover quantidades e só e
 ## Testes
 
 Os testes de contratos verificam o mapeamento dos IDs, slots de artistas e bloqueio de reservas para produtos de contingência. Foram adicionados à etapa de testes de engenharia do CI. O build/CI e a validação visual num browser continuam necessários antes da certificação final.
+
+## Correcção adicional da Fase 3
+
+O canvas recebe agora os dígitos directamente quando tem foco, e evita a duplicação de eventos no listener global. Enter também confirma o código por este caminho acessível. A máquina de estados mantém a submissão automática da combinação completa 808.

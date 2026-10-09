@@ -340,7 +340,10 @@ export class CampingStudioEngine {
   }
 
   pressAccessibleKey(key: string): void {
-    if (key === "CLR") {
+    if (key === "BACK") {
+      this.dispatch({ type: "BACKSPACE" });
+      click();
+    } else if (key === "CLR") {
       this.dispatch({ type: "CLEAR" });
       click();
     } else if (key === "ENTER") {
