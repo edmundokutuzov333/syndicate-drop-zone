@@ -18,6 +18,8 @@
     "rolldown": "1.2.1"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "0.12.15",
+    "@ffmpeg/util": "0.12.2",
     "@hookform/resolvers": "^5.2.2",
     "@mediapipe/tasks-vision": "^0.10.34",
     "@radix-ui/react-accordion": "^1.2.12",

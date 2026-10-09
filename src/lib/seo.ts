@@ -37,8 +37,8 @@ const STATIC_SEO: Record<string, Pick<RouteSeo, "title" | "description">> = {
     description: "Vídeos e fotografias cruas das gravações do camping no Studio XOYENS.",
   },
   "/filiar": {
-    title: "Filiar-se — O Sindicato do Trap",
-    description: "Assina o estatuto, recebe a tua carteira numerada e entra no Sindicato.",
+    title: "Cartão de Fã — O Sindicato do Trap",
+    description: "Aceita o Código do Fã, cria o teu cartão e partilha o Sindicato.",
   },
   "/frequencia": {
     title: "Frequência 808 — O Sindicato do Trap",

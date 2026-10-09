@@ -5,84 +5,37 @@ vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => (route: unknown) => route,
   Link: (props: any) => <a href={String(props.to ?? "/")}>{props.children}</a>,
 }));
-vi.mock("@/lib/carteira", () => ({ drawCard: vi.fn(), shareCard: vi.fn() }));
-vi.mock("@/lib/halftone-canvas", () => ({ renderHalftone: vi.fn() }));
+vi.mock("@/lib/fan-membership", () => ({
+  fanPublic: vi.fn(),
+  getStoredFanCode: vi.fn(() => null),
+  registerFan: vi.fn(),
+  storeFanCode: vi.fn(),
+}));
+vi.mock("@/lib/fan-card", () => ({
+  drawFanCard: vi.fn(),
+  downloadFanCard: vi.fn().mockResolvedValue(undefined),
+  shareFanCard: vi.fn().mockResolvedValue("shared"),
+  downloadVideoBlob: vi.fn(),
+}));
+vi.mock("@/lib/fan-video", () => ({
+  createFanVideo: vi.fn().mockResolvedValue(new Blob(["test-video"], { type: "video/mp4" })),
+}));
 vi.mock("@/lib/track", () => ({ track: vi.fn() }));
-vi.mock("@/lib/sfx", () => ({ thud: vi.fn() }));
-vi.mock("@/lib/membership", () => ({
-  getDelegates: vi.fn().mockResolvedValue([]),
-  joinUnion: vi.fn(),
-  storeMemberCode: vi.fn(),
-}));
-vi.mock("@/components/SignaturePad", () => ({
-  SignaturePad: (props: { onChange: (canvas: HTMLCanvasElement | null) => void }) => (
-    <button type="button" onClick={() => props.onChange(document.createElement("canvas"))}>
-      TESTAR ASSINATURA
-    </button>
-  ),
-}));
-vi.mock("@/assets/brand/sindicato-selo.png.asset.json", () => ({
-  default: { url: "/mock-selo.png" },
-}));
 
-import { joinUnion } from "@/lib/membership";
+import { fanPublic, registerFan, storeFanCode } from "@/lib/fan-membership";
+import { downloadFanCard } from "@/lib/fan-card";
+import { createFanVideo } from "@/lib/fan-video";
 import { Filiacao } from "@/routes/filiar";
-import { validateMembershipForm } from "@/lib/membership-validation";
 
-const urlMethods = {
-  createObjectURL: Object.getOwnPropertyDescriptor(URL, "createObjectURL"),
-  revokeObjectURL: Object.getOwnPropertyDescriptor(URL, "revokeObjectURL"),
-};
-
-const validForm = {
-  alias: "TESTE",
-  contactType: "whatsapp" as const,
-  contactValue: "+258 84 123 4567",
-  hasPhoto: true,
-  hasSignature: true,
-};
-
-function acceptAllClauses() {
-  for (let index = 1; index <= 6; index += 1) {
-    fireEvent.click(screen.getByRole("button", { name: new RegExp("Carimbar cláusula 0" + index, "i") }));
-  }
-  fireEvent.click(screen.getByRole("button", { name: /AVANÇAR PARA A FICHA/i }));
-}
-
-class ImmediateImage {
-  onload: (() => void) | null = null;
-  onerror: (() => void) | null = null;
-  private currentSrc = "";
-
-  set src(value: string) {
-    this.currentSrc = value;
-    queueMicrotask(() => this.onload?.());
-  }
-
-  get src() {
-    return this.currentSrc;
-  }
-}
+const createdFan = { code: "FAN123", fanNumber: 9, alias: "FÃ TESTE", since: "2026-10-09T08:00:00.000Z" };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(joinUnion).mockResolvedValue({
-    alreadyMember: false,
-    code: "ABC123",
-    memberNumber: 7,
-    alias: "TESTE",
-    since: "2026-10-09T07:00:00.000Z",
-  });
-  vi.stubGlobal("Image", ImmediateImage);
-  Object.defineProperty(URL, "createObjectURL", {
-    configurable: true,
-    writable: true,
-    value: vi.fn(() => "blob:member-photo"),
-  });
-  Object.defineProperty(URL, "revokeObjectURL", {
-    configurable: true,
-    writable: true,
-    value: vi.fn(),
+  vi.mocked(fanPublic).mockResolvedValue(null);
+  vi.mocked(registerFan).mockResolvedValue(createdFan);
+  vi.stubGlobal("URL", {
+    createObjectURL: vi.fn(() => "blob:fan-video"),
+    revokeObjectURL: vi.fn(),
   });
 });
 
@@ -90,65 +43,46 @@ afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
-  if (urlMethods.createObjectURL) Object.defineProperty(URL, "createObjectURL", urlMethods.createObjectURL);
-  else Reflect.deleteProperty(URL, "createObjectURL");
-  if (urlMethods.revokeObjectURL) Object.defineProperty(URL, "revokeObjectURL", urlMethods.revokeObjectURL);
-  else Reflect.deleteProperty(URL, "revokeObjectURL");
 });
 
-describe("validação da filiação", () => {
-  it("identifica cada requisito em falta antes de chamar o backend", () => {
-    expect(validateMembershipForm({
-      alias: "",
-      contactType: "whatsapp",
-      contactValue: "",
-      hasPhoto: false,
-      hasSignature: false,
-    })?.code).toBe("ALIAS");
-
-    expect(validateMembershipForm({
-      ...validForm,
-      contactType: "email",
-      contactValue: "email-invalido",
-    })?.code).toBe("CONTACT");
-
-    expect(validateMembershipForm({ ...validForm, hasPhoto: false })?.target).toBe("member-photo-section");
-    expect(validateMembershipForm({ ...validForm, hasSignature: false })?.target).toBe("member-signature-section");
-    expect(validateMembershipForm(validForm)).toBeNull();
-  });
-
-  it("mantém o botão clicável e mostra o que falta em vez de o bloquear", async () => {
+describe("Código do Fã", () => {
+  it("mostra as quatro regras curtas e não exige contacto nem assinatura", () => {
     render(<Filiacao />);
-    expect(screen.getByText("TERMO DE ADESÃO AO SINDICATO")).toBeTruthy();
-    acceptAllClauses();
-
-    const submit = screen.getByRole("button", { name: /ASSINAR E ENTRAR NO SINDICATO/i }) as HTMLButtonElement;
-    expect(submit.disabled).toBe(false);
-    fireEvent.click(submit);
-
-    expect((await screen.findByRole("alert")).textContent).toMatch(/CODINOME/i);
-    expect(joinUnion).not.toHaveBeenCalled();
+    expect(screen.getByText("RESPEITO")).toBeTruthy();
+    expect(screen.getByText("APOIO")).toBeTruthy();
+    expect(screen.getByText("CRÉDITO")).toBeTruthy();
+    expect(screen.getByText("UNIÃO")).toBeTruthy();
+    expect(screen.queryByLabelText(/whatsapp|email|assinatura/i)).toBeNull();
   });
 
-  it("emite a carteira sem bloqueios de campos ocultos depois de preencher e assinar", async () => {
-    const { container } = render(<Filiacao />);
-    expect(container.querySelector('input[aria-hidden="true"][tabindex="-1"]')).toBeNull();
-    acceptAllClauses();
+  it("só cria o cartão depois de aceitar o código e preencher o nome", async () => {
+    render(<Filiacao />);
+    fireEvent.change(screen.getByLabelText("NOME OU APELIDO"), { target: { value: "FÃ TESTE" } });
+    fireEvent.click(screen.getByRole("button", { name: /CRIAR O MEU CARTÃO/i }));
+    expect(registerFan).not.toHaveBeenCalled();
 
-    fireEvent.change(screen.getByLabelText("CODINOME"), { target: { value: "TESTE" } });
-    fireEvent.change(screen.getByPlaceholderText("+258 84 000 0000"), { target: { value: "+258 84 123 4567" } });
+    fireEvent.click(screen.getByLabelText(/Aceito o Código do Fã/i));
+    fireEvent.click(screen.getByRole("button", { name: /CRIAR O MEU CARTÃO/i }));
+    expect(await screen.findByText("CARTÃO DE FÃ CRIADO")).toBeTruthy();
+    expect(registerFan).toHaveBeenCalledWith({ alias: "FÃ TESTE", rulesVersion: "v1", referredBy: null });
+    expect(storeFanCode).toHaveBeenCalledWith("FAN123");
+    expect(downloadFanCard).not.toHaveBeenCalled();
+    expect(createFanVideo).not.toHaveBeenCalled();
+  });
 
-    const photoInput = document.getElementById("member-photo-gallery") as HTMLInputElement;
-    const file = new File(["image"], "membro.png", { type: "image/png" });
-    fireEvent.change(photoInput, { target: { files: [file] } });
-    await waitFor(() => expect(screen.getByText("FOTOGRAFIA CARREGADA")).toBeTruthy());
+  it("mantém o download PNG separado e só chama o motor de vídeo ao clicar", async () => {
+    render(<Filiacao />);
+    fireEvent.change(screen.getByLabelText("NOME OU APELIDO"), { target: { value: "FÃ TESTE" } });
+    fireEvent.click(screen.getByLabelText(/Aceito o Código do Fã/i));
+    fireEvent.click(screen.getByRole("button", { name: /CRIAR O MEU CARTÃO/i }));
+    await screen.findByText("CARTÃO DE FÃ CRIADO");
 
-    fireEvent.click(screen.getByRole("button", { name: "TESTAR ASSINATURA" }));
-    const submit = screen.getByRole("button", { name: /ASSINAR E ENTRAR NO SINDICATO/i }) as HTMLButtonElement;
-    expect(submit.disabled).toBe(false);
-    fireEvent.click(submit);
+    fireEvent.click(screen.getByRole("button", { name: /DESCARREGAR IMAGEM PNG/i }));
+    await waitFor(() => expect(downloadFanCard).toHaveBeenCalledTimes(1));
+    expect(createFanVideo).not.toHaveBeenCalled();
 
-    expect(await screen.findByText("CARTEIRA EMITIDA")).toBeTruthy();
-    expect(joinUnion).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("button", { name: /^CRIAR VÍDEO$/i }));
+    await screen.findByText("VÍDEO PRONTO");
+    expect(createFanVideo).toHaveBeenCalledTimes(1);
   });
 });

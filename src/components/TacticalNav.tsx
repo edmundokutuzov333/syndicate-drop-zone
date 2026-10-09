@@ -13,7 +13,7 @@ const LINKS = [
   { to: "/revelacao", label: "REVELAÇÃO", k: "03" },
   { to: "/camera", label: "CAMERA", k: "04" },
   { to: "/merch", label: "MERCH", k: "05" },
-  { to: "/filiar", label: "FILIAR", k: "06" },
+  { to: "/filiar", label: "FÃS", k: "06" },
 ] as const;
 
 export function TacticalNav() {
