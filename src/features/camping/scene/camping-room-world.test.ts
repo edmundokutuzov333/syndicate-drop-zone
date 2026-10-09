@@ -16,6 +16,17 @@ describe("CAMPING physical room navigation", () => {
     expect(layout.centers.secret.z).toBeLessThan(layout.centers.archive.z);
   });
 
+  it("aligns the archive entrance and secret passage with their room thresholds", () => {
+    const archive = layout.centers.archive;
+    const secret = layout.centers.secret;
+    const normal = layout.normal;
+    const alongNormal = (point: { x: number; z: number }) =>
+      (point.x - layout.door.x) * normal.x + (point.z - layout.door.z) * normal.z;
+
+    expect(alongNormal(archive)).toBeCloseTo(6.1, 4);
+    expect(alongNormal(secret)).toBeCloseTo(17.1, 4);
+  });
+
   it("provides a navigable spawn position for every room", () => {
     for (const roomId of ["archive", "listening", "secret"] as const) {
       const entry = getCampingRoomEntry(roomId, layout);

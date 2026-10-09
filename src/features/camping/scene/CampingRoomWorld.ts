@@ -52,7 +52,7 @@ export function createCampingRoomLayout(door: PointXZ): CampingRoomLayout {
   candidates.sort((a, b) => a.distance - b.distance);
   const normal = candidates[0]?.direction ?? { x: 0, z: -1 };
   const side = { x: -normal.z, z: normal.x };
-  const archiveDoorOffset = 8.25;
+  const archiveDoorOffset = 6.1;
   const archiveCenter = add(door, normal, archiveDoorOffset);
   return {
     door,
@@ -61,7 +61,7 @@ export function createCampingRoomLayout(door: PointXZ): CampingRoomLayout {
     centers: {
       archive: archiveCenter,
       listening: add(archiveCenter, side, 12.15),
-      secret: add(door, normal, 20.25),
+      secret: add(door, normal, archiveDoorOffset + ROOM_DIMENSIONS.archive.depth / 2 + ROOM_DIMENSIONS.secret.depth / 2),
     },
   };
 }
