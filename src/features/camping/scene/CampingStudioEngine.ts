@@ -431,7 +431,9 @@ export class CampingStudioEngine {
 
     const floor = box(new THREE.BoxGeometry(6.8, 0.12, 5.8), floorMat, [0, -0.12, 6.9]);
     floor.receiveShadow = true;
-    box(new THREE.BoxGeometry(5.3, 3.25, 0.22), wallMat, [0.1, 1.62, 5.82]);
+    box(new THREE.BoxGeometry(1.4, 3.25, 0.22), wallMat, [-2.05, 1.62, 5.25]);
+    box(new THREE.BoxGeometry(1.8, 3.25, 0.22), wallMat, [1.78, 1.62, 5.25]);
+    box(new THREE.BoxGeometry(2.55, 0.45, 0.22), wallMat, [-0.1, 3.0, 5.25]);
     box(new THREE.BoxGeometry(0.28, 3.15, 0.24), trimMat, [-1.12, 1.58, 5.61]);
     box(new THREE.BoxGeometry(0.28, 3.15, 0.24), trimMat, [0.86, 1.58, 5.61]);
     box(new THREE.BoxGeometry(2.2, 0.26, 0.24), trimMat, [-0.13, 3.08, 5.61]);
@@ -487,13 +489,13 @@ export class CampingStudioEngine {
         side: THREE.DoubleSide,
       }),
     );
-    label.position.set(1.2, 2.46, 5.45);
+    label.position.set(1.45, 2.46, 5.62);
     this.scene.add(label);
 
     const board = box(
       new THREE.BoxGeometry(0.86, 1.44, 0.12),
       blackMat,
-      [1.2, 1.53, 5.48],
+      [1.45, 1.53, 5.48],
     );
     board.userData.kind = "keypad-board";
     this.hitTargets.push(board);
@@ -509,7 +511,7 @@ export class CampingStudioEngine {
       new THREE.PlaneGeometry(0.64, 0.24),
       new THREE.MeshBasicMaterial({ map: this.keypadDisplayTexture, toneMapped: false }),
     );
-    display.position.set(1.2, 2.0, 5.412);
+    display.position.set(1.45, 2.0, 5.552);
     this.scene.add(display);
     this.keypadDisplay = display;
 
@@ -525,19 +527,19 @@ export class CampingStudioEngine {
     });
     for (const key of digits) {
       this.createKeyButton(
-        key.x + 1.2,
+        key.x + 1.45,
         key.y,
         key.digit,
         { kind: "keypad-digit", digit: key.digit },
         keyMat,
       );
     }
-    this.createKeyButton(0.98, 1.11, "CLR", { kind: "keypad-clear" }, keyMat, 0.19);
-    this.createKeyButton(1.2, 1.11, "0", { kind: "keypad-digit", digit: "0" }, keyMat);
-    this.createKeyButton(1.42, 1.11, "ENTER", { kind: "keypad-enter" }, keyMat, 0.19);
+    this.createKeyButton(1.23, 1.11, "CLR", { kind: "keypad-clear" }, keyMat, 0.19);
+    this.createKeyButton(1.45, 1.11, "0", { kind: "keypad-digit", digit: "0" }, keyMat);
+    this.createKeyButton(1.67, 1.11, "ENTER", { kind: "keypad-enter" }, keyMat, 0.19);
 
     this.lockLight = new THREE.PointLight(0x9c1b17, 3, 2.5, 2);
-    this.lockLight.position.set(1.2, 2.26, 5.2);
+    this.lockLight.position.set(1.45, 2.26, 5.2);
     this.scene.add(this.lockLight);
 
     // The access corridor has real floor edges and a dark threshold.
@@ -564,7 +566,7 @@ export class CampingStudioEngine {
       new THREE.BoxGeometry(width, 0.135, 0.055),
       material.clone(),
     );
-    mesh.position.set(x, y, 5.405);
+    mesh.position.set(x, y, 5.565);
     mesh.castShadow = true;
     mesh.userData.keypadTarget = target;
     this.scene.add(mesh);
@@ -575,7 +577,7 @@ export class CampingStudioEngine {
       new THREE.PlaneGeometry(width * 0.78, 0.063),
       new THREE.MeshBasicMaterial({ map: texture, transparent: true, toneMapped: false }),
     );
-    face.position.set(x, y, 5.438);
+    face.position.set(x, y, 5.601);
     face.userData.keypadLabel = true;
     this.scene.add(face);
   }
