@@ -537,13 +537,13 @@
 .camera-filter-tuning-heading { display: grid; gap: 4px; min-width: 0; }
 .camera-filter-tuning-kicker {
   color: rgba(235,231,222,0.35);
-  font: 6px/1 var(--font-mono);
+  font: 8px/1 var(--font-mono);
   letter-spacing: 0.16em;
 }
 .camera-filter-tuning-heading strong {
   overflow: hidden;
   color: rgba(239,233,224,0.86);
-  font: 8px/1.1 var(--font-mono);
+  font: 10px/1.1 var(--font-mono);
   font-weight: 400;
   letter-spacing: 0.08em;
   text-overflow: ellipsis;
@@ -554,7 +554,7 @@
   align-items: center;
   gap: 5px;
   color: rgba(235,231,222,0.44);
-  font: 6px/1 var(--font-mono);
+  font: 8px/1 var(--font-mono);
   letter-spacing: 0.14em;
 }
 .camera-filter-tuning-live i {
@@ -570,7 +570,7 @@
   padding: 5px 6px;
   background: transparent;
   color: rgba(235,231,222,0.46);
-  font: 6px/1 var(--font-mono);
+  font: 8px/1 var(--font-mono);
   letter-spacing: 0.12em;
   cursor: pointer;
 }
@@ -587,7 +587,7 @@
   display: grid;
   gap: 5px;
   color: rgba(235,231,222,0.56);
-  font: 6px/1.2 var(--font-mono);
+  font: 9px/1.25 var(--font-mono);
   letter-spacing: 0.08em;
 }
 .camera-filter-tuning-value { align-items: baseline; gap: 5px; min-width: 0; }
@@ -601,8 +601,10 @@
 .camera-filter-tuning-control input[type="range"] {
   width: 100%;
   min-width: 0;
-  height: 10px;
+  height: 24px;
+  min-height: 24px;
   margin: 0;
+  touch-action: pan-y;
   accent-color: var(--blood);
   cursor: pointer;
 }
@@ -805,7 +807,7 @@
 @media (max-width: 700px) {
   .camera-filter-tuning { padding: 8px 9px; gap: 8px; }
   .camera-filter-tuning-grid { gap: 8px 11px; }
-  .camera-filter-tuning-control { font-size: 5px; }
+  .camera-filter-tuning-control { font-size: 8px; }
 
   .camera-hud {
     gap: 7px;

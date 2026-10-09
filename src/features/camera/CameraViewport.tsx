@@ -185,10 +185,10 @@ export function CameraViewport({
           engine.setSceneOverlaySource(null);
         }
 
-        if (activeFilter === "cyber-mugshot") {
+        if (activeFilter === "cyber-mugshot" || activeFilter === "night-cctv") {
           const wallTime = Date.now();
           if (wallTime - lastHudAt.current >= 33) {
-            engine.setHudText(formatCyberTimecode(wallTime));
+            engine.setHudText(formatCameraTimecode(wallTime));
             lastHudAt.current = wallTime;
           }
         } else {
@@ -407,7 +407,7 @@ export function CameraViewport({
   );
 }
 
-function formatCyberTimecode(timestamp: number): string {
+function formatCameraTimecode(timestamp: number): string {
   const date = new Date(timestamp);
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");

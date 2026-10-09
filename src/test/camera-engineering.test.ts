@@ -13,7 +13,7 @@ import {
   captureTimerReducer,
   createCaptureTimerState,
 } from "@/lib/camera/capture-timer";
-import { FILTER_REGISTRY } from "@/lib/webgl/filter-registry";
+import { FILTER_REGISTRY, normalizeFilterControlValue } from "@/lib/webgl/filter-registry";
 import { buildFaceVfxUniforms } from "@/lib/camera/face-vfx";
 import {
   evaluateAdaptivePreview,
@@ -544,6 +544,49 @@ describe("camera engineering foundation", () => {
     expect(FILTER_REGISTRY.get("night-cctv").controls?.map((control) => control.uniform)).toContain("u_rollIntensity");
     expect(FILTER_REGISTRY.get("fire-bloom").controls?.map((control) => control.uniform)).toContain("u_threshold");
     expect(FILTER_REGISTRY.get("neon-cyberpunk").controls?.map((control) => control.uniform)).toContain("u_glitchAmount");
+  });
+
+  it("binds every live slider to a declared and used shader uniform", () => {
+    const ids = [
+      "crt-classic",
+      "vhs-tracking",
+      "night-cctv",
+      "datamosh",
+      "fire-bloom",
+      "neon-cyberpunk",
+      "analog-interference",
+    ] as const;
+
+    for (const id of ids) {
+      const source = getFilterFragmentShader(id);
+      for (const control of FILTER_REGISTRY.get(id).controls ?? []) {
+        const uniformDeclaration = new RegExp(
+          `\\buniform\\s+float\\s+${control.uniform}\\s*;`,
+        );
+        const references = source.match(new RegExp(`\\b${control.uniform}\\b`, "g")) ?? [];
+        expect(source, `${id} declares ${control.uniform}`).toMatch(uniformDeclaration);
+        expect(references.length, `${id} uses ${control.uniform}`).toBeGreaterThan(1);
+      }
+    }
+  });
+
+  it("clamps live filter control values and rejects unknown or non-finite values", () => {
+    expect(normalizeFilterControlValue("crt-classic", "u_chromatic", -1)).toBe(0);
+    expect(normalizeFilterControlValue("crt-classic", "u_chromatic", 1)).toBe(0.06);
+    expect(normalizeFilterControlValue("fire-bloom", "u_threshold", 2)).toBe(0.9);
+    expect(normalizeFilterControlValue("fire-bloom", "u_threshold", Number.NaN)).toBeNull();
+    expect(normalizeFilterControlValue("fire-bloom", "u_nonexistent", 0.5)).toBeNull();
+  });
+
+  it("maps the CRT CLASSIC preset to the animated thermal reference palette", () => {
+    const source = getFilterFragmentShader("crt-classic");
+    expect(source).toContain("crtThermalPalette");
+    for (const tone of ["blue", "cyan", "magenta", "orange", "yellow"]) {
+      expect(source).toContain(`vec3 ${tone} =`);
+    }
+    expect(source).toContain("thermalPulse");
+    expect(source).toContain("u_time");
+    expect(source).toContain("u_scanlineStrength");
   });
 
   it("only enables face tracking and the Three.js overlay for filters that need them", () => {

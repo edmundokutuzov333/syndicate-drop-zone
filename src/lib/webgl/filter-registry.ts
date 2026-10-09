@@ -280,3 +280,16 @@ export const FILTER_REGISTRY = {
     return DEFINITIONS.some((definition) => definition.id === id);
   },
 };
+
+export function normalizeFilterControlValue(
+  filter: FilterId,
+  uniform: string,
+  value: number,
+): number | null {
+  if (!Number.isFinite(value)) return null;
+  const control = FILTER_REGISTRY.get(filter).controls?.find(
+    (candidate) => candidate.uniform === uniform,
+  );
+  if (!control) return null;
+  return Math.min(control.max, Math.max(control.min, value));
+}

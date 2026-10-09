@@ -2,15 +2,13 @@
 
 ## Estado
 
-**Estado final: PENDENTE**
+**Estado final: PENDENTE DE CERTIFICAÇÃO FÍSICA**
 
-A /camera passou a validação automatizada específica da superfície, mas não pode ser marcada FECHADA porque permanecem dois blockers:
+Base auditada antes desta actualização: `70996cc94c3879dbfb158dc552177784e50431ae` (`Add live per-preset camera tuning controls`).
 
-1. Vercel production build bloqueado pelo rate limit da conta/build.
-2. Matriz física de browsers e dispositivos ainda não executada com câmaras e microfones reais.
+Na auditoria de 09 Outubro 2026, o deploy de produção Vercel dessa base estava `READY` em `https://syndicate-drop-zone-6ee51s20w-kutuzov.vercel.app`, com o check combinado `Vercel = success`. Esse resultado pertence à base auditada e não substitui a verificação dos checks do novo commit desta actualização.
 
-Último commit de aplicação validado pelo CI: b000af92fbfe8c4b12a598232e795238cb310c32.
-Último commit de documentação/relatório em main: f574f083769dfdbfb72ad1f83d034a42df999262.
+O código já tinha cobertura automatizada da rota /camera. A certificação física continua pendente para câmaras, browsers, permissões, codecs e profiling real em dispositivos. A Issue #4 permanece aberta até existir evidência efectiva. Não declarar 60 FPS em todos os dispositivos nem fidelidade pixel-exact sem medições e comparação real.
 
 ## Matriz automatizada
 
@@ -21,7 +19,7 @@ A /camera passou a validação automatizada específica da superfície, mas não
 | DeviceManager FRONT/BACK | PASS | camera-engineering.test.ts |
 | OrientationManager | PASS | camera-engineering.test.ts |
 | CaptureTimer OFF/3s/10s | PASS | camera-engineering.test.ts |
-| Six active filters | PASS | camera-engineering.test.ts |
+| 22 filtros registados, incluindo os sete shaders glitch | PASS histórico | camera-engineering.test.ts |
 | Dynamic shader uniforms | PASS | camera-engineering.test.ts |
 | Adaptive performance | PASS | camera-engineering.test.ts |
 | 4K landscape | PASS | camera-engineering.test.ts |
@@ -36,16 +34,12 @@ A /camera passou a validação automatizada específica da superfície, mas não
 
 Workflow: .github/workflows/ci.yml
 
-Green run:
+Registo histórico de CI verde para a superfície da câmara:
 - Run 37648653599
 - Commit b000af92fbfe8c4b12a598232e795238cb310c32
-- Setup Node: PASS
-- Install dependencies: PASS
-- Camera lint: PASS
-- Camera tests: PASS
-- Production build: PASS
+- Setup Node, instalação, lint da câmara, testes da câmara e production build: PASS nessa execução
 
-O full-project TypeScript não é gate desta validação porque existem erros estritos históricos fora da superfície /camera, incluindo rotas antigas e Control Room. Esses erros não foram mascarados como resolvidos.
+Este run é evidência de um commit anterior. O CI do commit produzido por esta actualização tem de ser lido no próprio SHA; não reutilizar este resultado histórico como se fosse o resultado do novo SHA.
 
 ## Filtros
 
@@ -197,7 +191,7 @@ Project ID: 67a20cf5-03a6-4c64-ab1e-c6089a5ecca0
 Published: true
 Status: ready
 Agent finished: true
-Latest synced commit: b000af92fbfe8c4b12a598232e795238cb310c32
+Último commit sincronizado antes desta actualização: 70996cc94c3879dbfb158dc552177784e50431ae
 
 Preview:
 https://id-preview--67a20cf5-03a6-4c64-ab1e-c6089a5ecca0.lovable.app
@@ -206,14 +200,13 @@ O runtime interactivo do preview não pôde ser exercitado neste ambiente: o mec
 
 ## Vercel
 
-O GitHub status actual apresenta:
-Vercel = failure
+Estado observado na auditoria da base `70996cc94c3879dbfb158dc552177784e50431ae`:
+- Deployment production: `READY`
+- URL: `https://syndicate-drop-zone-6ee51s20w-kutuzov.vercel.app`
+- Check combinado do commit: `Vercel = success`
+- Deployment ID: `dpl_A7aDmYKEpiq2CvbhksUfvdrUC2FK`
 
-O target de status aponta para o rate limit de build da conta.
-
-O CI independente executou o production build com sucesso. A falha de Vercel não foi mascarada como erro de código.
-
-GitHub Issue #3 rastreia este blocker.
+Os estados de Vercel e dos checks devem ser sempre consultados no SHA exacto de cada actualização. Após cada novo commit, verificar o deployment e o check associados ao seu SHA.
 
 ## Dispositivos, browsers e versões
 
@@ -250,22 +243,22 @@ Nenhuma PR foi aberta. As alterações foram executadas directamente na main, se
 
 ## Evidências
 
-- CI do código da aplicação: 37648653599
-- CI do relatório/documentação: 37649235905
-- Commit validado: b000af92fbfe8c4b12a598232e795238cb310c32
-- Lovable synced commit: f574f083769dfdbfb72ad1f83d034a42df999262
-- Vercel: build-rate-limit blocker
-- Supabase: sem tabelas de captura
-- Issue #3: Vercel production build rate limit — OPEN
-- Issue #4: physical browser-device validation matrix — OPEN
-- Issues #1 and #2 — CLOSED as duplicates
+- Base auditada antes desta actualização: `70996cc94c3879dbfb158dc552177784e50431ae`
+- Deployment de produção observado nessa base: `dpl_A7aDmYKEpiq2CvbhksUfvdrUC2FK`, estado `READY`
+- Check Vercel na base auditada: `success`
+- CI histórico da câmara: run `37648653599`, commit `b000af92fbfe8c4b12a598232e795238cb310c32`
+- O SHA desta actualização precisa dos seus próprios resultados de CI e deploy antes de ser declarado validado.
+- Supabase: sem tabelas nem endpoints criados para guardar ajustes temporários da câmara.
+- Issue #3: CLOSED como nota de deployment histórico.
+- Issue #4: OPEN, validação física de browsers/dispositivos.
+- Issues #1 e #2: CLOSED como duplicados.
 
 ## Critérios de aceitação
 
 | Critério | Estado |
 |---|---|
-| CI verde | PASS |
-| Deploy Vercel verde | BLOCKED |
+| CI verde para o novo SHA | A confirmar no próprio SHA; runs anteriores são históricos |
+| Deploy Vercel verde para o novo SHA | A confirmar no próprio SHA; a base auditada estava READY |
 | Preview Lovable sincronizado | PASS |
 | Sem erros de consola | PENDENTE de runtime físico |
 | Sem leaks | PASS no cleanup/test path; físico PENDENTE |
@@ -285,21 +278,15 @@ Nenhuma PR foi aberta. As alterações foram executadas directamente na main, se
 | Rotas antigas | build PASS; runtime físico PENDENTE |
 | docs/camera-engineering.md | UPDATED |
 | docs/camera-validation.md | UPDATED |
-| Issues | OPEN #3, #4 · CLOSED DUPLICATE #1, #2 |
+| Issues | CLOSED #3 · OPEN #4 · CLOSED DUPLICATE #1, #2 |
 | PRs | NONE |
-| Estado production final | PENDENTE |
+| Certificação física final | PENDENTE até a matriz real ser executada |
 
 ## Decisão
 
-A /camera não está fechada em produção.
+O código não deve ser descrito como totalmente certificado em produção enquanto a matriz física não for executada. A base auditada estava publicada e com o check Vercel em sucesso. A validade do novo commit é determinada pelos checks próprios desse SHA, não por runs históricos.
 
-O código passou a validação automatizada específica da superfície, incluindo lint, testes e production build.
-
-O fecho permanece bloqueado por:
-1. Vercel production build rate limit.
-2. Validação física em browsers e dispositivos reais.
-
-Nenhum destes pontos é considerado PASS sem evidência real.
+A certificação ainda pendente é a validação física em browsers, dispositivos e câmaras reais. Não são inventados resultados nem se fecha a Issue #4 sem evidência.
 
 ## Fase 3 — preview adaptativo consciente do dispositivo (09 Outubro 2026)
 

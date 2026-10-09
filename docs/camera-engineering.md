@@ -331,3 +331,13 @@ The existing camera UI now renders a compact tuning panel only when one of the s
 The per-filter override store is keyed by FilterId and only applies declared controls to that filter's compiled program. The engine clamps values to each control's min/max and retains overrides across filter switching. React owns editable UI state and restores it if the WebGL context is recreated. All presets use the same preview canvas as MediaRecorder, so live recording contains the current slider values; slider tuning stays enabled during recording, while countdown, processing and capture preview lock the controls.
 
 The tuning panel uses the site's existing compact mono / dark / blood-red design language. It avoids extra rendering libraries and backdrop filters; per-frame work is limited to setting the active shader's already-declared uniforms. No API endpoint or database migration is needed for volatile live tuning values. Persisted or shareable presets remain separate work.
+
+## Execution update — 09 Outubro 2026
+
+The live camera engine retains the original fifteen filters and the seven independently registered analog/glitch shaders. The CRT CLASSIC shader now adds a time-modulated blue/cyan/magenta/orange/yellow thermal palette while retaining its curvature, RGB separation, phosphor pattern, scanlines, bloom and grain.
+
+NIGHT CCTV now displays the existing camera timecode HUD on the processed canvas, in the same render path used by video capture. The per-preset control path shares a testable normalizer that rejects non-finite values and unknown uniforms before applying min/max bounds.
+
+The regression suite now checks that each of the seven preset sliders corresponds to a declared and referenced GLSL float uniform, that clamp and invalid-value behavior is correct, and that the CRT thermal palette is animated. The control panel's small type and slider hit area were increased for legibility and touch interaction while retaining the monochrome / red industrial style.
+
+Adaptive rendering remains driven by measured CPU render duration and texture-upload duration as workload proxies, with hysteresis. These metrics are not portable direct GPU timing. Preview scaling does not change the camera stream and remains disabled while a forced capture output resolution is active. Physical browser, device, GPU, codec and memory certification remains pending under GitHub Issue #4.

@@ -1,4 +1,4 @@
-import { FILTER_REGISTRY } from "./filter-registry";
+import { FILTER_REGISTRY, normalizeFilterControlValue } from "./filter-registry";
 import { FrameBuffer } from "./frame-buffer";
 import { ShaderCache } from "./shader-cache";
 import { TextureManager } from "./texture-manager";
@@ -454,13 +454,8 @@ export class WebGLEngine {
   }
 
   setFilterParameter(filter: FilterId, uniform: string, value: number): void {
-    if (!Number.isFinite(value)) return;
-    const control = FILTER_REGISTRY.get(filter).controls?.find(
-      (candidate) => candidate.uniform === uniform,
-    );
-    if (!control) return;
-
-    const normalized = Math.min(control.max, Math.max(control.min, value));
+    const normalized = normalizeFilterControlValue(filter, uniform, value);
+    if (normalized === null) return;
     const current = this.filterParameters.get(filter) ?? new Map<string, number>();
     if (current.get(uniform) === normalized) return;
     current.set(uniform, normalized);
