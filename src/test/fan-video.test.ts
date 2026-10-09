@@ -34,7 +34,10 @@ describe("criação de vídeo do fã", () => {
     vi.stubGlobal("URL", class TestURL extends URL {
       static revokeObjectURL = vi.fn();
     });
-    const canvas = { toBlob: (callback: BlobCallback) => callback(new Blob(["card"], { type: "image/png" })) } as HTMLCanvasElement;
+    const cardBlob = Object.assign(new Blob(["card"], { type: "image/png" }), {
+      arrayBuffer: async () => new Uint8Array([99, 97, 114, 100]).buffer,
+    });
+    const canvas = { toBlob: (callback: BlobCallback) => callback(cardBlob) } as HTMLCanvasElement;
     const progress: number[] = [];
     const blob = await createFanVideo(canvas, "/audio/preview.mp3", (value) => progress.push(value));
     expect(blob.type).toBe("video/mp4");
