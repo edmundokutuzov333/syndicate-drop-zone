@@ -141,7 +141,7 @@ export function CampingStudioExperience({
         tabIndex={0}
         onKeyDown={(event) => {
           if (access.phase !== "LOCKED" && access.phase !== "CODE_ENTRY") return;
-          if (/^\\d$/.test(event.key)) {
+          if (/^\d$/.test(event.key)) {
             event.preventDefault();
             event.stopPropagation();
             engineRef.current?.pressAccessibleKey(event.key);
