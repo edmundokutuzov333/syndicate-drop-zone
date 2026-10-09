@@ -345,7 +345,7 @@ export class CampingStudioEngine {
       click();
     } else if (key === "ENTER") {
       this.submitCode();
-    } else if (/^\\d$/.test(key)) {
+    } else if (/^\d$/.test(key)) {
       this.inputDigit(key);
     }
   }

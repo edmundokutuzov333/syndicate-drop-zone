@@ -33,7 +33,7 @@ import { frequency } from "@/lib/frequency";
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   loader: async () => ({ site: await getLiveSiteConfig() }),
   head: ({ loaderData, location }) => {
-    const seo = buildRouteSeo(location.pathname, loaderData?.site?.heroTitle || undefined);
+    const seo = buildRouteSeo(location?.pathname || "/", loaderData?.site?.heroTitle || undefined);
     return {
       meta: [
         { charSet: "utf-8" },
