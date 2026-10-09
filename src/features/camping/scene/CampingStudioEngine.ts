@@ -661,8 +661,7 @@ export class CampingStudioEngine {
     if (this.access.phase === "EXPLORATION" && previousPhase !== "EXPLORATION") {
       this.tween = null;
       this.camera.position.y = CAM_HEIGHT;
-      this.yaw = Math.atan2(-0.12, -1);
-      this.pitch = -0.01;
+      // Keep the camera orientation produced by the door-entry tween.
       this.callbacks.onHoverChange(null);
       this.callbacks.onMessage(null);
       this.currentMessage = null;
