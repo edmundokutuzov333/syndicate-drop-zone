@@ -27,7 +27,7 @@ jobs:
         run: "npx eslint src/lib/camera src/lib/webgl src/features/camera src/routes/camera.tsx --rule 'prettier/prettier: off'"
 
       - name: Engineering tests
-        run: npm run test -- src/test/camera-engineering.test.ts src/test/frequency.test.ts src/test/supabase-public.test.ts src/test/membership.test.ts src/test/partnership.test.ts src/test/phase1.test.ts
+        run: npm run test -- src/test/camera-engineering.test.ts src/test/frequency.test.ts src/test/supabase-public.test.ts src/test/membership.test.ts src/test/filiacao.test.tsx src/test/partnership.test.ts src/test/phase1.test.ts
 
       - name: Production build
         run: npm run build

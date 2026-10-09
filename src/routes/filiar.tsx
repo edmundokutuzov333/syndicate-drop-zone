@@ -4,6 +4,7 @@ import { Check, Copy, Download, Share2, ShieldCheck } from "lucide-react";
 import { SignaturePad } from "@/components/SignaturePad";
 import { drawCard, shareCard } from "@/lib/carteira";
 import { getDelegates, joinUnion, storeMemberCode } from "@/lib/membership";
+import { validateMembershipForm } from "@/lib/membership-validation";
 import { renderHalftone } from "@/lib/halftone-canvas";
 import { track } from "@/lib/track";
 import { thud } from "@/lib/sfx";
@@ -33,13 +34,31 @@ type JoinView = {
 };
 
 const CLAUSES = [
-  "Ninguém sai sem o disco.",
-  "Respeita quem segura o microfone.",
-  "A crew vem antes do ego.",
-  "O segredo fica no Sindicato.",
-  "O drop não espera ninguém.",
-  "Tudo ou nada. Sem desculpas.",
-];
+  {
+    title: "LEALDADE AO MOVIMENTO",
+    body: "Respeitar artistas, produtores e colaboradores que constroem o Sindicato. O nome da crew não serve para intimidar nem diminuir ninguém.",
+  },
+  {
+    title: "CRÉDITO É LEI",
+    body: "Reconhecer cada autoria. Música, imagem, conceito e trabalho de outra pessoa não são propriedade de quem os partilha primeiro.",
+  },
+  {
+    title: "RESPEITO NO MICROFONE",
+    body: "Representar o movimento com responsabilidade, dentro e fora do palco, nas redes, nos estúdios e em qualquer colaboração.",
+  },
+  {
+    title: "O BACKSTAGE É CONFIDENCIAL",
+    body: "Conversas privadas, dados pessoais e informação interna ficam protegidos. Nada é divulgado sem autorização de quem tem legitimidade para autorizar.",
+  },
+  {
+    title: "PROTEGER O DROP",
+    body: "Pré-lançamentos, ficheiros, campanhas e conteúdos exclusivos só podem ser publicados ou enviados com autorização expressa.",
+  },
+  {
+    title: "A CREW ACIMA DO EGO",
+    body: "Nenhuma ambição individual justifica prejudicar a segurança, a confiança ou o trabalho colectivo. O respeito também faz parte da cultura.",
+  },
+] as const;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -58,7 +77,7 @@ function fmtStamp(value: string): string {
   });
 }
 
-function Filiacao() {
+export function Filiacao() {
   const [step, setStep] = useState<Step>(1);
   const [clauses, setClauses] = useState<Set<number>>(() => new Set());
   const [alias, setAlias] = useState("");
@@ -132,9 +151,13 @@ function Filiacao() {
     };
   }, [card, photo, signature]);
 
-  const validAlias = alias.trim().length >= 2 && alias.trim().length <= 20;
-  const validContact = contactValue.trim().length >= 5;
-  const canSubmit = validAlias && validContact && Boolean(photo) && Boolean(signature) && !busy;
+  const formIssue = validateMembershipForm({
+    alias,
+    contactType,
+    contactValue,
+    hasPhoto: Boolean(photo),
+    hasSignature: Boolean(signature),
+  });
 
   const progressLabel = useMemo(() => {
     if (step === 1) return clauses.size + "/6 CARIMBOS";
@@ -180,16 +203,33 @@ function Filiacao() {
     setError("");
     setAlreadyMember(false);
 
-    if (honeypot) return;
-    if (!canSubmit) {
-      setError("FALTA UMA PEÇA: codinome, contacto, fotografia e assinatura são obrigatórios.");
+    if (busy) return;
+    if (honeypot) {
+      setError("NÃO FOI POSSÍVEL VALIDAR A FICHA. ACTUALIZA A PÁGINA E TENTA NOVAMENTE.");
+      return;
+    }
+
+    const issue = validateMembershipForm({
+      alias,
+      contactType,
+      contactValue,
+      hasPhoto: Boolean(photo),
+      hasSignature: Boolean(signature),
+    });
+    if (issue) {
+      setError(issue.message);
+      const target = document.getElementById(issue.target);
+      target?.scrollIntoView?.({
+        behavior: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "center",
+      });
+      if (target instanceof HTMLElement) target.focus({ preventScroll: true });
       return;
     }
 
     setBusy(true);
-    track("join_start", { referred: Boolean(referrer) ? 1 : 0 });
-
     try {
+      track("join_start", { referred: Boolean(referrer) ? 1 : 0 });
       const result = await joinUnion({
         alias: alias.trim(),
         contactType,
@@ -200,7 +240,6 @@ function Filiacao() {
 
       if (result.alreadyMember) {
         setAlreadyMember(true);
-        setBusy(false);
         return;
       }
 
@@ -279,48 +318,169 @@ function Filiacao() {
       </div>
 
       {step === 1 && (
-        <section className="mt-10">
-          <div className="grid gap-4 md:grid-cols-2">
-            {CLAUSES.map((clause, index) => {
-              const stamped = clauses.has(index);
-              return (
-                <button
-                  key={clause}
-                  type="button"
-                  onClick={() => stampClause(index)}
-                  className={"grain xerox-wear relative min-h-40 overflow-hidden border p-6 text-left transition " + (stamped ? "border-blood bg-blood/5" : "border-border bg-card hover:border-blood")}
-                  aria-pressed={stamped}
-                >
-                  <span className="absolute right-4 top-4 font-mono text-[9px] tracking-[0.2em] text-blood">
-                    CLAUSULA 0{index + 1}
-                  </span>
-                  <p className="max-w-sm font-stamp text-2xl leading-tight">{clause}</p>
-                  <div className="mt-8 flex items-center gap-3 text-[9px] tracking-[0.2em]">
-                    {stamped ? <Check size={13} className="text-blood" /> : <span className="h-3 w-3 border border-border" />}
-                    <span>{stamped ? "CARIMBADO" : "TOCA PARA CARIMBAR"}</span>
-                  </div>
-                </button>
-              );
-            })}
+        <section className="mx-auto mt-10 max-w-5xl" aria-labelledby="statute-title">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="font-mono text-[9px] tracking-[0.24em] text-blood">PROTOCOLO DE ENTRADA // ARQUIVO 001</p>
+              <h2 id="statute-title" className="mt-2 font-gothic text-5xl leading-none md:text-7xl">O Estatuto.</h2>
+            </div>
+            <div className="flex items-center gap-2 border border-blood px-3 py-2 font-mono text-[9px] tracking-[0.16em] text-blood">
+              <span className="h-2 w-2 animate-pulse bg-blood" />
+              LEITURA OBRIGATÓRIA
+            </div>
           </div>
 
-          <div className="mt-6 flex flex-col items-start justify-between gap-4 border border-border bg-card p-5 sm:flex-row sm:items-center">
-            <div>
-              <p className="font-mono text-[10px] tracking-[0.2em] text-blood">ESTATUTO</p>
-              <p className="mt-1 text-xs text-muted-foreground">As seis cláusulas têm de ficar carimbadas. Não há atalho.</p>
+          <article className="relative isolate overflow-hidden border border-border bg-[#141313] shadow-[0_22px_80px_rgba(0,0,0,0.42)]">
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 xerox-wear opacity-25" />
+
+            <header className="relative z-10 border-b-2 border-blood bg-[#100f0f] p-5 md:p-8">
+              <div className="flex flex-wrap items-start gap-4">
+                <div className="grid h-14 w-14 shrink-0 place-items-center border-2 border-blood font-gothic text-3xl text-blood md:h-16 md:w-16 md:text-4xl">
+                  SDT
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-mono text-[9px] tracking-[0.22em] text-blood">O SINDICATO DO TRAP</p>
+                  <h3 className="mt-2 font-stamp text-xl leading-tight text-foreground md:text-3xl">TERMO DE ADESÃO AO SINDICATO</h3>
+                  <p className="mt-2 max-w-2xl font-mono text-[9px] leading-5 tracking-[0.08em] text-muted-foreground">
+                    INSTRUMENTO DE COMPROMISSO, CONDUTA E PROTECÇÃO DO MOVIMENTO.
+                  </p>
+                </div>
+                <div className="stamp hidden rotate-[-8deg] px-3 py-2 text-center text-[9px] font-bold leading-4 tracking-[0.15em] sm:block">
+                  USO INTERNO
+                  <br />
+                  CÓPIA 001
+                </div>
+              </div>
+
+              <div className="mt-6 grid grid-cols-2 gap-2 border-y border-border py-3 md:grid-cols-4">
+                <div className="border-r border-border pr-2">
+                  <p className="font-mono text-[8px] tracking-[0.16em] text-muted-foreground">DOCUMENTO</p>
+                  <p className="mt-1 font-mono text-[9px] text-foreground">SDT-FIL-001</p>
+                </div>
+                <div className="md:border-r md:border-border md:pr-2">
+                  <p className="font-mono text-[8px] tracking-[0.16em] text-muted-foreground">VERSÃO</p>
+                  <p className="mt-1 font-mono text-[9px] text-foreground">ESTATUTO V1.0</p>
+                </div>
+                <div className="border-r border-border pr-2">
+                  <p className="font-mono text-[8px] tracking-[0.16em] text-muted-foreground">VALIDAÇÃO</p>
+                  <p className="mt-1 font-mono text-[9px] text-foreground">6 ARTIGOS</p>
+                </div>
+                <div>
+                  <p className="font-mono text-[8px] tracking-[0.16em] text-muted-foreground">ESTADO</p>
+                  <p className="mt-1 font-mono text-[9px] text-blood">{clauses.size === 6 ? "ACEITE INTEGRAL" : "AGUARDA ACEITAÇÃO"}</p>
+                </div>
+              </div>
+            </header>
+
+            <div className="relative z-10 p-4 md:p-8">
+              <div className="max-w-3xl border-l-2 border-blood pl-4 md:pl-5">
+                <p className="font-mono text-[8px] tracking-[0.2em] text-blood">PREÂMBULO</p>
+                <p className="mt-2 font-stamp text-sm leading-6 text-foreground md:text-base">
+                  Ao solicitar entrada no Sindicato, declaro que li este estatuto e assumo o compromisso de respeitar as pessoas, o trabalho e a cultura que sustentam o movimento. Cada artigo deve ser lido e confirmado através do respectivo carimbo digital.
+                </p>
+              </div>
+
+              <div className="mt-7 border-t border-border">
+                {CLAUSES.map((clause, index) => {
+                  const stamped = clauses.has(index);
+                  return (
+                    <button
+                      key={clause.title}
+                      type="button"
+                      onClick={() => stampClause(index)}
+                      className={
+                        "group relative grid w-full grid-cols-[38px_minmax(0,1fr)_auto] items-start gap-3 border-b border-border/70 px-2 py-5 text-left transition-colors sm:grid-cols-[58px_minmax(0,1fr)_112px] sm:gap-4 sm:px-4 " +
+                        (stamped ? "bg-blood/[0.06]" : "hover:bg-foreground/[0.025]")
+                      }
+                      aria-pressed={stamped}
+                      aria-label={(stamped ? "Cláusula aceite " : "Carimbar cláusula ") + String(index + 1).padStart(2, "0") + ": " + clause.title}
+                    >
+                      <span className="pt-1 font-mono text-[9px] tracking-[0.08em] text-blood md:text-[10px]">
+                        ART. {String(index + 1).padStart(2, "0")}
+                      </span>
+                      <span className="min-w-0 text-left">
+                        <span className="block font-stamp text-base leading-tight text-foreground md:text-lg">{clause.title}</span>
+                        <span className="mt-2 block font-mono text-[9px] leading-5 tracking-[0.01em] text-muted-foreground md:text-[10px]">
+                          {clause.body}
+                        </span>
+                        <span className="mt-3 block font-mono text-[8px] tracking-[0.13em] text-muted-foreground">
+                          {stamped ? "ARTIGO CONFIRMADO NO REGISTO" : "LER E CARIMBAR PARA ACEITAR"}
+                        </span>
+                      </span>
+                      <span className="flex min-h-8 items-center justify-center pt-0.5">
+                        {stamped ? (
+                          <span className="stamp inline-flex rotate-[-8deg] px-2 py-1 text-[8px] font-bold tracking-[0.12em] md:px-3 md:text-[9px]">
+                            ACEITE
+                          </span>
+                        ) : (
+                          <span className="inline-flex min-h-8 items-center gap-2 border border-border px-2 font-mono text-[8px] tracking-[0.1em] text-muted-foreground transition group-hover:border-blood group-hover:text-blood">
+                            <span className="h-2 w-2 border border-current" />
+                            CARIMBAR
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-6 grid gap-3 md:grid-cols-[1.15fr_0.85fr]">
+                <div className="border border-border bg-black/20 p-4">
+                  <p className="font-mono text-[8px] tracking-[0.18em] text-blood">DECLARAÇÃO DE VONTADE</p>
+                  <p className="mt-2 font-stamp text-sm leading-6 text-foreground">
+                    Confirmo que compreendo o compromisso descrito neste documento. A assinatura desenhada e a confirmação final serão pedidas na ficha seguinte.
+                  </p>
+                </div>
+                <div className="flex items-center justify-between gap-3 border border-border p-4">
+                  <div>
+                    <p className="font-mono text-[8px] tracking-[0.18em] text-muted-foreground">CARIMBOS REGISTADOS</p>
+                    <p className="mt-2 font-gothic text-4xl leading-none text-foreground">{String(clauses.size).padStart(2, "0")}<span className="font-mono text-sm text-muted-foreground"> / 06</span></p>
+                  </div>
+                  <div className={"stamp px-2 py-2 text-center text-[8px] font-bold leading-3 tracking-[0.1em] " + (clauses.size === 6 ? "rotate-[-8deg] opacity-100" : "rotate-[5deg] opacity-35")}>
+                    {clauses.size === 6 ? "ACEITE" : "PENDENTE"}
+                  </div>
+                </div>
+              </div>
             </div>
-            <button
-              type="button"
-              disabled={clauses.size !== 6}
-              onClick={() => {
-                setError("");
-                setStep(2);
-              }}
-              className="border border-blood bg-blood px-5 py-3 font-mono text-[10px] tracking-[0.18em] text-primary-foreground disabled:cursor-not-allowed disabled:opacity-35"
-            >
-              AVANÇAR PARA A FICHA
-            </button>
-          </div>
+
+            <footer className="relative z-10 border-t-2 border-border bg-[#100f0f] p-4 md:p-6">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <p className="font-mono text-[8px] tracking-[0.18em] text-muted-foreground">RUBRICA DIGITAL</p>
+                  <div className="mt-4 h-px w-full max-w-sm bg-border" />
+                  <p className="mt-2 font-stamp text-xs text-foreground">CONFIRMAÇÃO FINAL NA FICHA 02</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-mono text-[8px] tracking-[0.16em] text-muted-foreground">PROTOCOLO SDT</p>
+                  <p className="mt-1 font-mono text-[9px] text-blood">FILIAÇÃO / 001 / V1.0</p>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-col items-start justify-between gap-4 border-t border-border pt-5 sm:flex-row sm:items-center">
+                <div>
+                  <p className="font-mono text-[10px] tracking-[0.2em] text-blood">ESTATUTO</p>
+                  <p className="mt-1 max-w-xl text-[10px] leading-5 text-muted-foreground">
+                    Todos os seis artigos têm de ficar carimbados. A aceitação fica associada à versão do estatuto usada na filiação.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={clauses.size !== 6}
+                  onClick={() => {
+                    setError("");
+                    setStep(2);
+                  }}
+                  className="min-h-12 border border-blood bg-blood px-5 py-3 font-mono text-[10px] tracking-[0.18em] text-primary-foreground transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-35"
+                >
+                  AVANÇAR PARA A FICHA
+                </button>
+              </div>
+            </footer>
+          </article>
+
+          <p className="mt-3 font-mono text-[8px] leading-5 tracking-[0.1em] text-muted-foreground">
+            INTERFACE DE ADESÃO DO MOVIMENTO // LÊ CADA ARTIGO ANTES DE CARIMBAR. O BOTÃO DE AVANÇO SÓ ABRE DEPOIS DOS 6/6.
+          </p>
         </section>
       )}
 
@@ -341,7 +501,10 @@ function Filiacao() {
                 <input
                   id="member-alias"
                   value={alias}
-                  onChange={(event) => setAlias(event.target.value.toUpperCase().slice(0, 20))}
+                  onChange={(event) => {
+                    setAlias(event.target.value.toUpperCase().slice(0, 20));
+                    setError("");
+                  }}
                   minLength={2}
                   maxLength={20}
                   autoComplete="nickname"
@@ -351,7 +514,7 @@ function Filiacao() {
               </label>
 
               <div className="mt-5">
-                <p className="font-mono text-[9px] tracking-[0.18em] text-muted-foreground">CONTACTO</p>
+                <label htmlFor="member-contact" className="font-mono text-[9px] tracking-[0.18em] text-muted-foreground">CONTACTO</label>
                 <div className="mt-2 grid grid-cols-2 border border-border">
                   {([
                     ["whatsapp", "WHATSAPP"],
@@ -360,7 +523,10 @@ function Filiacao() {
                     <button
                       type="button"
                       key={value}
-                      onClick={() => setContactType(value)}
+                      onClick={() => {
+                        setContactType(value);
+                        setError("");
+                      }}
                       className={"py-3 font-mono text-[9px] tracking-[0.16em] " + (contactType === value ? "bg-blood text-primary-foreground" : "hover:bg-muted")}
                       aria-pressed={contactType === value}
                     >
@@ -369,8 +535,12 @@ function Filiacao() {
                   ))}
                 </div>
                 <input
+                  id="member-contact"
                   value={contactValue}
-                  onChange={(event) => setContactValue(event.target.value)}
+                  onChange={(event) => {
+                    setContactValue(event.target.value);
+                    setError("");
+                  }}
                   type={contactType === "email" ? "email" : "tel"}
                   inputMode={contactType === "email" ? "email" : "tel"}
                   autoComplete={contactType === "email" ? "email" : "tel"}
@@ -380,7 +550,7 @@ function Filiacao() {
                 <p className="mt-2 text-[9px] leading-5 text-muted-foreground">Só o Sindicato vê isto. Este contacto impede uma segunda filiação.</p>
               </div>
 
-              <div className="mt-6">
+              <div id="member-photo-section" tabIndex={-1} className="mt-6 outline-none">
                 <p className="font-mono text-[9px] tracking-[0.18em] text-muted-foreground">FOTOGRAFIA</p>
                 <p className="mt-2 text-[10px] leading-5 text-muted-foreground">
                   No telemóvel pode escolher uma fotografia da galeria ou abrir a câmara. No computador pode seleccionar um ficheiro.
@@ -438,10 +608,14 @@ function Filiacao() {
                 )}
               </div>
 
-              <div className="mt-6">
+              <div id="member-signature-section" tabIndex={-1} className="mt-6 outline-none">
                 <p className="font-mono text-[9px] tracking-[0.18em] text-muted-foreground">ASSINATURA</p>
+                <p className="mt-2 text-[9px] leading-5 text-muted-foreground">DESENHA A TUA RUBRICA NO CAMPO. UM TRAÇO CURTO TAMBÉM CONTA.</p>
                 <div className="mt-2">
-                  <SignaturePad onChange={setSignature} />
+                  <SignaturePad onChange={(canvas) => {
+                    setSignature(canvas);
+                    if (canvas) setError("");
+                  }} />
                 </div>
               </div>
 
@@ -474,7 +648,7 @@ function Filiacao() {
                 )}
               </div>
 
-              {error && <div className="mt-4 border border-blood/40 bg-blood/5 p-3 font-mono text-[10px] leading-5 text-blood">{error}</div>}
+              {error && <div role="alert" aria-live="assertive" className="mt-4 border border-blood/60 bg-blood/10 p-3 font-mono text-[10px] leading-5 text-blood">{error}</div>}
               {alreadyMember && (
                 <div className="mt-4 border border-blood bg-blood/5 p-4">
                   <p className="font-gothic text-3xl text-blood">JÁ ESTÁS NO SISTEMA.</p>
@@ -482,7 +656,18 @@ function Filiacao() {
                 </div>
               )}
 
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <div id="membership-submit-status" aria-live="polite" className="mt-6 mb-3 flex items-start gap-3 border border-border p-3">
+                <span className={"mt-1 h-2 w-2 shrink-0 " + (busy ? "animate-pulse bg-blood" : formIssue ? "bg-border" : "bg-blood")} />
+                <p className="font-mono text-[9px] leading-5 tracking-[0.08em] text-muted-foreground">
+                  {busy
+                    ? "A VALIDAR O REGISTO NO SISTEMA DO SINDICATO..."
+                    : formIssue
+                      ? "FICHA INCOMPLETA. " + formIssue.message
+                      : "FICHA COMPLETA. A CONFIRMAÇÃO VAI EMITIR A TUA CARTEIRA."}
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <button
                   type="button"
                   onClick={() => setStep(1)}
@@ -493,8 +678,10 @@ function Filiacao() {
                 <button
                   type="button"
                   onClick={() => void submit()}
-                  disabled={!canSubmit}
-                  className="flex-1 border border-blood bg-blood px-4 py-3 font-mono text-[10px] tracking-[0.18em] text-primary-foreground disabled:cursor-not-allowed disabled:opacity-35"
+                  disabled={busy}
+                  aria-busy={busy}
+                  aria-describedby="membership-submit-status"
+                  className="min-h-12 flex-1 border border-blood bg-blood px-4 py-3 font-mono text-[10px] tracking-[0.18em] text-primary-foreground transition hover:brightness-110 disabled:cursor-wait disabled:opacity-60"
                 >
                   {busy ? "A REGISTAR..." : "ASSINAR E ENTRAR NO SINDICATO"}
                 </button>

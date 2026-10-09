@@ -51,6 +51,10 @@ export function SignaturePad({
           const ctx = event.currentTarget.getContext("2d");
           ctx?.beginPath();
           ctx?.moveTo(x, y);
+          // A short tap still creates a visible signature mark, especially on touchscreens.
+          ctx?.lineTo(x + 0.5, y + 0.5);
+          ctx?.stroke();
+          dirty.current = true;
         }}
         onPointerMove={(event) => {
           if (!drawing.current) return;
