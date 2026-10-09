@@ -5,6 +5,7 @@ import { TextureManager } from "./texture-manager";
 import { getFilterFragmentShader } from "./filter-shaders";
 import { getFilterShaderContract } from "./filter-contract";
 import { CinematicPipeline } from "./cinematic-pipeline";
+import { canRenderDirectToCanvas } from "./render-policy";
 import crossfadeShader from "@/shaders/camera/crossfade.frag.glsl?raw";
 import {
   ASTRO_LUT_HEIGHT,
@@ -36,6 +37,19 @@ type FilterTransition = {
   from: FilterId;
   to: FilterId;
   startedAt: number;
+};
+
+type IdleDeadlineLike = {
+  timeRemaining(): number;
+  didTimeout: boolean;
+};
+
+type IdleWindow = Window & {
+  requestIdleCallback?: (
+    callback: (deadline: IdleDeadlineLike) => void,
+    options?: { timeout: number },
+  ) => number;
+  cancelIdleCallback?: (handle: number) => void;
 };
 
 const TRANSITION_MS = 300;
@@ -81,6 +95,8 @@ export class WebGLEngine {
   >();
   private readonly attributeLocations = new Map<WebGLProgram, number>();
   private readonly programs = new Map<FilterId, ShaderProgramHandle>();
+  private idleCompileHandle: number | null = null;
+  private idleCompileQueue: FilterId[] = [];
   private vertexBuffer: WebGLBuffer | null = null;
   private blendProgram: ShaderProgramHandle | null = null;
   private overlayProgram: ShaderProgramHandle | null = null;
@@ -328,21 +344,24 @@ export class WebGLEngine {
   }
 
   preloadFilters(vertexShaderSource: string): void {
+    this.cancelIdleFilterCompilation();
     this.vertexShaderSource = vertexShaderSource;
 
     if (this.gl) {
       this.cinematicPipeline.init(this.gl, vertexShaderSource);
     }
 
-    for (const filter of FILTER_REGISTRY.listVisible()) {
-      const handle = this.compileProgram(
-        filter.shaderKey,
-        this.vertexShaderSource,
-        getFilterFragmentShader(filter.id),
-      );
-
-      this.programs.set(filter.id, handle);
-    }
+    // Compile the first visible filter synchronously. Everything else is
+    // prepared in browser idle time, and setFilter still compiles on demand
+    // if the user selects a filter before its idle preload runs.
+    const initial = FILTER_REGISTRY.get(this.filter);
+    const handle = this.compileProgram(
+      initial.shaderKey,
+      this.vertexShaderSource,
+      getFilterFragmentShader(initial.id),
+    );
+    this.programs.set(initial.id, handle);
+    this.scheduleIdleFilterCompilation();
   }
 
   setProgram(
@@ -481,8 +500,17 @@ export class WebGLEngine {
     );
     const uploadTime = performance.now() - uploadStart;
 
-    const finalFramebuffer = this.finalOutput.get();
-    if (!finalFramebuffer) return;
+    const activeFilter = this.transition?.to ?? this.filter;
+    const directOutput = canRenderDirectToCanvas({
+      transitionActive: Boolean(this.transition),
+      sceneOverlayActive: Boolean(this.sceneOverlaySource),
+      overlayPending: Boolean(this.overlayText || this.overlayDirty),
+      hudPending: Boolean(this.hudText || this.hudDirty),
+      masterOverlayActive: Object.values(this.masterOverlays).some(Boolean),
+      pipeline: FILTER_REGISTRY.get(activeFilter).pipeline,
+    });
+    const finalFramebuffer = directOutput ? null : this.finalOutput.get();
+    if (!directOutput && !finalFramebuffer) return;
 
     if (this.transition) {
       const progress = Math.min(
@@ -528,29 +556,31 @@ export class WebGLEngine {
       );
     }
 
-    if (this.sceneOverlaySource) {
-      this.renderSceneOverlayPass(finalFramebuffer);
-    }
+    if (!directOutput) {
+      if (this.sceneOverlaySource) {
+        this.renderSceneOverlayPass(finalFramebuffer);
+      }
 
-    const finalTexture = this.finalOutput.getTexture();
+      const finalTexture = this.finalOutput.getTexture();
 
-    if (finalTexture) {
-      this.cinematicPipeline.renderMasterOverlays(
-        finalTexture,
-        null,
-        timestamp / 1000,
-        this.masterOverlays["cathode-crt"],
-        this.masterOverlays["paper-film"],
-        Number(this.uniforms.get("u_faceMotionBurst") ?? 0),
-      );
-    }
+      if (finalTexture) {
+        this.cinematicPipeline.renderMasterOverlays(
+          finalTexture,
+          null,
+          timestamp / 1000,
+          this.masterOverlays["cathode-crt"],
+          this.masterOverlays["paper-film"],
+          Number(this.uniforms.get("u_faceMotionBurst") ?? 0),
+        );
+      }
 
-    if (this.overlayText || this.overlayDirty) {
-      this.renderOverlayPass();
-    }
+      if (this.overlayText || this.overlayDirty) {
+        this.renderOverlayPass();
+      }
 
-    if (this.hudText || this.hudDirty) {
-      this.renderHudOverlayPass();
+      if (this.hudText || this.hudDirty) {
+        this.renderHudOverlayPass();
+      }
     }
 
     const renderTime = performance.now() - renderStart;
@@ -640,6 +670,7 @@ export class WebGLEngine {
   }
 
   destroy(): void {
+    this.cancelIdleFilterCompilation();
     const gl = this.gl;
 
     if (gl) {
@@ -693,6 +724,65 @@ export class WebGLEngine {
     this.gcEvents = 0;
     this.lastFrameAt = 0;
     this.frameCounter = 0;
+  }
+
+  private scheduleIdleFilterCompilation(): void {
+    if (typeof window === "undefined") return;
+    const idleWindow = window as IdleWindow;
+    if (!idleWindow.requestIdleCallback) return;
+
+    this.idleCompileQueue = FILTER_REGISTRY.listVisible()
+      .map((definition) => definition.id)
+      .filter((id) => !this.programs.has(id));
+
+    const compileNext = (deadline: IdleDeadlineLike) => {
+      this.idleCompileHandle = null;
+      if (!this.gl || !this.canvas || !this.vertexShaderSource) return;
+
+      // Avoid spending the next frame budget compiling a shader. Browsers
+      // without requestIdleCallback compile a requested filter in setFilter.
+      if (deadline.timeRemaining() < 8 && !deadline.didTimeout) {
+        this.idleCompileHandle = idleWindow.requestIdleCallback!(compileNext, {
+          timeout: 4000,
+        });
+        return;
+      }
+
+      const nextId = this.idleCompileQueue.shift();
+      if (nextId && !this.programs.has(nextId)) {
+        try {
+          const definition = FILTER_REGISTRY.get(nextId);
+          const handle = this.compileProgram(
+            definition.shaderKey,
+            this.vertexShaderSource,
+            getFilterFragmentShader(nextId),
+          );
+          this.programs.set(nextId, handle);
+        } catch {
+          // Keep the camera usable. setFilter can retry compilation when the
+          // user explicitly selects a filter whose idle compilation failed.
+        }
+      }
+
+      if (this.idleCompileQueue.length > 0) {
+        this.idleCompileHandle = idleWindow.requestIdleCallback!(compileNext, {
+          timeout: 4000,
+        });
+      }
+    };
+
+    this.idleCompileHandle = idleWindow.requestIdleCallback(compileNext, {
+      timeout: 1500,
+    });
+  }
+
+  private cancelIdleFilterCompilation(): void {
+    if (this.idleCompileHandle !== null && typeof window !== "undefined") {
+      const idleWindow = window as IdleWindow;
+      idleWindow.cancelIdleCallback?.(this.idleCompileHandle);
+    }
+    this.idleCompileHandle = null;
+    this.idleCompileQueue = [];
   }
 
   private applyCanvasResolution(): void {
