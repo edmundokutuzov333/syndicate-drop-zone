@@ -506,7 +506,9 @@ export class WebGLEngine {
       sceneOverlayActive: Boolean(this.sceneOverlaySource),
       overlayPending: Boolean(this.overlayText || this.overlayDirty),
       hudPending: Boolean(this.hudText || this.hudDirty),
-      masterOverlayActive: Object.values(this.masterOverlays).some(Boolean),
+      masterOverlayActive:
+        this.masterOverlays["cathode-crt"] ||
+        this.masterOverlays["paper-film"],
       pipeline: FILTER_REGISTRY.get(activeFilter).pipeline,
     });
     const finalFramebuffer = directOutput ? null : this.finalOutput.get();
@@ -741,7 +743,13 @@ export class WebGLEngine {
 
       // Avoid spending the next frame budget compiling a shader. Browsers
       // without requestIdleCallback compile a requested filter in setFilter.
-      if (deadline.timeRemaining() < 8 && !deadline.didTimeout) {
+      if (deadline.timeRemaining() < 8) {
+        // Never force a compilation into a busy render loop. If the callback
+        // already timed out, keep the remaining programs on-demand instead.
+        if (deadline.didTimeout) {
+          this.idleCompileQueue = [];
+          return;
+        }
         this.idleCompileHandle = idleWindow.requestIdleCallback!(compileNext, {
           timeout: 4000,
         });
