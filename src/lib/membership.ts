@@ -1,4 +1,4 @@
-import { getPublicSupabaseConfig } from "@/lib/supabase-public";
+import { getPublicSupabaseConfig, publicSupabaseHeaders } from "@/lib/supabase-public";
 
 export type MemberPublic = {
   code: string;
@@ -36,11 +36,7 @@ async function rpc<T>(name: string, body: Record<string, unknown>): Promise<T> {
   const { url, key } = cfg();
   const response = await fetch(url + "/rest/v1/rpc/" + name, {
     method: "POST",
-    headers: {
-      apikey: key,
-      Authorization: "Bearer " + key,
-      "Content-Type": "application/json",
-    },
+    headers: publicSupabaseHeaders(key, { "Content-Type": "application/json" }),
     body: JSON.stringify(body),
   });
 
@@ -59,27 +55,17 @@ export async function joinUnion(input: {
   referredBy?: string | null;
   signaturePresent: boolean;
 }): Promise<JoinResult> {
-  const result = await rpc<{
-    code: string | null;
-    member_number: number | null;
-    alias: string | null;
-    since: string | null;
-    already_member: boolean;
-  }>("join_union", {
-    p_alias: input.alias,
-    p_contact_type: input.contactType,
-    p_contact_value: input.contactValue,
-    p_referred_by: input.referredBy ?? null,
-    p_statute_version: "v1",
-    p_signature_present: input.signaturePresent,
+  type JoinUnionRow = { code: string | null; member_number: number | null; alias: string | null; since: string | null; already_member: boolean };
+  const payload = await rpc<JoinUnionRow[] | JoinUnionRow>("join_union", {
+    p_alias: input.alias, p_contact_type: input.contactType, p_contact_value: input.contactValue,
+    p_referred_by: input.referredBy ?? null, p_statute_version: "v1", p_signature_present: input.signaturePresent,
   });
-
+  // PostgREST returns RETURNS TABLE functions as arrays of rows.
+  const result = Array.isArray(payload) ? payload[0] : payload;
+  if (!result) throw new Error("O serviço do Sindicato devolveu uma resposta vazia.");
   return {
-    alreadyMember: Boolean(result.already_member),
-    code: result.code,
-    memberNumber: result.member_number,
-    alias: result.alias,
-    since: result.since,
+    alreadyMember: Boolean(result.already_member), code: result.code, memberNumber: result.member_number,
+    alias: result.alias, since: result.since,
   } as JoinResult;
 }
 

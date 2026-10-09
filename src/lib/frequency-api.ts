@@ -1,4 +1,4 @@
-import { getPublicSupabaseConfig } from "@/lib/supabase-public";
+import { getPublicSupabaseConfig, publicSupabaseHeaders } from "@/lib/supabase-public";
 import { getAnalyticsSessionId } from "@/lib/track";
 
 type Clock = {
@@ -17,11 +17,7 @@ async function rpc<T>(name: string, body: Record<string, unknown>): Promise<T> {
   const cfg = rpcConfig();
   const response = await fetch(cfg.url + "/rest/v1/rpc/" + name, {
     method: "POST",
-    headers: {
-      apikey: cfg.key,
-      Authorization: "Bearer " + cfg.key,
-      "Content-Type": "application/json",
-    },
+    headers: publicSupabaseHeaders(cfg.key, { "Content-Type": "application/json" }),
     body: JSON.stringify(body),
   });
   if (!response.ok) throw new Error((await response.text()) || "RPC da Frequência indisponível.");

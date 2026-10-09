@@ -3,7 +3,7 @@ import { MERCH as STATIC_MERCH, SIZES, TAPES as STATIC_TAPE_DATA, RADIO_TRACKS a
 import { REVELACAO_MEDIA as STATIC_REVELACAO_MEDIA, type RevelationMedia } from "@/lib/revelacao-media";
 import type { RevelationMediaRatio, RevelationMediaType } from "@/lib/revelacao-media";
 import { getLiveArtists } from "@/lib/public-content";
-import { getPublicSupabaseConfig } from "@/lib/supabase-public";
+import { getPublicSupabaseConfig, publicSupabaseHeaders } from "@/lib/supabase-public";
 import { getMemberCount } from "@/lib/membership";
 import { getRadioCatalog, getRadioStationConfig } from "@/lib/frequency-api";
 
@@ -569,12 +569,7 @@ export async function createPublicMerchReservation(input: {
 
   const response = await fetch(cfg.url + "/rest/v1/reservations", {
     method: "POST",
-    headers: {
-      apikey: cfg.key,
-      Authorization: "Bearer " + cfg.key,
-      "Content-Type": "application/json",
-      Prefer: "return=representation",
-    },
+    headers: publicSupabaseHeaders(cfg.key, { "Content-Type": "application/json", Prefer: "return=representation" }),
     body: JSON.stringify(payload),
   });
   if (!response.ok) {

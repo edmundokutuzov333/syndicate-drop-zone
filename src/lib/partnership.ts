@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getPublicSupabaseConfig } from "@/lib/supabase-public";
+import { getPublicSupabaseConfig, publicSupabaseHeaders } from "@/lib/supabase-public";
 
 export const PartnershipRequestSchema = z.object({
   name: z.string().trim().min(2, "Indique o seu nome.").max(120, "Nome demasiado longo."),
@@ -18,11 +18,7 @@ async function rpc<T>(name: string, body: Record<string, unknown>): Promise<T> {
   const { url, key } = getPublicSupabaseConfig();
   const response = await fetch(url + "/rest/v1/rpc/" + name, {
     method: "POST",
-    headers: {
-      apikey: key,
-      Authorization: "Bearer " + key,
-      "Content-Type": "application/json",
-    },
+    headers: publicSupabaseHeaders(key, { "Content-Type": "application/json" }),
     body: JSON.stringify(body),
   });
 

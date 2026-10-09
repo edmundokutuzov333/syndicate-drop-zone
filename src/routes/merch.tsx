@@ -1,13 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { SIZES, TAPES } from "@/lib/data";
+import { KEY_LISTEN_SECONDS } from "@/lib/config";
 import { canEnterMerch, keyLeftMs } from "@/lib/key";
 import { createPublicMerchReservation, getLiveMerchProducts, getLiveTapes, type LiveMerchProduct } from "@/lib/site-content";
 import { HalftoneCanvas } from "@/components/HalftoneCanvas";
 import { hiss, printer, thud } from "@/lib/sfx";
 import { tape } from "@/lib/tape-engine";
+import { frequency } from "@/lib/frequency";
 import { track } from "@/lib/track";
 import { useKey } from "@/components/use-key";
+import { useTape } from "@/components/use-tape";
 import { useMember } from "@/components/use-member";
 import { merchProductJsonLd } from "@/lib/seo";
 
@@ -46,8 +49,9 @@ function Merch() {
   const [reservationMessage, setReservationMessage] = useState("");
   const [openedStamp, setOpenedStamp] = useState(false);
   const armed = useKey();
+  const tapeState = useTape();
   const { member } = useMember();
-  const canOpen = canEnterMerch(armed, { isSyndicateMember: Boolean(member) });
+  const canOpen = canEnterMerch(armed);
   const previousKey = useRef(armed);
   const { merch, tapes } = Route.useLoaderData();
   const p = merch[sel]!;
@@ -106,14 +110,17 @@ function Merch() {
     }
   };
 
-  const visibleTapes = (tapes.length ? tapes : TAPES).slice(0, 3);
+  const visibleTapes = tapes.length ? tapes : TAPES;
+  const activeTape = visibleTapes.find((item) => item.id === tapeState.id) ?? null;
+  const listenedSeconds = activeTape ? Math.min(KEY_LISTEN_SECONDS, tapeState.t) : 0;
+  const listenProgress = armed ? 100 : Math.min(100, (listenedSeconds / KEY_LISTEN_SECONDS) * 100);
   const remaining = keyLeftMs();
   const keyLabel = remaining > 0 ? Math.ceil(remaining / 3600000) + "H " + Math.ceil((remaining % 3600000) / 60000) + "M RESTANTES" : "CHAVE EXPIRADA";
 
   return (
     <main className="relative mx-auto max-w-7xl px-4 pb-24 pt-12 md:px-8">
       {!canOpen && (
-        <dialog open aria-labelledby="merch-gate-title" className="fixed inset-0 z-[70] h-full w-full overflow-y-auto border-0 bg-black/60 p-4 backdrop-blur-sm md:p-8">
+        <dialog open aria-labelledby="merch-gate-title" className="fixed inset-0 z-[70] h-full w-full overflow-y-auto border-0 bg-black/95 p-4 backdrop-blur-sm md:p-8" aria-modal="true">
           <div className="mx-auto flex min-h-full max-w-4xl items-center justify-center py-12">
             <section className="w-full border-2 border-blood bg-background/95 shadow-[0_30px_100px_rgba(0,0,0,.75)]">
               <div className="hazard h-3" />
@@ -121,30 +128,41 @@ function Merch() {
                 <div className="text-center">
                   <p className="font-mono text-[10px] tracking-[0.3em] text-blood">COFRE 001 · ACESSO RESTRITO</p>
                   <h2 id="merch-gate-title" className="mt-3 font-gothic text-5xl leading-none md:text-7xl">COFRE FECHADO</h2>
-                  <p className="mx-auto mt-4 max-w-xl font-stamp text-sm text-muted-foreground">O catálogo está em baixo do aço. Ouve 10 segundos de qualquer fita para receber a chave.</p>
+                  <p id="merch-gate-instructions" className="mx-auto mt-4 max-w-xl font-stamp text-sm text-muted-foreground">PASSO 1: clica numa faixa e deixa a música tocar durante 10 segundos. A chave é atribuída automaticamente. Só depois o catálogo e as peças ficam visíveis.</p>
                 </div>
                 <div className="grid gap-3 sm:grid-cols-3">
                   {visibleTapes.map((preview) => {
-                    const active = tape.getState().id === preview.id;
+                    const active = tapeState.id === preview.id;
+                    const playing = active && tapeState.playing;
+                    const progress = active ? Math.min(100, (tapeState.t / KEY_LISTEN_SECONDS) * 100) : 0;
                     return (
-                      <button
-                        key={preview.id}
-                        type="button"
-                        onClick={() => tape.toggle(preview)}
-                        className={"group border border-border bg-card p-4 text-left hover:border-blood focus-visible:outline focus-visible:outline-1 focus-visible:outline-[var(--blood)] " + (active ? "border-blood" : "")}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-blood">{active ? "■ A TOCAR" : "▶ TAPE " + preview.id}</span>
-                          <span className="h-8 w-8 rounded-full border-2 border-border border-t-blood group-hover:animate-spin" />
+                      <button key={preview.id} type="button" aria-label={(playing ? "Pausar " : "Ouvir ") + preview.title} aria-pressed={playing}
+                        onClick={() => {
+                          if (playing) { tape.pause(); return; }
+                          frequency.stop();
+                          tape.toggle(preview);
+                        }}
+                        className={"group border border-border bg-card p-4 text-left hover:border-blood focus-visible:outline focus-visible:outline-1 focus-visible:outline-[var(--blood)] " + (playing ? "border-blood" : active ? "border-blood/60" : "")}>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-xs text-blood">{playing ? "■ A TOCAR" : active && tapeState.error ? "↻ TENTAR NOVAMENTE" : active ? "▶ RETOMAR" : "▶ OUVIR FAIXA"}</span>
+                          <span className="h-8 w-8 rounded-full border-2 border-border border-t-blood group-hover:animate-spin" aria-hidden />
                         </div>
                         <p className="mt-8 truncate font-stamp text-lg">{preview.title}</p>
                         <p className="mt-1 truncate text-[9px] tracking-[0.16em] text-muted-foreground">{preview.feat}</p>
-                        <p className="mt-5 border-t border-border pt-3 text-[9px] tracking-[0.18em] text-muted-foreground">OUVE UMA FITA PARA ABRIR</p>
+                        <p className="mt-5 border-t border-border pt-3 text-[9px] tracking-[0.18em] text-muted-foreground">CLICA PARA OUVIR · 10 SEGUNDOS PARA DESBLOQUEAR</p>
+                        {active && <div className="mt-3" aria-label="Progresso da escuta">
+                          <div className="h-1 overflow-hidden bg-muted"><div className="h-full bg-blood transition-[width]" style={{width:progress+"%"}} /></div>
+                          <p className="mt-2 font-mono text-[9px] text-muted-foreground">{Math.min(KEY_LISTEN_SECONDS,Math.floor(tapeState.t))}/{KEY_LISTEN_SECONDS} SEGUNDOS</p>
+                        </div>}
                       </button>
                     );
                   })}
                 </div>
-                <div className="border border-border bg-card/70 p-4 text-center font-mono text-[9px] tracking-[0.18em] text-muted-foreground">catálogo mantido no DOM · scanlines · SEO · CX</div>
+                <div className="border border-border bg-card/70 p-4 font-mono text-[9px] tracking-[0.12em] text-muted-foreground">
+                  <div className="flex items-center justify-between gap-4"><span>{activeTape ? activeTape.title : "PASSO 1 · ESCOLHER FAIXA"}</span><span className="shrink-0 text-blood">{tapeState.error ? "ERRO DE ÁUDIO" : activeTape ? Math.min(KEY_LISTEN_SECONDS,Math.floor(tapeState.t))+"/"+KEY_LISTEN_SECONDS+" SEG" : "0/"+KEY_LISTEN_SECONDS+" SEG"}</span></div>
+                  <div className="mt-3 h-1 overflow-hidden bg-muted" role="progressbar" aria-label="Escuta necessária para abrir o cofre" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(listenProgress)}><div className="h-full bg-blood transition-[width]" style={{width:listenProgress+"%"}} /></div>
+                  <p className="mt-3 leading-5" aria-live="polite">{tapeState.error ? "Esta faixa não carregou. Escolhe outra faixa para continuar." : !activeTape ? "Clica numa faixa e deixa-a tocar durante 10 segundos. A abertura é automática." : !tapeState.playing ? "A faixa está em pausa. Clica em RETOMAR para continuar a escuta." : "Continua a ouvir. Ao completar 10 segundos, o cofre abre automaticamente."}</p>
+                </div>
               </div>
               <div className="hazard h-3" />
             </section>
@@ -158,6 +176,7 @@ function Merch() {
         {canOpen && <span className="border border-blood px-2 py-1 font-mono text-[9px] tracking-widest text-blood">{openedStamp ? "ABERTO" : keyLabel}</span>}
       </div>
 
+      {canOpen && (
       <div className="mt-10 grid gap-8 lg:grid-cols-[1.3fr_1fr]">
         <div>
           <div className="relative aspect-square border border-border">
@@ -222,6 +241,7 @@ function Merch() {
           )}
         </div>
       </div>
+      )}
     </main>
   );
 }

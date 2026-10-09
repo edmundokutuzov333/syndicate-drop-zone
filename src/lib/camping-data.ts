@@ -1,6 +1,6 @@
 import { createClient, type RealtimeChannel } from "@supabase/supabase-js";
 import { getLiveArtistsForSite } from "@/lib/site-content";
-import { getPublicSupabaseConfig } from "@/lib/supabase-public";
+import { getPublicSupabaseConfig, publicSupabaseHeaders } from "@/lib/supabase-public";
 
 export type CampingRoom = {
   id: string; name: string; x: number; y: number; w: number; h: number; line: string; live?: boolean; galleryTag: string;
@@ -180,7 +180,7 @@ export async function createPublicLiveNotification(input: { contactType: "whatsa
   const { url, key } = publicConfig();
   const response = await fetch(url + "/rest/v1/rpc/create_live_notification", {
     method: "POST",
-    headers: { apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json" },
+    headers: publicSupabaseHeaders(key, { "Content-Type": "application/json" }),
     body: JSON.stringify({ p_contact_type: input.contactType, p_contact_value: input.contactValue, p_kind: "live" }),
   });
   if (!response.ok) {
