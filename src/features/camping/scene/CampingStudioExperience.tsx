@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import type { CampingAccessState } from "../interactions/access-machine";
 import type { CampingRoomId } from "./CampingRoomWorld";
 import { initialCampingAccessState } from "../interactions/access-machine";
@@ -60,7 +60,6 @@ export function CampingStudioExperience({
   onLeave,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const engineReadyRef = useRef(false);
   const pendingAccessKeysRef = useRef<string[]>([]);
   const engineRef = useRef<CampingStudioEngine | null>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
@@ -88,34 +87,36 @@ export function CampingStudioExperience({
     onClosePanels();
   }, [onClosePanels]);
 
+  const handleAccessKey = (event: ReactKeyboardEvent<HTMLElement>) => {
+    const phase = accessRef.current.phase;
+    if (phase !== "LOCKED" && phase !== "CODE_ENTRY") return;
+
+    const target = event.target instanceof HTMLElement ? event.target : null;
+    const key = /^\d$/.test(event.key)
+      ? event.key
+      : event.key === "Enter" || event.key === "NumpadEnter"
+        ? "ENTER"
+        : event.key === "Backspace"
+          ? "BACK"
+          : null;
+    if (!key) return;
+    // Preserve native Enter activation for focused buttons and links. Digits,
+    // Backspace and Enter on the canvas still use the 808 keypad state machine.
+    if (key === "ENTER" && target && /^(BUTTON|A)$/.test(target.tagName)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!engineRef.current) {
+      pendingAccessKeysRef.current.push(key);
+      return;
+    }
+    engineRef.current.pressAccessibleKey(key);
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
-    const handleAccessKey = (event: KeyboardEvent) => {
-      const phase = accessRef.current.phase;
-      if (phase !== "LOCKED" && phase !== "CODE_ENTRY") return;
-
-      const key = /^\d$/.test(event.key)
-        ? event.key
-        : event.key === "Enter" || event.key === "NumpadEnter"
-          ? "ENTER"
-          : event.key === "Backspace"
-            ? "BACK"
-            : null;
-      if (!key) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
-
-      if (!engineReadyRef.current || !engineRef.current) {
-        pendingAccessKeysRef.current.push(key);
-        return;
-      }
-      engineRef.current.pressAccessibleKey(key);
-    };
-    document.addEventListener("keydown", handleAccessKey, true);
 
     const engine = new CampingStudioEngine({
       onAccessChange: (nextAccess) => {
@@ -154,14 +155,10 @@ export function CampingStudioExperience({
       },
     });
     engineRef.current = engine;
-    engineReadyRef.current = false;
     engine.mount(canvas);
-    engineReadyRef.current = true;
     const pendingKeys = pendingAccessKeysRef.current.splice(0);
     for (const key of pendingKeys) engine.pressAccessibleKey(key);
     return () => {
-      document.removeEventListener("keydown", handleAccessKey, true);
-      engineReadyRef.current = false;
       pendingAccessKeysRef.current = [];
       engine.dispose();
       engineRef.current = null;
@@ -182,30 +179,16 @@ export function CampingStudioExperience({
   };
 
   return (
-    <section className="camping-studio" aria-label="Experiência tridimensional do estúdio Xoyens">
+    <section
+      className="camping-studio"
+      aria-label="Experiência tridimensional do estúdio Xoyens"
+      onKeyDownCapture={handleAccessKey}
+    >
       <canvas
         ref={canvasRef}
         className="camping-studio__canvas"
         aria-label="Estúdio 3D. Arraste para olhar à volta e clique nos objectos identificados."
         tabIndex={0}
-        onKeyDown={(event) => {
-          if (access.phase !== "LOCKED" && access.phase !== "CODE_ENTRY") return;
-          const key = /^\d$/.test(event.key)
-            ? event.key
-            : event.key === "Enter" || event.key === "NumpadEnter"
-              ? "ENTER"
-              : event.key === "Backspace"
-                ? "BACK"
-                : null;
-          if (!key) return;
-          event.preventDefault();
-          event.stopPropagation();
-          if (!engineReadyRef.current || !engineRef.current) {
-            pendingAccessKeysRef.current.push(key);
-            return;
-          }
-          engineRef.current.pressAccessibleKey(key);
-        }}
       />
 
       <div className="camping-studio__vignette" aria-hidden="true" />
