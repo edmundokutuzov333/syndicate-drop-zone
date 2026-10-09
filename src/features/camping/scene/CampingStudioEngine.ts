@@ -210,6 +210,7 @@ export class CampingStudioEngine {
     this.createEntrySet();
     this.resize();
 
+    this.canvas.addEventListener("keydown", this.onKeyDown);
     this.canvas.addEventListener("pointerdown", this.onPointerDown);
     this.canvas.addEventListener("pointermove", this.onPointerMove);
     this.canvas.addEventListener("pointerup", this.onPointerUp);
@@ -241,6 +242,7 @@ export class CampingStudioEngine {
     document.removeEventListener("visibilitychange", this.onDocumentVisibility);
 
     if (this.canvas) {
+      this.canvas.removeEventListener("keydown", this.onKeyDown);
       this.canvas.removeEventListener("pointerdown", this.onPointerDown);
       this.canvas.removeEventListener("pointermove", this.onPointerMove);
       this.canvas.removeEventListener("pointerup", this.onPointerUp);
@@ -833,17 +835,20 @@ export class CampingStudioEngine {
     const digit = event.key.length === 1 && /^\d$/.test(event.key) ? event.key : null;
     if (digit && (this.phase === "LOCKED" || this.phase === "CODE_ENTRY")) {
       event.preventDefault();
+      event.stopPropagation();
       this.inputDigit(digit);
       return;
     }
     if ((event.key === "Enter" || event.key === "NumpadEnter") && (this.phase === "LOCKED" || this.phase === "CODE_ENTRY")) {
       if (target && /^(BUTTON|A)$/.test(target.tagName)) return;
       event.preventDefault();
+      event.stopPropagation();
       this.submitCode();
       return;
     }
     if (event.key === "Backspace" && (this.phase === "LOCKED" || this.phase === "CODE_ENTRY")) {
       event.preventDefault();
+      event.stopPropagation();
       this.dispatch({ type: "BACKSPACE" });
       return;
     }
