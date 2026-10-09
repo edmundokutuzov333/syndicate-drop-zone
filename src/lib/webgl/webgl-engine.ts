@@ -90,7 +90,7 @@ export class WebGLEngine {
   private readonly transitionTo = new FrameBuffer();
   private readonly finalOutput = new FrameBuffer();
   private readonly datamoshHistory: [FrameBuffer, FrameBuffer] = [new FrameBuffer(), new FrameBuffer()];
-  private datamoshHistoryReadIndex = 0;
+  private datamoshHistoryReadIndex: 0 | 1 = 0;
   private datamoshHistoryReady = false;
   private readonly cinematicPipeline = new CinematicPipeline();
   private masterOverlays: Record<MasterOverlayId, boolean> = {
@@ -901,7 +901,7 @@ export class WebGLEngine {
     const canvas = this.canvas;
     if (!gl || !canvas || !this.ensureDatamoshHistory(canvas.width, canvas.height)) return;
 
-    const writeIndex = 1 - this.datamoshHistoryReadIndex;
+    const writeIndex: 0 | 1 = this.datamoshHistoryReadIndex === 0 ? 1 : 0;
     const writeBuffer = this.datamoshHistory[writeIndex];
     this.renderCrossfade(outputTexture, outputTexture, 1, writeBuffer.get(), writeBuffer.getSize());
 
@@ -933,6 +933,10 @@ export class WebGLEngine {
     const previousTexture = this.textureManager.getPrevious();
 
     if (!currentTexture || !previousTexture) return;
+
+    // Allocate/resize temporal targets before binding the active render target.
+    const datamoshHistoryAvailable =
+      filter === "datamosh" && this.ensureDatamoshHistory(canvas.width, canvas.height);
 
     if (definition.pipeline === "halation") {
       this.cinematicPipeline.renderHalation(
@@ -996,7 +1000,7 @@ export class WebGLEngine {
     this.setProgramUniform(programHandle.program, "u_lut", 2);
 
     if (filter === "datamosh") {
-      const historyReady = this.ensureDatamoshHistory(canvas.width, canvas.height) && this.datamoshHistoryReady;
+      const historyReady = datamoshHistoryAvailable && this.datamoshHistoryReady;
       const historyTexture = historyReady ? this.datamoshHistory[this.datamoshHistoryReadIndex].getTexture() : previousTexture;
       gl.activeTexture(gl.TEXTURE3);
       gl.bindTexture(gl.TEXTURE_2D, historyTexture);
