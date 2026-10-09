@@ -44,7 +44,6 @@ type KeypadTarget = {
   digit?: string;
 };
 
-const CLOCK = new THREE.Clock();
 const WALK_SPEED = 2.05;
 const LOOK_SENSITIVITY = 0.0027;
 const CAM_HEIGHT = 1.62;
@@ -114,14 +113,6 @@ function labelTexture(label: string): THREE.CanvasTexture {
   });
 }
 
-function rectColliderPoint(x: number, z: number, radius: number, rect: { minX: number; maxX: number; minZ: number; maxZ: number }): boolean {
-  const nearestX = Math.max(rect.minX, Math.min(x, rect.maxX));
-  const nearestZ = Math.max(rect.minZ, Math.min(z, rect.maxZ));
-  const dx = x - nearestX;
-  const dz = z - nearestZ;
-  return dx * dx + dz * dz < radius * radius;
-}
-
 export class CampingStudioEngine {
   private readonly callbacks: EngineCallbacks;
   private canvas: HTMLCanvasElement | null = null;
@@ -138,13 +129,11 @@ export class CampingStudioEngine {
   private studioLoaded = false;
   private loader: GLTFLoader | null = null;
   private entryDoor: THREE.Group | null = null;
-  private doorPanel: THREE.Mesh | null = null;
   private keypadDisplay: THREE.Mesh | null = null;
   private keypadDisplayTexture: THREE.CanvasTexture | null = null;
   private lockLight: THREE.PointLight | null = null;
   private access = { ...initialCampingAccessState };
   private phaseStartedAt = performance.now();
-  private unlockRequestedAt = 0;
   private doorOpened = false;
   private doorAngle = 0;
   private messageUntil = 0;
@@ -288,7 +277,6 @@ export class CampingStudioEngine {
     this.scene.clear();
     this.studioRoot = null;
     this.entryDoor = null;
-    this.doorPanel = null;
     this.keypadDisplay = null;
     this.keypadDisplayTexture = null;
   }
@@ -349,6 +337,17 @@ export class CampingStudioEngine {
       saved.look,
       650,
     );
+  }
+
+  pressAccessibleKey(key: string): void {
+    if (key === "CLR") {
+      this.dispatch({ type: "CLEAR" });
+      click();
+    } else if (key === "ENTER") {
+      this.submitCode();
+    } else if (/^\\d$/.test(key)) {
+      this.inputDigit(key);
+    }
   }
 
   retryStudioLoad(): void {
@@ -470,7 +469,6 @@ export class CampingStudioEngine {
     );
     knob.position.set(1.42, 1.28, 0.13);
     panel.add(knob);
-    this.doorPanel = leaf as THREE.Mesh;
 
     // Weathered wall strips and a practical amber fixture.
     box(new THREE.BoxGeometry(0.65, 2.75, 0.08), darkWoodMat, [-2.52, 1.43, 5.68]);
@@ -684,7 +682,6 @@ export class CampingStudioEngine {
   }
 
   private beginGrantedSequence(): void {
-    this.unlockRequestedAt = performance.now();
     this.doorOpened = false;
     this.callbacks.onAssetState(this.studioLoaded ? "ready" : "loading");
     this.setTransientMessage("ACCESS GRANTED", "success", 2600);
@@ -1002,25 +999,6 @@ export class CampingStudioEngine {
     this.currentMessage = null;
     this.messageUntil = 0;
     this.callbacks.onMessage(null);
-  }
-
-  private returnFromFocus(): void {
-    if (this.phase !== "INTERACTION_FOCUS") return;
-    this.returnFromFocusPublic();
-  }
-
-  private returnFromFocusPublic(): void {
-    if (this.phase !== "INTERACTION_FOCUS") return;
-    const saved = this.focusReturn;
-    this.finishFocusState();
-    if (!saved) return;
-    this.startTween(
-      this.camera.position.clone(),
-      saved.position,
-      this.currentLookTarget(),
-      saved.look,
-      640,
-    );
   }
 
   private labelForId(id: string): string {
