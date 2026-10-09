@@ -12,6 +12,13 @@ import masterCathode from "@/shaders/camera/passes/master-cathode.frag.glsl?raw"
 import masterPaperFilm from "@/shaders/camera/passes/master-paper-film.frag.glsl?raw";
 
 type Gl = WebGLRenderingContext | WebGL2RenderingContext;
+type CinematicFramebufferKey =
+  | "a"
+  | "b"
+  | "feedbackA"
+  | "feedbackB"
+  | "motion"
+  | "overlay";
 
 const COPY_FRAGMENT = `precision mediump float;
 uniform sampler2D u_input;
@@ -337,9 +344,7 @@ export class CinematicPipeline {
     this.feedbackReady = false;
   }
 
-  private ensureSize(
-    keys: Array<keyof typeof this.framebuffers>,
-  ): void {
+  private ensureSize(keys: CinematicFramebufferKey[]): void {
     const gl = this.gl;
     if (!gl || this.width <= 0 || this.height <= 0) return;
 
