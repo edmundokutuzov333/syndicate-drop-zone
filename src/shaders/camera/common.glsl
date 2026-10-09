@@ -176,12 +176,10 @@ float digitalFlicker(float speed) {
 }
 
 vec2 liquidWarp(vec2 uv, float amount) {
+  // Compatibility helper without animated image waves.
   vec2 p = uv * 2.0 - 1.0;
-  float waveA = sin(p.y * 18.0 + u_time * 2.7);
-  float waveB = cos(p.x * 15.0 - u_time * 2.1);
-  p += vec2(waveA, waveB) * amount * 0.018;
-  float r2 = dot(p, p);
-  p *= 1.0 + r2 * amount * 0.14;
+  float radius = dot(p, p);
+  p *= 1.0 + radius * clamp(amount, 0.0, 1.0) * 0.14;
   return clamp(p * 0.5 + 0.5, 0.0, 1.0);
 }
 

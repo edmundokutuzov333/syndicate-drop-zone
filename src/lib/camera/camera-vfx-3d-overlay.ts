@@ -276,11 +276,13 @@ export class CameraVfx3DOverlay {
     meshColor: [number, number, number] = [0, 1, 0.4],
     lineWidth = 1.5,
     depthFade = 0.8,
+    coreIntensity = 0.82,
   ): void {
     this.xrayOuterMaterial.uniforms.uMeshColor!.value.set(...meshColor);
     this.xrayCoreMaterial.uniforms.uMeshColor!.value.set(...meshColor);
     this.xrayOuterMaterial.uniforms.uDepthFade!.value = depthFade;
     this.xrayCoreMaterial.uniforms.uDepthFade!.value = depthFade;
+    this.xrayCoreMaterial.uniforms.uCore!.value = coreIntensity;
     this.xrayOuterMaterial.uniforms.uLineWidth!.value = lineWidth;
     this.xrayCoreMaterial.uniforms.uLineWidth!.value = lineWidth;
   }

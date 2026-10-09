@@ -1,5 +1,5 @@
 void main() {
-  vec2 uv = liquidWarp(v_uv, 0.58 + u_distortion * 2.2);
+  vec2 uv = liquidWarp(v_uv, u_distortion);
   vec3 source = sampleColor(uv);
   float lum = luma(source);
   float edge = edgeStrength(uv);
@@ -37,6 +37,7 @@ void main() {
   phosphor += pixelNoise;
 
   phosphor *= scan * digitalFlicker(9.0);
+  phosphor = mix(sampleColor(v_uv), phosphor, u_intensity);
   phosphor *= vignette(v_uv, 0.52);
   phosphor = mix(phosphor, phosphor + edge * vec3(0.02, 0.12, 0.02), 0.75);
   phosphor = applyFlash(phosphor);

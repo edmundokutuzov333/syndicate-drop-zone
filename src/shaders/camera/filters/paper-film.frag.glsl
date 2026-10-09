@@ -1,6 +1,7 @@
 uniform float uGrainIntensity;
 uniform float uDirtFrequency;
 uniform float uJitterAmount;
+uniform float uLavenderTint;
 
 uniform float uApplyToAllFilters;
 
@@ -37,6 +38,8 @@ void main() {
   vec2 jitter = (jitterSeed - 0.5) * uJitterAmount;
 
   vec3 source = sampleColor(v_uv + jitter);
+  vec3 lavenderGrade = source * vec3(0.84, 0.76, 0.96) + vec3(0.025, 0.018, 0.045);
+  source = mix(source, lavenderGrade, clamp(uLavenderTint, 0.0, 1.0));
 
   float n = paperNoise(v_uv + jitter, filmFrame * 27.0 + 1.0);
   float dirt = dirtMask(v_uv + jitter, filmFrame);

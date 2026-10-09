@@ -20,7 +20,7 @@ vec3 thermalPalette(float value) {
 }
 
 void main() {
-  vec2 uv = liquidWarp(v_uv, 0.8 + u_distortion * 2.5);
+  vec2 uv = liquidWarp(v_uv, u_distortion);
   vec3 source = sampleColor(uv);
   float lum = luma(source);
 
@@ -47,6 +47,7 @@ void main() {
 
   color = feedbackBlend(uv, color);
   color += vec3(0.16, 0.02, 0.0) * pulse(1.1, 0.7) * hot * 0.04;
+  color = mix(source, color, u_intensity);
   color = applyFlash(color);
 
   gl_FragColor = vec4(saturateColor(color), 1.0);

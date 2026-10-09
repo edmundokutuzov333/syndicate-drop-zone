@@ -52,6 +52,7 @@ void main() {
     tapeBurst * 0.22
   );
 
+  grade = mix(sampleColor(v_uv), grade, u_intensity);
   grade = feedbackBlend(uv, grade);
   grade = applyFlash(grade);
 

@@ -103,6 +103,8 @@ export type FilterUniformDefaults = {
   feedback: number;
 };
 
+export type FilterControlTarget = "shader" | "cinematic" | "xray-overlay";
+
 export type FilterControlDefinition = {
   uniform: string;
   label: string;
@@ -110,6 +112,7 @@ export type FilterControlDefinition = {
   max: number;
   step: number;
   defaultValue: number;
+  target?: FilterControlTarget;
 };
 
 export type FilterDefinition = {

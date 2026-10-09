@@ -10,6 +10,7 @@ import {
   type DirectRenderState,
 } from "./render-policy";
 import crossfadeShader from "@/shaders/camera/crossfade.frag.glsl?raw";
+import waveWarpShader from "@/shaders/camera/wave-warp.frag.glsl?raw";
 import {
   ASTRO_LUT_HEIGHT,
   ASTRO_LUT_WIDTH,
@@ -89,6 +90,9 @@ export class WebGLEngine {
   private readonly transitionFrom = new FrameBuffer();
   private readonly transitionTo = new FrameBuffer();
   private readonly finalOutput = new FrameBuffer();
+  private readonly waveOutput = new FrameBuffer();
+  private waveProgram: ShaderProgramHandle | null = null;
+  private waveAmount = 0;
   private readonly datamoshHistory: [FrameBuffer, FrameBuffer] = [new FrameBuffer(), new FrameBuffer()];
   private datamoshHistoryReadIndex: 0 | 1 = 0;
   private datamoshHistoryReady = false;
@@ -306,6 +310,7 @@ export class WebGLEngine {
     this.transitionFrom.create(this.gl, this.canvas.width, this.canvas.height);
     this.transitionTo.create(this.gl, this.canvas.width, this.canvas.height);
     this.finalOutput.create(this.gl, this.canvas.width, this.canvas.height);
+    if (this.waveOutput.get()) this.waveOutput.create(this.gl, this.canvas.width, this.canvas.height);
     this.cinematicPipeline.resize(this.canvas.width, this.canvas.height);
 
     this.metrics = {
@@ -330,6 +335,7 @@ export class WebGLEngine {
     this.transitionFrom.create(this.gl, this.canvas.width, this.canvas.height);
     this.transitionTo.create(this.gl, this.canvas.width, this.canvas.height);
     this.finalOutput.create(this.gl, this.canvas.width, this.canvas.height);
+    if (this.waveOutput.get()) this.waveOutput.create(this.gl, this.canvas.width, this.canvas.height);
     this.cinematicPipeline.resize(this.canvas.width, this.canvas.height);
   }
 
@@ -343,6 +349,7 @@ export class WebGLEngine {
     this.transitionFrom.create(this.gl, this.canvas.width, this.canvas.height);
     this.transitionTo.create(this.gl, this.canvas.width, this.canvas.height);
     this.finalOutput.create(this.gl, this.canvas.width, this.canvas.height);
+    if (this.waveOutput.get()) this.waveOutput.create(this.gl, this.canvas.width, this.canvas.height);
     this.cinematicPipeline.resize(this.canvas.width, this.canvas.height);
   }
 
@@ -453,6 +460,23 @@ export class WebGLEngine {
     this.uniforms.set(name, value);
   }
 
+  setWaveAmount(value: number): void {
+    if (!Number.isFinite(value)) return;
+    const next = Math.max(0, Math.min(1, value));
+    if (next > 0 && !this.waveProgram && this.gl && this.vertexShaderSource) {
+      this.waveProgram = this.compileProgram(
+        "optional-wave-warp:v1",
+        this.vertexShaderSource,
+        waveWarpShader,
+      );
+    }
+    this.waveAmount = next;
+  }
+
+  getWaveAmount(): number {
+    return this.waveAmount;
+  }
+
   setFilterParameter(filter: FilterId, uniform: string, value: number): void {
     const normalized = normalizeFilterControlValue(filter, uniform, value);
     if (normalized === null) return;
@@ -547,7 +571,7 @@ export class WebGLEngine {
     const activeFilter = this.transition?.to ?? this.filter;
     this.directRenderState.transitionActive = Boolean(this.transition);
     this.directRenderState.sceneOverlayActive = Boolean(this.sceneOverlaySource);
-    this.directRenderState.overlayPending = Boolean(this.overlayText || this.overlayDirty);
+    this.directRenderState.overlayPending = Boolean(this.overlayText || this.overlayDirty || this.waveAmount > 0);
     this.directRenderState.hudPending = Boolean(this.hudText || this.hudDirty);
     this.directRenderState.masterOverlayActive =
       this.masterOverlays["cathode-crt"] ||
@@ -608,7 +632,12 @@ export class WebGLEngine {
         this.renderSceneOverlayPass(finalFramebuffer);
       }
 
-      const finalTexture = this.finalOutput.getTexture();
+      let finalTexture = this.finalOutput.getTexture();
+
+      if (finalTexture && this.waveAmount > 0) {
+        this.renderWavePass(finalTexture, timestamp);
+        finalTexture = this.waveOutput.getTexture() ?? finalTexture;
+      }
 
       if (finalTexture) {
         this.cinematicPipeline.renderMasterOverlays(
@@ -737,6 +766,7 @@ export class WebGLEngine {
       this.finalOutput.destroy(gl);
       this.datamoshHistory[0].destroy(gl);
       this.datamoshHistory[1].destroy(gl);
+      this.waveOutput.destroy(gl);
       this.cinematicPipeline.destroy();
       this.shaderCache.clear(gl);
     }
@@ -750,6 +780,8 @@ export class WebGLEngine {
     this.transition = null;
     this.forcedOutputResolution = null;
     this.programs.clear();
+    this.waveProgram = null;
+    this.waveAmount = 0;
     this.blendProgram = null;
     this.uniforms.clear();
     this.uniformLocations.clear();
@@ -925,6 +957,41 @@ export class WebGLEngine {
     }
   }
 
+  private getFilterControlValue(filter: FilterId, uniform: string, fallback: number): number {
+    const control = FILTER_REGISTRY.get(filter).controls?.find((item) => item.uniform === uniform);
+    return this.filterParameters.get(filter)?.get(uniform) ?? control?.defaultValue ?? fallback;
+  }
+
+  private renderWavePass(inputTexture: WebGLTexture, timestamp: number): void {
+    const gl = this.gl;
+    const canvas = this.canvas;
+    const handle = this.waveProgram;
+    if (!gl || !canvas || !handle || this.waveAmount <= 0) return;
+
+    const size = this.waveOutput.getSize();
+    if (!this.waveOutput.get() || !this.waveOutput.getTexture() || size.width !== canvas.width || size.height !== canvas.height) {
+      this.waveOutput.create(gl, canvas.width, canvas.height);
+    }
+    const framebuffer = this.waveOutput.get();
+    if (!framebuffer) return;
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    this.bindProgram(handle.program);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, inputTexture);
+    this.setProgramUniform(handle.program, "u_input", 0);
+    this.setProgramUniform(handle.program, "u_resolution", [canvas.width, canvas.height]);
+    this.setProgramUniform(handle.program, "u_time", timestamp / 1000);
+    this.setProgramUniform(handle.program, "u_waveAmount", this.waveAmount);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    this.drawCallsThisFrame += 1;
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    gl.useProgram(null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
   private renderFilterPass(
     framebuffer: WebGLFramebuffer | null,
     filter: FilterId,
@@ -953,9 +1020,9 @@ export class WebGLEngine {
         currentTexture,
         framebuffer,
         timestamp / 1000,
-        0.025,
-        0.3,
-        0.7,
+        this.getFilterControlValue(filter, "uGlowRadius", 0.025),
+        this.getFilterControlValue(filter, "uHalationIntensity", 0.3),
+        this.getFilterControlValue(filter, "uGlowThreshold", 0.7),
       );
       return;
     }
@@ -967,9 +1034,9 @@ export class WebGLEngine {
         framebuffer,
         this.getTargetTexture(framebuffer),
         timestamp / 1000,
-        0.08,
-        0.02,
-        0.92,
+        this.getFilterControlValue(filter, "uMeltStrength", 0.08),
+        this.getFilterControlValue(filter, "uVelocityThreshold", 0.02),
+        this.getFilterControlValue(filter, "uPersistence", 0.92),
         Number(this.uniforms.get("u_faceMotion") ?? 0),
         Number(this.uniforms.get("u_faceMotionBurst") ?? 0),
       );
@@ -1050,6 +1117,7 @@ export class WebGLEngine {
     // Apply only this preset's controls. Other filters keep their own state/defaults.
     const parameterOverrides = this.filterParameters.get(filter);
     for (const control of definition.controls ?? []) {
+      if (control.target === "cinematic" || control.target === "xray-overlay") continue;
       const value = parameterOverrides?.get(control.uniform) ?? control.defaultValue;
       this.setProgramUniform(programHandle.program, control.uniform, value);
     }
@@ -1429,6 +1497,7 @@ export class WebGLEngine {
 
     if (
       name === "u_texture" ||
+      name === "u_input" ||
       name === "u_previousFrame" ||
       name === "u_from" ||
       name === "u_to" ||

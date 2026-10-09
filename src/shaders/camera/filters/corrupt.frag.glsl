@@ -10,7 +10,7 @@ void main() {
   float faceTear = step(0.58, hash12(vec2(floor(uv.y * 120.0), glitchFrame + 31.0))) * face;
 
   uv.x += tearBand * tearDirection * (0.018 + 0.050 * u_distortion);
-  uv.x += faceTear * sin(u_time * 8.0 + uv.y * 90.0) * 0.055;
+  uv.x += faceTear * (hash12(vec2(glitchFrame, 37.0)) - 0.5) * (0.018 + 0.025 * u_distortion);
   uv.y += (hash12(vec2(floor(uv.x * 34.0), glitchFrame + 3.0)) - 0.5)
     * 0.010 * u_distortion;
 

@@ -18,6 +18,7 @@ type CameraViewportProps = {
   manager: CameraManager;
   facingMode: CameraFacingMode;
   filter: FilterId;
+  filterParameterValues: Readonly<Record<string, number>>;
   onReady: () => void | Promise<void>;
   onCanvasReady?: (canvas: HTMLCanvasElement | null) => void;
   onEngineReady?: (engine: WebGLEngine | null) => void;
@@ -28,6 +29,7 @@ export function CameraViewport({
   manager,
   facingMode,
   filter,
+  filterParameterValues,
   onReady,
   onCanvasReady,
   onEngineReady,
@@ -36,6 +38,8 @@ export function CameraViewport({
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<WebGLEngine | null>(null);
+  const vfx3dRef = useRef<CameraVfx3DOverlay | null>(null);
+  const filterParameterValuesRef = useRef(filterParameterValues);
   const restartRenderLoopRef = useRef<(() => void) | null>(null);
   const filterRef = useRef(filter);
   const facingRef = useRef(facingMode);
@@ -43,6 +47,7 @@ export function CameraViewport({
   const [engineReady, setEngineReady] = useState(false);
 
   filterRef.current = filter;
+  filterParameterValuesRef.current = filterParameterValues;
   facingRef.current = facingMode;
   recordingRef.current = recording;
 
@@ -93,10 +98,16 @@ export function CameraViewport({
 
       try {
         const overlay = new CameraVfx3DOverlay();
-        overlay.setXrayParameters([0, 1, 0.4], 1.5, 0.8);
+        overlay.setXrayParameters(
+          [0, 1, 0.4],
+          1.5,
+          filterParameterValuesRef.current.uDepthFade ?? 0.8,
+          filterParameterValuesRef.current.uCore ?? 0.82,
+        );
         const rect = stage.getBoundingClientRect();
         overlay.resize(rect.width, rect.height);
         vfx3d = overlay;
+        vfx3dRef.current = overlay;
       } catch {
         vfx3d = null;
       }
@@ -347,6 +358,7 @@ export function CameraViewport({
       faceVfx.destroy();
       vfx3d?.destroy();
       vfx3d = null;
+      vfx3dRef.current = null;
       canvas.removeEventListener(
         "webglcontextlost",
         handleContextLost,
@@ -382,6 +394,15 @@ export function CameraViewport({
   useEffect(() => {
     engineRef.current?.setFilter(filter);
   }, [filter]);
+
+  useEffect(() => {
+    vfx3dRef.current?.setXrayParameters(
+      [0, 1, 0.4],
+      1.5,
+      filterParameterValues.uDepthFade ?? 0.8,
+      filterParameterValues.uCore ?? 0.82,
+    );
+  }, [filterParameterValues]);
 
   return (
     <div

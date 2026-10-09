@@ -37,15 +37,12 @@ void main() {
   color += vec3(0.11, 0.015, 0.02) * eyeRegister * 0.55;
   color += vec3(0.01, 0.015, 0.08) * mouthRegister * (0.28 + u_mouth.w * 0.18);
 
-  float fold = smoothstep(
-    0.012,
-    0.0,
-    abs(uv.x - (0.5 + sin(u_time * 0.08) * 0.05))
-  );
+  float fold = 1.0 - smoothstep(0.0, 0.012, abs(uv.x - 0.5));
   color += vec3(0.085) * fold;
 
   color += vec3(scanner) * 0.055;
   color += filmGrain(uv, lum) * 0.045;
+  color = mix(source, color, u_intensity);
   color *= 0.94 + 0.06 * scanner;
   color *= vignette(v_uv, 0.18);
   color = applyFlash(color);

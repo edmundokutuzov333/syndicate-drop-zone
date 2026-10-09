@@ -19,7 +19,6 @@ vec2 crtClassicWarp(vec2 uv) {
   vec2 p = uv * 2.0 - 1.0;
   float radius = dot(p, p);
   p *= 1.0 + radius * (0.035 + u_distortion * 0.22);
-  p.x += sin(p.y * 24.0 + u_time * 1.4) * 0.0012 * u_intensity;
   return p * 0.5 + 0.5;
 }
 

@@ -1,5 +1,5 @@
 void main() {
-  vec2 uv = liquidWarp(v_uv, 0.72 + u_distortion * 1.8);
+  vec2 uv = liquidWarp(v_uv, u_distortion);
   vec3 color = chromaticSample(uv);
   float lum = luma(color);
 
@@ -46,6 +46,7 @@ void main() {
   float dust = dustSpeck(uv, 280.0, 0.9982);
   red += vec3(dust * 0.35, dust * 0.015, dust * 0.05);
 
+  red = mix(sampleColor(v_uv), red, u_intensity);
   red = feedbackBlend(uv, red);
   red += filmGrain(uv, lum) * 0.072;
   red *= vignette(v_uv, 0.58);

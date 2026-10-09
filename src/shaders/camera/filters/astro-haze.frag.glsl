@@ -3,7 +3,7 @@ void main() {
   float entry = smoothstep(0.0, 0.55, effectTime);
   float motion = clamp(u_faceMotion + u_faceMotionBurst * 0.75, 0.0, 1.0);
 
-  vec2 uv = liquidWarp(v_uv, 0.32 + u_distortion * 1.9 + motion * 0.12);
+  vec2 uv = liquidWarp(v_uv, u_distortion);
   vec3 source = sampleColor(uv);
 
   vec3 graded = applyLut(source);
@@ -37,6 +37,7 @@ void main() {
   graded += vec3(0.10, 0.14, 0.12) * entryFlash * (0.22 + bloom * 0.5);
 
   graded = mix(source, graded, entry * 0.92);
+  graded = mix(source, graded, u_intensity);
   graded = feedbackBlend(uv, graded);
   graded = applyFlash(graded);
 

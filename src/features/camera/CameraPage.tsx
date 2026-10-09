@@ -51,6 +51,7 @@ export function CameraPage() {
   }));
   const [mode, setMode] = useState<CaptureMode>("photo");
   const [filter, setFilter] = useState<FilterId>("op1um");
+  const [waveAmount, setWaveAmount] = useState(0);
   const [filterParameterOverrides, setFilterParameterOverrides] = useState<
     Partial<Record<FilterId, Record<string, number>>>
   >({});
@@ -98,6 +99,12 @@ export function CameraPage() {
     [engineReady, filter],
   );
 
+  const handleWaveAmountChange = useCallback((value: number) => {
+    const next = Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0;
+    setWaveAmount(next);
+    engineReady?.setWaveAmount(next);
+  }, [engineReady]);
+
   const handleFilterParameterReset = useCallback(() => {
     const next = { ...filterParameterOverridesRef.current };
     delete next[filter];
@@ -119,6 +126,11 @@ export function CameraPage() {
       }
     }
   }, [engineReady]);
+
+  useEffect(() => {
+    if (!engineReady) return;
+    engineReady.setWaveAmount(waveAmount);
+  }, [engineReady, waveAmount]);
 
   useEffect(() => {
     if (!engineReady) return;
@@ -455,6 +467,7 @@ export function CameraPage() {
           manager={cameraManager}
           facingMode={camera.facingMode}
           filter={filter}
+          filterParameterValues={selectedFilterParameters}
           onReady={startCamera}
           onCanvasReady={setCanvasReady}
           onEngineReady={setEngineReady}
@@ -476,6 +489,8 @@ export function CameraPage() {
             values={selectedFilterParameters}
             onChange={handleFilterParameterChange}
             onReset={handleFilterParameterReset}
+            waveAmount={waveAmount}
+            onWaveAmountChange={handleWaveAmountChange}
             locked={
               captureStatus === "countdown" ||
               captureStatus === "processing" ||

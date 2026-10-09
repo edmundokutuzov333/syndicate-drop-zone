@@ -523,6 +523,27 @@ describe("camera engineering foundation", () => {
     expect(FILTER_REGISTRY.get("datamosh").supportsFeedback).toBe(true);
   });
 
+  it("provides live controls for every original filter as well as the seven dedicated signal engines", () => {
+    const originalIds = [
+      "op1um", "xerox", "corrupt", "nightvision", "thermal", "redroom", "vamp",
+      "astro-haze", "cyber-mugshot", "threshold", "xray-mesh", "cathode-crt",
+      "halation", "kinetic-melt", "paper-film",
+    ] as const;
+    for (const id of originalIds) {
+      const definition = FILTER_REGISTRY.get(id);
+      expect(definition.controls?.length, id).toBeGreaterThanOrEqual(3);
+      for (const control of definition.controls ?? []) {
+        expect(control.min, id + ":" + control.uniform).toBeLessThan(control.max);
+        expect(control.step, id + ":" + control.uniform).toBeGreaterThan(0);
+        expect(control.defaultValue, id + ":" + control.uniform).toBeGreaterThanOrEqual(control.min);
+        expect(control.defaultValue, id + ":" + control.uniform).toBeLessThanOrEqual(control.max);
+      }
+    }
+    expect(FILTER_REGISTRY.get("halation").controls?.every((c) => c.target === "cinematic")).toBe(true);
+    expect(FILTER_REGISTRY.get("kinetic-melt").controls?.every((c) => c.target === "cinematic")).toBe(true);
+    expect(FILTER_REGISTRY.get("xray-mesh").controls?.filter((c) => c.target === "xray-overlay").map((c) => c.uniform)).toEqual(["uDepthFade", "uCore"]);
+  });
+
   it("defines valid, filter-specific live controls for all seven analog presets", () => {
     const ids = ["crt-classic", "vhs-tracking", "night-cctv", "datamosh", "fire-bloom", "neon-cyberpunk", "analog-interference"] as const;
     for (const id of ids) {
@@ -576,6 +597,18 @@ describe("camera engineering foundation", () => {
     expect(normalizeFilterControlValue("fire-bloom", "u_threshold", 2)).toBe(0.9);
     expect(normalizeFilterControlValue("fire-bloom", "u_threshold", Number.NaN)).toBeNull();
     expect(normalizeFilterControlValue("fire-bloom", "u_nonexistent", 0.5)).toBeNull();
+  });
+
+  it("keeps shared image warp wave-free and implements optional Bayer and lavender treatments", () => {
+    const originalIds = ["op1um", "xerox", "corrupt", "nightvision", "thermal", "redroom", "vamp", "astro-haze", "cyber-mugshot", "threshold", "xray-mesh", "cathode-crt", "halation", "kinetic-melt", "paper-film"] as const;
+    for (const id of originalIds) {
+      const source = getFilterFragmentShader(id);
+      expect(source, id).not.toContain("waveA");
+      expect(source, id).not.toContain("waveB");
+    }
+    expect(getFilterFragmentShader("threshold")).toContain("bayer8Rank");
+    expect(getFilterFragmentShader("threshold")).toContain("uDitherAmount");
+    expect(getFilterFragmentShader("paper-film")).toContain("uLavenderTint");
   });
 
   it("maps the CRT CLASSIC preset to the animated thermal reference palette", () => {

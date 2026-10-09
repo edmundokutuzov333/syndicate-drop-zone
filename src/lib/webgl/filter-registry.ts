@@ -12,6 +12,13 @@ const DEFINITIONS: FilterDefinition[] = [
     supportsFeedback: true,
     enabled: true,
     defaults: { intensity: 0.98, noise: 0.55, distortion: 0.11, chromatic: 0.0062, feedback: 0.22 },
+    controls: [
+      { uniform: "u_intensity", label: "EFFECT MIX", min: 0, max: 1, step: 0.01, defaultValue: 0.98 },
+      { uniform: "u_chromatic", label: "RGB SPLIT", min: 0, max: 0.04, step: 0.001, defaultValue: 0.0062 },
+      { uniform: "u_distortion", label: "LENS CURVE", min: 0, max: 0.22, step: 0.005, defaultValue: 0.11 },
+      { uniform: "u_noise", label: "GRAIN", min: 0, max: 1, step: 0.01, defaultValue: 0.55 },
+      { uniform: "u_feedback", label: "IMAGE TRAIL", min: 0, max: 0.65, step: 0.01, defaultValue: 0.22 },
+    ],
   },
   {
     id: "xerox",
@@ -23,6 +30,11 @@ const DEFINITIONS: FilterDefinition[] = [
     supportsFeedback: false,
     enabled: true,
     defaults: { intensity: 0.94, noise: 0.72, distortion: 0.032, chromatic: 0.0012, feedback: 0.06 },
+    controls: [
+      { uniform: "u_intensity", label: "EFFECT MIX", min: 0, max: 1, step: 0.01, defaultValue: 1 },
+      { uniform: "u_distortion", label: "LENS CURVE", min: 0, max: 0.12, step: 0.002, defaultValue: 0.032 },
+      { uniform: "u_noise", label: "PAPER GRAIN", min: 0, max: 1, step: 0.01, defaultValue: 0.72 },
+    ],
   },
   {
     id: "corrupt",
@@ -34,6 +46,13 @@ const DEFINITIONS: FilterDefinition[] = [
     supportsFeedback: true,
     enabled: true,
     defaults: { intensity: 1, noise: 0.48, distortion: 0.42, chromatic: 0.035, feedback: 0.48 },
+    controls: [
+      { uniform: "u_intensity", label: "GLITCH MIX", min: 0, max: 1, step: 0.01, defaultValue: 1 },
+      { uniform: "u_distortion", label: "DISPLACEMENT", min: 0, max: 0.5, step: 0.01, defaultValue: 0.42 },
+      { uniform: "u_chromatic", label: "RGB SPLIT", min: 0, max: 0.06, step: 0.001, defaultValue: 0.035 },
+      { uniform: "u_noise", label: "STATIC", min: 0, max: 1, step: 0.01, defaultValue: 0.48 },
+      { uniform: "u_feedback", label: "GHOSTING", min: 0, max: 0.7, step: 0.01, defaultValue: 0.48 },
+    ],
   },
   {
     id: "nightvision",
@@ -45,6 +64,11 @@ const DEFINITIONS: FilterDefinition[] = [
     supportsFeedback: false,
     enabled: true,
     defaults: { intensity: 0.98, noise: 0.46, distortion: 0.06, chromatic: 0.0025, feedback: 0.16 },
+    controls: [
+      { uniform: "u_intensity", label: "PHOSPHOR MIX", min: 0, max: 1, step: 0.01, defaultValue: 0.98 },
+      { uniform: "u_distortion", label: "LENS CURVE", min: 0, max: 0.2, step: 0.005, defaultValue: 0.06 },
+      { uniform: "u_noise", label: "SENSOR GRAIN", min: 0, max: 1, step: 0.01, defaultValue: 0.46 },
+    ],
   },
   {
     id: "thermal",
@@ -56,6 +80,11 @@ const DEFINITIONS: FilterDefinition[] = [
     supportsFeedback: false,
     enabled: true,
     defaults: { intensity: 0.98, noise: 0.38, distortion: 0.12, chromatic: 0.003, feedback: 0.24 },
+    controls: [
+      { uniform: "u_intensity", label: "THERMAL MIX", min: 0, max: 1, step: 0.01, defaultValue: 0.98 },
+      { uniform: "u_distortion", label: "LENS CURVE", min: 0, max: 0.22, step: 0.005, defaultValue: 0.12 },
+      { uniform: "u_noise", label: "HEAT GRAIN", min: 0, max: 1, step: 0.01, defaultValue: 0.38 },
+    ],
   },
   {
     id: "redroom",
@@ -67,6 +96,13 @@ const DEFINITIONS: FilterDefinition[] = [
     supportsFeedback: true,
     enabled: true,
     defaults: { intensity: 1, noise: 0.56, distortion: 0.10, chromatic: 0.012, feedback: 0.31 },
+    controls: [
+      { uniform: "u_intensity", label: "RED GRADE MIX", min: 0, max: 1, step: 0.01, defaultValue: 1 },
+      { uniform: "u_distortion", label: "LENS CURVE", min: 0, max: 0.18, step: 0.005, defaultValue: 0.1 },
+      { uniform: "u_chromatic", label: "CHROMA BLEED", min: 0, max: 0.04, step: 0.001, defaultValue: 0.012 },
+      { uniform: "u_noise", label: "FILM GRAIN", min: 0, max: 1, step: 0.01, defaultValue: 0.56 },
+      { uniform: "u_feedback", label: "AFTERIMAGE", min: 0, max: 0.65, step: 0.01, defaultValue: 0.31 },
+    ],
   },
   {
     id: "vamp",
@@ -78,6 +114,13 @@ const DEFINITIONS: FilterDefinition[] = [
     supportsFeedback: true,
     enabled: true,
     defaults: { intensity: 1, noise: 0.66, distortion: 0.12, chromatic: 0.018, feedback: 0.22 },
+    controls: [
+      { uniform: "u_intensity", label: "GRADE MIX", min: 0, max: 1, step: 0.01, defaultValue: 1 },
+      { uniform: "u_distortion", label: "FISHEYE", min: 0, max: 0.35, step: 0.005, defaultValue: 0.12 },
+      { uniform: "u_chromatic", label: "CHROMA SPLIT", min: 0, max: 0.05, step: 0.001, defaultValue: 0.018 },
+      { uniform: "u_noise", label: "FILM GRAIN", min: 0, max: 1, step: 0.01, defaultValue: 0.66 },
+      { uniform: "u_feedback", label: "AFTERIMAGE", min: 0, max: 0.65, step: 0.01, defaultValue: 0.22 },
+    ],
   },
   {
     id: "astro-haze",
@@ -89,6 +132,12 @@ const DEFINITIONS: FilterDefinition[] = [
     supportsFeedback: true,
     enabled: true,
     defaults: { intensity: 0.98, noise: 0.5, distortion: 0.14, chromatic: 0.008, feedback: 0.54 },
+    controls: [
+      { uniform: "u_intensity", label: "HAZE MIX", min: 0, max: 1, step: 0.01, defaultValue: 0.98 },
+      { uniform: "u_distortion", label: "LENS / HAZE", min: 0, max: 0.25, step: 0.005, defaultValue: 0.14 },
+      { uniform: "u_noise", label: "ATMOSPHERE GRAIN", min: 0, max: 1, step: 0.01, defaultValue: 0.5 },
+      { uniform: "u_feedback", label: "TEMPORAL TRAIL", min: 0, max: 0.75, step: 0.01, defaultValue: 0.54 },
+    ],
   },
   {
     id: "cyber-mugshot",
@@ -100,6 +149,13 @@ const DEFINITIONS: FilterDefinition[] = [
     supportsFeedback: true,
     enabled: true,
     defaults: { intensity: 1, noise: 0.62, distortion: 0.18, chromatic: 0.028, feedback: 0.36 },
+    controls: [
+      { uniform: "u_intensity", label: "IMAGE MIX", min: 0, max: 1, step: 0.01, defaultValue: 1 },
+      { uniform: "u_distortion", label: "LENS CURVE", min: 0, max: 0.35, step: 0.005, defaultValue: 0.18 },
+      { uniform: "u_chromatic", label: "RGB SPLIT", min: 0, max: 0.06, step: 0.001, defaultValue: 0.028 },
+      { uniform: "u_noise", label: "STATIC", min: 0, max: 1, step: 0.01, defaultValue: 0.62 },
+      { uniform: "u_feedback", label: "AFTERIMAGE", min: 0, max: 0.7, step: 0.01, defaultValue: 0.36 },
+    ],
   },
   {
     id: "threshold",
@@ -112,6 +168,16 @@ const DEFINITIONS: FilterDefinition[] = [
     enabled: true,
     pipeline: "single",
     defaults: { intensity: 1, noise: 0.7, distortion: 0.01, chromatic: 0, feedback: 0 },
+    controls: [
+      { uniform: "u_intensity", label: "EFFECT MIX", min: 0, max: 1, step: 0.01, defaultValue: 1 },
+      { uniform: "uThreshold", label: "THRESHOLD", min: 0, max: 1, step: 0.005, defaultValue: 0.45 },
+      { uniform: "uEdgeSmoothness", label: "EDGE SOFTNESS", min: 0, max: 0.25, step: 0.001, defaultValue: 0.015 },
+      { uniform: "uFlickerIntensity", label: "EXPOSURE FLICKER", min: 0, max: 1, step: 0.01, defaultValue: 0.05 },
+      { uniform: "uDitherAmount", label: "BAYER DITHER", min: 0, max: 1, step: 0.01, defaultValue: 0.68 },
+      { uniform: "uDitherScale", label: "DITHER SCALE", min: 0.1, max: 1, step: 0.01, defaultValue: 0.35 },
+      { uniform: "uPaletteAmount", label: "OLIVE / YELLOW", min: 0, max: 1, step: 0.01, defaultValue: 1 },
+      { uniform: "u_noise", label: "GRAIN", min: 0, max: 1, step: 0.01, defaultValue: 0.7 },
+    ],
     passes: getFilterShaderContract("threshold")?.passes,
     parameters: getFilterShaderContract("threshold")?.parameters,
   },
@@ -126,6 +192,11 @@ const DEFINITIONS: FilterDefinition[] = [
     enabled: true,
     pipeline: "xray-mesh",
     defaults: { intensity: 1, noise: 0.15, distortion: 0, chromatic: 0, feedback: 0 },
+    controls: [
+      { uniform: "u_intensity", label: "PHOSPHOR MIX", min: 0, max: 1, step: 0.01, defaultValue: 1 },
+      { uniform: "uDepthFade", label: "DEPTH FADE", min: 0, max: 2, step: 0.01, defaultValue: 0.8, target: "xray-overlay" },
+      { uniform: "uCore", label: "CORE GLOW", min: 0, max: 1, step: 0.01, defaultValue: 0.82, target: "xray-overlay" },
+    ],
     passes: getFilterShaderContract("xray-mesh")?.passes,
     parameters: getFilterShaderContract("xray-mesh")?.parameters,
   },
@@ -141,6 +212,12 @@ const DEFINITIONS: FilterDefinition[] = [
     pipeline: "single",
     masterOverlay: "cathode-crt",
     defaults: { intensity: 1, noise: 0.28, distortion: 0.12, chromatic: 0.008, feedback: 0.18 },
+    controls: [
+      { uniform: "uDistortionK", label: "CRT CURVATURE", min: -0.2, max: 0.5, step: 0.005, defaultValue: 0.12 },
+      { uniform: "uScanlineCount", label: "SCANLINE DENSITY", min: 100, max: 1600, step: 10, defaultValue: 800 },
+      { uniform: "uChromaticOffset", label: "RGB SPLIT", min: 0, max: 0.08, step: 0.001, defaultValue: 0.008 },
+      { uniform: "uScanlineIntensity", label: "SCANLINE DEPTH", min: 0, max: 0.85, step: 0.01, defaultValue: 0.13 },
+    ],
     passes: getFilterShaderContract("cathode-crt")?.passes,
     parameters: getFilterShaderContract("cathode-crt")?.parameters,
   },
@@ -155,6 +232,11 @@ const DEFINITIONS: FilterDefinition[] = [
     enabled: true,
     pipeline: "halation",
     defaults: { intensity: 1, noise: 0.02, distortion: 0, chromatic: 0.002, feedback: 0.12 },
+    controls: [
+      { uniform: "uGlowRadius", label: "BLOOM RADIUS", min: 0.002, max: 0.12, step: 0.001, defaultValue: 0.025, target: "cinematic" },
+      { uniform: "uHalationIntensity", label: "HALATION", min: 0, max: 1, step: 0.01, defaultValue: 0.3, target: "cinematic" },
+      { uniform: "uGlowThreshold", label: "HIGHLIGHT THRESHOLD", min: 0, max: 1, step: 0.01, defaultValue: 0.7, target: "cinematic" },
+    ],
     passes: getFilterShaderContract("halation")?.passes,
     parameters: getFilterShaderContract("halation")?.parameters,
   },
@@ -169,6 +251,11 @@ const DEFINITIONS: FilterDefinition[] = [
     enabled: true,
     pipeline: "kinetic-melt",
     defaults: { intensity: 1, noise: 0.12, distortion: 0.18, chromatic: 0.01, feedback: 0.92 },
+    controls: [
+      { uniform: "uMeltStrength", label: "MELT STRENGTH", min: 0, max: 0.4, step: 0.005, defaultValue: 0.08, target: "cinematic" },
+      { uniform: "uVelocityThreshold", label: "MOTION THRESHOLD", min: 0, max: 0.2, step: 0.001, defaultValue: 0.02, target: "cinematic" },
+      { uniform: "uPersistence", label: "FRAME PERSISTENCE", min: 0.5, max: 0.995, step: 0.001, defaultValue: 0.92, target: "cinematic" },
+    ],
     passes: getFilterShaderContract("kinetic-melt")?.passes,
     parameters: getFilterShaderContract("kinetic-melt")?.parameters,
   },
@@ -184,6 +271,12 @@ const DEFINITIONS: FilterDefinition[] = [
     pipeline: "single",
     masterOverlay: "paper-film",
     defaults: { intensity: 1, noise: 0.06, distortion: 0.001, chromatic: 0.001, feedback: 0.02 },
+    controls: [
+      { uniform: "uGrainIntensity", label: "GRAIN AMOUNT", min: 0, max: 0.25, step: 0.005, defaultValue: 0.06 },
+      { uniform: "uDirtFrequency", label: "DUST / SCRATCHES", min: 0, max: 1, step: 0.01, defaultValue: 0.4 },
+      { uniform: "uJitterAmount", label: "CAMCORDER JITTER", min: 0, max: 0.01, step: 0.0001, defaultValue: 0.001 },
+      { uniform: "uLavenderTint", label: "LAVENDER WASH", min: 0, max: 1, step: 0.01, defaultValue: 0.38 },
+    ],
     passes: getFilterShaderContract("paper-film")?.passes,
     parameters: getFilterShaderContract("paper-film")?.parameters,
   },

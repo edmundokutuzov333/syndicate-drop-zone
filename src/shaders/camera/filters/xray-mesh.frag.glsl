@@ -11,8 +11,7 @@ void main() {
   float scan = scanline(0.45, 0.12);
   float flicker = digitalFlicker(10.0);
 
-  gl_FragColor = vec4(
-    saturateColor(phosphor * scan * flicker * (0.72 + 0.28 * u_intensity)),
-    1.0
-  );
+  phosphor *= scan * flicker;
+  phosphor = mix(sampleColor(v_uv), phosphor, u_intensity);
+  gl_FragColor = vec4(saturateColor(phosphor), 1.0);
 }

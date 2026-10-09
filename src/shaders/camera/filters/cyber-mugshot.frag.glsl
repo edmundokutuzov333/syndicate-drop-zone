@@ -11,7 +11,7 @@ void main() {
   float tear = step(0.84, tearSeed) * (0.35 + burst * 0.85);
 
   uv.x += tear * (hash12(vec2(glitchFrame, 19.0)) - 0.5) * (0.04 + u_distortion * 0.10);
-  uv.y += sin(uv.x * 72.0 + u_time * 13.0) * burst * 0.0035;
+  // Horizontal sync tears stay local; no full-frame vertical ripple.
 
   float split = u_chromatic + burst * 0.047 + motion * 0.016 + crtBoot * 0.024;
   vec2 rgbOffset = vec2(split, 0.0);
@@ -49,6 +49,7 @@ void main() {
   color *= scan * digitalFlicker(13.0 + burst * 28.0);
   color += filmGrain(uv, lum) * 0.07;
 
+  color = mix(sampleColor(v_uv), color, u_intensity);
   color = feedbackBlend(uv, color);
   color *= vignette(v_uv, 0.56);
   color *= filmGate(v_uv, 0.035);

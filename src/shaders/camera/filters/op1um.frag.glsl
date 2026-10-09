@@ -1,9 +1,5 @@
 void main() {
-  vec2 breathing = vec2(
-    sin(u_time * 0.72) * 0.002,
-    cos(u_time * 0.52) * 0.0014
-  );
-  vec2 uv = distortUv(v_uv + breathing);
+  vec2 uv = distortUv(v_uv);
   vec3 color = chromaticSample(uv);
 
   float lum = luma(color);
@@ -46,6 +42,7 @@ void main() {
   color += vec3(dust + hair) * 0.035;
   color *= gate * scan * vignette(v_uv, 0.34);
 
+  color = mix(sampleColor(v_uv), color, u_intensity);
   color = feedbackBlend(uv, color);
   color = applyFlash(color);
 
