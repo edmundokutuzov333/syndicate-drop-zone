@@ -13,11 +13,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CameraRouteImport } from './routes/camera'
 import { Route as CampingRouteImport } from './routes/camping'
 import { Route as ControlRoomRouteImport } from './routes/control-room'
+import { Route as FiliarRouteImport } from './routes/filiar'
+import { Route as FrequenciaRouteImport } from './routes/frequencia'
 import { Route as MembrosRouteImport } from './routes/membros'
 import { Route as MerchRouteImport } from './routes/merch'
 import { Route as RevelacaoRouteImport } from './routes/revelacao'
-import { Route as FiliarRouteImport } from './routes/filiar'
-import { Route as FrequenciaRouteImport } from './routes/frequencia'
 import { Route as CarteiraCodeRouteImport } from './routes/carteira_.$code'
 import { Route as ControlRoomIndexRouteImport } from './routes/control-room.index'
 import { Route as ControlRoomActividadeRouteImport } from './routes/control-room.actividade'
@@ -28,12 +28,13 @@ import { Route as ControlRoomMediaRouteImport } from './routes/control-room.medi
 import { Route as ControlRoomMerchRouteImport } from './routes/control-room.merch'
 import { Route as ControlRoomMusicaRouteImport } from './routes/control-room.musica'
 import { Route as ControlRoomParceriasRouteImport } from './routes/control-room.parcerias'
+import { Route as ControlRoomRadioRouteImport } from './routes/control-room.radio'
 import { Route as ControlRoomRevelacaoRouteImport } from './routes/control-room.revelacao'
 import { Route as ControlRoomSeoRouteImport } from './routes/control-room.seo'
+import { Route as ControlRoomSindicalizadosRouteImport } from './routes/control-room.sindicalizados'
 import { Route as ControlRoomSistemaRouteImport } from './routes/control-room.sistema'
 import { Route as ControlRoomSiteRouteImport } from './routes/control-room.site'
 import { Route as ControlRoomUtilizadoresRouteImport } from './routes/control-room.utilizadores'
-import { Route as ControlRoomSindicalizadosRouteImport } from './routes/control-room.sindicalizados'
 import { Route as ControlRoomLoginRouteImport } from './routes/control-room_.login'
 import { Route as MembrosSlugRouteImport } from './routes/membros_.$slug'
 
@@ -57,6 +58,16 @@ const ControlRoomRoute = ControlRoomRouteImport.update({
   path: '/control-room',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FiliarRoute = FiliarRouteImport.update({
+  id: '/filiar',
+  path: '/filiar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FrequenciaRoute = FrequenciaRouteImport.update({
+  id: '/frequencia',
+  path: '/frequencia',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MembrosRoute = MembrosRouteImport.update({
   id: '/membros',
   path: '/membros',
@@ -72,19 +83,9 @@ const RevelacaoRoute = RevelacaoRouteImport.update({
   path: '/revelacao',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FiliarRoute = FiliarRouteImport.update({
-  id: '/filiar',
-  path: '/filiar',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CarteiraCodeRoute = CarteiraCodeRouteImport.update({
   id: '/carteira_/$code',
   path: '/carteira/$code',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FrequenciaRoute = FrequenciaRouteImport.update({
-  id: '/frequencia',
-  path: '/frequencia',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ControlRoomIndexRoute = ControlRoomIndexRouteImport.update({
@@ -132,6 +133,11 @@ const ControlRoomParceriasRoute = ControlRoomParceriasRouteImport.update({
   path: '/parcerias',
   getParentRoute: () => ControlRoomRoute,
 } as any)
+const ControlRoomRadioRoute = ControlRoomRadioRouteImport.update({
+  id: '/radio',
+  path: '/radio',
+  getParentRoute: () => ControlRoomRoute,
+} as any)
 const ControlRoomRevelacaoRoute = ControlRoomRevelacaoRouteImport.update({
   id: '/revelacao',
   path: '/revelacao',
@@ -142,6 +148,12 @@ const ControlRoomSeoRoute = ControlRoomSeoRouteImport.update({
   path: '/seo',
   getParentRoute: () => ControlRoomRoute,
 } as any)
+const ControlRoomSindicalizadosRoute =
+  ControlRoomSindicalizadosRouteImport.update({
+    id: '/sindicalizados',
+    path: '/sindicalizados',
+    getParentRoute: () => ControlRoomRoute,
+  } as any)
 const ControlRoomSistemaRoute = ControlRoomSistemaRouteImport.update({
   id: '/sistema',
   path: '/sistema',
@@ -155,11 +167,6 @@ const ControlRoomSiteRoute = ControlRoomSiteRouteImport.update({
 const ControlRoomUtilizadoresRoute = ControlRoomUtilizadoresRouteImport.update({
   id: '/utilizadores',
   path: '/utilizadores',
-  getParentRoute: () => ControlRoomRoute,
-} as any)
-const ControlRoomSindicalizadosRoute = ControlRoomSindicalizadosRouteImport.update({
-  id: '/sindicalizados',
-  path: '/sindicalizados',
   getParentRoute: () => ControlRoomRoute,
 } as any)
 const ControlRoomLoginRoute = ControlRoomLoginRouteImport.update({
@@ -178,14 +185,11 @@ export interface FileRoutesByFullPath {
   '/camera': typeof CameraRoute
   '/camping': typeof CampingRoute
   '/control-room': typeof ControlRoomRouteWithChildren
+  '/filiar': typeof FiliarRoute
+  '/frequencia': typeof FrequenciaRoute
   '/membros': typeof MembrosRoute
   '/merch': typeof MerchRoute
   '/revelacao': typeof RevelacaoRoute
-  '/filiar': typeof FiliarRoute
-  '/frequencia': typeof FrequenciaRoute
-  '/carteira_/$code': typeof CarteiraCodeRoute
-  '/carteira/$code': typeof CarteiraCodeRoute
-  '/filiar': typeof FiliarRoute
   '/carteira/$code': typeof CarteiraCodeRoute
   '/control-room/actividade': typeof ControlRoomActividadeRoute
   '/control-room/artistas': typeof ControlRoomArtistasRoute
@@ -195,12 +199,13 @@ export interface FileRoutesByFullPath {
   '/control-room/merch': typeof ControlRoomMerchRoute
   '/control-room/musica': typeof ControlRoomMusicaRoute
   '/control-room/parcerias': typeof ControlRoomParceriasRoute
+  '/control-room/radio': typeof ControlRoomRadioRoute
   '/control-room/revelacao': typeof ControlRoomRevelacaoRoute
   '/control-room/seo': typeof ControlRoomSeoRoute
+  '/control-room/sindicalizados': typeof ControlRoomSindicalizadosRoute
   '/control-room/sistema': typeof ControlRoomSistemaRoute
   '/control-room/site': typeof ControlRoomSiteRoute
   '/control-room/utilizadores': typeof ControlRoomUtilizadoresRoute
-  '/control-room/sindicalizados': typeof ControlRoomSindicalizadosRoute
   '/control-room/login': typeof ControlRoomLoginRoute
   '/membros/$slug': typeof MembrosSlugRoute
   '/control-room/': typeof ControlRoomIndexRoute
@@ -209,11 +214,11 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/camera': typeof CameraRoute
   '/camping': typeof CampingRoute
+  '/filiar': typeof FiliarRoute
+  '/frequencia': typeof FrequenciaRoute
   '/membros': typeof MembrosRoute
   '/merch': typeof MerchRoute
   '/revelacao': typeof RevelacaoRoute
-  '/filiar': typeof FiliarRoute
-  '/frequencia': typeof FrequenciaRoute
   '/carteira/$code': typeof CarteiraCodeRoute
   '/control-room/actividade': typeof ControlRoomActividadeRoute
   '/control-room/artistas': typeof ControlRoomArtistasRoute
@@ -223,8 +228,10 @@ export interface FileRoutesByTo {
   '/control-room/merch': typeof ControlRoomMerchRoute
   '/control-room/musica': typeof ControlRoomMusicaRoute
   '/control-room/parcerias': typeof ControlRoomParceriasRoute
+  '/control-room/radio': typeof ControlRoomRadioRoute
   '/control-room/revelacao': typeof ControlRoomRevelacaoRoute
   '/control-room/seo': typeof ControlRoomSeoRoute
+  '/control-room/sindicalizados': typeof ControlRoomSindicalizadosRoute
   '/control-room/sistema': typeof ControlRoomSistemaRoute
   '/control-room/site': typeof ControlRoomSiteRoute
   '/control-room/utilizadores': typeof ControlRoomUtilizadoresRoute
@@ -238,10 +245,12 @@ export interface FileRoutesById {
   '/camera': typeof CameraRoute
   '/camping': typeof CampingRoute
   '/control-room': typeof ControlRoomRouteWithChildren
+  '/filiar': typeof FiliarRoute
+  '/frequencia': typeof FrequenciaRoute
   '/membros': typeof MembrosRoute
   '/merch': typeof MerchRoute
   '/revelacao': typeof RevelacaoRoute
-  '/frequencia': typeof FrequenciaRoute
+  '/carteira_/$code': typeof CarteiraCodeRoute
   '/control-room/actividade': typeof ControlRoomActividadeRoute
   '/control-room/artistas': typeof ControlRoomArtistasRoute
   '/control-room/camping': typeof ControlRoomCampingRoute
@@ -250,8 +259,10 @@ export interface FileRoutesById {
   '/control-room/merch': typeof ControlRoomMerchRoute
   '/control-room/musica': typeof ControlRoomMusicaRoute
   '/control-room/parcerias': typeof ControlRoomParceriasRoute
+  '/control-room/radio': typeof ControlRoomRadioRoute
   '/control-room/revelacao': typeof ControlRoomRevelacaoRoute
   '/control-room/seo': typeof ControlRoomSeoRoute
+  '/control-room/sindicalizados': typeof ControlRoomSindicalizadosRoute
   '/control-room/sistema': typeof ControlRoomSistemaRoute
   '/control-room/site': typeof ControlRoomSiteRoute
   '/control-room/utilizadores': typeof ControlRoomUtilizadoresRoute
@@ -266,11 +277,11 @@ export interface FileRouteTypes {
     | '/camera'
     | '/camping'
     | '/control-room'
+    | '/filiar'
+    | '/frequencia'
     | '/membros'
     | '/merch'
     | '/revelacao'
-    | '/filiar'
-    | '/frequencia'
     | '/carteira/$code'
     | '/control-room/actividade'
     | '/control-room/artistas'
@@ -280,25 +291,27 @@ export interface FileRouteTypes {
     | '/control-room/merch'
     | '/control-room/musica'
     | '/control-room/parcerias'
+    | '/control-room/radio'
     | '/control-room/revelacao'
     | '/control-room/seo'
+    | '/control-room/sindicalizados'
     | '/control-room/sistema'
     | '/control-room/site'
     | '/control-room/utilizadores'
-    | '/control-room/sindicalizados'
     | '/control-room/login'
     | '/membros/$slug'
-    | '/carteira_/$code'
     | '/control-room/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/camera'
     | '/camping'
+    | '/filiar'
+    | '/frequencia'
     | '/membros'
     | '/merch'
     | '/revelacao'
-    | '/frequencia'
+    | '/carteira/$code'
     | '/control-room/actividade'
     | '/control-room/artistas'
     | '/control-room/camping'
@@ -307,8 +320,10 @@ export interface FileRouteTypes {
     | '/control-room/merch'
     | '/control-room/musica'
     | '/control-room/parcerias'
+    | '/control-room/radio'
     | '/control-room/revelacao'
     | '/control-room/seo'
+    | '/control-room/sindicalizados'
     | '/control-room/sistema'
     | '/control-room/site'
     | '/control-room/utilizadores'
@@ -321,10 +336,12 @@ export interface FileRouteTypes {
     | '/camera'
     | '/camping'
     | '/control-room'
+    | '/filiar'
+    | '/frequencia'
     | '/membros'
     | '/merch'
     | '/revelacao'
-    | '/frequencia'
+    | '/carteira_/$code'
     | '/control-room/actividade'
     | '/control-room/artistas'
     | '/control-room/camping'
@@ -333,8 +350,10 @@ export interface FileRouteTypes {
     | '/control-room/merch'
     | '/control-room/musica'
     | '/control-room/parcerias'
+    | '/control-room/radio'
     | '/control-room/revelacao'
     | '/control-room/seo'
+    | '/control-room/sindicalizados'
     | '/control-room/sistema'
     | '/control-room/site'
     | '/control-room/utilizadores'
@@ -348,14 +367,14 @@ export interface RootRouteChildren {
   CameraRoute: typeof CameraRoute
   CampingRoute: typeof CampingRoute
   ControlRoomRoute: typeof ControlRoomRouteWithChildren
+  FiliarRoute: typeof FiliarRoute
+  FrequenciaRoute: typeof FrequenciaRoute
   MembrosRoute: typeof MembrosRoute
   MerchRoute: typeof MerchRoute
   RevelacaoRoute: typeof RevelacaoRoute
+  CarteiraCodeRoute: typeof CarteiraCodeRoute
   ControlRoomLoginRoute: typeof ControlRoomLoginRoute
   MembrosSlugRoute: typeof MembrosSlugRoute
-  FiliarRoute: typeof FiliarRoute
-  FrequenciaRoute: typeof FrequenciaRoute
-  CarteiraCodeRoute: typeof CarteiraCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -388,6 +407,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ControlRoomRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/filiar': {
+      id: '/filiar'
+      path: '/filiar'
+      fullPath: '/filiar'
+      preLoaderRoute: typeof FiliarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/frequencia': {
+      id: '/frequencia'
+      path: '/frequencia'
+      fullPath: '/frequencia'
+      preLoaderRoute: typeof FrequenciaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/membros': {
       id: '/membros'
       path: '/membros'
@@ -407,20 +440,6 @@ declare module '@tanstack/react-router' {
       path: '/revelacao'
       fullPath: '/revelacao'
       preLoaderRoute: typeof RevelacaoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/filiar': {
-      id: '/filiar'
-      path: '/filiar'
-      fullPath: '/filiar'
-      preLoaderRoute: typeof FiliarRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/frequencia': {
-      id: '/frequencia'
-      path: '/frequencia'
-      fullPath: '/frequencia'
-      preLoaderRoute: typeof FrequenciaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/carteira_/$code': {
@@ -493,6 +512,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ControlRoomParceriasRouteImport
       parentRoute: typeof ControlRoomRoute
     }
+    '/control-room/radio': {
+      id: '/control-room/radio'
+      path: '/radio'
+      fullPath: '/control-room/radio'
+      preLoaderRoute: typeof ControlRoomRadioRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
     '/control-room/revelacao': {
       id: '/control-room/revelacao'
       path: '/revelacao'
@@ -505,6 +531,13 @@ declare module '@tanstack/react-router' {
       path: '/seo'
       fullPath: '/control-room/seo'
       preLoaderRoute: typeof ControlRoomSeoRouteImport
+      parentRoute: typeof ControlRoomRoute
+    }
+    '/control-room/sindicalizados': {
+      id: '/control-room/sindicalizados'
+      path: '/sindicalizados'
+      fullPath: '/control-room/sindicalizados'
+      preLoaderRoute: typeof ControlRoomSindicalizadosRouteImport
       parentRoute: typeof ControlRoomRoute
     }
     '/control-room/sistema': {
@@ -526,13 +559,6 @@ declare module '@tanstack/react-router' {
       path: '/utilizadores'
       fullPath: '/control-room/utilizadores'
       preLoaderRoute: typeof ControlRoomUtilizadoresRouteImport
-      parentRoute: typeof ControlRoomRoute
-    }
-    '/control-room/sindicalizados': {
-      id: '/control-room/sindicalizados'
-      path: '/sindicalizados'
-      fullPath: '/control-room/sindicalizados'
-      preLoaderRoute: typeof ControlRoomSindicalizadosRouteImport
       parentRoute: typeof ControlRoomRoute
     }
     '/control-room_/login': {
@@ -561,12 +587,13 @@ interface ControlRoomRouteChildren {
   ControlRoomMerchRoute: typeof ControlRoomMerchRoute
   ControlRoomMusicaRoute: typeof ControlRoomMusicaRoute
   ControlRoomParceriasRoute: typeof ControlRoomParceriasRoute
+  ControlRoomRadioRoute: typeof ControlRoomRadioRoute
   ControlRoomRevelacaoRoute: typeof ControlRoomRevelacaoRoute
   ControlRoomSeoRoute: typeof ControlRoomSeoRoute
+  ControlRoomSindicalizadosRoute: typeof ControlRoomSindicalizadosRoute
   ControlRoomSistemaRoute: typeof ControlRoomSistemaRoute
   ControlRoomSiteRoute: typeof ControlRoomSiteRoute
   ControlRoomUtilizadoresRoute: typeof ControlRoomUtilizadoresRoute
-  ControlRoomSindicalizadosRoute: typeof ControlRoomSindicalizadosRoute
   ControlRoomIndexRoute: typeof ControlRoomIndexRoute
 }
 
@@ -579,12 +606,13 @@ const ControlRoomRouteChildren: ControlRoomRouteChildren = {
   ControlRoomMerchRoute: ControlRoomMerchRoute,
   ControlRoomMusicaRoute: ControlRoomMusicaRoute,
   ControlRoomParceriasRoute: ControlRoomParceriasRoute,
+  ControlRoomRadioRoute: ControlRoomRadioRoute,
   ControlRoomRevelacaoRoute: ControlRoomRevelacaoRoute,
   ControlRoomSeoRoute: ControlRoomSeoRoute,
+  ControlRoomSindicalizadosRoute: ControlRoomSindicalizadosRoute,
   ControlRoomSistemaRoute: ControlRoomSistemaRoute,
   ControlRoomSiteRoute: ControlRoomSiteRoute,
   ControlRoomUtilizadoresRoute: ControlRoomUtilizadoresRoute,
-  ControlRoomSindicalizadosRoute: ControlRoomSindicalizadosRoute,
   ControlRoomIndexRoute: ControlRoomIndexRoute,
 }
 
@@ -597,14 +625,14 @@ const rootRouteChildren: RootRouteChildren = {
   CameraRoute: CameraRoute,
   CampingRoute: CampingRoute,
   ControlRoomRoute: ControlRoomRouteWithChildren,
+  FiliarRoute: FiliarRoute,
+  FrequenciaRoute: FrequenciaRoute,
   MembrosRoute: MembrosRoute,
   MerchRoute: MerchRoute,
   RevelacaoRoute: RevelacaoRoute,
+  CarteiraCodeRoute: CarteiraCodeRoute,
   ControlRoomLoginRoute: ControlRoomLoginRoute,
   MembrosSlugRoute: MembrosSlugRoute,
-  FiliarRoute: FiliarRoute,
-  FrequenciaRoute: FrequenciaRoute,
-  CarteiraCodeRoute: CarteiraCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
