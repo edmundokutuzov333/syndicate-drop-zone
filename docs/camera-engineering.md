@@ -256,12 +256,15 @@ Implemented in the camera viewport:
 
 This phase targets startup latency, memory pressure and GPU-context overhead for the 12 filters that do not need the Three.js overlay, and avoids starting the MediaPipe model until face tracking is requested. This is an architectural workload reduction, not a claim of measured FPS improvement; physical device profiling remains pending.
 
-### Phase 2 — render-pipeline work (pending)
+### Phase 2 — render-pipeline optimisation (implemented)
 
-- Remove redundant full-frame composition passes only where single-pass rendering, filter transitions, scene overlays, HUD and capture contracts make bypass safe.
-- Reduce first-use shader compilation stalls without breaking the existing 300 ms filter cross-fade.
-- Schedule rendering against real video frames where supported and retain a robust fallback for browsers without `requestVideoFrameCallback`.
-- Validate every filter pipeline, Master FX option and photo/video capture against regression tests.
+- [x] Eligible single-pass frames render directly to the visible canvas, bypassing the offscreen final framebuffer and the follow-up full-frame copy.
+- [x] Direct rendering is disabled during filter transitions, scene overlays, HUD/countdown clearing or drawing, Master FX, and the `halation`/`kinetic-melt` multipass/feedback pipelines.
+- [x] The initially selected filter compiles synchronously; remaining regular filter programs compile incrementally during browser idle time where `requestIdleCallback` exists, while `setFilter` retains an on-demand compilation fallback.
+- [x] Cinematic pass shaders are compiled only when their filter/Master FX is used.
+- [x] Cinematic framebuffers are allocated only for the pass groups that need them and previously allocated buffers are resized with the preview/capture surface.
+- [x] The 300 ms cross-fade, filter registry and IDs, Master FX composition, HUD/countdown overlays, feedback state and local capture contract remain intact.
+- [ ] Runtime profiling on real devices remains pending; reduced passes/allocations are structural improvements and are not presented as measured FPS gains.
 
 ### Phase 3 — device-aware preview and capture (pending)
 
