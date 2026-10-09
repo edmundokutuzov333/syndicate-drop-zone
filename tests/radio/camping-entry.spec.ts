@@ -33,6 +33,21 @@ test.describe("CAMPING V2 / 808 access", () => {
     await expect(page.getByRole("button", { name: "REGISTOS" })).toBeVisible();
   });
 
+  test("captures 808 while a non-input interface button has keyboard focus", async ({ page }) => {
+    await openCamping(page);
+    if (await page.getByRole("heading", { name: "ACESSO ALTERNATIVO" }).isVisible()) {
+      test.skip(true, "O runtime Chromium deste job não disponibiliza WebGL.");
+    }
+
+    await page.getByRole("button", { name: "NAVEGAÇÃO GUIADA" }).focus();
+    await page.keyboard.press("8");
+    await page.keyboard.press("0");
+    await page.keyboard.press("8");
+
+    await expect(page.locator(".camping-studio__status")).toContainText("ACCESS GRANTED", { timeout: 5_000 });
+    await expect(page.locator(".camping-studio__status")).toContainText("EXPLORATION", { timeout: 30_000 });
+  });
+
   test("accepts 808 and enters the loaded studio when WebGL is available", async ({ page }) => {
     await openCamping(page);
     if (await page.getByRole("heading", { name: "ACESSO ALTERNATIVO" }).isVisible()) {
