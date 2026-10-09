@@ -6,7 +6,18 @@ export const FAN_VIDEO_SPEC = { durationSeconds: 30, width: 1080, height: 1920, 
 const ALLOWED_TRACKS: readonly FanVideoTrackId[] = ["T1", "T2", "T3"];
 const MAX_IMAGE_DATA_LENGTH = 4_000_000;
 
-type VideoErrorPayload = { error?: unknown; code?: unknown };
+type VideoErrorPayload = { error?: unknown; code?: unknown; requestId?: unknown };
+
+function createRequestId(): string {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+  } catch {
+    // Fall through for browsers without a usable crypto implementation.
+  }
+  return `fan-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
 
 function isMp4(bytes: Uint8Array): boolean {
   return bytes.byteLength >= 12
@@ -34,6 +45,7 @@ export async function createFanVideo(
   }
 
   const controller = new AbortController();
+  const requestId = createRequestId();
   const timeout = window.setTimeout(() => controller.abort(), 55_000);
   onProgress(8);
 
@@ -42,7 +54,11 @@ export async function createFanVideo(
     try {
       response = await fetch("/api/fan-video", {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "video/mp4, application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "video/mp4, application/json",
+          "X-Request-Id": requestId,
+        },
         body: JSON.stringify({ trackId, imageData }),
         signal: controller.signal,
       });
@@ -55,8 +71,12 @@ export async function createFanVideo(
 
     if (!response.ok) {
       const payload = await response.json().catch(() => null) as VideoErrorPayload | null;
-      const message = typeof payload?.error === "string" ? payload.error : "";
-      throw new Error(message || "O motor de vídeo respondeu com erro (" + response.status + "). Tenta novamente.");
+      const message = typeof payload?.error === "string" ? payload.error.trim() : "";
+      const responseId = response.headers.get("x-request-id")
+        || (typeof payload?.requestId === "string" ? payload.requestId : "")
+        || requestId;
+      const reason = message || `O motor de vídeo respondeu com erro HTTP ${response.status}.`;
+      throw new Error(`${reason} Referência: ${responseId}.`);
     }
 
     const contentType = response.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase();

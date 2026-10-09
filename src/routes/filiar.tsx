@@ -271,8 +271,19 @@ export function Filiacao() {
       setVideoProgress(100);
       track("card_share", { method: "video_created" });
     } catch (renderError) {
-      const message = renderError instanceof Error ? renderError.message : "";
-      setVideoError(message || "NÃO FOI POSSÍVEL CRIAR O VÍDEO. O DOWNLOAD PNG CONTINUA DISPONÍVEL.");
+      let message = "";
+      if (typeof renderError === "string") {
+        message = renderError.trim();
+      } else if (renderError && typeof renderError === "object") {
+        const details = renderError as { message?: unknown; error?: unknown; code?: unknown };
+        if (typeof details.message === "string") message = details.message.trim();
+        else if (typeof details.error === "string") message = details.error.trim();
+        else if (typeof details.code === "string") message = `O motor de vídeo falhou (${details.code}).`;
+      }
+      setVideoError(
+        message
+          || "O motor de vídeo falhou sem devolver diagnóstico. Recarrega a página e tenta novamente; o download PNG continua disponível.",
+      );
     } finally {
       setVideoBusy(false);
     }

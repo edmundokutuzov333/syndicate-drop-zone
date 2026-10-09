@@ -1,5 +1,6 @@
+import { randomUUID } from "node:crypto";
 import { spawn } from "node:child_process";
-import { access, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
@@ -9,6 +10,17 @@ type VideoTrackId = "T1" | "T2" | "T3";
 type VideoRequest = { trackId?: unknown; imageData?: unknown };
 type ApiRequest = IncomingMessage & { body?: unknown };
 type ApiResponse = ServerResponse<IncomingMessage>;
+
+class FanVideoError extends Error {
+  constructor(
+    readonly code: string,
+    message: string,
+    readonly statusCode: number = 500,
+  ) {
+    super(message);
+    this.name = "FanVideoError";
+  }
+}
 
 const DURATION_SECONDS = 30;
 const RENDER_TIMEOUT_MS = 52_000;
@@ -32,6 +44,49 @@ function respondJson(response: ApiResponse, status: number, payload: Record<stri
 
 function isTrackId(value: unknown): value is VideoTrackId {
   return typeof value === "string" && Object.prototype.hasOwnProperty.call(TRACK_AUDIO, value);
+}
+
+function getRequestId(request: ApiRequest): string {
+  const supplied = request.headers["x-request-id"];
+  if (typeof supplied === "string" && /^[A-Za-z0-9-]{8,80}$/.test(supplied)) return supplied;
+  return randomUUID();
+}
+
+async function resolveTrackAudio(trackId: VideoTrackId): Promise<string> {
+  const directory = resolve(process.cwd(), "public", "audio");
+  let filenames: string[];
+  try {
+    filenames = await readdir(directory);
+  } catch {
+    throw new FanVideoError(
+      "AUDIO_DIRECTORY_MISSING",
+      "A faixa de áudio não está disponível no servidor. O problema foi registado.",
+      503,
+    );
+  }
+
+  // Filesystems may preserve accented filenames as NFC or NFD. Match both forms.
+  const expected = TRACK_AUDIO[trackId].normalize("NFC");
+  const filename = filenames.find((entry) => entry.normalize("NFC") === expected);
+  if (!filename) {
+    throw new FanVideoError(
+      "AUDIO_ASSET_MISSING",
+      "A faixa seleccionada não foi incluída no servidor de vídeo. O problema foi registado.",
+      503,
+    );
+  }
+
+  const audioPath = join(directory, filename);
+  try {
+    await access(audioPath);
+  } catch {
+    throw new FanVideoError(
+      "AUDIO_ASSET_MISSING",
+      "A faixa seleccionada não está acessível no servidor. O problema foi registado.",
+      503,
+    );
+  }
+  return audioPath;
 }
 
 function readRequestBody(request: ApiRequest): VideoRequest | null {
@@ -73,8 +128,12 @@ function isRateLimited(address: string): boolean {
   return false;
 }
 
-function runFfmpeg(args: string[]): Promise<void> {
-  if (!ffmpegPath) return Promise.reject(new Error("O encoder nativo não está disponível neste servidor."));
+function runFfmpeg(args: string[], requestId: string): Promise<void> {
+  if (!ffmpegPath) return Promise.reject(new FanVideoError(
+    "ENCODER_UNAVAILABLE",
+    "O encoder nativo de vídeo não está disponível neste servidor.",
+    503,
+  ));
 
   return new Promise((resolvePromise, rejectPromise) => {
     const process = spawn(ffmpegPath, args, { stdio: ["ignore", "ignore", "pipe"] });
@@ -84,7 +143,11 @@ function runFfmpeg(args: string[]): Promise<void> {
       if (settled) return;
       settled = true;
       process.kill("SIGKILL");
-      rejectPromise(new Error("A renderização ultrapassou o tempo permitido. Tenta novamente."));
+      rejectPromise(new FanVideoError(
+        "RENDER_TIMEOUT",
+        "A renderização ultrapassou o tempo permitido. Tenta novamente.",
+        504,
+      ));
     }, RENDER_TIMEOUT_MS);
     timer.unref?.();
 
@@ -95,8 +158,14 @@ function runFfmpeg(args: string[]): Promise<void> {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      console.error("[fan-video] Não foi possível iniciar o FFmpeg:", error.message);
-      rejectPromise(new Error("O motor nativo de vídeo não conseguiu arrancar."));
+      console.error(`[fan-video:${requestId}] phase=spawn code=${error.code ?? "UNKNOWN"} message=${error.message}`);
+      rejectPromise(new FanVideoError(
+        error.code === "ENOENT" ? "ENCODER_BINARY_MISSING" : "ENCODER_START_FAILED",
+        error.code === "ENOENT"
+          ? "O binário do encoder não foi incluído no deployment. O problema foi registado."
+          : "O motor nativo de vídeo não conseguiu arrancar.",
+        error.code === "ENOENT" ? 503 : 500,
+      ));
     });
     process.once("close", (code) => {
       if (settled) return;
@@ -106,11 +175,19 @@ function runFfmpeg(args: string[]): Promise<void> {
         resolvePromise();
         return;
       }
-      console.error("[fan-video] FFmpeg terminou com código", code, stderr);
+      console.error(`[fan-video:${requestId}] phase=encode exitCode=${code} stderr=${stderr}`);
       if (/Unknown encoder|Encoder .* not found/i.test(stderr)) {
-        rejectPromise(new Error("O servidor não tem o encoder de vídeo necessário. O problema foi registado."));
+        rejectPromise(new FanVideoError(
+          "ENCODER_UNSUPPORTED",
+          "O servidor não tem o encoder de vídeo necessário. O problema foi registado.",
+          503,
+        ));
       } else {
-        rejectPromise(new Error("O servidor não conseguiu concluir o vídeo. Tenta novamente."));
+        rejectPromise(new FanVideoError(
+          "RENDER_FAILED",
+          "O servidor não conseguiu concluir o vídeo. Tenta novamente.",
+          500,
+        ));
       }
     });
   });
@@ -121,6 +198,11 @@ export const config = {
 };
 
 export default async function handler(request: ApiRequest, response: ApiResponse): Promise<void> {
+  const requestId = getRequestId(request);
+  const startedAt = Date.now();
+  let phase = "validate";
+  response.setHeader("X-Request-Id", requestId);
+
   if (request.method !== "POST") {
     response.setHeader("Allow", "POST");
     respondJson(response, 405, { code: "METHOD_NOT_ALLOWED", error: "Este endpoint aceita apenas pedidos POST." });
@@ -179,9 +261,18 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   activeRenders += 1;
   let workDirectory = "";
   try {
-    if (!ffmpegPath) throw new Error("O encoder nativo não está instalado.");
-    const audioPath = resolve(process.cwd(), "public", "audio", TRACK_AUDIO[payload.trackId]);
-    await access(audioPath);
+    phase = "resolve-audio";
+    const audioPath = await resolveTrackAudio(payload.trackId);
+
+    phase = "prepare-files";
+    if (!ffmpegPath) {
+      throw new FanVideoError("ENCODER_UNAVAILABLE", "O encoder nativo não está instalado.", 503);
+    }
+    try {
+      await access(ffmpegPath);
+    } catch {
+      throw new FanVideoError("ENCODER_BINARY_MISSING", "O binário do encoder não foi incluído no deployment.", 503);
+    }
 
     workDirectory = await mkdtemp(join(tmpdir(), "sdt-fan-video-"));
     const imagePath = join(workDirectory, "fan-card.jpg");
@@ -206,13 +297,16 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       "-movflags", "+faststart", "-f", "mp4", outputPath,
     ];
 
-    await runFfmpeg(args);
+    phase = "render";
+    await runFfmpeg(args, requestId);
+    phase = "validate-output";
     const video = await readFile(outputPath);
     if (video.byteLength < 12 || video.byteLength > MAX_OUTPUT_BYTES
         || video.toString("ascii", 4, 8) !== "ftyp") {
-      throw new Error("O servidor gerou um ficheiro MP4 inválido. Tenta novamente.");
+      throw new FanVideoError("INVALID_OUTPUT", "O servidor gerou um ficheiro MP4 inválido. Tenta novamente.", 500);
     }
 
+    console.info(`[fan-video:${requestId}] success track=${payload.trackId} bytes=${video.byteLength} elapsedMs=${Date.now() - startedAt}`);
     response.statusCode = 200;
     response.setHeader("Content-Type", "video/mp4");
     response.setHeader("Content-Length", String(video.byteLength));
@@ -220,20 +314,22 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     response.setHeader("Cache-Control", "no-store, private");
     response.end(video);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    if (message.includes("ENOENT") || message.includes("no such file")) {
-      console.error("[fan-video] Recurso de áudio ou FFmpeg não encontrado:", message);
-      if (!response.writableEnded) respondJson(response, 503, {
-        code: "ENCODER_ASSET_MISSING",
-        error: "O motor de vídeo está a preparar os recursos no servidor. Tenta novamente dentro de momentos.",
-      });
-    } else {
-      console.error("[fan-video] Falha na renderização:", message);
-      if (!response.writableEnded) respondJson(response, 500, {
-        code: "RENDER_FAILED",
-        error: message || "Não foi possível concluir a renderização. O PNG continua disponível.",
-      });
-    }
+    const message = error instanceof Error ? error.message : "Erro desconhecido";
+    const failure = error instanceof FanVideoError
+      ? error
+      : new FanVideoError(
+        "RENDER_FAILED",
+        "Não foi possível concluir a renderização. O PNG continua disponível.",
+        500,
+      );
+    console.error(
+      `[fan-video:${requestId}] failed phase=${phase} code=${failure.code} elapsedMs=${Date.now() - startedAt} message=${message}`,
+    );
+    if (!response.writableEnded) respondJson(response, failure.statusCode, {
+      code: failure.code,
+      error: failure.message,
+      requestId,
+    });
   } finally {
     activeRenders = Math.max(0, activeRenders - 1);
     if (workDirectory) {
