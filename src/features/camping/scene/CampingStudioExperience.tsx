@@ -59,6 +59,7 @@ export function CampingStudioExperience({
   const guidedRef = useRef(false);
   const recordsRef = useRef(recordsOpen);
   const [access, setAccess] = useState<CampingAccessState>({ ...initialCampingAccessState });
+  const accessRef = useRef<CampingAccessState>({ ...initialCampingAccessState });
   const [hover, setHover] = useState<HoverTarget>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [messageTone, setMessageTone] = useState<"neutral" | "danger" | "success">("neutral");
@@ -81,8 +82,37 @@ export function CampingStudioExperience({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    const handleAccessKey = (event: KeyboardEvent) => {
+      const phase = accessRef.current.phase;
+      if (phase !== "LOCKED" && phase !== "CODE_ENTRY") return;
+
+      const key = /^\\d$/.test(event.key)
+        ? event.key
+        : event.key === "Enter" || event.key === "NumpadEnter"
+          ? "ENTER"
+          : event.key === "Backspace"
+            ? "BACK"
+            : null;
+      if (!key) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+
+      if (!engineReadyRef.current || !engineRef.current) {
+        pendingAccessKeysRef.current.push(key);
+        return;
+      }
+      engineRef.current.pressAccessibleKey(key);
+    };
+    document.addEventListener("keydown", handleAccessKey, true);
+
     const engine = new CampingStudioEngine({
-      onAccessChange: setAccess,
+      onAccessChange: (nextAccess) => {
+        accessRef.current = nextAccess;
+        setAccess(nextAccess);
+      },
       onHoverChange: (target) => {
         setHover(target);
         if (cursorRef.current) cursorRef.current.dataset.interactive = target ? "true" : "false";
@@ -120,6 +150,7 @@ export function CampingStudioExperience({
     const pendingKeys = pendingAccessKeysRef.current.splice(0);
     for (const key of pendingKeys) engine.pressAccessibleKey(key);
     return () => {
+      document.removeEventListener("keydown", handleAccessKey, true);
       engineReadyRef.current = false;
       pendingAccessKeysRef.current = [];
       engine.dispose();
