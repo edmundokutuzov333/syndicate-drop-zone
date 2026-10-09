@@ -1,0 +1,427 @@
+.camping-object-interface {
+  position: absolute;
+  z-index: 45;
+  top: 50%;
+  right: clamp(18px, 3.2vw, 52px);
+  display: flex;
+  flex-direction: column;
+  width: min(760px, calc(100vw - 36px));
+  max-height: min(78dvh, 780px);
+  overflow: hidden;
+  border: 1px solid rgba(199, 162, 119, .64);
+  background: rgba(9, 8, 7, .97);
+  color: #e6d6be;
+  box-shadow: 0 24px 90px rgba(0,0,0,.68), 0 0 0 1px rgba(0,0,0,.65);
+  transform: translateY(-50%);
+  font-family: var(--font-mono, "Space Mono", monospace);
+}
+.camping-object-interface::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 42px;
+  height: 2px;
+  background: #9a2b25;
+}
+.camping-object-interface button,
+.camping-object-interface a,
+.camping-object-interface input,
+.camping-object-interface select { font: inherit; }
+.camping-object-interface button {
+  min-height: 35px;
+  border: 1px solid #51412f;
+  border-radius: 0;
+  padding: 8px 10px;
+  background: #12100d;
+  color: #d9c8ae;
+  font-size: 8px;
+  letter-spacing: .12em;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 130ms ease, background 130ms ease, color 130ms ease;
+}
+.camping-object-interface button:hover,
+.camping-object-interface button:focus-visible {
+  border-color: #b88b54;
+  color: #fff0d9;
+  outline: none;
+}
+.camping-object-interface button:focus-visible,
+.camping-object-interface a:focus-visible {
+  outline: 1px solid #c6975d;
+  outline-offset: 2px;
+}
+.camping-object-interface button:disabled { opacity: .38; cursor: not-allowed; }
+.camping-object-interface a { color: #d3b994; text-decoration: none; }
+.camping-object-interface a:hover { color: #fff0d9; }
+.camping-object-interface__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 15px 17px 13px;
+  border-bottom: 1px solid rgba(186, 148, 102, .34);
+  background: #100e0b;
+}
+.camping-object-interface__identity { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.camping-object-interface__stamp {
+  display: grid;
+  flex: 0 0 39px;
+  width: 39px;
+  height: 39px;
+  place-items: center;
+  border: 1px solid #8a2925;
+  color: #c63d33;
+  font-size: 12px;
+  font-weight: 700;
+  transform: rotate(-4deg);
+}
+.camping-object-interface__eyebrow {
+  margin: 0 0 6px;
+  color: #aa352d;
+  font-size: 8px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+.camping-object-interface__top h2 {
+  margin: 0;
+  font-family: Impact, "Arial Narrow", sans-serif;
+  font-size: clamp(20px, 2.4vw, 30px);
+  font-weight: 500;
+  letter-spacing: .05em;
+  line-height: 1;
+}
+.camping-object-interface__top-actions { display: flex; align-items: center; gap: 7px; }
+.camping-object-interface__close {
+  display: grid;
+  width: 35px;
+  min-width: 35px;
+  height: 35px;
+  place-items: center;
+  padding: 0 !important;
+  font-size: 21px !important;
+  text-align: center !important;
+}
+.camping-object-interface__cart-toggle {
+  border-color: #7a5a3b !important;
+  color: #e5c79d !important;
+}
+.camping-object-interface__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 7px 14px;
+  padding: 8px 17px;
+  border-bottom: 1px solid rgba(186, 148, 102, .18);
+  color: #7f7160;
+  font-size: 7px;
+  letter-spacing: .12em;
+}
+.camping-object-interface__body { overflow: auto; overscroll-behavior: contain; min-height: 0; padding: 18px; }
+.camping-object-interface__desktop-intro { margin-bottom: 18px; }
+.camping-object-interface__desktop-intro h3,
+.camping-object-interface__section-head h3 {
+  margin: 0;
+  color: #e8d8be;
+  font-family: Impact, "Arial Narrow", sans-serif;
+  font-size: clamp(22px, 2.5vw, 32px);
+  font-weight: 500;
+  letter-spacing: .04em;
+}
+.camping-object-interface__desktop-intro > p:last-child {
+  max-width: 490px;
+  margin: 8px 0 0;
+  color: #968875;
+  font-size: 9px;
+  line-height: 1.7;
+}
+.camping-object-interface__folders { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 9px; }
+.camping-object-folder {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 126px;
+  padding: 13px !important;
+  border-color: #3c342a !important;
+  background: linear-gradient(145deg, #15120e, #0d0c0a) !important;
+}
+.camping-object-folder__icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 42px;
+  height: 31px;
+  padding-right: 7px;
+  border: 1px solid #8b704f;
+  color: #bfa17a;
+  background: #201a12;
+}
+.camping-object-folder__icon::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: -1px;
+  width: 17px;
+  height: 6px;
+  border: 1px solid #8b704f;
+  border-bottom: 0;
+  background: #201a12;
+}
+.camping-object-folder__icon span { font-size: 8px; }
+.camping-object-folder__label { font-size: 10px; letter-spacing: .13em; }
+.camping-object-folder__sub { color: #837461; font-size: 7px; letter-spacing: .1em; }
+.camping-object-interface__footer-note,
+.camping-object-interface__bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 17px;
+  border-top: 1px solid rgba(186, 148, 102, .2);
+  color: #776957;
+  font-size: 7px;
+  letter-spacing: .14em;
+}
+.camping-object-interface__bottom { flex: 0 0 auto; padding: 9px 17px; background: #0e0c0a; }
+.camping-object-interface__section-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 17px;
+}
+.camping-object-interface__section-head > div { flex: 1; min-width: 0; }
+.camping-object-interface__section-head h3 { font-size: 23px; }
+.camping-object-interface__back { flex: 0 0 auto; }
+.camping-object-interface__status,
+.camping-object-interface__empty,
+.camping-object-interface__footnote {
+  margin: 13px 0;
+  padding: 11px 12px;
+  border: 1px solid rgba(184, 139, 84, .2);
+  color: #a19480;
+  font-size: 8px;
+  line-height: 1.75;
+}
+.camping-object-interface__status--error { border-color: rgba(170, 45, 38, .55); color: #df8a7d; }
+.camping-object-interface__empty { border-style: dashed; color: #8c7d69; }
+.camping-object-interface__footnote { background: rgba(255,255,255,.015); }
+.camping-object-interface__artist-grid,
+.camping-object-interface__product-grid,
+.camping-object-interface__archive-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+}
+.camping-object-artist,
+.camping-object-product,
+.camping-object-archive-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding: 7px !important;
+  background: #100e0b !important;
+  border-color: #393027 !important;
+}
+.camping-object-artist__photo,
+.camping-object-product__image,
+.camping-object-archive-item__image {
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border: 1px solid #413528;
+  background: #1a1712;
+}
+.camping-object-artist__photo img,
+.camping-object-product__image img,
+.camping-object-archive-item__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(.68) contrast(1.08);
+  transition: filter 200ms ease, transform 250ms ease;
+}
+.camping-object-artist:hover img,
+.camping-object-product:hover img,
+.camping-object-archive-item:hover img { filter: grayscale(.12) contrast(1.06); transform: scale(1.025); }
+.camping-object-artist__number,
+.camping-object-artist__code,
+.camping-object-product__code,
+.camping-object-product__stock,
+.camping-object-archive-item__meta {
+  color: #94836c;
+  font-size: 7px;
+  letter-spacing: .08em;
+}
+.camping-object-artist strong,
+.camping-object-product strong,
+.camping-object-archive-item strong {
+  overflow: hidden;
+  color: #e0cfb5;
+  font-family: "Space Mono", ui-monospace, monospace;
+  font-size: 8px;
+  line-height: 1.6;
+  text-align: left;
+}
+.camping-object-product__image { aspect-ratio: 4 / 3; }
+.camping-object-product__price { color: #cfab7e; font-size: 10px; }
+.camping-object-product.is-selected { border-color: #a97f51 !important; background: #1b150f !important; }
+.camping-object-product-detail,
+.camping-object-cart {
+  margin-top: 13px;
+  padding: 14px;
+  border: 1px solid rgba(184,139,84,.45);
+  background: #0e0c0a;
+}
+.camping-object-product-detail__heading,
+.camping-object-cart__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.camping-object-product-detail__heading h4,
+.camping-object-cart__top h4,
+.camping-object-dossier h4 {
+  margin: 0;
+  color: #eadac1;
+  font-family: Impact, "Arial Narrow", sans-serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: .04em;
+}
+.camping-object-product-detail__heading p:last-child { margin: 6px 0 0; color: #93846f; font-size: 8px; line-height: 1.7; }
+.camping-object-product-detail__heading > strong,
+.camping-object-cart__top > span { color: #d8b487; font-size: 13px; white-space: nowrap; }
+.camping-object-product-detail ul { display: flex; flex-wrap: wrap; gap: 5px 17px; margin: 12px 0; padding-left: 14px; color: #afa08b; font-size: 8px; }
+.camping-object-product-detail__size,
+.camping-object-cart__alias { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; color: #a3927a; font-size: 8px; letter-spacing: .13em; }
+.camping-object-product-detail__size select,
+.camping-object-cart__alias input {
+  min-height: 35px;
+  min-width: 140px;
+  border: 1px solid #50412f;
+  border-radius: 0;
+  padding: 7px 9px;
+  background: #090807;
+  color: #dfcfb6;
+  font-size: 9px;
+}
+.camping-object-product-detail__actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 13px; }
+.camping-object-interface__primary,
+.camping-object-interface__secondary-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 35px;
+  padding: 8px 11px;
+  border: 1px solid #795837;
+  background: #21180f;
+  color: #e9d5b7 !important;
+  font-size: 8px;
+  letter-spacing: .12em;
+}
+.camping-object-interface__secondary,
+.camping-object-interface__secondary-link { margin-top: 10px; }
+.camping-object-dossier {
+  display: grid;
+  grid-template-columns: minmax(130px, .7fr) minmax(0, 1.3fr);
+  gap: 16px;
+  border: 1px solid #44372b;
+  padding: 12px;
+  background: #100e0b;
+}
+.camping-object-dossier__photo { overflow: hidden; background: #17130e; }
+.camping-object-dossier__photo img { display: block; width: 100%; height: 100%; max-height: 310px; object-fit: cover; filter: grayscale(.8) contrast(1.08); }
+.camping-object-dossier__body > p:not(.camping-object-interface__eyebrow) { color: #b9a992; font-size: 9px; line-height: 1.8; }
+.camping-object-dossier__role { color: #9c7e5b !important; text-transform: uppercase; }
+.camping-object-dossier blockquote { margin: 8px 0; padding-left: 10px; border-left: 2px solid #82342d; color: #bba181; font-family: "Special Elite", monospace; font-size: 11px; }
+.camping-object-dossier__tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.camping-object-dossier__tags span { padding: 5px 7px; border: 1px solid #3f3428; color: #a69378; font-size: 7px; }
+.camping-object-dossier__links { display: flex; flex-wrap: wrap; gap: 6px; margin: 13px 0; }
+.camping-object-dossier__links a { padding: 7px; border: 1px solid #4d3d2c; font-size: 7px; }
+.camping-object-track {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 11px 10px;
+  border: 1px solid #3d3226;
+  background: #100e0b;
+}
+.camping-object-track + .camping-object-track { margin-top: 6px; }
+.camping-object-track__index { color: #a52d27; font-size: 9px; }
+.camping-object-track__copy { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
+.camping-object-track__copy strong { color: #e1d1b9; font-size: 9px; font-weight: 400; }
+.camping-object-track__copy span { color: #8c7b65; font-size: 7px; line-height: 1.6; }
+.camping-object-track > span:last-child { color: #bfa17a; font-size: 7px; }
+.camping-object-track--link { text-decoration: none; }
+.camping-object-cart__line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #32291f; }
+.camping-object-cart__line > div:first-child { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.camping-object-cart__line strong { color: #d6c3a7; font-size: 8px; }
+.camping-object-cart__line span { color: #94826b; font-size: 7px; }
+.camping-object-cart__actions { display: flex; gap: 4px; }
+.camping-object-cart__actions button { min-width: 29px; padding: 6px; text-align: center; }
+.camping-object-cart__alias { align-items: center; }
+.camping-object-cart__alias input { flex: 1; }
+.camping-object-interface__session-list { display: grid; gap: 7px; }
+.camping-object-session { display: grid; grid-template-columns: 78px minmax(0, 1fr) auto; align-items: start; gap: 10px; padding: 12px; border: 1px solid #3c3227; background: #100e0b; }
+.camping-object-session__status { color: #998873; font-size: 7px; letter-spacing: .08em; }
+.camping-object-session__status.is-live { color: #c84d3d; }
+.camping-object-session h4 { margin: 0; color: #e0cfb5; font-size: 9px; font-weight: 400; }
+.camping-object-session p,
+.camping-object-session div > span { margin: 4px 0 0; color: #91816d; font-size: 7px; line-height: 1.7; }
+.camping-object-session__day { color: #806c54; font-size: 7px; }
+.camping-object-listening { border: 1px solid #493927; padding: 17px; background: radial-gradient(ellipse at 50% 0, rgba(175,115,57,.08), transparent 55%), #0c0b09; }
+.camping-object-listening h4 { margin: 14px 0 4px; color: #eadbc4; font-family: Impact, "Arial Narrow", sans-serif; font-size: 30px; font-weight: 500; }
+.camping-object-listening > p:not(.camping-object-interface__eyebrow) { color: #998b78; font-size: 9px; }
+.camping-object-listening__status { display: flex; align-items: center; gap: 8px; margin: 12px 0; color: #998b78; font-size: 8px; }
+.camping-object-listening__status span { width: 7px; height: 7px; border-radius: 50%; background: #6e6252; }
+.camping-object-listening__status span.is-live { background: #a83229; box-shadow: 0 0 8px rgba(160,35,29,.6); }
+.camping-object-interface__feedback { margin: 12px 0 0; padding: 10px 12px; border: 1px solid #4c3b29; font-size: 8px; line-height: 1.7; overflow-wrap: anywhere; }
+.camping-object-interface__feedback--ok { color: #d4bf9c; border-color: #6d563a; }
+.camping-object-interface__feedback--error { color: #e29486; border-color: #953b32; }
+.camping-object-interface__feedback--info { color: #b7a487; }
+@media (max-width: 760px) {
+  .camping-object-interface {
+    top: auto;
+    right: 10px;
+    bottom: max(80px, env(safe-area-inset-bottom));
+    left: 10px;
+    width: auto;
+    max-height: 66dvh;
+    transform: none;
+  }
+  .camping-object-interface__top { padding: 11px 12px; }
+  .camping-object-interface__body { padding: 12px; }
+  .camping-object-interface__meta { padding: 7px 12px; }
+  .camping-object-interface__folders { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .camping-object-interface__artist-grid,
+  .camping-object-interface__product-grid,
+  .camping-object-interface__archive-grid { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 6px; }
+  .camping-object-dossier { grid-template-columns: 95px minmax(0,1fr); gap: 10px; padding: 8px; }
+  .camping-object-dossier__photo img { max-height: 220px; }
+  .camping-object-dossier h4 { font-size: 19px; }
+  .camping-object-session { grid-template-columns: 1fr auto; }
+  .camping-object-session__status { grid-column: 1 / -1; }
+}
+@media (max-width: 420px) {
+  .camping-object-interface__top h2 { font-size: 19px; }
+  .camping-object-interface__stamp { width: 31px; height: 31px; flex-basis: 31px; }
+  .camping-object-interface__artist-grid,
+  .camping-object-interface__product-grid,
+  .camping-object-interface__archive-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .camping-object-interface__meta { font-size: 6px; }
+  .camping-object-interface__section-head { flex-wrap: wrap; }
+  .camping-object-interface__section-head h3 { font-size: 18px; }
+  .camping-object-cart__line { align-items: flex-start; flex-direction: column; }
+  .camping-object-cart__actions { width: 100%; }
+  .camping-object-cart__actions button { flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .camping-object-interface *, .camping-object-interface *::before, .camping-object-interface *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

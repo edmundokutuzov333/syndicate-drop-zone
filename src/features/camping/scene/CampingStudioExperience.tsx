@@ -3,6 +3,8 @@ import type { CampingAccessState } from "../interactions/access-machine";
 import { initialCampingAccessState } from "../interactions/access-machine";
 import sindicatoSelo from "@/assets/brand/sindicato-selo.png.asset.json";
 import { CampingStudioEngine } from "./CampingStudioEngine";
+import { CampingObjectInterface } from "./CampingObjectInterface";
+import "./camping-object-interface.css";
 import "./camping-studio.css";
 
 type HoverTarget = { id: string; label: string; action: string } | null;
@@ -316,6 +318,13 @@ export function CampingStudioExperience({
         <div className={"camping-studio__toast camping-studio__toast--" + messageTone} role="status" aria-live="polite">
           <span>{statusMessage}</span>
         </div>
+      )}
+
+      {access.phase === "INTERACTION_FOCUS" && access.focusedId && (
+        <CampingObjectInterface
+          focusedId={access.focusedId}
+          onClose={() => engineRef.current?.returnFromFocus()}
+        />
       )}
 
       <span className="camping-studio__asset-state" aria-live="polite">
