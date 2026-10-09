@@ -130,7 +130,6 @@ export class CampingStudioEngine {
   private loader: GLTFLoader | null = null;
   private entryDoor: THREE.Group | null = null;
   private keypadDisplay: THREE.Mesh | null = null;
-  private keypadDisplayTexture: THREE.CanvasTexture | null = null;
   private lockLight: THREE.PointLight | null = null;
   private access = { ...initialCampingAccessState };
   private phaseStartedAt = performance.now();
@@ -278,7 +277,6 @@ export class CampingStudioEngine {
     this.studioRoot = null;
     this.entryDoor = null;
     this.keypadDisplay = null;
-    this.keypadDisplayTexture = null;
   }
 
   setVirtualMovement(direction: Direction, active: boolean): void {
@@ -500,7 +498,7 @@ export class CampingStudioEngine {
     board.userData.kind = "keypad-board";
     this.hitTargets.push(board);
 
-    this.keypadDisplayTexture = makeCanvasTexture(512, 192, (ctx, width, height) => {
+    const displayTexture = makeCanvasTexture(512, 192, (ctx, width, height) => {
       ctx.fillStyle = "#070908";
       ctx.fillRect(0, 0, width, height);
       ctx.strokeStyle = "#58462f";
@@ -509,7 +507,7 @@ export class CampingStudioEngine {
     });
     const display = new THREE.Mesh(
       new THREE.PlaneGeometry(0.64, 0.24),
-      new THREE.MeshBasicMaterial({ map: this.keypadDisplayTexture, toneMapped: false }),
+      new THREE.MeshBasicMaterial({ map: displayTexture, toneMapped: false }),
     );
     display.position.set(1.45, 2.0, 5.552);
     this.scene.add(display);
