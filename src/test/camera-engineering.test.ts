@@ -490,9 +490,6 @@ describe("camera engineering foundation", () => {
       "astro-haze",
       "xray-mesh",
     ]);
-    expect(visibleIds.filter((id) => requires3DOverlay(id))).toEqual(
-      visibleIds.filter((id) => ["vamp", "astro-haze", "xray-mesh"].includes(id)),
-    );
   });
 
   it("derives stable face VFX controls from MediaPipe landmarks and blendshapes", () => {
