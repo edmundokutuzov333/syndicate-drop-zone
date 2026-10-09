@@ -38,6 +38,7 @@ test.describe("Cartão de Fã and public proposals", () => {
       mimeType: "image/svg+xml",
       buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="540" height="960"><rect width="540" height="960" fill="#222"/><circle cx="270" cy="280" r="120" fill="#bd252b"/></svg>'),
     });
+    await expect(page.getByText("FOTOGRAFIA SELECCIONADA", { exact: true })).toBeVisible();
     await page.getByLabel(/Aceito o Código do Fã/).check();
     await page.getByRole("button", { name: "CRIAR O MEU CARTÃO" }).click();
     await expect(page.getByText("CARTÃO DE FÃ CRIADO", { exact: true })).toBeVisible();
@@ -50,13 +51,14 @@ test.describe("Cartão de Fã and public proposals", () => {
     await mockPublicBackend(page);
     await page.goto("/");
     await page.getByRole("button", { name: "Abrir proposta de parceria MASTER" }).click();
-    await page.getByPlaceholder("Nome de contacto").fill("Marca Teste");
-    await page.getByPlaceholder("Nome da marca").fill("Empresa Teste");
-    await page.getByPlaceholder("Email ou telefone").fill("contacto@empresa.co.mz");
-    await page.getByLabel("TIPO DE PARCERIA").selectOption({ label: "Patrocínio" });
-    await page.getByPlaceholder("Descreva a ideia, objectivos e activação pretendida.").fill("Proposta real de activação da marca no Sindicato do Trap.");
-    await page.getByRole("button", { name: "ENVIAR PROPOSTA" }).click();
-    await expect(page.getByText("PROPOSTA REGISTADA. A EQUIPA JÁ A PODE CONSULTAR NO CONTROL ROOM.", { exact: false })).toBeVisible();
-    await expect(page.getByText("PROPOSTA REGISTADA. A EQUIPA JÁ A PODE CONSULTAR NO CONTROL ROOM.")).toBeVisible();
+    const form = page.locator("#parcerias-form");
+    await form.getByPlaceholder("Nome da marca / responsável").fill("Marca Teste");
+    await form.getByPlaceholder("Nome da empresa").fill("Empresa Teste");
+    await form.getByPlaceholder("Email, telefone ou WhatsApp").fill("contacto@empresa.co.mz");
+    await form.locator("select").selectOption({ label: "Patrocínio · MASTER" });
+    await form.getByPlaceholder("Explique a marca, objectivo da parceria e o que pretende activar.").fill("Proposta real de activação da marca no Sindicato do Trap.");
+    await form.getByRole("button", { name: "ENVIAR PROPOSTA" }).click();
+    await expect(form.getByText("PROPOSTA RECEBIDA", { exact: true })).toBeVisible();
+    await expect(form.getByText("A equipa do Sindicato recebeu os dados e entra em contacto para dar seguimento.")).toBeVisible();
   });
 });
