@@ -30,3 +30,9 @@ Os testes de contratos verificam o mapeamento dos IDs, slots de artistas e bloqu
 ## Correcção adicional da Fase 3
 
 O canvas recebe agora os dígitos directamente quando tem foco, e evita a duplicação de eventos no listener global. Enter também confirma o código por este caminho acessível. A máquina de estados mantém a submissão automática da combinação completa 808.
+
+
+## Ajustes de UX e inventário
+
+- Pastas abertas no terminal do iMac regressam agora à estação. Interfaces abertas directamente no rack, parede ou porta regressam à cena 3D ao premir o controlo de retorno.
+- A contagem de stock usa a soma das variantes como fonte autoritativa quando existem variantes; o total do produto só é usado como fallback quando não há variantes. Isto evita duplicar stock no ecrã de merchandising.

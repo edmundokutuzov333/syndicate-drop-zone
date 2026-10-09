@@ -88,6 +88,7 @@ function IconFolder({ code }: { code: string }) {
 export function CampingObjectInterface({ focusedId, onClose }: Props) {
   const initialSection = getCampingObjectSection(focusedId);
   const [section, setSection] = useState<CampingObjectSection>(initialSection);
+  const [launchedFromDesktop, setLaunchedFromDesktop] = useState(initialSection === "ROOT");
   const [artists, setArtists] = useState<DataState<Artist[]>>({ value: EMPTY_ARTISTS, loading: false, error: null });
   const [merch, setMerch] = useState<DataState<LiveMerchProduct[]>>({ value: EMPTY_MERCH, loading: false, error: null });
   const [tapes, setTapes] = useState<DataState<LiveTape[]>>({ value: EMPTY_TAPES, loading: false, error: null });
@@ -112,6 +113,7 @@ export function CampingObjectInterface({ focusedId, onClose }: Props) {
 
   useEffect(() => {
     setSection(getCampingObjectSection(focusedId));
+    setLaunchedFromDesktop(getCampingObjectSection(focusedId) === "ROOT");
     setSelectedArtistSlug(null);
     setForceArtistGrid(false);
     setSelectedProductId(null);
@@ -190,6 +192,7 @@ export function CampingObjectInterface({ focusedId, onClose }: Props) {
   const beatMedia = media.value.filter((item) => /beat|instrumental|producer/i.test([item.roll, item.tag, item.caption, item.alt].join(" ")));
 
   function openFolder(next: CampingObjectSection) {
+    setLaunchedFromDesktop(true);
     setSection(next);
     setSelectedArtistSlug(null);
     setSelectedProductId(null);
@@ -321,7 +324,7 @@ export function CampingObjectInterface({ focusedId, onClose }: Props) {
       {section !== "ROOT" && (
         <div className="camping-object-interface__body">
           <div className="camping-object-interface__section-head">
-            <button type="button" onClick={() => openFolder(focusedId === "studio.imac" ? "ROOT" : getCampingObjectSection(focusedId))} className="camping-object-interface__back">← VOLTAR</button>
+            <button type="button" onClick={() => launchedFromDesktop ? openFolder("ROOT") : onClose()} className="camping-object-interface__back">{launchedFromDesktop ? "← WORKSTATION" : "← REGRESSAR AO ESTÚDIO"}</button>
             <div><p className="camping-object-interface__eyebrow">DIRECTORY / 808</p><h3>{heading}</h3></div>
             {section === "MERCH" && <button type="button" className="camping-object-interface__cart-toggle" onClick={() => setCartOpen((open) => !open)}>BAG / {String(cartCount).padStart(2, "0")}</button>}
           </div>

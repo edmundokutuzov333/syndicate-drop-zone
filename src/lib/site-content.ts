@@ -6,6 +6,7 @@ import { getLiveArtists } from "@/lib/public-content";
 import { getPublicSupabaseConfig, publicSupabaseHeaders } from "@/lib/supabase-public";
 import { getMemberCount } from "@/lib/membership";
 import { getRadioCatalog, getRadioStationConfig } from "@/lib/frequency-api";
+import { getAvailableMerchStock } from "@/lib/merch-stock";
 
 export type ContentRow = Record<string, unknown>;
 
@@ -303,8 +304,8 @@ export async function getLiveMerchProducts(): Promise<LiveMerchProduct[]> {
           stockSold: numberValue(variant, ["stock_sold", "sold"]),
         }));
 
-      const left = productVariants.reduce(
-        (sum, variant) => sum + Math.max(0, variant.stockTotal - variant.stockReserved - variant.stockSold),
+      const left = getAvailableMerchStock(
+        productVariants,
         numberValue(row, ["stock_available", "left", "quantity_available"]),
       );
 
