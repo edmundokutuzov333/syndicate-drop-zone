@@ -5,7 +5,10 @@ import { TextureManager } from "./texture-manager";
 import { getFilterFragmentShader } from "./filter-shaders";
 import { getFilterShaderContract } from "./filter-contract";
 import { CinematicPipeline } from "./cinematic-pipeline";
-import { canRenderDirectToCanvas } from "./render-policy";
+import {
+  canRenderDirectToCanvas,
+  type DirectRenderState,
+} from "./render-policy";
 import crossfadeShader from "@/shaders/camera/crossfade.frag.glsl?raw";
 import {
   ASTRO_LUT_HEIGHT,
@@ -97,6 +100,14 @@ export class WebGLEngine {
   private readonly programs = new Map<FilterId, ShaderProgramHandle>();
   private idleCompileHandle: number | null = null;
   private idleCompileQueue: FilterId[] = [];
+  private readonly directRenderState: DirectRenderState = {
+    transitionActive: false,
+    sceneOverlayActive: false,
+    overlayPending: false,
+    hudPending: false,
+    masterOverlayActive: false,
+    pipeline: undefined,
+  };
   private vertexBuffer: WebGLBuffer | null = null;
   private blendProgram: ShaderProgramHandle | null = null;
   private overlayProgram: ShaderProgramHandle | null = null;
@@ -501,16 +512,15 @@ export class WebGLEngine {
     const uploadTime = performance.now() - uploadStart;
 
     const activeFilter = this.transition?.to ?? this.filter;
-    const directOutput = canRenderDirectToCanvas({
-      transitionActive: Boolean(this.transition),
-      sceneOverlayActive: Boolean(this.sceneOverlaySource),
-      overlayPending: Boolean(this.overlayText || this.overlayDirty),
-      hudPending: Boolean(this.hudText || this.hudDirty),
-      masterOverlayActive:
-        this.masterOverlays["cathode-crt"] ||
-        this.masterOverlays["paper-film"],
-      pipeline: FILTER_REGISTRY.get(activeFilter).pipeline,
-    });
+    this.directRenderState.transitionActive = Boolean(this.transition);
+    this.directRenderState.sceneOverlayActive = Boolean(this.sceneOverlaySource);
+    this.directRenderState.overlayPending = Boolean(this.overlayText || this.overlayDirty);
+    this.directRenderState.hudPending = Boolean(this.hudText || this.hudDirty);
+    this.directRenderState.masterOverlayActive =
+      this.masterOverlays["cathode-crt"] ||
+      this.masterOverlays["paper-film"];
+    this.directRenderState.pipeline = FILTER_REGISTRY.get(activeFilter).pipeline;
+    const directOutput = canRenderDirectToCanvas(this.directRenderState);
     const finalFramebuffer = directOutput ? null : this.finalOutput.get();
     if (!directOutput && !finalFramebuffer) return;
 
