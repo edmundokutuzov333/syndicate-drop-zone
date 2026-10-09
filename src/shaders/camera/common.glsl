@@ -2,6 +2,8 @@ precision mediump float;
 
 uniform sampler2D u_texture;
 uniform sampler2D u_previousFrame;
+uniform sampler2D u_feedbackFrame;
+uniform float u_feedbackReady;
 uniform sampler2D u_lut;
 uniform vec2 u_resolution;
 uniform vec2 u_videoResolution;

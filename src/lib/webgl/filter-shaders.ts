@@ -19,6 +19,13 @@ import cathodeCrt from "@/shaders/camera/filters/cathode-crt.frag.glsl?raw";
 import halation from "@/shaders/camera/filters/halation.frag.glsl?raw";
 import kineticMelt from "@/shaders/camera/filters/kinetic-melt.frag.glsl?raw";
 import paperFilm from "@/shaders/camera/filters/paper-film.frag.glsl?raw";
+import crtClassic from "@/shaders/camera/filters/crt-classic.frag.glsl?raw";
+import vhsTracking from "@/shaders/camera/filters/vhs-tracking.frag.glsl?raw";
+import nightCctv from "@/shaders/camera/filters/night-cctv.frag.glsl?raw";
+import datamosh from "@/shaders/camera/filters/datamosh.frag.glsl?raw";
+import fireBloom from "@/shaders/camera/filters/fire-bloom.frag.glsl?raw";
+import neonCyberpunk from "@/shaders/camera/filters/neon-cyberpunk.frag.glsl?raw";
+import analogInterference from "@/shaders/camera/filters/analog-interference.frag.glsl?raw";
 
 const shared = [common, grain, distortion, chromatic, feedback].join("\n");
 
@@ -38,6 +45,13 @@ const BODIES: Record<FilterId, string> = {
   halation,
   "kinetic-melt": kineticMelt,
   "paper-film": paperFilm,
+  "crt-classic": crtClassic,
+  "vhs-tracking": vhsTracking,
+  "night-cctv": nightCctv,
+  datamosh,
+  "fire-bloom": fireBloom,
+  "neon-cyberpunk": neonCyberpunk,
+  "analog-interference": analogInterference,
 };
 
 export function getFilterFragmentShader(id: FilterId): string {

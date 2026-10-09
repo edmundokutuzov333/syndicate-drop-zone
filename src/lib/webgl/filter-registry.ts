@@ -187,6 +187,41 @@ const DEFINITIONS: FilterDefinition[] = [
     passes: getFilterShaderContract("paper-film")?.passes,
     parameters: getFilterShaderContract("paper-film")?.parameters,
   },
+  {
+    id: "crt-classic", index: "16", label: "CRT CLASSIC", shaderKey: "crt-classic:v1",
+    complexity: "medium", visible: true, supportsFeedback: false, enabled: true,
+    defaults: { intensity: 0.98, noise: 0.3, distortion: 0.12, chromatic: 0.018, feedback: 0.12 },
+  },
+  {
+    id: "vhs-tracking", index: "17", label: "VHS TRACKING", shaderKey: "vhs-tracking:v1",
+    complexity: "medium", visible: true, supportsFeedback: true, enabled: true,
+    defaults: { intensity: 1, noise: 0.62, distortion: 0.42, chromatic: 0.018, feedback: 0.32 },
+  },
+  {
+    id: "night-cctv", index: "18", label: "NIGHT CCTV", shaderKey: "night-cctv:v1",
+    complexity: "medium", visible: true, supportsFeedback: true, enabled: true,
+    defaults: { intensity: 0.98, noise: 0.8, distortion: 0.045, chromatic: 0.004, feedback: 0.26 },
+  },
+  {
+    id: "datamosh", index: "19", label: "DATAMOSH", shaderKey: "datamosh:v1",
+    complexity: "high", visible: true, supportsFeedback: true, enabled: true, pipeline: "datamosh",
+    defaults: { intensity: 1, noise: 0.54, distortion: 0.34, chromatic: 0.025, feedback: 0.82 },
+  },
+  {
+    id: "fire-bloom", index: "20", label: "FIRE BLOOM", shaderKey: "fire-bloom:v1",
+    complexity: "high", visible: true, supportsFeedback: false, enabled: true,
+    defaults: { intensity: 0.98, noise: 0.28, distortion: 0.16, chromatic: 0.012, feedback: 0.08 },
+  },
+  {
+    id: "neon-cyberpunk", index: "21", label: "NEON CYBERPUNK", shaderKey: "neon-cyberpunk:v1",
+    complexity: "high", visible: true, supportsFeedback: false, enabled: true,
+    defaults: { intensity: 1, noise: 0.32, distortion: 0.16, chromatic: 0.038, feedback: 0.12 },
+  },
+  {
+    id: "analog-interference", index: "22", label: "ANALOG INTERFERENCE", shaderKey: "analog-interference:v1",
+    complexity: "medium", visible: true, supportsFeedback: true, enabled: true,
+    defaults: { intensity: 0.96, noise: 0.72, distortion: 0.22, chromatic: 0.008, feedback: 0.28 },
+  },
 ];
 
 export const FILTER_REGISTRY = {

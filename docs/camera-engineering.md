@@ -283,3 +283,33 @@ Render time and texture-upload duration are CPU-visible workload proxies; this i
 ### Phase 1 verification boundary
 
 No camera backend or Supabase schema change is required: capture remains local, with no media upload or camera-specific persistence. No route, global shell or Control Room contract is changed. CI results and the active deployment status are reported separately from physical-device validation; inaccessible preview hosts are not treated as a passed runtime test.
+
+## Glitch Camera Engine — Phase 1 (live shader foundation)
+
+The first reference-driven preset set is registered as seven separate GLSL fragment programs. Existing filter IDs and shader bodies remain unchanged. Each preset receives the live camera texture and shader time; switching presets uses the existing WebGLEngine transition lifecycle and 300 ms cross-fade.
+
+| New preset | Visual reference mapping | Runtime treatment |
+|---|---|---|
+| CRT CLASSIC | 1, 4 | curved glass mask, RGB phosphor split, scanlines, vignette, subtle bloom and shimmer |
+| VHS TRACKING | 2, 10, 11 | per-line horizontal displacement, rolling tracking band, RGB shift, monochrome/cool grading and tearing |
+| NIGHT CCTV | 4, 8 | blue/cyan low-light response, high-contrast luma, temporal flicker, rolling interference and sensor static |
+| DATAMOSH | 3, 7, 9, 13 | motion-difference mask, horizontal slice displacement and processed-frame persistence |
+| FIRE BLOOM | 6, 7 | highlight threshold, four-tap bloom, hot red/orange grading and time-driven exposure flicker |
+| NEON CYBERPUNK | 5, 12, 13 | RGB channel separation, cyan/magenta grading, posterisation and animated glitch strips |
+| ANALOG INTERFERENCE | 2, 3, 8, 9, 10, 11 | olive/amber monochrome, jitter, rolling interference, scratches, noisy grain and contrast modulation |
+
+### Datamosh temporal pipeline
+
+- The processed output is copied into two lazily allocated ping-pong framebuffers; each frame samples the prior processed frame while rendering into a different target.
+- History targets are downsampled so their long edge does not exceed 1280 pixels. The live/capture output remains at the active canvas resolution; only the temporal trail buffer is reduced.
+- History is reset when the input source changes, when Datamosh is entered, on framebuffer resize and during cleanup. The initial frame falls back to the existing prior-camera-frame texture.
+- Direct-to-canvas rendering is disabled for Datamosh to prevent a feedback read/write hazard. Non-temporal presets continue on the normal single-pass route.
+- Each effect maps to an independent fragment body compiled/cached by the existing shader cache; the selection does not run a preset switch in a monolithic shader. Motion comes from shader time, previous camera frames or processed-frame history, not an animated thumbnail.
+
+### Three implementation phases
+
+1. Phase 1 — engine and seven live shader presets: implemented in this commit; existing filters, capture path and camera route are retained.
+2. Phase 2 — preset-specific UI controls: add per-preset intensity, RGB split, tracking and grain controls wired to existing uniforms without changing the global shell.
+3. Phase 3 — device profiling and polish: validate mobile GPU cost, visual fidelity, recording output, cross-browser shader compilation and fallback behavior, then tune defaults from measurements.
+
+Camera processing remains client-side because the real-time preview and MediaRecorder capture use the same WebGL canvas. No database/API persistence is introduced in this phase; no new server data contract is required. Persisted/shareable preset configurations, if later required, should be added separately with an explicit schema and access policy.

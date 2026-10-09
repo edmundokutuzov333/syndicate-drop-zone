@@ -463,10 +463,10 @@ describe("camera engineering foundation", () => {
     ).toBe("cancelled");
   });
 
-  it("ships all fifteen interactive VFX filters as active definitions", () => {
+  it("ships the original fifteen filters and seven new live glitch presets", () => {
     const visible = FILTER_REGISTRY.listVisible();
 
-    expect(visible).toHaveLength(15);
+    expect(visible).toHaveLength(22);
     expect(visible.every((filter) => filter.enabled)).toBe(true);
     expect(visible.map((filter) => filter.id)).toEqual([
       "op1um",
@@ -484,8 +484,35 @@ describe("camera engineering foundation", () => {
       "halation",
       "kinetic-melt",
       "paper-film",
+      "crt-classic",
+      "vhs-tracking",
+      "night-cctv",
+      "datamosh",
+      "fire-bloom",
+      "neon-cyberpunk",
+      "analog-interference",
     ]);
-    expect(new Set(visible.map((filter) => filter.shaderKey)).size).toBe(15);
+    expect(new Set(visible.map((filter) => filter.shaderKey)).size).toBe(22);
+  });
+
+  it("registers independent animated shader bodies for all seven new glitch presets", () => {
+    const newFilters = ["crt-classic", "vhs-tracking", "night-cctv", "datamosh", "fire-bloom", "neon-cyberpunk", "analog-interference"] as const;
+    for (const id of newFilters) {
+      const source = getFilterFragmentShader(id);
+      expect(source).toContain("void main()");
+      expect(source).toContain("u_time");
+      expect(source).toContain("sampleColor");
+    }
+    expect(getFilterFragmentShader("crt-classic")).toContain("crtClassicWarp");
+    expect(getFilterFragmentShader("vhs-tracking")).toContain("trackingBand");
+    expect(getFilterFragmentShader("night-cctv")).toContain("digitalFlicker");
+    expect(getFilterFragmentShader("datamosh")).toContain("u_feedbackFrame");
+    expect(getFilterFragmentShader("datamosh")).toContain("u_feedbackReady");
+    expect(getFilterFragmentShader("fire-bloom")).toContain("bloom");
+    expect(getFilterFragmentShader("neon-cyberpunk")).toContain("poster");
+    expect(getFilterFragmentShader("analog-interference")).toContain("lineNoise");
+    expect(FILTER_REGISTRY.get("datamosh").pipeline).toBe("datamosh");
+    expect(FILTER_REGISTRY.get("datamosh").supportsFeedback).toBe(true);
   });
 
   it("only enables face tracking and the Three.js overlay for filters that need them", () => {
@@ -689,6 +716,7 @@ describe("camera engineering foundation", () => {
     expect(canRenderDirectToCanvas({ ...cleanFrame, masterOverlayActive: true })).toBe(false);
     expect(canRenderDirectToCanvas({ ...cleanFrame, pipeline: "halation" })).toBe(false);
     expect(canRenderDirectToCanvas({ ...cleanFrame, pipeline: "kinetic-melt" })).toBe(false);
+    expect(canRenderDirectToCanvas({ ...cleanFrame, pipeline: "datamosh" })).toBe(false);
   });
 
   it("does not punish a healthy 30 FPS source for its frame cadence", () => {

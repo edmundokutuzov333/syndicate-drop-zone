@@ -16,7 +16,14 @@ export type FilterId =
   | "cathode-crt"
   | "halation"
   | "kinetic-melt"
-  | "paper-film";
+  | "paper-film"
+  | "crt-classic"
+  | "vhs-tracking"
+  | "night-cctv"
+  | "datamosh"
+  | "fire-bloom"
+  | "neon-cyberpunk"
+  | "analog-interference";
 export type MasterOverlayId = "cathode-crt" | "paper-film";
 export type FlashMode = "off" | "hardware" | "software";
 export type PerformanceTier = "high" | "medium" | "low";
@@ -106,7 +113,7 @@ export type FilterDefinition = {
   supportsFeedback: boolean;
   enabled: boolean;
   defaults: FilterUniformDefaults;
-  pipeline?: "single" | "xray-mesh" | "halation" | "kinetic-melt";
+  pipeline?: "single" | "xray-mesh" | "halation" | "kinetic-melt" | "datamosh";
   passes?: readonly string[];
   masterOverlay?: "cathode-crt" | "paper-film";
   parameters?: readonly {

@@ -89,6 +89,9 @@ export class WebGLEngine {
   private readonly transitionFrom = new FrameBuffer();
   private readonly transitionTo = new FrameBuffer();
   private readonly finalOutput = new FrameBuffer();
+  private readonly datamoshHistory: [FrameBuffer, FrameBuffer] = [new FrameBuffer(), new FrameBuffer()];
+  private datamoshHistoryReadIndex = 0;
+  private datamoshHistoryReady = false;
   private readonly cinematicPipeline = new CinematicPipeline();
   private masterOverlays: Record<MasterOverlayId, boolean> = {
     "cathode-crt": false,
@@ -364,6 +367,7 @@ export class WebGLEngine {
   }
 
   setFrameSource(source: TexImageSource | null): void {
+    if (source !== this.frameSource) this.resetDatamoshHistory();
     this.frameSource = source;
   }
 
@@ -426,6 +430,8 @@ export class WebGLEngine {
       this.filter = filter;
       return;
     }
+
+    if (filter === "datamosh" && from !== "datamosh") this.resetDatamoshHistory();
 
     this.transition = {
       from,
@@ -573,8 +579,10 @@ export class WebGLEngine {
       }
 
       if (progress >= 1) {
+        const previousFilter = this.transition.from;
         this.filter = this.transition.to;
         this.transition = null;
+        if (previousFilter === "datamosh" && this.filter !== "datamosh") this.resetDatamoshHistory();
       }
     } else {
       this.renderFilterPass(
@@ -610,6 +618,15 @@ export class WebGLEngine {
       if (this.hudText || this.hudDirty) {
         this.renderHudOverlayPass();
       }
+    }
+
+    const datamoshIsActive =
+      this.filter === "datamosh" ||
+      this.transition?.from === "datamosh" ||
+      this.transition?.to === "datamosh";
+    if (!directOutput && datamoshIsActive) {
+      const outputTexture = this.finalOutput.getTexture();
+      if (outputTexture) this.commitDatamoshHistory(outputTexture);
     }
 
     const renderTime = performance.now() - renderStart;
@@ -708,6 +725,8 @@ export class WebGLEngine {
       this.transitionFrom.destroy(gl);
       this.transitionTo.destroy(gl);
       this.finalOutput.destroy(gl);
+      this.datamoshHistory[0].destroy(gl);
+      this.datamoshHistory[1].destroy(gl);
       this.cinematicPipeline.destroy();
       this.shaderCache.clear(gl);
     }
@@ -753,6 +772,8 @@ export class WebGLEngine {
     this.gcEvents = 0;
     this.lastFrameAt = 0;
     this.frameCounter = 0;
+    this.datamoshHistoryReadIndex = 0;
+    this.datamoshHistoryReady = false;
     this.previewProfileKey = "";
     this.sourceFrameRate = undefined;
     this.adaptivePreviewState = {
@@ -849,6 +870,51 @@ export class WebGLEngine {
     );
   }
 
+  private resetDatamoshHistory(): void {
+    this.datamoshHistoryReadIndex = 0;
+    this.datamoshHistoryReady = false;
+  }
+
+  private ensureDatamoshHistory(width: number, height: number): boolean {
+    const gl = this.gl;
+    if (!gl || width <= 0 || height <= 0) return false;
+
+    const scale = Math.min(1, 1280 / width, 1280 / height);
+    const targetWidth = Math.max(1, Math.round(width * scale));
+    const targetHeight = Math.max(1, Math.round(height * scale));
+    const size = this.datamoshHistory[0].getSize();
+    const needsResize = size.width !== targetWidth || size.height !== targetHeight ||
+      !this.datamoshHistory[0].getTexture() || !this.datamoshHistory[1].getTexture();
+
+    if (needsResize) {
+      this.datamoshHistory[0].create(gl, targetWidth, targetHeight);
+      this.datamoshHistory[1].create(gl, targetWidth, targetHeight);
+      this.resetDatamoshHistory();
+    }
+
+    return Boolean(this.datamoshHistory[0].get() && this.datamoshHistory[0].getTexture() &&
+      this.datamoshHistory[1].get() && this.datamoshHistory[1].getTexture());
+  }
+
+  private commitDatamoshHistory(outputTexture: WebGLTexture): void {
+    const gl = this.gl;
+    const canvas = this.canvas;
+    if (!gl || !canvas || !this.ensureDatamoshHistory(canvas.width, canvas.height)) return;
+
+    const writeIndex = 1 - this.datamoshHistoryReadIndex;
+    const writeBuffer = this.datamoshHistory[writeIndex];
+    this.renderCrossfade(outputTexture, outputTexture, 1, writeBuffer.get(), writeBuffer.getSize());
+
+    if (!this.datamoshHistoryReady) {
+      const seedBuffer = this.datamoshHistory[this.datamoshHistoryReadIndex];
+      this.renderCrossfade(outputTexture, outputTexture, 1, seedBuffer.get(), seedBuffer.getSize());
+      this.datamoshHistoryReadIndex = 0;
+      this.datamoshHistoryReady = true;
+    } else {
+      this.datamoshHistoryReadIndex = writeIndex;
+    }
+  }
+
   private renderFilterPass(
     framebuffer: WebGLFramebuffer | null,
     filter: FilterId,
@@ -929,6 +995,15 @@ export class WebGLEngine {
     gl.bindTexture(gl.TEXTURE_2D, this.lutTexture);
     this.setProgramUniform(programHandle.program, "u_lut", 2);
 
+    if (filter === "datamosh") {
+      const historyReady = this.ensureDatamoshHistory(canvas.width, canvas.height) && this.datamoshHistoryReady;
+      const historyTexture = historyReady ? this.datamoshHistory[this.datamoshHistoryReadIndex].getTexture() : previousTexture;
+      gl.activeTexture(gl.TEXTURE3);
+      gl.bindTexture(gl.TEXTURE_2D, historyTexture);
+      this.setProgramUniform(programHandle.program, "u_feedbackFrame", 3);
+      this.setProgramUniform(programHandle.program, "u_feedbackReady", historyReady ? 1 : 0);
+    }
+
     this.uniforms.set("u_time", timestamp / 1000);
 
     const defaults = definition.defaults;
@@ -961,6 +1036,8 @@ export class WebGLEngine {
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     this.drawCallsThisFrame += 1;
 
+    gl.activeTexture(gl.TEXTURE3);
+    gl.bindTexture(gl.TEXTURE_2D, null);
     gl.activeTexture(gl.TEXTURE2);
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.activeTexture(gl.TEXTURE1);
@@ -977,6 +1054,7 @@ export class WebGLEngine {
     toTexture: WebGLTexture,
     progress: number,
     framebuffer: WebGLFramebuffer | null,
+    viewportSize?: { width: number; height: number },
   ): void {
     const gl = this.gl;
     const canvas = this.canvas;
@@ -986,7 +1064,8 @@ export class WebGLEngine {
     if (!gl || !canvas || !vertexBuffer || !programHandle) return;
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-    gl.viewport(0, 0, canvas.width, canvas.height);
+    const viewport = viewportSize ?? { width: canvas.width, height: canvas.height };
+    gl.viewport(0, 0, viewport.width, viewport.height);
     this.bindProgram(programHandle.program);
 
     gl.activeTexture(gl.TEXTURE0);
@@ -1008,6 +1087,7 @@ export class WebGLEngine {
     gl.bindTexture(gl.TEXTURE_2D, null);
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
     gl.useProgram(null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
   private copyTextureToScreen(texture: WebGLTexture): void {

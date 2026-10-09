@@ -23,6 +23,7 @@ export function canRenderDirectToCanvas(state: DirectRenderState): boolean {
     !state.hudPending &&
     !state.masterOverlayActive &&
     state.pipeline !== "halation" &&
-    state.pipeline !== "kinetic-melt"
+    state.pipeline !== "kinetic-melt" &&
+    state.pipeline !== "datamosh"
   );
 }

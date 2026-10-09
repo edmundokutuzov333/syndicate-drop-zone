@@ -313,3 +313,13 @@ Estado da implementação de código: implementada nesta actualização; CI e de
 - Nenhum teste físico de iPhone/Android/Desktop, validação térmica ou perfil de GPU real foi executado nesta actualização. Esses resultados continuam pendentes.
 
 A validação global da câmara continua PENDENTE até a matriz de dispositivos reais ser executada. Os estados de CI, Vercel e publicação têm de ser verificados no SHA desta actualização; os registos de commits anteriores nesta página são evidência histórica e não substituem a verificação do commit actual.
+
+## Glitch Camera Engine — Phase 1 validation scope
+
+Seven new independently compiled live shaders were added: CRT CLASSIC, VHS TRACKING, NIGHT CCTV, DATAMOSH, FIRE BLOOM, NEON CYBERPUNK and ANALOG INTERFERENCE. The original 15 IDs are retained, producing 22 selectable filters in the current filter rail.
+
+Automated coverage verifies registration, independent shader bodies, dynamic uniforms, the Datamosh temporal sampler and the rule that Datamosh cannot bypass its offscreen history target. The history pair is lazily allocated, capped at a 1280 px long edge and disposed with WebGL resources.
+
+Reference files were inspected frame-by-frame where animated frames were present. Seven supplied files contained only one frame, so their missing temporal progression cannot be inferred from the uploaded asset; their visual treatment is mapped to the closest analog family instead of inventing source movement.
+
+CI, deploy status and runtime preview access must be read from the exact Phase 1 commit. Physical tests across iPhone/Android/desktop cameras and visual comparison against the source footage remain pending until those environments can be exercised.
