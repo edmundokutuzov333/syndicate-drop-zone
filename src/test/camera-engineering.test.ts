@@ -29,6 +29,10 @@ import {
   getFilterShaderContract,
 } from "@/lib/webgl/filter-contract";
 import { CinematicPipeline } from "@/lib/webgl/cinematic-pipeline";
+import {
+  requires3DOverlay,
+  requiresFaceTracking,
+} from "@/lib/camera/filter-runtime-policy";
 
 function makeTrack(
   kind: "video" | "audio",
@@ -470,6 +474,25 @@ describe("camera engineering foundation", () => {
       "paper-film",
     ]);
     expect(new Set(visible.map((filter) => filter.shaderKey)).size).toBe(15);
+  });
+
+  it("only enables face tracking and the Three.js overlay for filters that need them", () => {
+    const visibleIds = FILTER_REGISTRY.listVisible().map((filter) => filter.id);
+
+    expect(visibleIds.filter(requiresFaceTracking)).toEqual([
+      "vamp",
+      "astro-haze",
+      "xray-mesh",
+      "kinetic-melt",
+    ]);
+    expect(visibleIds.filter(requires3DOverlay)).toEqual([
+      "vamp",
+      "astro-haze",
+      "xray-mesh",
+    ]);
+    expect(visibleIds.filter((id) => requires3DOverlay(id))).toEqual(
+      visibleIds.filter((id) => ["vamp", "astro-haze", "xray-mesh"].includes(id)),
+    );
   });
 
   it("derives stable face VFX controls from MediaPipe landmarks and blendshapes", () => {
