@@ -31,6 +31,7 @@ const createdFan = { code: "FAN123", fanNumber: 9, alias: "FÃ TESTE", since: "2
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.history.replaceState({}, "", "/filiar");
   vi.mocked(fanPublic).mockResolvedValue(null);
   vi.mocked(registerFan).mockResolvedValue(createdFan);
   vi.stubGlobal("URL", {
