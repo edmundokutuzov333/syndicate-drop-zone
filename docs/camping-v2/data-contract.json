@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "status": "audit-and-design",
+  "sourceCommit": "b694bb87dab5aefdf5b48f76802a0fbf31a9395e",
+  "supabaseProject": {
+    "ref": "hhipwyixtbleiulfnvvm",
+    "name": "sindicato do trap",
+    "status": "ACTIVE_HEALTHY"
+  },
+  "observedRemotePublicSchema": {
+    "baseTables": [
+      "fan_memberships",
+      "members",
+      "partnership_requests",
+      "reservations"
+    ],
+    "views": [
+      "partnership_public"
+    ],
+    "migrationLedgerCount": 6,
+    "repositorySqlMigrationFiles": 14
+  },
+  "sourceContracts": [
+    {
+      "entity": "artists",
+      "tables": [
+        "artists",
+        "artist_releases"
+      ],
+      "consumers": [
+        "src/lib/public-content.ts",
+        "src/lib/artist-profiles.ts",
+        "src/components/ArtistPresence.tsx",
+        "Control Room ARTISTAS"
+      ],
+      "currentState": "artists and artist_releases absent from observed remote schema; 17 static profile fallbacks exist",
+      "requirement": "Resolve canonical roster from database after migration/schema reconciliation; never fabricate member 018."
+    },
+    {
+      "entity": "artist-presence",
+      "tables": [
+        "artist_status"
+      ],
+      "consumers": [
+        "src/lib/camping-data.ts",
+        "src/components/control-room/CampingControlRoom.tsx"
+      ],
+      "currentState": "artist_status absent from observed remote schema; Phase 8 migration exists in repo but is absent from remote migration ledger",
+      "requirement": "Apply only after safe reconciliation and RLS verification."
+    },
+    {
+      "entity": "camping-sessions",
+      "tables": [
+        "camping_events",
+        "camping_sessions"
+      ],
+      "consumers": [
+        "src/lib/camping-data.ts",
+        "src/components/CampingSessions.tsx",
+        "ControlRoomModule"
+      ],
+      "currentState": "Both tables absent from observed remote schema; local migrations reference them but do not provide a complete baseline table-creation migration",
+      "requirement": "Locate/recover baseline schema or create a reviewed additive migration after diffing current database."
+    },
+    {
+      "entity": "camping-live-flags",
+      "tables": [
+        "site_flags"
+      ],
+      "consumers": [
+        "src/lib/camping-data.ts",
+        "src/components/control-room/CampingControlRoom.tsx"
+      ],
+      "currentState": "site_flags absent from observed remote schema; Phase 8 migration not recorded remotely",
+      "requirement": "Verify table, RLS, grants, policies and Realtime."
+    },
+    {
+      "entity": "gallery-and-media",
+      "tables": [
+        "gallery_items",
+        "media_assets",
+        "revelation_media"
+      ],
+      "consumers": [
+        "src/lib/camping-data.ts",
+        "src/lib/site-content.ts",
+        "Control Room MEDIA/REVELAÇÃO"
+      ],
+      "currentState": "These tables are absent from observed remote schema; local migrations do not establish a full core content schema",
+      "requirement": "Keep managed asset IDs/URLs separate from 3D geometry; publish only authorized media."
+    },
+    {
+      "entity": "music",
+      "tables": [
+        "tapes",
+        "releases",
+        "artist_releases"
+      ],
+      "consumers": [
+        "src/lib/site-content.ts",
+        "Control Room MÚSICA",
+        "future iMac MUSIC"
+      ],
+      "currentState": "Tables absent from observed remote schema; the frontend has static fallbacks for four tapes",
+      "requirement": "Define IDs, track metadata, cover media, actual audio URL, duration, publication status and rights/visibility."
+    },
+    {
+      "entity": "beats",
+      "tables": [],
+      "consumers": [
+        "future iMac BEATS"
+      ],
+      "currentState": "No authoritative beats catalog/table was identified during this audit",
+      "requirement": "Define producer, BPM, price/licence if applicable, preview URL, authorized full asset and publication state before implementing."
+    },
+    {
+      "entity": "merch",
+      "tables": [
+        "merch_products",
+        "merch_variants",
+        "inventory_movements",
+        "reservations"
+      ],
+      "consumers": [
+        "src/routes/merch.tsx",
+        "Control Room MERCH",
+        "future clothing rack"
+      ],
+      "currentState": "reservations exists, but merch_products, merch_variants and inventory_movements are absent from observed remote schema; four static products p1-p4 exist in code",
+      "requirement": "Server owns product, variant, price, stock and checkout; client receives a display DTO and cannot set stock/price."
+    },
+    {
+      "entity": "membership",
+      "tables": [
+        "members",
+        "fan_memberships"
+      ],
+      "consumers": [
+        "src/lib/membership.ts",
+        "src/routes/filiar.tsx",
+        "future Syndicate ID"
+      ],
+      "currentState": "Both tables exist remotely and must remain separate concepts",
+      "requirement": "Reuse current membership RPCs and authorization; do not mix fan cards and artist profiles."
+    },
+    {
+      "entity": "radio",
+      "tables": [
+        "radio_tracks",
+        "radio_station",
+        "radio_blocks",
+        "frequency_station",
+        "frequency_listeners",
+        "frequency_badges"
+      ],
+      "consumers": [
+        "src/lib/frequency-api.ts",
+        "src/lib/frequency.ts",
+        "Control Room RADIO",
+        "public/audio"
+      ],
+      "currentState": "Tables are expected by local migration files but absent from observed remote schema",
+      "requirement": "Keep the existing global radio service; do not instantiate an independent player in the 3D scene. The studio device should control the shared service."
+    },
+    {
+      "entity": "Control Room foundations",
+      "tables": [
+        "admin_profiles",
+        "audit_logs",
+        "site_settings",
+        "site_sections",
+        "drop_campaigns"
+      ],
+      "consumers": [
+        "src/components/control-room/ControlRoomModule.tsx",
+        "Control Room SYSTEM/SITE/DROP/ACTIVITY"
+      ],
+      "currentState": "These expected tables are absent from the observed remote schema; control_room_audit.sql assumes many content tables already exist",
+      "requirement": "Recover and verify the real baseline before applying dependent trigger/policy migrations."
+    }
+  ],
+  "nonNegotiableRules": [
+    "No DDL should be applied while the canonical baseline and remote migration drift are unresolved.",
+    "Never replay all repository migration files blindly against production.",
+    "Do not put Supabase service-role keys in browser code.",
+    "Room visibility is not authorization; protected files require backend authorization.",
+    "The 3D object manifest contains entity IDs, not copied names/prices/audio URLs.",
+    "Realtime remains the authoritative update mechanism where configured; polling frequency must be explicitly budgeted.",
+    "No fake artists, tracks, beats, products or stock in production."
+  ],
+  "blockingIssue": "https://github.com/edmundokutuzov333/syndicate-drop-zone/issues/32"
+}

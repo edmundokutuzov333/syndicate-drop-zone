@@ -1,0 +1,248 @@
+{
+  "version": 1,
+  "status": "planning-contract",
+  "auditedAt": "2026-10-09",
+  "sourceCommit": "b694bb87dab5aefdf5b48f76802a0fbf31a9395e",
+  "rules": {
+    "sceneIsTrue3D": true,
+    "useFlatPanoramaAsEnvironment": false,
+    "allInteractiveObjectsHaveStableIds": true,
+    "hideUnavailablePrivateMediaBehindBackendAuthorization": true,
+    "accessCodeIsNotAuthentication": true,
+    "hiddenRoomsLoadOnDemand": true,
+    "noInventedArtistProfiles": true,
+    "officialBrandAssetsMustNotBeRedrawn": true
+  },
+  "navigationStates": [
+    "LOCKED",
+    "CODE_ENTRY",
+    "ACCESS_GRANTED",
+    "DOOR_OPENING",
+    "ENTERING_STUDIO",
+    "EXPLORATION",
+    "INTERACTION_FOCUS",
+    "ROOM_TRANSITION",
+    "GUIDED_NAVIGATION"
+  ],
+  "roomGraph": [
+    {
+      "id": "entry",
+      "label": "ENTRY / ACCESS 808",
+      "load": "initial",
+      "exits": [
+        "studio-main"
+      ]
+    },
+    {
+      "id": "studio-main",
+      "label": "ROOM 01 / XOYENS STUDIO",
+      "load": "after-access",
+      "exits": [
+        "archive",
+        "listening-room"
+      ],
+      "hiddenExits": [
+        "secret-room"
+      ]
+    },
+    {
+      "id": "archive",
+      "label": "ROOM 02 / THE ARCHIVE",
+      "load": "on-door-proximity",
+      "exits": [
+        "studio-main"
+      ]
+    },
+    {
+      "id": "listening-room",
+      "label": "ROOM 03 / LISTENING ROOM",
+      "load": "on-door-proximity",
+      "exits": [
+        "studio-main"
+      ]
+    },
+    {
+      "id": "secret-room",
+      "label": "UNLISTED / SECRET ROOM",
+      "load": "after-discovery",
+      "exits": [
+        "studio-main"
+      ]
+    }
+  ],
+  "interactionContract": {
+    "activation": "proximity-and-raycast-click",
+    "desktop": [
+      "WASD",
+      "MOUSE_LOOK",
+      "CLICK_INTERACT",
+      "ESC_CLOSE"
+    ],
+    "mobile": [
+      "TOUCH_LOOK",
+      "TOUCH_MOVE",
+      "TAP_INTERACT"
+    ],
+    "accessibilityAlternative": "guided-room-and-object-navigation",
+    "transitions": "camera-and-object-motion-must-be-interpolated-not-teleported",
+    "targetHintLabels": [
+      "INTERACT",
+      "OPEN",
+      "LISTEN",
+      "ACCESS",
+      "VIEW FILE",
+      "BUY",
+      "ENTER"
+    ]
+  },
+  "objects": [
+    {
+      "id": "entry.access-door",
+      "roomId": "entry",
+      "type": "animated-door",
+      "action": "open-after-valid-code",
+      "access": "public-entry",
+      "dataSource": null,
+      "priority": "P0",
+      "asset": "custom-3d-model-required"
+    },
+    {
+      "id": "entry.keypad-808",
+      "roomId": "entry",
+      "type": "physical-keypad",
+      "action": "enter-access-code",
+      "access": "public-entry",
+      "dataSource": null,
+      "priority": "P0",
+      "asset": "custom-3d-model-required"
+    },
+    {
+      "id": "studio.imac",
+      "roomId": "studio-main",
+      "type": "computer-terminal",
+      "action": "open-diegetic-os",
+      "access": "public-content-plus-backend-authorization",
+      "dataSource": "catalogs/music/beats/artists/merch/archive/sessions",
+      "priority": "P0",
+      "asset": "custom-3d-model-required"
+    },
+    {
+      "id": "studio.artists-wall",
+      "roomId": "studio-main",
+      "type": "physical-photo-wall",
+      "action": "open-artist-dossier",
+      "access": "published-artists-only",
+      "dataSource": "artists + artist_releases + managed artist portrait assets",
+      "priority": "P0",
+      "asset": "photo-frames-and-actual-artist-assets"
+    },
+    {
+      "id": "studio.merch-rack",
+      "roomId": "studio-main",
+      "type": "physical-clothing-rack",
+      "action": "open-product-and-cart",
+      "access": "published-stock-only",
+      "dataSource": "merch_products + merch_variants + reservations/checkout",
+      "priority": "P0",
+      "asset": "rack-hangers-fabric-and-product-assets"
+    },
+    {
+      "id": "studio.recording-desk",
+      "roomId": "studio-main",
+      "type": "production-workstation",
+      "action": "open-sessions-or-music",
+      "access": "public-content",
+      "dataSource": "tapes/releases/artist_releases + camping_sessions",
+      "priority": "P1",
+      "asset": "custom-3d-model-required"
+    },
+    {
+      "id": "studio.photo-backdrop",
+      "roomId": "studio-main",
+      "type": "photography-set",
+      "action": "open-published-visuals",
+      "access": "published-media-only",
+      "dataSource": "gallery_items + media_assets",
+      "priority": "P1",
+      "asset": "black-backdrop-lights-stands"
+    },
+    {
+      "id": "studio.audio-system",
+      "roomId": "studio-main",
+      "type": "speaker-system",
+      "action": "open-listening-experience",
+      "access": "catalog-and-media-authorization",
+      "dataSource": "approved music catalogue",
+      "priority": "P1",
+      "asset": "custom-3d-model-required"
+    },
+    {
+      "id": "studio.radio-device",
+      "roomId": "studio-main",
+      "type": "radio-device",
+      "action": "show-frequency-808-controls",
+      "access": "public-radio",
+      "dataSource": "existing Frequência 808 service",
+      "priority": "P1",
+      "asset": "custom-3d-model-required"
+    },
+    {
+      "id": "studio.archive-door",
+      "roomId": "studio-main",
+      "type": "animated-door",
+      "action": "transition-to-archive",
+      "access": "public-room; private-files-authorized-separately",
+      "dataSource": "room manifest",
+      "priority": "P1",
+      "asset": "custom-3d-model-required"
+    },
+    {
+      "id": "studio.listening-door",
+      "roomId": "studio-main",
+      "type": "animated-door",
+      "action": "transition-to-listening-room",
+      "access": "public-room",
+      "dataSource": "room manifest",
+      "priority": "P2",
+      "asset": "custom-3d-model-required"
+    },
+    {
+      "id": "studio.secret-drawer",
+      "roomId": "studio-main",
+      "type": "hidden-drawer",
+      "action": "discover-secret-room",
+      "access": "discovery-state; private content still requires backend authorization",
+      "dataSource": "secret-room manifest and protected media",
+      "priority": "P2",
+      "asset": "custom-3d-model-required"
+    },
+    {
+      "id": "archive.boxes",
+      "roomId": "archive",
+      "type": "interactive-archive-boxes",
+      "action": "open-archive-record",
+      "access": "per-record authorization",
+      "dataSource": "published archive/media records",
+      "priority": "P1",
+      "asset": "custom-3d-model-required"
+    },
+    {
+      "id": "listening-room.speakers",
+      "roomId": "listening-room",
+      "type": "audio-system",
+      "action": "play-authorized-project",
+      "access": "per-track authorization",
+      "dataSource": "music catalogue",
+      "priority": "P2",
+      "asset": "custom-3d-model-required"
+    }
+  ],
+  "decisionsPendingBeforePhase2": [
+    "Resolve the live Supabase schema/migration drift tracked in issue #32.",
+    "Confirm whether the canonical artist roster is 17 or 18; current static code holds 17.",
+    "Confirm the authoritative beats catalogue and fields; do not reuse tapes unless backend owner confirms.",
+    "Collect additional Xoyens studio angles and real measurements for hidden wall geometry and room dimensions.",
+    "Version the studio reference image in the repository or project asset storage for reproducible modelling.",
+    "Confirm product inventory and checkout contracts before merch interactions are added."
+  ]
+}
