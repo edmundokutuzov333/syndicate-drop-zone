@@ -9,7 +9,8 @@ import { tape } from "@/lib/tape-engine";
 import { useKey } from "@/components/use-key";
 import { useMember } from "@/components/use-member";
 import { track } from "@/lib/track";
-import { canReserveLiveProduct, getArtistSlotIndex, getCampingObjectSection, type CampingObjectSection } from "./camping-object-contracts";
+import { canReserveLiveProduct, getArtistSlotIndex, getCampingObjectSection, roomRequiresBackendAuthorization, type CampingObjectSection } from "./camping-object-contracts";
+import type { CampingInteriorRoomId } from "./CampingRoomWorld";
 
 type CartLine = {
   key: string;
@@ -22,7 +23,11 @@ type CartLine = {
   quantity: number;
 };
 
-type Props = { focusedId: string; onClose: () => void };
+type Props = {
+  focusedId: string;
+  onClose: () => void;
+  onEnterRoom: (roomId: CampingInteriorRoomId) => void;
+};
 type DataState<T> = { value: T; loading: boolean; error: string | null };
 
 const EMPTY_ARTISTS: Artist[] = [];
@@ -66,6 +71,7 @@ function sectionName(section: CampingObjectSection): string {
     ARCHIVE: "ARCHIVE / PUBLISHED RECORDS",
     SESSIONS: "SESSIONS / CAMPING LOG",
     LISTEN: "LISTENING ROOM / 808",
+    SECRET: "UNLISTED / RESTRICTED FILE",
   };
   return labels[section];
 }
@@ -78,6 +84,9 @@ function titleForObject(id: string): string {
   if (id === "studio.production-desk") return "PRODUCTION DESK";
   if (id === "studio.audio-system") return "LISTENING ROOM";
   if (id === "studio.inner-door") return "ROOM 02 / THE ARCHIVE";
+  if (id === "studio.secret-drawer") return "UNLISTED DRAWER";
+  if (id === "studio.secret-vault") return "RESTRICTED VAULT";
+  if (id === "room.archive.records") return "ARCHIVE RECORDS";
   return "OBJECT FILE";
 }
 
@@ -272,6 +281,8 @@ export function CampingObjectInterface({ focusedId, onClose }: Props) {
   const slotIndex = getArtistSlotIndex(focusedId);
   const heading = section === "ROOT" ? "XOYENS / WORKSTATION" : sectionName(section);
 
+  const secretRoomRestricted = roomRequiresBackendAuthorization("secret");
+
   return (
     <section className="camping-object-interface" aria-label={"Interface interactiva " + titleForObject(focusedId)} data-testid="camping-object-interface">
       <div className="camping-object-interface__top">
@@ -465,7 +476,8 @@ export function CampingObjectInterface({ focusedId, onClose }: Props) {
             <>
               {media.loading && <p className="camping-object-interface__status">A ABRIR ARQUIVO…</p>}
               {media.error && <p className="camping-object-interface__status camping-object-interface__status--error">{media.error}</p>}
-              <p className="camping-object-interface__footnote">{focusedId === "studio.inner-door" ? "ROOM 02 / ARQUIVO DIGITAL. Os ficheiros abaixo são apenas os registos que a fonte actual publica. Conteúdo restrito exige autorização no backend." : "REGISTOS VISUAIS PUBLICADOS / SEM ACESSO A FICHEIROS PRIVADOS."}</p>
+              {focusedId === "studio.inner-door" && <button type="button" className="camping-object-interface__primary" onClick={() => onEnterRoom("archive")}>ENTRAR ROOM 02 / THE ARCHIVE →</button>}
+              <p className="camping-object-interface__footnote">{focusedId === "studio.inner-door" ? "ROOM 02 / ARQUIVO FÍSICO. Os registos digitais abaixo vêm apenas da fonte publicada. Conteúdo restrito exige autorização no backend." : "REGISTOS VISUAIS PUBLICADOS / SEM ACESSO A FICHEIROS PRIVADOS."}</p>
               <div className="camping-object-interface__archive-grid">
                 {media.value.filter((item) => !/beat|instrumental/i.test([item.roll, item.tag].join(" "))).map((item, index) => <a key={item.id} className="camping-object-archive-item" href={"/revelacao?media=" + encodeURIComponent(item.id)}>
                   <span className="camping-object-archive-item__image">{item.type === "image" && <img loading="lazy" src={item.src} alt={item.alt} />}{item.type === "video" && item.poster && <img loading="lazy" src={item.poster} alt="" />}</span>
@@ -475,8 +487,21 @@ export function CampingObjectInterface({ focusedId, onClose }: Props) {
                 </a>)}
               </div>
               {!media.loading && !media.value.length && !media.error && <p className="camping-object-interface__empty">SEM REGISTOS PÚBLICOS DISPONÍVEIS.</p>}
-              {focusedId === "studio.inner-door" && <p className="camping-object-interface__empty">A SALA ARQUITECTÓNICA ROOM 02 AINDA NÃO ESTÁ MODELADA. ESTE TERMINAL SÓ EXPÕE REGISTOS PUBLICADOS.</p>}
             </>
+          )}
+
+          {section === "SECRET" && (
+            <div className="camping-object-listening">
+              <p className="camping-object-interface__eyebrow">UNLISTED / 808</p>
+              <h4>{focusedId === "studio.secret-vault" ? "RESTRICTED VAULT" : "YOU WERE NOT SUPPOSED TO FIND THIS"}</h4>
+              <p>{focusedId === "studio.secret-drawer"
+                ? "O compartimento físico abriu uma passagem não listada. A descoberta é apenas um estado de navegação, não uma autorização."
+                : "Este objecto está identificado como restrito. Nenhum ficheiro privado é carregado por esta interface."}</p>
+              {secretRoomRestricted && <p className="camping-object-interface__footnote">ACCESS CONTROL / BACKEND AUTHORIZATION REQUIRED. O código 808 não concede acesso a conteúdo privado.</p>}
+              {focusedId === "studio.secret-drawer" && (
+                <button type="button" className="camping-object-interface__primary" onClick={() => onEnterRoom("secret")}>ENTRAR NA SALA NÃO LISTADA →</button>
+              )}
+            </div>
           )}
 
           {section === "SESSIONS" && (

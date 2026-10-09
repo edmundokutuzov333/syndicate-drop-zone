@@ -16,6 +16,16 @@ import {
   resolveStudioMovement,
   type PointXZ,
 } from "../camera/camping-collision";
+import {
+  createCampingInteriorRoom,
+  createCampingRoomLayout,
+  getCampingRoomCollision,
+  getCampingRoomEntry,
+  type CampingInteriorRoomId,
+  type CampingRoomId,
+  type CampingRoomLayout,
+} from "./CampingRoomWorld";
+import { getRoomTransitionTarget } from "./camping-object-contracts";
 
 type HoverTarget = { id: string; label: string; action: string } | null;
 
@@ -27,6 +37,7 @@ type EngineCallbacks = {
   onWebGLFailure: (message: string) => void;
   onCursor: (x: number, y: number, visible: boolean) => void;
   onEscape: () => void;
+  onRoomChange: (roomId: CampingRoomId) => void;
 };
 
 type CameraTween = {
@@ -40,6 +51,15 @@ type CameraTween = {
 };
 
 type Direction = "forward" | "back" | "left" | "right";
+
+type RoomDoorMotion = {
+  pivot: THREE.Object3D;
+  fromRotationY: number;
+  toRotationY: number;
+  startedAt: number;
+  duration: number;
+  onComplete: () => void;
+};
 
 type KeypadTarget = {
   kind: "keypad-digit" | "keypad-clear" | "keypad-enter";
@@ -129,6 +149,13 @@ export class CampingStudioEngine {
   private outline: THREE.BoxHelper | null = null;
   private studioRoot: THREE.Group | null = null;
   private studioLoaded = false;
+  private currentRoom: CampingRoomId = "studio";
+  private roomLayout: CampingRoomLayout | null = null;
+  private roomRoots = new Map<CampingInteriorRoomId, THREE.Group>();
+  private roomTransitioning = false;
+  private roomDoorMotion: RoomDoorMotion | null = null;
+  private roomTransitionDoorPivot: THREE.Object3D | null = null;
+  private roomTransitionDoorBaseRotation = 0;
   private loader: GLTFLoader | null = null;
   private entryDoor: THREE.Group | null = null;
   private keypadDisplay: THREE.Mesh | null = null;
@@ -178,6 +205,13 @@ export class CampingStudioEngine {
     this.canvas = canvas;
     this.disposed = false;
     this.phase = "LOCKED";
+    this.currentRoom = "studio";
+    this.roomLayout = null;
+    this.roomRoots.clear();
+    this.roomTransitioning = false;
+    this.roomDoorMotion = null;
+    this.roomTransitionDoorPivot = null;
+    this.roomTransitionDoorBaseRotation = 0;
     this.camera.position.set(0.14, CAM_HEIGHT, 8.25);
     this.camera.rotation.order = "YXZ";
     this.camera.rotation.set(this.pitch, this.yaw, 0);
@@ -279,6 +313,12 @@ export class CampingStudioEngine {
     this.renderer = null;
     this.scene.clear();
     this.studioRoot = null;
+    this.roomRoots.clear();
+    this.roomLayout = null;
+    this.roomDoorMotion = null;
+    this.roomTransitioning = false;
+    this.roomTransitionDoorPivot = null;
+    this.roomTransitionDoorBaseRotation = 0;
     this.entryDoor = null;
     this.keypadDisplay = null;
   }
@@ -292,6 +332,57 @@ export class CampingStudioEngine {
   guideTo(anchor: "entrance" | "studio" | "production" | "photography" | "clothing" | "artists"): void {
     if (this.phase !== "EXPLORATION" && this.phase !== "INTERACTION_FOCUS") return;
     if (this.phase === "INTERACTION_FOCUS") this.finishFocusState();
+    if (this.currentRoom !== "studio") {
+      const layout = this.ensureRoomLayout();
+      const center = layout.centers[this.currentRoom];
+      const anchors: Record<CampingInteriorRoomId, Record<typeof anchor, { side: number; normal: number; lookSide: number; lookNormal: number }>> = {
+        archive: {
+          studio: { side: -3, normal: -1.2, lookSide: 0, lookNormal: 1 },
+          production: { side: -2.5, normal: -1.5, lookSide: -4.5, lookNormal: 0 },
+          photography: { side: 2.7, normal: -1.2, lookSide: 0.7, lookNormal: -1.65 },
+          clothing: { side: 3, normal: -1.2, lookSide: 4.1, lookNormal: 2.55 },
+          artists: { side: -0.5, normal: 2.6, lookSide: -1.2, lookNormal: 1.0 },
+        },
+        listening: {
+          studio: { side: -3, normal: -1, lookSide: 0, lookNormal: 0 },
+          production: { side: -2.4, normal: 0.4, lookSide: -3.5, lookNormal: 3.45 },
+          photography: { side: 0, normal: -2.7, lookSide: 0, lookNormal: 0 },
+          clothing: { side: 3, normal: 0, lookSide: 3.55, lookNormal: 3.6 },
+          artists: { side: -2.5, normal: 1.8, lookSide: -3.5, lookNormal: 3.45 },
+        },
+        secret: {
+          studio: { side: -2, normal: 0, lookSide: 0, lookNormal: 0 },
+          production: { side: -2.7, normal: -1, lookSide: 1.8, lookNormal: 2.8 },
+          photography: { side: 0, normal: -2.5, lookSide: 0, lookNormal: 0 },
+          clothing: { side: 2.8, normal: 0, lookSide: 1.8, lookNormal: 2.8 },
+          artists: { side: -3, normal: 2, lookSide: -3.6, lookNormal: 3.6 },
+        },
+      };
+      const target = anchors[this.currentRoom][anchor];
+      const destination = new THREE.Vector3(
+        center.x + layout.side.x * target.side + layout.normal.x * target.normal,
+        CAM_HEIGHT,
+        center.z + layout.side.z * target.side + layout.normal.z * target.normal,
+      );
+      const safeDestination = canOccupyStudio(
+        { x: destination.x, z: destination.z },
+        this.collision,
+      ) ? destination : getCampingRoomEntry(this.currentRoom, layout).position;
+      const look = new THREE.Vector3(
+        center.x + layout.side.x * target.lookSide + layout.normal.x * target.lookNormal,
+        1.5,
+        center.z + layout.side.z * target.lookSide + layout.normal.z * target.lookNormal,
+      );
+      this.startTween(
+        this.camera.position.clone(),
+        safeDestination,
+        this.currentLookTarget(),
+        look,
+        720,
+        () => this.callbacks.onHoverChange(null),
+      );
+      return;
+    }
     const anchors: Record<typeof anchor, { position: [number, number, number]; look: [number, number, number] }> = {
       entrance: { position: [0.08, CAM_HEIGHT, 3.25], look: [0, 1.45, 5.45] },
       studio: { position: [0.1, CAM_HEIGHT, 2.9], look: [0, 1.5, -1.5] },
@@ -315,6 +406,11 @@ export class CampingStudioEngine {
 
   returnToEntry(): void {
     if (this.phase !== "EXPLORATION" && this.phase !== "INTERACTION_FOCUS") return;
+    if (this.roomDoorMotion || this.roomTransitioning || this.tween) return;
+    if (this.currentRoom !== "studio") {
+      this.enterRoom(this.currentRoom === "archive" ? "studio" : "archive");
+      return;
+    }
     if (this.phase === "INTERACTION_FOCUS") this.finishFocusState();
     this.focusReturn = null;
     this.callbacks.onHoverChange(null);
@@ -324,6 +420,139 @@ export class CampingStudioEngine {
       this.currentLookTarget(),
       new THREE.Vector3(0.05, 1.42, 5.47),
       880,
+    );
+  }
+
+  enterRoom(nextRoom: CampingRoomId): void {
+    if (this.phase !== "EXPLORATION" && this.phase !== "INTERACTION_FOCUS") return;
+    if (this.currentRoom === nextRoom || this.roomTransitioning || this.roomDoorMotion) return;
+    if (this.phase === "INTERACTION_FOCUS") this.finishFocusState();
+    this.focusReturn = null;
+    this.keyState.clear();
+    this.virtualState.clear();
+    this.callbacks.onHoverChange(null);
+    this.callbacks.onMessage(null);
+    click();
+
+    const sourceDoor = this.getRoomTransitionDoor(this.currentRoom, nextRoom);
+    if (sourceDoor) {
+      const pivot = (sourceDoor.userData.doorPivot as THREE.Object3D | undefined) ??
+        sourceDoor.getObjectByName("door-pivot") ??
+        sourceDoor;
+      const fromRotationY = pivot.rotation.y;
+      this.roomTransitionDoorPivot = pivot;
+      this.roomTransitionDoorBaseRotation = fromRotationY;
+      this.roomDoorMotion = {
+        pivot,
+        fromRotationY,
+        toRotationY: fromRotationY + Math.PI / 2,
+        startedAt: performance.now(),
+        duration: 420,
+        onComplete: () => this.beginRoomTransition(nextRoom),
+      };
+      return;
+    }
+    this.roomTransitionDoorPivot = null;
+    this.beginRoomTransition(nextRoom);
+  }
+
+  private ensureRoomLayout(): CampingRoomLayout {
+    if (this.roomLayout) return this.roomLayout;
+    let door = { x: 0, z: -3.8 };
+    if (this.studioRoot) {
+      this.studioRoot.updateMatrixWorld(true);
+      const doorNode = this.studioRoot.getObjectByName("studio.inner-door");
+      if (doorNode) {
+        const bounds = new THREE.Box3().setFromObject(doorNode);
+        const center = bounds.getCenter(new THREE.Vector3());
+        door = { x: center.x, z: center.z };
+      }
+    }
+    this.roomLayout = createCampingRoomLayout(door);
+    return this.roomLayout;
+  }
+
+  private ensureInteriorRoom(roomId: CampingInteriorRoomId): THREE.Group {
+    const existing = this.roomRoots.get(roomId);
+    if (existing) return existing;
+    const room = createCampingInteriorRoom(roomId, this.ensureRoomLayout());
+    this.scene.add(room);
+    this.roomRoots.set(roomId, room);
+    return room;
+  }
+
+  private getTransitionDoor(fromRoom: CampingRoomId, toRoom: CampingRoomId): THREE.Object3D | null {
+    let root: THREE.Object3D | null = null;
+    let doorId = "";
+    if (fromRoom === "studio" && toRoom === "archive") {
+      root = this.studioRoot;
+      doorId = "studio.inner-door";
+    } else if (fromRoom === "archive" && toRoom === "studio") {
+      root = this.roomRoots.get("archive") ?? null;
+      doorId = "room.archive.return-door";
+    } else if (fromRoom === "archive" && toRoom === "listening") {
+      root = this.roomRoots.get("archive") ?? null;
+      doorId = "room.archive.listening-door";
+    } else if (fromRoom === "listening" && toRoom === "archive") {
+      root = this.roomRoots.get("listening") ?? null;
+      doorId = "room.listening.return-door";
+    } else if (fromRoom === "archive" && toRoom === "secret") {
+      root = this.roomRoots.get("archive") ?? null;
+      doorId = "room.archive.secret-door";
+    } else if (fromRoom === "secret" && toRoom === "archive") {
+      root = this.roomRoots.get("secret") ?? null;
+      doorId = "room.secret.return-door";
+    }
+    return root?.getObjectByName(doorId) ?? null;
+  }
+
+  private advanceRoomDoorMotion(now: number): void {
+    const motion = this.roomDoorMotion;
+    if (!motion) return;
+    const raw = Math.min(1, Math.max(0, (now - motion.startedAt) / motion.duration));
+    motion.pivot.rotation.y = THREE.MathUtils.lerp(motion.fromRotationY, motion.toRotationY, easeOutCubic(raw));
+    if (raw >= 1) {
+      this.roomDoorMotion = null;
+      motion.onComplete();
+    }
+  }
+
+  private beginRoomTransition(nextRoom: CampingRoomId): void {
+    const layout = this.ensureRoomLayout();
+    if (nextRoom !== "studio") this.ensureInteriorRoom(nextRoom).visible = true;
+    const sourceRoot = this.currentRoom === "studio"
+      ? this.studioRoot
+      : this.roomRoots.get(this.currentRoom);
+    if (sourceRoot) sourceRoot.visible = true;
+    if (nextRoom === "studio" && this.studioRoot) this.studioRoot.visible = true;
+    if (nextRoom !== "studio") this.ensureInteriorRoom(nextRoom).visible = true;
+
+    const entry = getCampingRoomEntry(nextRoom, layout);
+    this.roomTransitioning = true;
+    this.startTween(
+      this.camera.position.clone(),
+      entry.position,
+      this.currentLookTarget(),
+      entry.lookAt,
+      1120,
+      () => {
+        this.roomTransitioning = false;
+        if (this.roomTransitionDoorPivot) {
+          this.roomTransitionDoorPivot.rotation.y = this.roomTransitionDoorBaseRotation;
+          this.roomTransitionDoorPivot = null;
+        }
+        this.currentRoom = nextRoom;
+        this.collision = getCampingRoomCollision(nextRoom, layout);
+        if (this.studioRoot) this.studioRoot.visible = nextRoom === "studio";
+        for (const [id, room] of this.roomRoots) room.visible = id === nextRoom;
+        const fogNear = nextRoom === "studio" ? 15 : 7;
+        const fogFar = nextRoom === "secret" ? 42 : nextRoom === "studio" ? 30 : 39;
+        this.scene.fog = new THREE.Fog(0x100d0a, fogNear, fogFar);
+        this.callbacks.onRoomChange(nextRoom);
+        this.callbacks.onHoverChange(null);
+        this.keyState.clear();
+        this.virtualState.clear();
+      },
     );
   }
 
@@ -370,6 +599,7 @@ export class CampingStudioEngine {
       return;
     }
 
+    this.advanceRoomDoorMotion(now);
     const delta = this.lastFrameAt > 0
       ? Math.min(0.05, Math.max(0, (now - this.lastFrameAt) / 1000))
       : 0.016;
@@ -753,6 +983,40 @@ export class CampingStudioEngine {
     }
   }
 
+  private prepareInnerDoorPivot(root: THREE.Group): void {
+    root.updateMatrixWorld(true);
+    const doorRoot = root.getObjectByName("studio.inner-door");
+    if (!doorRoot || doorRoot.userData.doorPivot) return;
+    const panel = root.getObjectByName("studio.door-panel");
+    const handle = root.getObjectByName("studio.door-handle");
+    const bounds = new THREE.Box3().setFromObject(panel ?? doorRoot);
+    if (bounds.isEmpty()) return;
+
+    // Build a real hinge at the left edge of the physical door while preserving
+    // the current GLB world transforms of the door, panel and handle.
+    const center = bounds.getCenter(new THREE.Vector3());
+    const hingeWorld = new THREE.Vector3(bounds.min.x, center.y, center.z);
+    const hingeLocal = root.worldToLocal(hingeWorld.clone());
+    const pivot = new THREE.Group();
+    pivot.name = "studio.inner-door.pivot";
+    pivot.position.copy(hingeLocal);
+    pivot.userData.isDoorPivot = true;
+    root.add(pivot);
+    root.updateMatrixWorld(true);
+
+    const candidates = [doorRoot, panel, handle].filter(
+      (item): item is THREE.Object3D => Boolean(item),
+    );
+    const topLevel = candidates.filter(
+      (candidate) => !candidates.some(
+        (other) => other !== candidate && other.getObjectById(candidate.id),
+      ),
+    );
+    for (const item of topLevel) pivot.attach(item);
+    doorRoot.userData.doorPivot = pivot;
+    root.updateMatrixWorld(true);
+  }
+
   private loadStudio(): void {
     if (this.studioLoaded || this.loader || this.disposed) return;
     this.callbacks.onAssetState("loading");
@@ -772,6 +1036,7 @@ export class CampingStudioEngine {
         const root = gltf.scene;
         root.name = "CAMPING / XOYENS STUDIO GLB";
         root.visible = this.phase !== "LOCKED" && this.phase !== "CODE_ENTRY" && this.phase !== "ACCESS_GRANTED";
+        this.prepareInnerDoorPivot(root);
         root.traverse((object) => {
           const mesh = object as THREE.Mesh;
           if (mesh.isMesh) {
@@ -942,9 +1207,11 @@ export class CampingStudioEngine {
   private updateRaycaster(): THREE.Intersection[] {
     if (!this.camera) return [];
     this.raycaster.setFromCamera(this.pointer, this.camera);
-    const roots = this.studioRoot && this.studioRoot.visible
-      ? [...this.hitTargets, this.studioRoot]
-      : [...this.hitTargets];
+    const roots: THREE.Object3D[] = [...this.hitTargets];
+    if (this.studioRoot?.visible) roots.push(this.studioRoot);
+    for (const room of this.roomRoots.values()) {
+      if (room.visible) roots.push(room);
+    }
     return this.raycaster.intersectObjects(roots, true);
   }
 
@@ -991,9 +1258,21 @@ export class CampingStudioEngine {
       }
       return;
     }
-    if (this.phase !== "EXPLORATION") return;
+    if (this.phase !== "EXPLORATION" || this.tween || this.roomTransitioning || this.roomDoorMotion) return;
     const root = this.findInteractiveRoot(hit.object);
-    if (root) this.focusObject(root);
+    if (!root) return;
+    const interactionId = String(root.userData.interactionId || root.name);
+    const nextRoom = getRoomTransitionTarget(this.currentRoom, interactionId);
+    if (nextRoom) {
+      this.enterRoom(nextRoom);
+      return;
+    }
+    if (interactionId === "studio.secret-drawer") {
+      const archiveRoom = this.roomRoots.get("archive");
+      const secretDoor = archiveRoom?.getObjectByName("room.archive.secret-door");
+      if (secretDoor) secretDoor.visible = true;
+    }
+    this.focusObject(root);
   }
 
   private getKeypadTarget(object: THREE.Object3D): KeypadTarget | null {
@@ -1040,6 +1319,7 @@ export class CampingStudioEngine {
 
   private focusObject(root: THREE.Object3D): void {
     const id = String(root.userData.interactionId || root.name);
+    click();
     this.focusReturn = {
       position: this.camera.position.clone(),
       look: this.currentLookTarget(),
@@ -1095,6 +1375,8 @@ export class CampingStudioEngine {
 
   private labelForId(id: string): string {
     if (id === "studio.imac") return "OPEN";
+    if (id === "studio.secret-drawer" || id === "studio.secret-vault") return "DISCOVER";
+    if (id === "room.archive.records") return "VIEW FILE";
     if (id === "studio.artists-wall" || id.startsWith("studio.artist-photo")) return "VIEW FILE";
     if (id === "studio.merch-rack") return "BUY";
     if (id === "studio.audio-system") return "LISTEN";
@@ -1105,6 +1387,9 @@ export class CampingStudioEngine {
 
   private actionForId(id: string): string {
     if (id === "studio.imac") return "OPEN COMPUTER";
+    if (id === "studio.secret-drawer") return "UNLISTED ROOM / 808";
+    if (id === "studio.secret-vault") return "RESTRICTED ACCESS";
+    if (id === "room.archive.records") return "PUBLISHED ARCHIVE FILES";
     if (id === "studio.merch-rack") return "VIEW CLOTHING";
     if (id === "studio.audio-system") return "LISTEN";
     if (id === "studio.inner-door") return "ROOM ACCESS";
@@ -1159,7 +1444,7 @@ export class CampingStudioEngine {
     const raw = Math.min(1, Math.max(0, (now - current.startedAt) / current.duration));
     const t = easeInOutCubic(raw);
     const interpolated = current.fromPosition.clone().lerp(current.toPosition, t);
-    const constrained = this.phase === "EXPLORATION" || this.phase === "INTERACTION_FOCUS"
+    const constrained = !this.roomTransitioning && (this.phase === "EXPLORATION" || this.phase === "INTERACTION_FOCUS")
       ? resolveStudioMovement(
           { x: this.camera.position.x, z: this.camera.position.z },
           { x: interpolated.x - this.camera.position.x, z: interpolated.z - this.camera.position.z },
@@ -1185,7 +1470,7 @@ export class CampingStudioEngine {
   }
 
   private advanceMovement(delta: number): void {
-    if (!isCampingWalkEnabled(this.phase) || this.tween) return;
+    if (!isCampingWalkEnabled(this.phase) || this.tween || this.roomDoorMotion || this.roomTransitioning) return;
     let forward =
       (this.keyState.has("w") || this.keyState.has("arrowup") || this.virtualState.has("forward") ? 1 : 0) -
       (this.keyState.has("s") || this.keyState.has("arrowdown") || this.virtualState.has("back") ? 1 : 0);

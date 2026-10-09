@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CampingAccessState } from "../interactions/access-machine";
+import type { CampingRoomId } from "./CampingRoomWorld";
 import { initialCampingAccessState } from "../interactions/access-machine";
 import sindicatoSelo from "@/assets/brand/sindicato-selo.png.asset.json";
 import { CampingStudioEngine } from "./CampingStudioEngine";
@@ -44,6 +45,13 @@ const directions = [
   { key: "right", label: "DIREITA", glyph: "→" },
 ] as const;
 
+const roomCopy: Record<CampingRoomId, { code: string; title: string; subtitle: string }> = {
+  studio: { code: "ROOM 01", title: "XOYENS STUDIO", subtitle: "EXPLORATION ACTIVE" },
+  archive: { code: "ROOM 02", title: "THE ARCHIVE", subtitle: "PUBLISHED RECORDS / 808" },
+  listening: { code: "ROOM 03", title: "LISTENING ROOM", subtitle: "FREQUENCIA 808" },
+  secret: { code: "UNLISTED", title: "SECRET ROOM", subtitle: "DISCOVERY IS NOT AUTHORIZATION" },
+};
+
 export function CampingStudioExperience({
   day,
   recordsOpen,
@@ -66,6 +74,7 @@ export function CampingStudioExperience({
   const [assetState, setAssetState] = useState<AssetState>("idle");
   const [webglError, setWebglError] = useState<string | null>(null);
   const [guidedOpen, setGuidedOpen] = useState(false);
+  const [currentRoom, setCurrentRoom] = useState<CampingRoomId>("studio");
 
   useEffect(() => {
     guidedRef.current = guidedOpen;
@@ -131,6 +140,7 @@ export function CampingStudioExperience({
         cursor.style.opacity = visible ? "1" : "0";
         cursor.dataset.interactive = hover ? "true" : "false";
       },
+      onRoomChange: setCurrentRoom,
       onEscape: () => {
         if (guidedRef.current) {
           setGuidedOpen(false);
@@ -268,10 +278,10 @@ export function CampingStudioExperience({
 
       {isExploring && (
         <div className="camping-studio__explore-state">
-          <span className="camping-studio__micro-label">ROOM 01</span>
-          <strong>{access.phase === "INTERACTION_FOCUS" ? "OBJECT SELECTED" : "XOYENS STUDIO"}</strong>
+          <span className="camping-studio__micro-label">{roomCopy[currentRoom].code}</span>
+          <strong>{access.phase === "INTERACTION_FOCUS" ? "OBJECT SELECTED" : roomCopy[currentRoom].title}</strong>
           <span className="camping-studio__explore-divider" />
-          <span>{access.phase === "INTERACTION_FOCUS" ? access.focusedId?.toUpperCase().replace(/\./g, " / ") : "EXPLORATION ACTIVE"}</span>
+          <span>{access.phase === "INTERACTION_FOCUS" ? access.focusedId?.toUpperCase().replace(/\./g, " / ") : roomCopy[currentRoom].subtitle}</span>
         </div>
       )}
 
@@ -311,7 +321,9 @@ export function CampingStudioExperience({
             <button type="button" onClick={() => engineRef.current?.returnFromFocus()}>VOLTAR</button>
           )}
           {isExploring && (
-            <button type="button" onClick={() => engineRef.current?.returnToEntry()}>ENTRADA 808</button>
+            <button type="button" onClick={() => engineRef.current?.returnToEntry()}>
+              {currentRoom === "studio" ? "ENTRADA 808" : currentRoom === "archive" ? "ROOM 01 / ESTÚDIO" : "VOLTAR AO ARQUIVO"}
+            </button>
           )}
           <button type="button" onClick={onLeave}>SAIR</button>
         </div>
@@ -381,6 +393,7 @@ export function CampingStudioExperience({
         <CampingObjectInterface
           focusedId={access.focusedId}
           onClose={() => engineRef.current?.returnFromFocus()}
+          onEnterRoom={(roomId) => engineRef.current?.enterRoom(roomId)}
         />
       )}
 

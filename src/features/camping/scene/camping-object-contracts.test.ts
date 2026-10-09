@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canReserveLiveProduct, getArtistSlotIndex, getCampingObjectSection } from "./camping-object-contracts";
+import { canReserveLiveProduct, getArtistSlotIndex, getCampingObjectSection, getRoomTransitionTarget, roomRequiresBackendAuthorization } from "./camping-object-contracts";
 
 describe("CAMPING object interaction contracts", () => {
   it("maps each model interaction to the correct content surface", () => {
@@ -25,5 +25,23 @@ describe("CAMPING object interaction contracts", () => {
     expect(canReserveLiveProduct("merch-products-uuid")).toBe(true);
     expect(canReserveLiveProduct("static-01")).toBe(false);
     expect(canReserveLiveProduct(null)).toBe(false);
+  });
+
+  it("routes physical doors to real room destinations and back", () => {
+    expect(getRoomTransitionTarget("studio", "studio.inner-door")).toBe("archive");
+    expect(getRoomTransitionTarget("archive", "room.archive.return-door")).toBe("studio");
+    expect(getRoomTransitionTarget("archive", "room.archive.listening-door")).toBe("listening");
+    expect(getRoomTransitionTarget("archive", "room.archive.secret-door")).toBe("secret");
+    expect(getRoomTransitionTarget("listening", "room.listening.return-door")).toBe("archive");
+    expect(getRoomTransitionTarget("secret", "room.secret.return-door")).toBe("archive");
+    expect(getRoomTransitionTarget("studio", "studio.imac")).toBeNull();
+  });
+
+  it("keeps secret-room discovery separate from backend authorization", () => {
+    expect(getCampingObjectSection("studio.secret-drawer")).toBe("SECRET");
+    expect(getCampingObjectSection("studio.secret-vault")).toBe("SECRET");
+    expect(roomRequiresBackendAuthorization("secret")).toBe(true);
+    expect(roomRequiresBackendAuthorization("archive")).toBe(false);
+    expect(roomRequiresBackendAuthorization("studio")).toBe(false);
   });
 });

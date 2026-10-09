@@ -1,7 +1,7 @@
 {
   "version": 1,
   "phase": 2,
-  "status": "model-produced-not-yet-mounted",
+  "status": "model-mounted",
   "model": "/models/camping/xoyens-studio.glb",
   "sourceCommit": "dc5197505155b0c9e7b0d2a7b11d2900216db618",
   "format": "glTF 2.0 binary",
@@ -72,8 +72,8 @@
     {
       "id": "studio.inner-door",
       "node": "studio.inner-door",
-      "action": "transition-to-next-room",
-      "source": "room manifest"
+      "action": "transition-to-archive-room",
+      "source": "procedural room manifest"
     }
   ],
   "objects": [
@@ -697,5 +697,41 @@
     "Official logo and seal are referenced from existing managed assets.",
     "Single-panorama reconstruction is not survey-grade: hidden geometry and exact measurements need more references.",
     "GLB is not yet mounted on /camping. First-person controller, collision, access 808 and runtime interactions belong to Phase 3 and later."
-  ]
+  ],
+  "proceduralInteriorRooms": {
+    "archive": {
+      "source": "src/features/camping/scene/CampingRoomWorld.ts",
+      "geometry": "procedural-threejs",
+      "customGlb": false,
+      "interactions": [
+        "room.archive.return-door",
+        "room.archive.listening-door",
+        "room.archive.secret-door",
+        "room.archive.records",
+        "studio.secret-drawer"
+      ],
+      "contentSource": "published media and gallery services only"
+    },
+    "listening": {
+      "source": "src/features/camping/scene/CampingRoomWorld.ts",
+      "geometry": "procedural-threejs",
+      "customGlb": false,
+      "interactions": [
+        "room.listening.return-door",
+        "studio.audio-system"
+      ],
+      "sharedAudioService": "existing Frequência 808 service"
+    },
+    "secret": {
+      "source": "src/features/camping/scene/CampingRoomWorld.ts",
+      "geometry": "procedural-threejs",
+      "customGlb": false,
+      "interactions": [
+        "room.secret.return-door",
+        "studio.secret-vault"
+      ],
+      "privateContentAuthorization": "backend-required",
+      "note": "Discovery does not grant access to restricted files."
+    }
+  }
 }
