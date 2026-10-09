@@ -378,9 +378,9 @@
   background: rgba(19, 14, 9, 0.7);
 }
 
-.camping-studio__controls {
+ .camping-studio__controls {
   right: 0;
-  bottom: 0;
+  bottom: 60px;
   left: 0;
   display: flex;
   align-items: flex-end;
@@ -438,7 +438,7 @@
 .camping-studio__touch-controls {
   display: none;
   right: auto;
-  bottom: 88px;
+  bottom: 145px;
   left: 18px;
   width: 130px;
   height: 124px;
@@ -550,7 +550,7 @@
 
 .camping-studio__toast {
   left: 50%;
-  bottom: 90px;
+  bottom: 145px;
   max-width: min(470px, calc(100vw - 35px));
   padding: 10px 13px;
   border: 1px solid rgba(196, 157, 109, 0.38);
@@ -637,6 +637,7 @@
 
   .camping-studio__controls {
     display: block;
+    bottom: 58px;
     padding: 10px 12px max(10px, env(safe-area-inset-bottom));
   }
 
@@ -658,6 +659,7 @@
 
   .camping-studio__touch-controls {
     display: block;
+    bottom: 145px;
   }
 
   .camping-studio__explore-state {
@@ -672,7 +674,7 @@
   }
 
   .camping-studio__toast {
-    bottom: 128px;
+    bottom: 145px;
     font-size: 8px;
   }
 
