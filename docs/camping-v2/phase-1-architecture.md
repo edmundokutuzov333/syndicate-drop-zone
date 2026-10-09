@@ -1,4 +1,4 @@
-# CAMPING V2 · Fase 1 — auditoria, arquitectura e contratos
+# CAMPING V2 · Fase 1: auditoria, arquitectura e contratos
 
 **Estado da fase:** auditoria executada e contratos documentados. **Gate de saída: BLOQUEADO** até à reconciliação do schema Supabase descrita na issue #32. Não foram feitas alterações de runtime nem DDL na base de dados nesta fase.
 
@@ -209,9 +209,9 @@ O frontend não deve guardar nomes, preços, stock, capas ou URLs de música no 
 
 Os contratos legíveis por máquina encontram-se em data-contract.json. Nenhuma migração foi aplicada nesta fase.
 
-## 8. Bloqueador de schema Supabase — não ignorar
+## 8. Bloqueador de schema Supabase: não ignorar
 
-A ligação configurada no frontend aponta para o projecto Supabase hhipwyixtbleiulfnvvm. A inspecção read-only do schema public devolveu quatro tabelas base — fan_memberships, members, partnership_requests e reservations — e a view partnership_public.
+A ligação configurada no frontend aponta para o projecto Supabase hhipwyixtbleiulfnvvm. A inspecção read-only do schema public devolveu quatro tabelas base: fan_memberships, members, partnership_requests e reservations, além da view partnership_public.
 
 O código do site e do Control Room pede também artists, artist_releases, tapes, releases, camping_events, camping_sessions, site_flags, artist_status, gallery_items, media_assets, revelation_media, merch_products, merch_variants, inventory_movements, site_settings, site_sections, drop_campaigns, admin_profiles e audit_logs. Estas tabelas não apareceram no inventário remoto observado.
 
