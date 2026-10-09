@@ -87,7 +87,7 @@ export function CampingStudioExperience({
       const phase = accessRef.current.phase;
       if (phase !== "LOCKED" && phase !== "CODE_ENTRY") return;
 
-      const key = /^\\d$/.test(event.key)
+      const key = /^\d$/.test(event.key)
         ? event.key
         : event.key === "Enter" || event.key === "NumpadEnter"
           ? "ENTER"
@@ -180,7 +180,7 @@ export function CampingStudioExperience({
         tabIndex={0}
         onKeyDown={(event) => {
           if (access.phase !== "LOCKED" && access.phase !== "CODE_ENTRY") return;
-          const key = /^\\d$/.test(event.key)
+          const key = /^\d$/.test(event.key)
             ? event.key
             : event.key === "Enter" || event.key === "NumpadEnter"
               ? "ENTER"
