@@ -6,9 +6,9 @@ const DIRECT_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_vfYmLBY6O2Ruxv3ggJCXmQ_I
 
 export function resolvePublicSupabaseConfig(input: PublicSupabaseRuntimeInputs): PublicSupabaseConfig {
   const host = input.browserHost.trim().toLowerCase();
-  const isLovableHost = host.endsWith(".lovable.app") || host.endsWith(".lovable.dev");
   const isLocalHost = host === "localhost" || host === "127.0.0.1";
-  const useDirectBackend = Boolean(host) && !isLovableHost && !isLocalHost;
+  // Preview and production must use the same real database; only local development may use the configured sandbox.
+  const useDirectBackend = Boolean(host) && !isLocalHost;
   const useConfiguredBackend = !useDirectBackend && Boolean(input.configuredUrl?.trim());
   const url = (useDirectBackend ? input.directUrl : useConfiguredBackend ? input.configuredUrl : input.directUrl)?.trim().replace(/\/+$/, "");
   const key = useDirectBackend ? input.directKey?.trim() : useConfiguredBackend ? input.configuredKey?.trim() : input.directKey?.trim();
