@@ -3,6 +3,10 @@ import { CameraManager } from "@/lib/camera/camera-manager";
 import { CameraVfx3DOverlay } from "@/lib/camera/camera-vfx-3d-overlay";
 import { FaceVfxTracker } from "@/lib/camera/face-vfx";
 import {
+  requires3DOverlay,
+  requiresFaceTracking,
+} from "@/lib/camera/filter-runtime-policy";
+import {
   type CameraFacingMode,
   type FilterId,
 } from "@/lib/camera/types";
@@ -62,6 +66,9 @@ export function CameraViewport({
     let destroyed = false;
 
     const faceVfx = new FaceVfxTracker();
+    let faceTrackingActive = false;
+    let faceWarmupStarted = false;
+    let faceState = faceVfx.reset();
     const orientation = new OrientationManager();
     orientation.start(0);
 
@@ -79,6 +86,22 @@ export function CameraViewport({
       vfx3d?.resize(rect.width, rect.height);
     };
 
+    const getOrCreateVfx3DOverlay = (): CameraVfx3DOverlay | null => {
+      if (vfx3d || destroyed) return vfx3d;
+
+      try {
+        const overlay = new CameraVfx3DOverlay();
+        overlay.setXrayParameters([0, 1, 0.4], 1.5, 0.8);
+        const rect = stage.getBoundingClientRect();
+        overlay.resize(rect.width, rect.height);
+        vfx3d = overlay;
+      } catch {
+        vfx3d = null;
+      }
+
+      return vfx3d;
+    };
+
     const applyEngineState = () => {
       engine.setFrameSource(video);
       engine.preloadFilters(vertexShader);
@@ -91,7 +114,9 @@ export function CameraViewport({
         facingRef.current === "user" ? 1 : 0,
       );
       engine.setUniform("u_flash", 0);
-      engine.setFaceTracking(faceVfx.reset());
+      faceState = faceVfx.reset();
+      faceTrackingActive = false;
+      engine.setFaceTracking(faceState);
       engine.setFilter(filterRef.current);
       resize();
     };
@@ -112,29 +137,39 @@ export function CameraViewport({
         video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
         (document.visibilityState === "visible" || recordingRef.current)
       ) {
-        const faceState = faceVfx.detect(video, timestamp);
+        const activeFilter = filterRef.current;
+        const needsFaceTracking = requiresFaceTracking(activeFilter);
+
+        if (needsFaceTracking) {
+          if (!faceWarmupStarted) {
+            faceWarmupStarted = true;
+            void faceVfx.warmup();
+          }
+          faceTrackingActive = true;
+          faceState = faceVfx.detect(video, timestamp);
+        } else if (faceTrackingActive) {
+          faceTrackingActive = false;
+          faceState = faceVfx.reset();
+        }
         engine.setFaceTracking(faceState);
 
-        const activeFilter = filterRef.current;
+        if (requires3DOverlay(activeFilter)) {
+          const overlay = getOrCreateVfx3DOverlay();
 
-        if (
-          vfx3d &&
-          (
-            activeFilter === "vamp" ||
-            activeFilter === "astro-haze" ||
-            activeFilter === "xray-mesh"
-          )
-        ) {
-          vfx3d.update(
-            activeFilter,
-            faceState,
-            facingRef.current,
-            timestamp,
-            video,
-            faceVfx.getLandmarks(),
-          );
-          vfx3d.render();
-          engine.setSceneOverlaySource(vfx3d.getCanvas());
+          if (overlay) {
+            overlay.update(
+              activeFilter,
+              faceState,
+              facingRef.current,
+              timestamp,
+              video,
+              faceVfx.getLandmarks(),
+            );
+            overlay.render();
+            engine.setSceneOverlaySource(overlay.getCanvas());
+          } else {
+            engine.setSceneOverlaySource(null);
+          }
         } else {
           engine.setSceneOverlaySource(null);
         }
@@ -201,13 +236,6 @@ export function CameraViewport({
         });
         engine.init(canvas);
 
-        try {
-          vfx3d = new CameraVfx3DOverlay();
-          vfx3d.setXrayParameters([0, 1, 0.4], 1.5, 0.8);
-        } catch {
-          vfx3d = null;
-        }
-
         applyEngineState();
         engineRef.current = engine;
         ready = true;
@@ -271,7 +299,6 @@ export function CameraViewport({
     document.addEventListener("visibilitychange", handleVisibility);
 
     initializeEngine();
-    void faceVfx.warmup();
     void onReady();
 
     resize();
