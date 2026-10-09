@@ -1,6 +1,8 @@
 export type PublicSupabaseConfig = { url: string; key: string };
 export type PublicSupabaseRuntimeInputs = { browserHost: string; configuredUrl?: string; configuredKey?: string; directUrl?: string; directKey?: string };
 const DIRECT_SUPABASE_URL = "https://hhipwyixtbleiulfnvvm.supabase.co";
+// Canonical public key for this project. Vercel currently injects a stale, invalid key at build time.
+const DIRECT_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_vfYmLBY6O2Ruxv3ggJCXmQ_I9KAhfw0";
 
 export function resolvePublicSupabaseConfig(input: PublicSupabaseRuntimeInputs): PublicSupabaseConfig {
   const host = input.browserHost.trim().toLowerCase();
@@ -38,6 +40,6 @@ export function getPublicSupabaseConfig(): PublicSupabaseConfig {
   const configuredKey = (import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string | undefined)?.trim() ||
     (import.meta.env["VITE_SUPABASE_ANON_KEY"] as string | undefined)?.trim();
   const directUrl = (import.meta.env["VITE_SUPABASE_DIRECT_URL"] as string | undefined)?.trim() || DIRECT_SUPABASE_URL;
-  const directKey = (import.meta.env["VITE_SUPABASE_DIRECT_PUBLISHABLE_KEY"] as string | undefined)?.trim();
+  const directKey = DIRECT_SUPABASE_PUBLISHABLE_KEY;
   return resolvePublicSupabaseConfig({ browserHost, configuredUrl, configuredKey, directUrl, directKey });
 }
