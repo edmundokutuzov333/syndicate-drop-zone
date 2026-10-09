@@ -29,6 +29,7 @@ import {
   getFilterShaderContract,
 } from "@/lib/webgl/filter-contract";
 import { CinematicPipeline } from "@/lib/webgl/cinematic-pipeline";
+import { canRenderDirectToCanvas } from "@/lib/webgl/render-policy";
 import {
   requires3DOverlay,
   requiresFaceTracking,
@@ -657,6 +658,26 @@ describe("camera engineering foundation", () => {
     expect(source).toContain("u_previousFrame");
     expect(source).toContain("filmGrain");
     expect(source).toContain("feedbackBlend");
+  });
+
+  it("bypasses the offscreen copy only for safe single-pass frames", () => {
+    const cleanFrame = {
+      transitionActive: false,
+      sceneOverlayActive: false,
+      overlayPending: false,
+      hudPending: false,
+      masterOverlayActive: false,
+      pipeline: undefined,
+    } as const;
+
+    expect(canRenderDirectToCanvas(cleanFrame)).toBe(true);
+    expect(canRenderDirectToCanvas({ ...cleanFrame, transitionActive: true })).toBe(false);
+    expect(canRenderDirectToCanvas({ ...cleanFrame, sceneOverlayActive: true })).toBe(false);
+    expect(canRenderDirectToCanvas({ ...cleanFrame, overlayPending: true })).toBe(false);
+    expect(canRenderDirectToCanvas({ ...cleanFrame, hudPending: true })).toBe(false);
+    expect(canRenderDirectToCanvas({ ...cleanFrame, masterOverlayActive: true })).toBe(false);
+    expect(canRenderDirectToCanvas({ ...cleanFrame, pipeline: "halation" })).toBe(false);
+    expect(canRenderDirectToCanvas({ ...cleanFrame, pipeline: "kinetic-melt" })).toBe(false);
   });
 
   it("keeps performance adaptation inside the render budget", () => {
