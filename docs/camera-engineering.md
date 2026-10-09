@@ -241,3 +241,35 @@ Physical validation on real iPhone, Android, Safari, Chrome, Firefox, Edge, low-
 - [x] no automatic upload
 - [x] no Supabase changes
 - [ ] physical browser/device matrix still requires real-device validation in Phase 4
+
+
+## Camera performance audit — three execution phases
+
+### Phase 1 — expensive VFX only on demand
+
+Implemented in the camera viewport:
+
+- MediaPipe face tracking starts only when a filter consumes face position, expression, pose or movement: `vamp`, `astro-haze`, `xray-mesh` and `kinetic-melt`.
+- The separate Three.js/WebGL overlay is constructed only for `vamp`, `astro-haze` and `xray-mesh`.
+- Leaving a face-tracked filter resets the face state before the next filter renders, avoiding stale tracking values.
+- The 15 filter definitions, filter order, visual controls, transition engine, camera track constraints, capture pipeline, route tree and database contracts remain unchanged.
+
+This phase targets startup latency, memory pressure and GPU-context overhead for the 11 filters that do not need the Three.js overlay, and avoids starting the MediaPipe model until face tracking is requested. This is an architectural workload reduction, not a claim of measured FPS improvement; physical device profiling remains pending.
+
+### Phase 2 — render-pipeline work (pending)
+
+- Remove redundant full-frame composition passes only where single-pass rendering, filter transitions, scene overlays, HUD and capture contracts make bypass safe.
+- Reduce first-use shader compilation stalls without breaking the existing 300 ms filter cross-fade.
+- Schedule rendering against real video frames where supported and retain a robust fallback for browsers without `requestVideoFrameCallback`.
+- Validate every filter pipeline, Master FX option and photo/video capture against regression tests.
+
+### Phase 3 — device-aware preview and capture (pending)
+
+- Add explicit adaptive preview profiles based on delivered camera capabilities and observed render cost.
+- Keep capture resolution truthful: photo/video output must use the actual source capability and must never label an upscaled lower-resolution source as native 4K.
+- Tune face inference cadence and inference input size only after confirming that the 3D effects and kinetic-melt motion remain visually correct.
+- Run a real-device matrix: iPhone Safari, Android Chrome, desktop browsers and a lower-end GPU; record startup time, FPS/frame-time metrics, dropped frames, texture upload cost and thermal degradation.
+
+### Phase 1 verification boundary
+
+No camera backend or Supabase schema change is required: capture remains local, with no media upload or camera-specific persistence. No route, global shell or Control Room contract is changed. CI results and the active deployment status are reported separately from physical-device validation; inaccessible preview hosts are not treated as a passed runtime test.
