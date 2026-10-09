@@ -218,7 +218,8 @@ export function CameraViewport({
       // continue sampling animated effects even on a 24/30 FPS camera.
       if (
         !recordingRef.current &&
-        typeof video.requestVideoFrameCallback === "function"
+        typeof video.requestVideoFrameCallback === "function" &&
+        typeof video.cancelVideoFrameCallback === "function"
       ) {
         videoFrameRef.current = video.requestVideoFrameCallback((timestamp) => {
           videoFrameRef.current = 0;
