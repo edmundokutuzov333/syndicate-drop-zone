@@ -32,3 +32,8 @@ A rota `/camping` e os seus dados de sessões, estado LIVE, galeria, presença e
 - A execução CI `37960901525` falhou nos dois testes E2E do Camping e no teste do Cartão de Fã. Os logs mostram erros SSR em `src/routes/__root.tsx` ao aceder a `location.pathname` quando `location` não está definido no contexto de head. Esta falha foi corrigida com fallback para `/`.
 - O keypad de acessibilidade tinha uma expressão regular incorrecta para dígitos; corrigida para aceitar um único algarismo.
 - A certificação só fica concluída depois de nova execução CI, carregamento do GLB e percurso E2E passarem. A publicação READY por si só não prova o percurso funcional.
+
+
+### Robustez do teclado durante o arranque
+
+Os dígitos e Enter recebidos enquanto o canvas está visível mas o motor ainda termina o mount ficam em fila e são entregues ao motor assim que este fica pronto. O evento no canvas é tratado uma única vez, evitando perda de input ou submissão duplicada.

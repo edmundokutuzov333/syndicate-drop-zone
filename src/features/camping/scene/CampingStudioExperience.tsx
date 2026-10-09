@@ -52,6 +52,8 @@ export function CampingStudioExperience({
   onLeave,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const engineReadyRef = useRef(false);
+  const pendingAccessKeysRef = useRef<string[]>([]);
   const engineRef = useRef<CampingStudioEngine | null>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   const guidedRef = useRef(false);
@@ -112,8 +114,14 @@ export function CampingStudioExperience({
       },
     });
     engineRef.current = engine;
+    engineReadyRef.current = false;
     engine.mount(canvas);
+    engineReadyRef.current = true;
+    const pendingKeys = pendingAccessKeysRef.current.splice(0);
+    for (const key of pendingKeys) engine.pressAccessibleKey(key);
     return () => {
+      engineReadyRef.current = false;
+      pendingAccessKeysRef.current = [];
       engine.dispose();
       engineRef.current = null;
     };
@@ -139,7 +147,25 @@ export function CampingStudioExperience({
         className="camping-studio__canvas"
         aria-label="Estúdio 3D. Arraste para olhar à volta e clique nos objectos identificados."
         tabIndex={0}
-  />
+        onKeyDown={(event) => {
+          if (access.phase !== "LOCKED" && access.phase !== "CODE_ENTRY") return;
+          const key = /^\\d$/.test(event.key)
+            ? event.key
+            : event.key === "Enter" || event.key === "NumpadEnter"
+              ? "ENTER"
+              : event.key === "Backspace"
+                ? "BACK"
+                : null;
+          if (!key) return;
+          event.preventDefault();
+          event.stopPropagation();
+          if (!engineReadyRef.current || !engineRef.current) {
+            pendingAccessKeysRef.current.push(key);
+            return;
+          }
+          engineRef.current.pressAccessibleKey(key);
+        }}
+      />
 
       <div className="camping-studio__vignette" aria-hidden="true" />
       <div className="camping-studio__grain" aria-hidden="true" />
