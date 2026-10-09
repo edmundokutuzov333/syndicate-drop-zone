@@ -36,6 +36,7 @@ export function CameraViewport({
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<WebGLEngine | null>(null);
+  const restartRenderLoopRef = useRef<(() => void) | null>(null);
   const filterRef = useRef(filter);
   const facingRef = useRef(facingMode);
   const recordingRef = useRef(recording);
@@ -76,6 +77,7 @@ export function CameraViewport({
       current: manager.getState().status === "active",
     };
     const rafRef = { current: 0 };
+    const videoFrameRef = { current: 0 };
     const lastHudAt = { current: 0 };
 
     const resize = () => {
@@ -126,10 +128,19 @@ export function CameraViewport({
         cancelAnimationFrame(rafRef.current);
         rafRef.current = 0;
       }
+
+      if (videoFrameRef.current) {
+        if (typeof video.cancelVideoFrameCallback === "function") {
+          video.cancelVideoFrameCallback(videoFrameRef.current);
+        }
+        videoFrameRef.current = 0;
+      }
     };
 
     const render = (timestamp: number) => {
+      if (destroyed) return;
       rafRef.current = 0;
+      videoFrameRef.current = 0;
 
       if (
         ready &&
@@ -187,24 +198,40 @@ export function CameraViewport({
         engine.render(timestamp);
       }
 
+      scheduleNextFrame();
+    };
+
+    const scheduleNextFrame = () => {
       if (
-        ready &&
-        streamActiveRef.current &&
-        (document.visibilityState === "visible" || recordingRef.current)
+        destroyed ||
+        rafRef.current ||
+        videoFrameRef.current ||
+        !ready ||
+        !streamActiveRef.current ||
+        !(document.visibilityState === "visible" || recordingRef.current)
       ) {
-        rafRef.current = requestAnimationFrame(render);
+        return;
       }
+
+      // In preview, process only newly presented camera frames. During a
+      // recording, keep the RAF clock alive so canvas.captureStream(60) can
+      // continue sampling animated effects even on a 24/30 FPS camera.
+      if (
+        !recordingRef.current &&
+        typeof video.requestVideoFrameCallback === "function"
+      ) {
+        videoFrameRef.current = video.requestVideoFrameCallback((timestamp) => {
+          videoFrameRef.current = 0;
+          render(timestamp);
+        });
+        return;
+      }
+
+      rafRef.current = requestAnimationFrame(render);
     };
 
     const scheduleRenderLoop = () => {
-      if (
-        !rafRef.current &&
-        ready &&
-        streamActiveRef.current &&
-        (document.visibilityState === "visible" || recordingRef.current)
-      ) {
-        rafRef.current = requestAnimationFrame(render);
-      }
+      scheduleNextFrame();
     };
 
     const handleManagerState = () => {
@@ -221,6 +248,10 @@ export function CameraViewport({
     };
 
     const unsubscribeCamera = manager.subscribe(handleManagerState);
+    restartRenderLoopRef.current = () => {
+      stopRenderLoop();
+      scheduleRenderLoop();
+    };
 
     const initializeEngine = () => {
       try {
@@ -306,6 +337,7 @@ export function CameraViewport({
 
     return () => {
       destroyed = true;
+      restartRenderLoopRef.current = null;
       stopRenderLoop();
       resizeObserver.disconnect();
       unsubscribe();
@@ -334,6 +366,10 @@ export function CameraViewport({
       }
     };
   }, [manager, onReady, onCanvasReady, onEngineReady]);
+
+  useEffect(() => {
+    restartRenderLoopRef.current?.();
+  }, [recording]);
 
   useEffect(() => {
     engineRef.current?.setUniform(
