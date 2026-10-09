@@ -332,7 +332,7 @@ The per-filter override store is keyed by FilterId and only applies declared con
 
 The tuning panel uses the site's existing compact mono / dark / blood-red design language. It avoids extra rendering libraries and backdrop filters; per-frame work is limited to setting the active shader's already-declared uniforms. No API endpoint or database migration is needed for volatile live tuning values. Persisted or shareable presets remain separate work.
 
-## Execution update — 09 Outubro 2026
+## Execution update: 09 Outubro 2026
 
 The live camera engine retains the original fifteen filters and the seven independently registered analog/glitch shaders. The CRT CLASSIC shader now adds a time-modulated blue/cyan/magenta/orange/yellow thermal palette while retaining its curvature, RGB separation, phosphor pattern, scanlines, bloom and grain.
 

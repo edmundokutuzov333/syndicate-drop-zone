@@ -247,7 +247,7 @@ Nenhuma PR foi aberta. As alterações foram executadas directamente na main, se
 - Deployment de produção observado nessa base: `dpl_A7aDmYKEpiq2CvbhksUfvdrUC2FK`, estado `READY`
 - Check Vercel na base auditada: `success`
 - CI histórico da câmara: run `37648653599`, commit `b000af92fbfe8c4b12a598232e795238cb310c32`
-- O SHA desta actualização precisa dos seus próprios resultados de CI e deploy antes de ser declarado validado.
+- CI do commit de aplicação `172939ce77e00781520404f185c655af88ffcad2`: lint da câmara, testes de engenharia e build passaram; o workflow global ficou em falha no teste E2E da rádio descrito na secção de resultados finais. O deploy Vercel do mesmo SHA está `READY` e o check Vercel está `success`.
 - Supabase: sem tabelas nem endpoints criados para guardar ajustes temporários da câmara.
 - Issue #3: CLOSED como nota de deployment histórico.
 - Issue #4: OPEN, validação física de browsers/dispositivos.
@@ -257,8 +257,8 @@ Nenhuma PR foi aberta. As alterações foram executadas directamente na main, se
 
 | Critério | Estado |
 |---|---|
-| CI verde para o novo SHA | A confirmar no próprio SHA; runs anteriores são históricos |
-| Deploy Vercel verde para o novo SHA | A confirmar no próprio SHA; a base auditada estava READY |
+| CI verde global | FAIL no run `37937051206`, por um teste E2E de formulário/foto não relacionado com a câmara; veja o relatório no fim |
+| Deploy Vercel para o SHA de aplicação `172939ce77e00781520404f185c655af88ffcad2` | READY; check `Vercel = success` |
 | Preview Lovable sincronizado | PASS |
 | Sem erros de consola | PENDENTE de runtime físico |
 | Sem leaks | PASS no cleanup/test path; físico PENDENTE |
@@ -314,3 +314,29 @@ CI, deploy status and runtime preview access must be read from the exact Phase 1
 ## Phase 2 — per-preset controls
 
 Seven filter definitions now declare their own concrete uniform controls, including effect-specific uniforms where the common intensity/noise/distortion values were insufficient. Regression coverage checks unique uniform names, valid ranges, default values, the CRT scanline, VHS tracking/tearing, CCTV roll, Fire Bloom threshold/radius/warmth, and Neon glitch amount. The React panel is mounted inside the current shutter zone and reuses the capture canvas. No route, global shell, Control Room or database schema changes are part of Phase 2.
+
+## Resultados finais da actualização de código
+
+Commit de aplicação: `172939ce77e00781520404f185c655af88ffcad2`  
+GitHub Actions: [run 37937051206](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/37937051206)  
+Deploy Vercel: [production deployment](https://vercel.com/kutuzov/syndicate-drop-zone/He12MjjqadUxDAWezDbGCbLffAXW)  
+URL do deployment: https://syndicate-drop-zone-hulbtgvpf-kutuzov.vercel.app
+
+| Verificação | Resultado no commit de aplicação |
+|---|---|
+| Instalação de dependências | PASS |
+| Smoke test de encoder FFmpeg | PASS |
+| Lint da câmara | PASS |
+| Testes de engenharia, incluindo novos testes de uniforms e limites | PASS |
+| Build de produção | PASS |
+| Inspecção do WAV da rádio | PASS |
+| Instalação do Chromium de Playwright | PASS |
+| E2E global de rádio | FAIL, 8 passaram e 1 falhou |
+| Deploy de produção Vercel | READY |
+| Check Vercel | success |
+| Compilação real dos shaders em WebGL e teste manual de /camera | Não verificado por browser interactivo neste ambiente |
+| Matriz física iPhone, Android, desktop e webcams | PENDENTE, Issue #4 aberta |
+
+O E2E falhado é `tests/radio/forms.spec.ts:73`, teste de criação de Cartão de Fã. A asserção `FOTOGRAFIA SELECCIONADA` não apareceu depois da selecção da imagem. Não é um teste da rota /camera. O mesmo teste, com a mesma asserção e o mesmo erro de `src/routes/__root.tsx:36` relacionado com `pathname`, também falhou no run anterior `37934265075`, associado ao commit base `70996cc94c3879dbfb158dc552177784e50431ae`. Por isso, a evidência indica uma falha preexistente fora desta alteração da câmara, não uma regressão introduzida pelo shader.
+
+A certificação física não está fechada: não houve teste real de permissões, webcams, Safari/iOS, Android, aquecimento, GPU, codecs ou memória. O deploy READY e os testes automatizados não substituem essa matriz.
