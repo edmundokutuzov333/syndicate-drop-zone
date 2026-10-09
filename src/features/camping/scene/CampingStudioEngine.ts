@@ -10,6 +10,7 @@ import {
   type CampingPhase,
 } from "../interactions/access-machine";
 import {
+  canOccupyStudio,
   createStudioCollisionConfig,
   resolveStudioMovement,
   type PointXZ,
@@ -775,7 +776,7 @@ export class CampingStudioEngine {
   private handleKeyDown(event: KeyboardEvent): void {
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     const target = event.target as HTMLElement | null;
-    if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+    if (target && /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(target.tagName)) return;
     const digit = event.key.length === 1 && /^\d$/.test(event.key) ? event.key : null;
     if (digit && (this.phase === "LOCKED" || this.phase === "CODE_ENTRY")) {
       event.preventDefault();
@@ -825,6 +826,9 @@ export class CampingStudioEngine {
   private handlePointerDown(event: PointerEvent): void {
     if (this.webglFailed) return;
     this.updatePointerFromEvent(event);
+    if (event.pointerType !== "touch") {
+      try { this.canvas?.focus({ preventScroll: true }); } catch {}
+    }
     this.dragPointerId = event.pointerId;
     this.dragStart = { x: event.clientX, y: event.clientY };
     this.dragLast = { ...this.dragStart };
@@ -881,10 +885,7 @@ export class CampingStudioEngine {
     const roots = this.studioRoot && this.studioRoot.visible
       ? [...this.hitTargets, this.studioRoot]
       : [...this.hitTargets];
-    return this.raycaster.intersectObjects(roots, true).filter((hit) => {
-      const target = this.getKeypadTarget(hit.object) || this.findInteractiveRoot(hit.object);
-      return Boolean(target);
-    });
+    return this.raycaster.intersectObjects(roots, true);
   }
 
   private updateRaycastHover(): void {
@@ -992,28 +993,25 @@ export class CampingStudioEngine {
     outward.normalize();
     let destination = center.clone().add(outward.clone().multiplyScalar(1.9));
     destination.y = CAM_HEIGHT;
-    const safePoint = (x: number, z: number) =>
-      resolveStudioMovement(
-        { x: center.x, z: center.z },
-        { x: x - center.x, z: z - center.z },
-        this.collision,
-      );
-    let safe = safePoint(destination.x, destination.z);
-    let foundSafeSpot = Math.hypot(safe.x - destination.x, safe.z - destination.z) < 0.09;
+    let foundSafeSpot = canOccupyStudio(
+      { x: destination.x, z: destination.z },
+      this.collision,
+    );
+    const startingAngle = Math.atan2(outward.z, outward.x);
     for (let index = 1; index <= 12 && !foundSafeSpot; index += 1) {
-      const angle = (Math.PI * 2 * index) / 12;
+      const angle = startingAngle + (Math.PI * 2 * index) / 12;
       const candidate = center.clone().add(new THREE.Vector3(
         Math.cos(angle) * 1.95,
         0,
         Math.sin(angle) * 1.95,
       ));
-      safe = safePoint(candidate.x, candidate.z);
-      foundSafeSpot = Math.hypot(safe.x - candidate.x, safe.z - candidate.z) < 0.09;
+      foundSafeSpot = canOccupyStudio(
+        { x: candidate.x, z: candidate.z },
+        this.collision,
+      );
       if (foundSafeSpot) destination = new THREE.Vector3(candidate.x, CAM_HEIGHT, candidate.z);
     }
-    if (!foundSafeSpot) {
-      destination = this.camera.position.clone();
-    }
+    if (!foundSafeSpot) destination = this.camera.position.clone();
     this.setHoveredRoot(root);
     this.dispatch({ type: "FOCUS_OBJECT", id });
     this.startTween(
