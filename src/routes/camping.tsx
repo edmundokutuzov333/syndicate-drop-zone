@@ -49,7 +49,7 @@ export const Route = createFileRoute("/camping")({
       { title: "Camping — O Sindicato do Trap" },
       { name: "description", content: "A planta viva do bunker Studio XOYENS: sessões, presença e transmissão." },
       { property: "og:title", content: "Camping — O Sindicato do Trap" },
-      { property: "og:description", content: "O bunker vivo do Sindicato do Trap." },
+      { property: "og:description", content: "O estúdio imersivo do Sindicato do Trap." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
