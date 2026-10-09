@@ -254,7 +254,7 @@ Implemented in the camera viewport:
 - Leaving a face-tracked filter resets the face state before the next filter renders, avoiding stale tracking values.
 - The 15 filter definitions, filter order, visual controls, transition engine, camera track constraints, capture pipeline, route tree and database contracts remain unchanged.
 
-This phase targets startup latency, memory pressure and GPU-context overhead for the 11 filters that do not need the Three.js overlay, and avoids starting the MediaPipe model until face tracking is requested. This is an architectural workload reduction, not a claim of measured FPS improvement; physical device profiling remains pending.
+This phase targets startup latency, memory pressure and GPU-context overhead for the 12 filters that do not need the Three.js overlay, and avoids starting the MediaPipe model until face tracking is requested. This is an architectural workload reduction, not a claim of measured FPS improvement; physical device profiling remains pending.
 
 ### Phase 2 — render-pipeline work (pending)
 
