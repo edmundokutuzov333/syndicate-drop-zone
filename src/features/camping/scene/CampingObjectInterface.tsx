@@ -94,7 +94,7 @@ function IconFolder({ code }: { code: string }) {
   return <span className="camping-object-folder__icon" aria-hidden="true"><span>{code}</span></span>;
 }
 
-export function CampingObjectInterface({ focusedId, onClose }: Props) {
+export function CampingObjectInterface({ focusedId, onClose, onEnterRoom }: Props) {
   const initialSection = getCampingObjectSection(focusedId);
   const [section, setSection] = useState<CampingObjectSection>(initialSection);
   const [launchedFromDesktop, setLaunchedFromDesktop] = useState(initialSection === "ROOT");

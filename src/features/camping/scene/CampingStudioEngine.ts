@@ -56,6 +56,9 @@ type RoomDoorMotion = {
   pivot: THREE.Object3D;
   fromRotationY: number;
   toRotationY: number;
+  extraPivot?: THREE.Object3D;
+  extraFromRotationY?: number;
+  extraToRotationY?: number;
   startedAt: number;
   duration: number;
   onComplete: () => void;
@@ -434,18 +437,30 @@ export class CampingStudioEngine {
     this.callbacks.onMessage(null);
     click();
 
+    if (nextRoom !== "studio") this.ensureInteriorRoom(nextRoom);
     const sourceDoor = this.getRoomTransitionDoor(this.currentRoom, nextRoom);
-    if (sourceDoor) {
-      const pivot = (sourceDoor.userData.doorPivot as THREE.Object3D | undefined) ??
-        sourceDoor.getObjectByName("door-pivot") ??
-        sourceDoor;
+    const destinationDoor = this.getDestinationTransitionDoor(this.currentRoom, nextRoom);
+    const getPivot = (door: THREE.Object3D | null): THREE.Object3D | null =>
+      door ? ((door.userData.doorPivot as THREE.Object3D | undefined) ?? door.getObjectByName("door-pivot") ?? door) : null;
+    const sourcePivot = getPivot(sourceDoor);
+    const destinationPivot = getPivot(destinationDoor);
+    const pivot = sourcePivot ?? destinationPivot;
+    if (pivot) {
       const fromRotationY = pivot.rotation.y;
-      this.roomTransitionDoorPivot = pivot;
-      this.roomTransitionDoorBaseRotation = fromRotationY;
+      const toRotationY = Math.abs(fromRotationY - Math.PI / 2) < 0.1 ? fromRotationY : Math.PI / 2;
+      const extraFromRotationY = destinationPivot && destinationPivot !== pivot ? destinationPivot.rotation.y : undefined;
+      const extraToRotationY = extraFromRotationY === undefined || Math.abs(extraFromRotationY - Math.PI / 2) < 0.1
+        ? extraFromRotationY
+        : Math.PI / 2;
+      this.roomTransitionDoorPivot = sourcePivot;
+      this.roomTransitionDoorBaseRotation = 0;
       this.roomDoorMotion = {
         pivot,
         fromRotationY,
-        toRotationY: fromRotationY + Math.PI / 2,
+        toRotationY,
+        extraPivot: destinationPivot && destinationPivot !== pivot ? destinationPivot : undefined,
+        extraFromRotationY,
+        extraToRotationY,
         startedAt: performance.now(),
         duration: 420,
         onComplete: () => this.beginRoomTransition(nextRoom),
@@ -510,11 +525,40 @@ export class CampingStudioEngine {
     const motion = this.roomDoorMotion;
     if (!motion) return;
     const raw = Math.min(1, Math.max(0, (now - motion.startedAt) / motion.duration));
-    motion.pivot.rotation.y = THREE.MathUtils.lerp(motion.fromRotationY, motion.toRotationY, easeOutCubic(raw));
+    const eased = easeOutCubic(raw);
+    motion.pivot.rotation.y = THREE.MathUtils.lerp(motion.fromRotationY, motion.toRotationY, eased);
+    if (motion.extraPivot && motion.extraFromRotationY !== undefined && motion.extraToRotationY !== undefined) {
+      motion.extraPivot.rotation.y = THREE.MathUtils.lerp(motion.extraFromRotationY, motion.extraToRotationY, eased);
+    }
     if (raw >= 1) {
       this.roomDoorMotion = null;
       motion.onComplete();
     }
+  }
+
+  private getDestinationTransitionDoor(fromRoom: CampingRoomId, toRoom: CampingRoomId): THREE.Object3D | null {
+    let root: THREE.Object3D | null = null;
+    let doorId = "";
+    if (fromRoom === "studio" && toRoom === "archive") {
+      root = this.roomRoots.get("archive") ?? null;
+      doorId = "room.archive.return-door";
+    } else if (fromRoom === "archive" && toRoom === "studio") {
+      root = this.studioRoot;
+      doorId = "studio.inner-door";
+    } else if (fromRoom === "archive" && toRoom === "listening") {
+      root = this.roomRoots.get("listening") ?? null;
+      doorId = "room.listening.return-door";
+    } else if (fromRoom === "listening" && toRoom === "archive") {
+      root = this.roomRoots.get("archive") ?? null;
+      doorId = "room.archive.listening-door";
+    } else if (fromRoom === "archive" && toRoom === "secret") {
+      root = this.roomRoots.get("secret") ?? null;
+      doorId = "room.secret.return-door";
+    } else if (fromRoom === "secret" && toRoom === "archive") {
+      root = this.roomRoots.get("archive") ?? null;
+      doorId = "room.archive.secret-door";
+    }
+    return root?.getObjectByName(doorId) ?? null;
   }
 
   private beginRoomTransition(nextRoom: CampingRoomId): void {
