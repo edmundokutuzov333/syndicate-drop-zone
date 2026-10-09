@@ -263,6 +263,8 @@ This phase targets startup latency, memory pressure and GPU-context overhead for
 - [x] The initially selected filter compiles synchronously; remaining regular filter programs compile incrementally during browser idle time where `requestIdleCallback` exists, while `setFilter` retains an on-demand compilation fallback.
 - [x] Cinematic pass shaders are compiled only when their filter/Master FX is used.
 - [x] Cinematic framebuffers are allocated only for the pass groups that need them and previously allocated buffers are resized with the preview/capture surface.
+- [x] Preview scheduling follows newly presented video frames through `requestVideoFrameCallback` when both request/cancel APIs exist, with `requestAnimationFrame` fallback.
+- [x] Recording keeps `requestAnimationFrame` active so `canvas.captureStream(60)` can continue sampling animated effects even when camera input runs below 60 FPS.
 - [x] The 300 ms cross-fade, filter registry and IDs, Master FX composition, HUD/countdown overlays, feedback state and local capture contract remain intact.
 - [ ] Runtime profiling on real devices remains pending; reduced passes/allocations are structural improvements and are not presented as measured FPS gains.
 
