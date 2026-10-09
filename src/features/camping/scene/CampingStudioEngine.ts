@@ -822,7 +822,11 @@ export class CampingStudioEngine {
   private handleKeyDown(event: KeyboardEvent): void {
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     const target = event.target as HTMLElement | null;
-    if (target && /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(target.tagName)) return;
+    const isTyping = target && (
+      /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) ||
+      target.isContentEditable
+    );
+    if (isTyping) return;
     const digit = event.key.length === 1 && /^\d$/.test(event.key) ? event.key : null;
     if (digit && (this.phase === "LOCKED" || this.phase === "CODE_ENTRY")) {
       event.preventDefault();
@@ -830,6 +834,7 @@ export class CampingStudioEngine {
       return;
     }
     if ((event.key === "Enter" || event.key === "NumpadEnter") && (this.phase === "LOCKED" || this.phase === "CODE_ENTRY")) {
+      if (target && /^(BUTTON|A)$/.test(target.tagName)) return;
       event.preventDefault();
       this.submitCode();
       return;
@@ -848,6 +853,7 @@ export class CampingStudioEngine {
       }
       return;
     }
+    if (target && /^(BUTTON|A)$/.test(target.tagName)) return;
     if (this.phase !== "EXPLORATION") return;
     const key = event.key.toLowerCase();
     if (["w", "a", "s", "d", "arrowup", "arrowleft", "arrowdown", "arrowright"].includes(key)) {

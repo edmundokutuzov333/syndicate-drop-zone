@@ -46,6 +46,7 @@ test.describe("CAMPING V2 / 808 access", () => {
       }
     });
 
+    await page.locator("canvas.camping-studio__canvas").focus();
     await page.keyboard.press("8");
     await page.keyboard.press("0");
     await page.keyboard.press("8");
@@ -65,6 +66,7 @@ test.describe("CAMPING V2 / 808 access", () => {
     if (await page.getByRole("heading", { name: "ACESSO ALTERNATIVO" }).isVisible()) {
       await page.getByRole("button", { name: "ABRIR REGISTOS PÚBLICOS" }).click();
     } else {
+      await page.locator("canvas.camping-studio__canvas").focus();
       await page.keyboard.press("8");
       await page.keyboard.press("0");
       await page.keyboard.press("8");
