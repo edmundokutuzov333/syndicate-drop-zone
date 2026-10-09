@@ -1,4 +1,4 @@
-import { getPublicSupabaseConfig } from "@/lib/supabase-public";
+import { getPublicSupabaseConfig, publicSupabaseHeaders } from "@/lib/supabase-public";
 
 export type EventName =
   | "gate_open" | "tape_play" | "tape_10s" | "key_earned" | "merch_view" | "cart_add" | "reserve"
@@ -92,12 +92,10 @@ async function pushEvents(rows: EventRow[]): Promise<void> {
     const { url, key } = getPublicSupabaseConfig();
     const response = await fetch(url + "/rest/v1/events", {
       method: "POST",
-      headers: {
-        apikey: key,
-        Authorization: "Bearer " + key,
+      headers: publicSupabaseHeaders(key, {
         "Content-Type": "application/json",
         Prefer: "return=minimal",
-      },
+      }),
       body: JSON.stringify(rows),
     });
     if (!response.ok) await response.text();
