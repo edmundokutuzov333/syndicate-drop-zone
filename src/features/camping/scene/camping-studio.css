@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap");
-
 .camping-studio {
   position: relative;
   isolation: isolate;
@@ -88,18 +86,13 @@
   gap: 12px;
 }
 
-.camping-studio__seal {
-  display: grid;
-  place-items: center;
-  width: 35px;
-  height: 35px;
-  border: 1px solid rgba(215, 187, 146, 0.62);
-  border-radius: 50%;
-  color: #e4cba4;
-  font-family: Georgia, serif;
-  font-size: 13px;
-  font-weight: 700;
-  transform: rotate(-9deg);
+.camping-studio__seal-image {
+  display: block;
+  width: 39px;
+  height: 39px;
+  flex: 0 0 auto;
+  object-fit: contain;
+  opacity: 0.88;
 }
 
 .camping-studio__eyebrow,
@@ -598,10 +591,9 @@
     padding: max(13px, env(safe-area-inset-top)) 14px 12px;
   }
 
-  .camping-studio__seal {
-    width: 29px;
-    height: 29px;
-    font-size: 11px;
+  .camping-studio__seal-image {
+    width: 31px;
+    height: 31px;
   }
 
   .camping-studio__eyebrow {
