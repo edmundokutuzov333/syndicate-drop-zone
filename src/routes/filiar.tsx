@@ -34,30 +34,12 @@ type JoinView = {
 };
 
 const CLAUSES = [
-  {
-    title: "LEALDADE AO MOVIMENTO",
-    body: "Respeitar artistas, produtores e colaboradores que constroem o Sindicato. O nome da crew não serve para intimidar nem diminuir ninguém.",
-  },
-  {
-    title: "CRÉDITO É LEI",
-    body: "Reconhecer cada autoria. Música, imagem, conceito e trabalho de outra pessoa não são propriedade de quem os partilha primeiro.",
-  },
-  {
-    title: "RESPEITO NO MICROFONE",
-    body: "Representar o movimento com responsabilidade, dentro e fora do palco, nas redes, nos estúdios e em qualquer colaboração.",
-  },
-  {
-    title: "O BACKSTAGE É CONFIDENCIAL",
-    body: "Conversas privadas, dados pessoais e informação interna ficam protegidos. Nada é divulgado sem autorização de quem tem legitimidade para autorizar.",
-  },
-  {
-    title: "PROTEGER O DROP",
-    body: "Pré-lançamentos, ficheiros, campanhas e conteúdos exclusivos só podem ser publicados ou enviados com autorização expressa.",
-  },
-  {
-    title: "A CREW ACIMA DO EGO",
-    body: "Nenhuma ambição individual justifica prejudicar a segurança, a confiança ou o trabalho colectivo. O respeito também faz parte da cultura.",
-  },
+  { title: "LEALDADE À CREW", body: "Respeita a crew e quem a constrói." },
+  { title: "CRÉDITO A QUEM CRIA", body: "Dá crédito a quem cria." },
+  { title: "CONFIDENCIALIDADE", body: "O que é interno não se divulga sem autorização." },
+  { title: "PROTEGER O DROP", body: "Não partilhes leaks nem lançamentos sem autorização." },
+  { title: "RESPEITO", body: "Sem assédio, discriminação ou ataques pessoais." },
+  { title: "REPRESENTAÇÃO", body: "Representa o Sindicato com responsabilidade." },
 ] as const;
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -85,7 +67,6 @@ export function Filiacao() {
   const [contactValue, setContactValue] = useState("");
   const [photo, setPhoto] = useState<HTMLImageElement | null>(null);
   const [signature, setSignature] = useState<HTMLCanvasElement | null>(null);
-  const [honeypot, setHoneypot] = useState("");
   const [referrer, setReferrer] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -204,11 +185,6 @@ export function Filiacao() {
     setAlreadyMember(false);
 
     if (busy) return;
-    if (honeypot) {
-      setError("NÃO FOI POSSÍVEL VALIDAR A FICHA. ACTUALIZA A PÁGINA E TENTA NOVAMENTE.");
-      return;
-    }
-
     const issue = validateMembershipForm({
       alias,
       contactType,
@@ -341,9 +317,6 @@ export function Filiacao() {
                 <div className="min-w-0 flex-1">
                   <p className="font-mono text-[9px] tracking-[0.22em] text-blood">O SINDICATO DO TRAP</p>
                   <h3 className="mt-2 font-stamp text-xl leading-tight text-foreground md:text-3xl">TERMO DE ADESÃO AO SINDICATO</h3>
-                  <p className="mt-2 max-w-2xl font-mono text-[9px] leading-5 tracking-[0.08em] text-muted-foreground">
-                    INSTRUMENTO DE COMPROMISSO, CONDUTA E PROTECÇÃO DO MOVIMENTO.
-                  </p>
                 </div>
                 <div className="stamp hidden rotate-[-8deg] px-3 py-2 text-center text-[9px] font-bold leading-4 tracking-[0.15em] sm:block">
                   USO INTERNO
@@ -376,7 +349,7 @@ export function Filiacao() {
               <div className="max-w-3xl border-l-2 border-blood pl-4 md:pl-5">
                 <p className="font-mono text-[8px] tracking-[0.2em] text-blood">PREÂMBULO</p>
                 <p className="mt-2 font-stamp text-sm leading-6 text-foreground md:text-base">
-                  Ao solicitar entrada no Sindicato, declaro que li este estatuto e assumo o compromisso de respeitar as pessoas, o trabalho e a cultura que sustentam o movimento. Cada artigo deve ser lido e confirmado através do respectivo carimbo digital.
+                  Ao entrar, comprometes-te a respeitar a crew, proteger o que é interno e dar crédito a quem cria.
                 </p>
               </div>
 
@@ -403,9 +376,6 @@ export function Filiacao() {
                         <span className="mt-2 block font-mono text-[9px] leading-5 tracking-[0.01em] text-muted-foreground md:text-[10px]">
                           {clause.body}
                         </span>
-                        <span className="mt-3 block font-mono text-[8px] tracking-[0.13em] text-muted-foreground">
-                          {stamped ? "ARTIGO CONFIRMADO NO REGISTO" : "LER E CARIMBAR PARA ACEITAR"}
-                        </span>
                       </span>
                       <span className="flex min-h-8 items-center justify-center pt-0.5">
                         {stamped ? (
@@ -426,9 +396,9 @@ export function Filiacao() {
 
               <div className="mt-6 grid gap-3 md:grid-cols-[1.15fr_0.85fr]">
                 <div className="border border-border bg-black/20 p-4">
-                  <p className="font-mono text-[8px] tracking-[0.18em] text-blood">DECLARAÇÃO DE VONTADE</p>
+                  <p className="font-mono text-[8px] tracking-[0.18em] text-blood">COMPROMISSO</p>
                   <p className="mt-2 font-stamp text-sm leading-6 text-foreground">
-                    Confirmo que compreendo o compromisso descrito neste documento. A assinatura desenhada e a confirmação final serão pedidas na ficha seguinte.
+                    Lealdade. Crédito. Privacidade. Respeito.
                   </p>
                 </div>
                 <div className="flex items-center justify-between gap-3 border border-border p-4">
@@ -460,7 +430,7 @@ export function Filiacao() {
                 <div>
                   <p className="font-mono text-[10px] tracking-[0.2em] text-blood">ESTATUTO</p>
                   <p className="mt-1 max-w-xl text-[10px] leading-5 text-muted-foreground">
-                    Todos os seis artigos têm de ficar carimbados. A aceitação fica associada à versão do estatuto usada na filiação.
+                    Carimba os 6 artigos para continuar.
                   </p>
                 </div>
                 <button
@@ -479,7 +449,7 @@ export function Filiacao() {
           </article>
 
           <p className="mt-3 font-mono text-[8px] leading-5 tracking-[0.1em] text-muted-foreground">
-            INTERFACE DE ADESÃO DO MOVIMENTO // LÊ CADA ARTIGO ANTES DE CARIMBAR. O BOTÃO DE AVANÇO SÓ ABRE DEPOIS DOS 6/6.
+            ESTATUTO SDT-FIL-001 // 6 ARTIGOS OBRIGATÓRIOS.
           </p>
         </section>
       )}
@@ -619,14 +589,6 @@ export function Filiacao() {
                 </div>
               </div>
 
-              <input
-                value={honeypot}
-                onChange={(event) => setHoneypot(event.target.value)}
-                tabIndex={-1}
-                autoComplete="off"
-                aria-hidden="true"
-                className="absolute -left-[9999px] h-px w-px opacity-0"
-              />
             </div>
 
             <div className="border border-border bg-card p-5 md:p-7">

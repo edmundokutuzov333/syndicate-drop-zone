@@ -130,8 +130,9 @@ describe("validação da filiação", () => {
     expect(joinUnion).not.toHaveBeenCalled();
   });
 
-  it("emite a carteira depois de preencher, carregar fotografia, assinar e submeter", async () => {
-    render(<Filiacao />);
+  it("emite a carteira sem bloqueios de campos ocultos depois de preencher e assinar", async () => {
+    const { container } = render(<Filiacao />);
+    expect(container.querySelector('input[aria-hidden="true"][tabindex="-1"]')).toBeNull();
     acceptAllClauses();
 
     fireEvent.change(screen.getByLabelText("CODINOME"), { target: { value: "TESTE" } });
