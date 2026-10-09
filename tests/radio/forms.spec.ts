@@ -1,4 +1,46 @@
 import { test, expect, type Page } from "@playwright/test";
+import { deflateSync } from "node:zlib";
+
+function crc32(buffer: Buffer): number {
+  let crc = 0xffffffff;
+  for (const byte of buffer) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function pngChunk(type: string, data: Buffer): Buffer {
+  const typeBytes = Buffer.from(type, "ascii");
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(data.length, 0);
+  const checksum = Buffer.alloc(4);
+  checksum.writeUInt32BE(crc32(Buffer.concat([typeBytes, data])), 0);
+  return Buffer.concat([length, typeBytes, data, checksum]);
+}
+
+function createPhotoFixture(): Buffer {
+  const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(2, 0);
+  header.writeUInt32BE(2, 4);
+  header[8] = 8;
+  header[9] = 6;
+  const pixels = Buffer.from([
+    0x22, 0x22, 0x22, 0xff, 0xbd, 0x25, 0x2b, 0xff,
+    0xbd, 0x25, 0x2b, 0xff, 0x22, 0x22, 0x22, 0xff,
+  ]);
+  const rows = Buffer.concat([
+    Buffer.from([0]), pixels.subarray(0, 8),
+    Buffer.from([0]), pixels.subarray(8, 16),
+  ]);
+  return Buffer.concat([
+    signature,
+    pngChunk("IHDR", header),
+    pngChunk("IDAT", deflateSync(rows)),
+    pngChunk("IEND", Buffer.alloc(0)),
+  ]);
+}
 
 async function mockPublicBackend(page: Page) {
   await page.route("**/rest/v1/**", async (route) => {
@@ -34,9 +76,9 @@ test.describe("Cartão de Fã and public proposals", () => {
     await page.goto("/filiar");
     await page.getByLabel("NOME OU APELIDO").fill("TESTE");
     await page.locator("#fan-photo").setInputFiles({
-      name: "foto-teste.svg",
-      mimeType: "image/svg+xml",
-      buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="540" height="960"><rect width="540" height="960" fill="#222"/><circle cx="270" cy="280" r="120" fill="#bd252b"/></svg>'),
+      name: "foto-teste.png",
+      mimeType: "image/png",
+      buffer: createPhotoFixture(),
     });
     await expect(page.getByText("FOTOGRAFIA SELECCIONADA", { exact: true })).toBeVisible();
     await page.getByLabel(/Aceito o Código do Fã/).check();
