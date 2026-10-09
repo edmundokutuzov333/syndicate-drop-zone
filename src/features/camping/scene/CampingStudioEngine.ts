@@ -291,8 +291,8 @@ export class CampingStudioEngine {
     const anchors: Record<typeof anchor, { position: [number, number, number]; look: [number, number, number] }> = {
       entrance: { position: [0.08, CAM_HEIGHT, 3.25], look: [0, 1.45, 5.45] },
       studio: { position: [0.1, CAM_HEIGHT, 2.9], look: [0, 1.5, -1.5] },
-      production: { position: [-1.0, CAM_HEIGHT, -1.25], look: [-2.25, 1.75, -3.72] },
-      photography: { position: [3.35, CAM_HEIGHT, -0.15], look: [3.95, 1.8, -4.18] },
+      production: { position: [0.12, CAM_HEIGHT, -2.05], look: [-2.25, 1.75, -3.72] },
+      photography: { position: [6.05, CAM_HEIGHT, 0.38], look: [3.95, 1.8, -4.18] },
       clothing: { position: [2.15, CAM_HEIGHT, -0.15], look: [3.05, 1.3, -1.55] },
       artists: { position: [5.25, CAM_HEIGHT, 0.35], look: [6.72, 2.1, 0.15] },
     };
@@ -813,8 +813,18 @@ export class CampingStudioEngine {
     this.keyState.delete(event.key.toLowerCase());
   }
 
+  private updatePointerFromEvent(event: PointerEvent): void {
+    if (!this.canvas) return;
+    const bounds = this.canvas.getBoundingClientRect();
+    this.pointer.set(
+      ((event.clientX - bounds.left) / Math.max(1, bounds.width)) * 2 - 1,
+      -(((event.clientY - bounds.top) / Math.max(1, bounds.height)) * 2 - 1),
+    );
+  }
+
   private handlePointerDown(event: PointerEvent): void {
     if (this.webglFailed) return;
+    this.updatePointerFromEvent(event);
     this.dragPointerId = event.pointerId;
     this.dragStart = { x: event.clientX, y: event.clientY };
     this.dragLast = { ...this.dragStart };
@@ -827,11 +837,7 @@ export class CampingStudioEngine {
 
   private handlePointerMove(event: PointerEvent): void {
     if (!this.canvas) return;
-    const bounds = this.canvas.getBoundingClientRect();
-    this.pointer.set(
-      ((event.clientX - bounds.left) / Math.max(1, bounds.width)) * 2 - 1,
-      -(((event.clientY - bounds.top) / Math.max(1, bounds.height)) * 2 - 1),
-    );
+    this.updatePointerFromEvent(event);
     this.callbacks.onCursor(event.clientX, event.clientY, event.pointerType !== "touch");
 
     if (this.dragPointerId === event.pointerId) {
@@ -852,6 +858,7 @@ export class CampingStudioEngine {
 
   private handlePointerUp(event: PointerEvent): void {
     if (this.dragPointerId !== event.pointerId) return;
+    this.updatePointerFromEvent(event);
     const wasClick = this.dragDistance < 7;
     this.dragPointerId = null;
     try {
@@ -874,14 +881,17 @@ export class CampingStudioEngine {
     const roots = this.studioRoot && this.studioRoot.visible
       ? [...this.hitTargets, this.studioRoot]
       : [...this.hitTargets];
-    return this.raycaster.intersectObjects(roots, true);
+    return this.raycaster.intersectObjects(roots, true).filter((hit) => {
+      const target = this.getKeypadTarget(hit.object) || this.findInteractiveRoot(hit.object);
+      return Boolean(target);
+    });
   }
 
   private updateRaycastHover(): void {
     const hits = this.updateRaycaster();
-    const target = hits.find((hit) => this.getKeypadTarget(hit.object) || this.findInteractiveRoot(hit.object));
+    const target = hits[0];
     const object = target?.object ?? null;
-    if (!object) {
+    if (!object || (!this.getKeypadTarget(object) && !this.findInteractiveRoot(object))) {
       this.setHoveredRoot(null);
       return;
     }
@@ -906,8 +916,8 @@ export class CampingStudioEngine {
 
   private activatePointerTarget(): void {
     const hits = this.updateRaycaster();
-    const hit = hits.find((entry) => this.getKeypadTarget(entry.object) || this.findInteractiveRoot(entry.object));
-    if (!hit) return;
+    const hit = hits[0];
+    if (!hit || (!this.getKeypadTarget(hit.object) && !this.findInteractiveRoot(hit.object))) return;
     const keypad = this.getKeypadTarget(hit.object);
     if (keypad) {
       if (keypad.kind === "keypad-digit" && keypad.digit) this.inputDigit(keypad.digit);
@@ -976,10 +986,34 @@ export class CampingStudioEngine {
     const bounds = new THREE.Box3().setFromObject(root);
     const center = bounds.getCenter(new THREE.Vector3());
     const outward = this.camera.position.clone().sub(center);
-    if (outward.lengthSq() < 0.001) outward.set(0, 0.3, 1);
+    if (outward.lengthSq() < 0.001) outward.set(0, 0, 1);
+    outward.y = 0;
+    if (outward.lengthSq() < 0.001) outward.set(0, 0, 1);
     outward.normalize();
-    const destination = center.clone().add(outward.multiplyScalar(1.85));
-    destination.y = THREE.MathUtils.clamp(center.y + 0.25, 1.25, 2.25);
+    let destination = center.clone().add(outward.clone().multiplyScalar(1.9));
+    destination.y = CAM_HEIGHT;
+    const safePoint = (x: number, z: number) =>
+      resolveStudioMovement(
+        { x: center.x, z: center.z },
+        { x: x - center.x, z: z - center.z },
+        this.collision,
+      );
+    let safe = safePoint(destination.x, destination.z);
+    let foundSafeSpot = Math.hypot(safe.x - destination.x, safe.z - destination.z) < 0.09;
+    for (let index = 1; index <= 12 && !foundSafeSpot; index += 1) {
+      const angle = (Math.PI * 2 * index) / 12;
+      const candidate = center.clone().add(new THREE.Vector3(
+        Math.cos(angle) * 1.95,
+        0,
+        Math.sin(angle) * 1.95,
+      ));
+      safe = safePoint(candidate.x, candidate.z);
+      foundSafeSpot = Math.hypot(safe.x - candidate.x, safe.z - candidate.z) < 0.09;
+      if (foundSafeSpot) destination = new THREE.Vector3(candidate.x, CAM_HEIGHT, candidate.z);
+    }
+    if (!foundSafeSpot) {
+      destination = this.camera.position.clone();
+    }
     this.setHoveredRoot(root);
     this.dispatch({ type: "FOCUS_OBJECT", id });
     this.startTween(
@@ -1066,7 +1100,15 @@ export class CampingStudioEngine {
     const current = this.tween;
     const raw = Math.min(1, Math.max(0, (now - current.startedAt) / current.duration));
     const t = easeInOutCubic(raw);
-    this.camera.position.lerpVectors(current.fromPosition, current.toPosition, t);
+    const interpolated = current.fromPosition.clone().lerp(current.toPosition, t);
+    const constrained = this.phase === "EXPLORATION" || this.phase === "INTERACTION_FOCUS"
+      ? resolveStudioMovement(
+          { x: this.camera.position.x, z: this.camera.position.z },
+          { x: interpolated.x - this.camera.position.x, z: interpolated.z - this.camera.position.z },
+          this.collision,
+        )
+      : { x: interpolated.x, z: interpolated.z };
+    this.camera.position.set(constrained.x, CAM_HEIGHT, constrained.z);
     const look = current.fromLook.clone().lerp(current.toLook, t);
     this.camera.lookAt(look);
     if (raw >= 1) {
