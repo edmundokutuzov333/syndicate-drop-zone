@@ -73,7 +73,7 @@ export function Filiacao() {
   const [selectedTrackId, setSelectedTrackId] = useState(TRACKS[0]?.id ?? "");
   const [previewPlaying, setPreviewPlaying] = useState(false);
   const [videoBusy, setVideoBusy] = useState(false);
-  const [videoProgress, setVideoProgress] = useState(0);
+  const [, setVideoProgress] = useState(0);
   const [videoError, setVideoError] = useState("");
   const [previewError, setPreviewError] = useState("");
   const [stampImage, setStampImage] = useState<HTMLImageElement | null>(null);
@@ -263,7 +263,7 @@ export function Filiacao() {
     setVideoUrl(null);
     try {
       const { createFanVideo } = await import("@/lib/fan-video");
-      const blob = await createFanVideo(cardCanvasRef.current, selectedTrack.src, setVideoProgress);
+      const blob = await createFanVideo(cardCanvasRef.current, selectedTrack.id, setVideoProgress);
       if (blob.type !== "video/mp4" || blob.size === 0) throw new Error("O vídeo criado não está no formato esperado.");
       const url = URL.createObjectURL(blob);
       videoObjectUrlRef.current = url;
@@ -462,11 +462,11 @@ export function Filiacao() {
                 </div>
                 <p className="mt-3 text-xs leading-5 text-muted-foreground">O motor de vídeo gratuito só é carregado quando clicares em “CRIAR VÍDEO”. A primeira vez pode demorar e usa a memória do teu dispositivo.</p>
                 <button type="button" onClick={() => void createVideo()} disabled={videoBusy || !selectedTrack || !photo} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 border border-blood bg-blood px-4 py-4 font-mono text-[10px] tracking-[0.16em] text-primary-foreground disabled:cursor-wait disabled:opacity-60">
-                  {videoBusy ? <><Loader2 size={15} className="animate-spin" /> A CRIAR VÍDEO {videoProgress}%</> : <><Video size={15} /> CRIAR VÍDEO</>}
+                  {videoBusy ? <><Loader2 size={15} className="animate-spin" /> A RENDERIZAR NO SERVIDOR...</> : <><Video size={15} /> CRIAR VÍDEO</>}
                 </button>
                 {videoBusy && (
-                  <div className="mt-3 h-2 overflow-hidden bg-border" role="progressbar" aria-label="Progresso da criação do vídeo" aria-valuemin={0} aria-valuemax={100} aria-valuenow={videoProgress}>
-                    <div className="h-full bg-blood transition-all" style={{ width: videoProgress + "%" }} />
+                  <div className="fan-rendering-track mt-3 h-2 overflow-hidden bg-border" role="status" aria-label="A renderizar o vídeo no servidor">
+                    <div className="fan-rendering-bar h-full w-1/3 bg-blood" />
                   </div>
                 )}
                 {videoError && <p role="alert" className="mt-3 border border-blood/60 bg-blood/10 p-3 text-xs leading-5 text-blood">{videoError}</p>}
@@ -493,7 +493,7 @@ export function Filiacao() {
       )}
 
       {!card && error && !loadingExisting && <p role="alert" aria-live="assertive" className="mt-5 border border-blood/60 bg-blood/10 p-3 font-mono text-[10px] leading-5 text-blood">{error}</p>}
-      <style>{".fan-eq-bar{transform-origin:center;animation:fan-eq 420ms ease-in-out infinite alternate}@keyframes fan-eq{0%{transform:scaleY(.28)}100%{transform:scaleY(1)}}"}</style>
+      <style>{".fan-eq-bar{transform-origin:center;animation:fan-eq 420ms ease-in-out infinite alternate}@keyframes fan-eq{0%{transform:scaleY(.28)}100%{transform:scaleY(1)}}.fan-rendering-bar{animation:fan-rendering 1.15s ease-in-out infinite alternate}@keyframes fan-rendering{from{transform:translateX(0)}to{transform:translateX(200%)}}"}</style>
     </main>
   );
 }

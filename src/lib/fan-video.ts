@@ -1,79 +1,85 @@
+export type FanVideoTrackId = "T1" | "T2" | "T3";
 export type VideoProgress = (percentage: number) => void;
 
-const CORE_BASE = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd";
 export const FAN_VIDEO_SPEC = { durationSeconds: 30, width: 1080, height: 1920, fps: 30 } as const;
+
+const ALLOWED_TRACKS: readonly FanVideoTrackId[] = ["T1", "T2", "T3"];
+const MAX_IMAGE_DATA_LENGTH = 4_000_000;
+
+type VideoErrorPayload = { error?: unknown; code?: unknown };
+
+function isMp4(bytes: Uint8Array): boolean {
+  return bytes.byteLength >= 12
+    && String.fromCharCode(...bytes.subarray(4, 8)) === "ftyp";
+}
 
 export async function createFanVideo(
   cardCanvas: HTMLCanvasElement,
-  soundtrackUrl: string,
+  trackId: FanVideoTrackId,
   onProgress: VideoProgress = () => undefined,
 ): Promise<Blob> {
-  if (typeof Worker === "undefined") throw new Error("Este navegador não permite criar o vídeo. Descarrega a imagem PNG.");
-  const sourceUrl = new URL(soundtrackUrl, window.location.origin);
-  if (sourceUrl.origin !== window.location.origin) throw new Error("A música seleccionada não está alojada no site.");
+  if (!ALLOWED_TRACKS.includes(trackId)) {
+    throw new Error("Escolhe uma das músicas disponíveis para criar o vídeo.");
+  }
 
-  onProgress(2);
-  const cardBlob = await new Promise<Blob>((resolve, reject) => {
-    cardCanvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Não foi possível preparar a imagem do vídeo.")), "image/png");
-  });
-  const cardBytes = new Uint8Array(await cardBlob.arrayBuffer());
+  let imageData: string;
+  try {
+    imageData = cardCanvas.toDataURL("image/jpeg", 0.9);
+  } catch {
+    throw new Error("Não foi possível preparar a fotografia do cartão. Selecciona novamente a imagem.");
+  }
 
-  // These imports and the WebAssembly core are loaded only after the user presses CREATE VIDEO.
-  const [{ FFmpeg }, { fetchFile, toBlobURL }] = await Promise.all([
-    import("@ffmpeg/ffmpeg"),
-    import("@ffmpeg/util"),
-  ]);
-  const ffmpeg = new FFmpeg();
-  const files = ["fan-card.png", "fan-track.mp3", "fan-video.mp4"];
-  let coreURL: string | null = null;
-  let wasmURL: string | null = null;
+  if (!imageData.startsWith("data:image/jpeg;base64,") || imageData.length > MAX_IMAGE_DATA_LENGTH) {
+    throw new Error("A fotografia é demasiado grande para criar o vídeo. Usa uma imagem mais leve.");
+  }
+
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 55_000);
+  onProgress(8);
 
   try {
-    onProgress(8);
-    coreURL = await toBlobURL(CORE_BASE + "/ffmpeg-core.js", "text/javascript");
-    onProgress(14);
-    wasmURL = await toBlobURL(CORE_BASE + "/ffmpeg-core.wasm", "application/wasm");
-    onProgress(19);
-    await ffmpeg.load({ coreURL, wasmURL });
-    onProgress(24);
-
-    const audioBytes = await fetchFile(sourceUrl.toString());
-    await ffmpeg.writeFile("fan-card.png", cardBytes);
-    await ffmpeg.writeFile("fan-track.mp3", audioBytes);
-
-    ffmpeg.on("progress", ({ progress }) => {
-      if (Number.isFinite(progress)) onProgress(Math.max(25, Math.min(95, Math.round(25 + progress * 70))));
-    });
-
-    const filter = [
-      "[0:v]scale=1080:1920:flags=lanczos,setsar=1,drawbox=x=68:y=1378:w=944:h=250:color=black@1:t=fill,drawbox=x=68:y=1378:w=944:h=250:color=0xC62828@1:t=4[base]",
-      "[1:a]atrim=start=0:duration=30,asetpts=PTS-STARTPTS,showwaves=s=900x220:mode=cline:rate=30:colors=0xE63946[waves]",
-      "[base][waves]overlay=90:1393:shortest=1[outv]",
-    ].join(";");
-    const exitCode = await ffmpeg.exec([
-      "-loop", "1", "-framerate", "30", "-i", "fan-card.png",
-      "-stream_loop", "-1", "-i", "fan-track.mp3",
-      "-filter_complex", filter, "-map", "[outv]", "-map", "1:a:0",
-      "-t", "30", "-r", "30", "-c:v", "libx264",
-      "-preset", "ultrafast", "-crf", "21", "-pix_fmt", "yuv420p",
-      "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "fan-video.mp4",
-    ], -1);
-
-    if (exitCode !== 0) throw new Error("O motor de vídeo não conseguiu terminar a exportação.");
-    onProgress(97);
-    const output = await ffmpeg.readFile("fan-video.mp4");
-    if (typeof output === "string" || output.byteLength === 0) throw new Error("O ficheiro MP4 ficou vazio.");
-    const copy = new Uint8Array(output);
-    const result = new Blob([copy.buffer as ArrayBuffer], { type: "video/mp4" });
-    if (result.type !== "video/mp4" || result.size === 0) throw new Error("O ficheiro MP4 não ficou válido.");
-    onProgress(100);
-    return result;
-  } finally {
-    for (const filename of files) {
-      try { await ffmpeg.deleteFile(filename); } catch { /* The file may be missing after setup failure. */ }
+    let response: Response;
+    try {
+      response = await fetch("/api/fan-video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "video/mp4, application/json" },
+        body: JSON.stringify({ trackId, imageData }),
+        signal: controller.signal,
+      });
+    } catch {
+      if (controller.signal.aborted) {
+        throw new Error("A renderização demorou demasiado. Tenta novamente com uma fotografia mais leve.");
+      }
+      throw new Error("Não foi possível contactar o motor de vídeo no servidor. Verifica a ligação e tenta novamente.");
     }
-    ffmpeg.terminate();
-    if (coreURL) URL.revokeObjectURL(coreURL);
-    if (wasmURL) URL.revokeObjectURL(wasmURL);
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null) as VideoErrorPayload | null;
+      const message = typeof payload?.error === "string" ? payload.error : "";
+      throw new Error(message || "O motor de vídeo respondeu com erro (" + response.status + "). Tenta novamente.");
+    }
+
+    const contentType = response.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase();
+    if (contentType !== "video/mp4") {
+      throw new Error("O servidor não devolveu um ficheiro MP4 válido. Tenta novamente.");
+    }
+
+    onProgress(85);
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    if (!isMp4(bytes)) {
+      throw new Error("O ficheiro recebido não é um vídeo MP4 válido. Tenta novamente.");
+    }
+
+    const blob = new Blob([bytes], { type: "video/mp4" });
+    if (!blob.size) throw new Error("O vídeo recebido está vazio. Tenta novamente.");
+    onProgress(100);
+    return blob;
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error("A renderização demorou demasiado. Tenta novamente com uma fotografia mais leve.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
   }
 }
