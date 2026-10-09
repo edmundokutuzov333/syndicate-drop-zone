@@ -504,6 +504,14 @@ describe("camera engineering foundation", () => {
       expect(source).toContain("sampleColor");
     }
     expect(getFilterFragmentShader("crt-classic")).toContain("crtClassicWarp");
+    expect(getFilterFragmentShader("crt-classic")).toContain("u_scanlineStrength");
+    expect(getFilterFragmentShader("vhs-tracking")).toContain("u_tracking");
+    expect(getFilterFragmentShader("vhs-tracking")).toContain("u_tearing");
+    expect(getFilterFragmentShader("night-cctv")).toContain("u_rollIntensity");
+    expect(getFilterFragmentShader("fire-bloom")).toContain("u_bloomRadius");
+    expect(getFilterFragmentShader("fire-bloom")).toContain("u_threshold");
+    expect(getFilterFragmentShader("fire-bloom")).toContain("u_warmth");
+    expect(getFilterFragmentShader("neon-cyberpunk")).toContain("u_glitchAmount");
     expect(getFilterFragmentShader("vhs-tracking")).toContain("trackingBand");
     expect(getFilterFragmentShader("night-cctv")).toContain("digitalFlicker");
     expect(getFilterFragmentShader("datamosh")).toContain("u_feedbackFrame");
@@ -513,6 +521,29 @@ describe("camera engineering foundation", () => {
     expect(getFilterFragmentShader("analog-interference")).toContain("lineNoise");
     expect(FILTER_REGISTRY.get("datamosh").pipeline).toBe("datamosh");
     expect(FILTER_REGISTRY.get("datamosh").supportsFeedback).toBe(true);
+  });
+
+  it("defines valid, filter-specific live controls for all seven analog presets", () => {
+    const ids = ["crt-classic", "vhs-tracking", "night-cctv", "datamosh", "fire-bloom", "neon-cyberpunk", "analog-interference"] as const;
+    for (const id of ids) {
+      const definition = FILTER_REGISTRY.get(id);
+      const controls = definition.controls ?? [];
+      expect(controls.length).toBeGreaterThanOrEqual(4);
+      expect(new Set(controls.map((control) => control.uniform)).size).toBe(controls.length);
+      for (const control of controls) {
+        expect(control.min).toBeLessThan(control.max);
+        expect(control.step).toBeGreaterThan(0);
+        expect(control.defaultValue).toBeGreaterThanOrEqual(control.min);
+        expect(control.defaultValue).toBeLessThanOrEqual(control.max);
+      }
+    }
+    expect(FILTER_REGISTRY.get("crt-classic").controls?.map((control) => control.uniform)).toContain("u_scanlineStrength");
+    expect(FILTER_REGISTRY.get("vhs-tracking").controls?.map((control) => control.uniform)).toEqual([
+      "u_tracking", "u_tearing", "u_chromatic", "u_feedback", "u_noise",
+    ]);
+    expect(FILTER_REGISTRY.get("night-cctv").controls?.map((control) => control.uniform)).toContain("u_rollIntensity");
+    expect(FILTER_REGISTRY.get("fire-bloom").controls?.map((control) => control.uniform)).toContain("u_threshold");
+    expect(FILTER_REGISTRY.get("neon-cyberpunk").controls?.map((control) => control.uniform)).toContain("u_glitchAmount");
   });
 
   it("only enables face tracking and the Three.js overlay for filters that need them", () => {

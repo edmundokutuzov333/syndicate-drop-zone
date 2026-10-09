@@ -323,3 +323,7 @@ Automated coverage verifies registration, independent shader bodies, dynamic uni
 Reference files were inspected frame-by-frame where animated frames were present. Seven supplied files contained only one frame, so their missing temporal progression cannot be inferred from the uploaded asset; their visual treatment is mapped to the closest analog family instead of inventing source movement.
 
 CI, deploy status and runtime preview access must be read from the exact Phase 1 commit. Physical tests across iPhone/Android/desktop cameras and visual comparison against the source footage remain pending until those environments can be exercised.
+
+## Phase 2 — per-preset controls
+
+Seven filter definitions now declare their own concrete uniform controls, including effect-specific uniforms where the common intensity/noise/distortion values were insufficient. Regression coverage checks unique uniform names, valid ranges, default values, the CRT scanline, VHS tracking/tearing, CCTV roll, Fire Bloom threshold/radius/warmth, and Neon glitch amount. The React panel is mounted inside the current shutter zone and reuses the capture canvas. No route, global shell, Control Room or database schema changes are part of Phase 2.

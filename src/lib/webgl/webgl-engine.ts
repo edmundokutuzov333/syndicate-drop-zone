@@ -104,6 +104,7 @@ export class WebGLEngine {
   >();
   private readonly attributeLocations = new Map<WebGLProgram, number>();
   private readonly programs = new Map<FilterId, ShaderProgramHandle>();
+  private readonly filterParameters = new Map<FilterId, Map<string, number>>();
   private idleCompileHandle: number | null = null;
   private idleCompileQueue: FilterId[] = [];
   private readonly directRenderState: DirectRenderState = {
@@ -450,6 +451,20 @@ export class WebGLEngine {
 
   setUniform(name: string, value: UniformValue): void {
     this.uniforms.set(name, value);
+  }
+
+  setFilterParameter(filter: FilterId, uniform: string, value: number): void {
+    if (!Number.isFinite(value)) return;
+    const control = FILTER_REGISTRY.get(filter).controls?.find(
+      (candidate) => candidate.uniform === uniform,
+    );
+    if (!control) return;
+
+    const normalized = Math.min(control.max, Math.max(control.min, value));
+    const current = this.filterParameters.get(filter) ?? new Map<string, number>();
+    if (current.get(uniform) === normalized) return;
+    current.set(uniform, normalized);
+    this.filterParameters.set(filter, current);
   }
 
   setFaceTracking(state: FaceVfxUniformState): void {
@@ -1036,6 +1051,13 @@ export class WebGLEngine {
     }
 
     this.applyUniforms(programHandle.program);
+
+    // Apply only this preset's controls. Other filters keep their own state/defaults.
+    const parameterOverrides = this.filterParameters.get(filter);
+    for (const control of definition.controls ?? []) {
+      const value = parameterOverrides?.get(control.uniform) ?? control.defaultValue;
+      this.setProgramUniform(programHandle.program, control.uniform, value);
+    }
 
     gl.drawArrays(gl.TRIANGLES, 0, 3);
     this.drawCallsThisFrame += 1;

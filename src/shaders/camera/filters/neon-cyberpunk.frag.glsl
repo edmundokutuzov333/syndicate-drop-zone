@@ -1,9 +1,11 @@
+uniform float u_glitchAmount;
+
 void main() {
   vec2 uv = v_uv;
   float row = floor(uv.y * u_resolution.y / 3.0);
   float lineClock = floor(u_time * 10.0);
   float glitchLine = step(0.94, hash12(vec2(row, lineClock)));
-  uv.x += (hash12(vec2(row + 17.0, lineClock)) - 0.5) * glitchLine * (0.018 + u_distortion * 0.09);
+  uv.x += (hash12(vec2(row + 17.0, lineClock)) - 0.5) * glitchLine * (0.004 + u_glitchAmount * 0.06);
   vec2 split = vec2((0.003 + u_chromatic * 0.62) * u_intensity, 0.0);
   vec3 color = vec3(sampleColor(uv + split).r, sampleColor(uv).g, sampleColor(uv - split).b);
   float y = luma(color);

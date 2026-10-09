@@ -10,7 +10,7 @@ void main() {
   uv.x = clamp(uv.x + (lineNoise - 0.5) * burst * (0.045 + u_distortion * 0.08), 0.001, 0.999);
   vec3 source = sampleColor(uv);
   float y = luma(source);
-  float contrast = clamp((y - 0.26) * 1.58 + 0.20, 0.0, 1.0);
+  float contrast = clamp((y - 0.26) * (0.7 + u_intensity * 0.92) + 0.20, 0.0, 1.0);
   vec3 olive = mix(vec3(0.018, 0.032, 0.024), vec3(0.78, 0.74, 0.47), contrast);
   vec3 previous = samplePrevious(uv);
   olive = mix(olive, mix(vec3(luma(previous)), previous, 0.28), roll * u_feedback * 0.28);

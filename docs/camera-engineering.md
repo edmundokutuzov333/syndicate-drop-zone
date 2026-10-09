@@ -313,3 +313,21 @@ The first reference-driven preset set is registered as seven separate GLSL fragm
 3. Phase 3 — device profiling and polish: validate mobile GPU cost, visual fidelity, recording output, cross-browser shader compilation and fallback behavior, then tune defaults from measurements.
 
 Camera processing remains client-side because the real-time preview and MediaRecorder capture use the same WebGL canvas. No database/API persistence is introduced in this phase; no new server data contract is required. Persisted/shareable preset configurations, if later required, should be added separately with an explicit schema and access policy.
+
+## Glitch Camera Engine — Phase 2 (live per-preset controls)
+
+The existing camera UI now renders a compact tuning panel only when one of the seven new glitch presets is selected. Each slider is bound to a named GLSL uniform declared in that preset shader, and changes are sent immediately to WebGLEngine; there is no Apply action or per-frame shader recompilation.
+
+| Preset | Live controls |
+|---|---|
+| CRT CLASSIC | Intensity, RGB split, scanline strength, curvature, grain |
+| VHS TRACKING | Tracking amplitude, tearing amplitude, RGB split, temporal trail, noise |
+| NIGHT CCTV | Signal gain, sensor static, rolling-band intensity, ghost trail |
+| DATAMOSH | Smear/displacement, temporal feedback, channel split, grain |
+| FIRE BLOOM | Bloom, halo spread, highlight threshold, warmth, grain |
+| NEON CYBERPUNK | RGB split, saturation, glitch strips, noise |
+| ANALOG INTERFERENCE | Tearing, contrast, ghosting, grain |
+
+The per-filter override store is keyed by FilterId and only applies declared controls to that filter's compiled program. The engine clamps values to each control's min/max and retains overrides across filter switching. React owns editable UI state and restores it if the WebGL context is recreated. All presets use the same preview canvas as MediaRecorder, so live recording contains the current slider values; slider tuning stays enabled during recording, while countdown, processing and capture preview lock the controls.
+
+The tuning panel uses the site's existing compact mono / dark / blood-red design language. It avoids extra rendering libraries and backdrop filters; per-frame work is limited to setting the active shader's already-declared uniforms. No API endpoint or database migration is needed for volatile live tuning values. Persisted or shareable presets remain separate work.

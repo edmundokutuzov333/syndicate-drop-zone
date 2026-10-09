@@ -103,6 +103,15 @@ export type FilterUniformDefaults = {
   feedback: number;
 };
 
+export type FilterControlDefinition = {
+  uniform: string;
+  label: string;
+  min: number;
+  max: number;
+  step: number;
+  defaultValue: number;
+};
+
 export type FilterDefinition = {
   id: FilterId;
   index: string;
@@ -113,6 +122,7 @@ export type FilterDefinition = {
   supportsFeedback: boolean;
   enabled: boolean;
   defaults: FilterUniformDefaults;
+  controls?: readonly FilterControlDefinition[];
   pipeline?: "single" | "xray-mesh" | "halation" | "kinetic-melt" | "datamosh";
   passes?: readonly string[];
   masterOverlay?: "cathode-crt" | "paper-film";

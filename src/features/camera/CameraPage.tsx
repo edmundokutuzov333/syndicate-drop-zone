@@ -4,6 +4,7 @@ import { CameraViewport } from "./CameraViewport";
 import { CaptureControls } from "./CaptureControls";
 import { CapturePreview } from "./CapturePreview";
 import { FilterRail } from "./FilterRail";
+import { FilterControlPanel } from "./FilterControlPanel";
 import { PermissionGate } from "./PermissionGate";
 import { CaptureEngine, isReal4KSource } from "@/lib/camera/capture-engine";
 import {
@@ -50,6 +51,11 @@ export function CameraPage() {
   }));
   const [mode, setMode] = useState<CaptureMode>("photo");
   const [filter, setFilter] = useState<FilterId>("op1um");
+  const [filterParameterOverrides, setFilterParameterOverrides] = useState<
+    Partial<Record<FilterId, Record<string, number>>>
+  >({});
+  const filterParameterOverridesRef = useRef(filterParameterOverrides);
+  filterParameterOverridesRef.current = filterParameterOverrides;
   const [masterOverlays, setMasterOverlays] = useState<Record<MasterOverlayId, boolean>>({
     "cathode-crt": false,
     "paper-film": false,
@@ -66,6 +72,53 @@ export function CameraPage() {
   const [engineReady, setEngineReady] = useState<WebGLEngine | null>(null);
 
   const selectedFilter = FILTER_REGISTRY.get(filter);
+  const selectedFilterParameters = useMemo(
+    () => Object.fromEntries(
+      (selectedFilter.controls ?? []).map((control) => [
+        control.uniform,
+        filterParameterOverrides[filter]?.[control.uniform] ?? control.defaultValue,
+      ]),
+    ) as Record<string, number>,
+    [filter, filterParameterOverrides, selectedFilter],
+  );
+
+  const handleFilterParameterChange = useCallback(
+    (uniform: string, value: number) => {
+      const next = {
+        ...filterParameterOverridesRef.current,
+        [filter]: {
+          ...(filterParameterOverridesRef.current[filter] ?? {}),
+          [uniform]: value,
+        },
+      };
+      filterParameterOverridesRef.current = next;
+      setFilterParameterOverrides(next);
+      engineReady?.setFilterParameter(filter, uniform, value);
+    },
+    [engineReady, filter],
+  );
+
+  const handleFilterParameterReset = useCallback(() => {
+    const next = { ...filterParameterOverridesRef.current };
+    delete next[filter];
+    filterParameterOverridesRef.current = next;
+    setFilterParameterOverrides(next);
+    for (const control of selectedFilter.controls ?? []) {
+      engineReady?.setFilterParameter(filter, control.uniform, control.defaultValue);
+    }
+  }, [engineReady, filter, selectedFilter]);
+
+  useEffect(() => {
+    if (!engineReady) return;
+    for (const [filterId, parameters] of Object.entries(filterParameterOverridesRef.current)) {
+      if (!FILTER_REGISTRY.has(filterId)) continue;
+      for (const [uniform, value] of Object.entries(parameters ?? {})) {
+        if (typeof value === "number") {
+          engineReady.setFilterParameter(filterId as FilterId, uniform, value);
+        }
+      }
+    }
+  }, [engineReady]);
 
   useEffect(() => {
     if (!engineReady) return;
@@ -418,6 +471,18 @@ export function CameraPage() {
         />
 
         <div className="camera-shutter-zone">
+          <FilterControlPanel
+            filter={selectedFilter}
+            values={selectedFilterParameters}
+            onChange={handleFilterParameterChange}
+            onReset={handleFilterParameterReset}
+            locked={
+              captureStatus === "countdown" ||
+              captureStatus === "processing" ||
+              captureStatus === "preview"
+            }
+          />
+
           <FilterRail
             selected={filter}
             onSelect={setFilter}

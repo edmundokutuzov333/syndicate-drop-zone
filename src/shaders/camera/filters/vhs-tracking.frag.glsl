@@ -1,11 +1,14 @@
+uniform float u_tracking;
+uniform float u_tearing;
+
 void main() {
   vec2 uv = v_uv;
   float row = floor(uv.y * u_resolution.y / 2.0);
   float clock = floor(u_time * 11.0);
   float rowNoise = hash12(vec2(row, clock));
   float tear = step(0.91, rowNoise) * step(0.28, hash12(vec2(clock + 7.0, row)));
-  float tracking = sin(uv.y * 34.0 - u_time * 4.2) * 0.0035;
-  uv.x = clamp(uv.x + tracking + (rowNoise - 0.5) * tear * (0.035 + u_distortion * 0.07), 0.001, 0.999);
+  float tracking = sin(uv.y * 34.0 - u_time * 4.2) * (0.001 + u_tracking * 0.009);
+  uv.x = clamp(uv.x + tracking + (rowNoise - 0.5) * tear * (0.01 + u_tearing * 0.09), 0.001, 0.999);
   vec2 split = vec2(0.0015 + u_chromatic * 0.42, 0.0);
   vec3 color = vec3(sampleColor(uv + split).r, sampleColor(uv).g, sampleColor(uv - split).b);
   float mono = luma(color);
