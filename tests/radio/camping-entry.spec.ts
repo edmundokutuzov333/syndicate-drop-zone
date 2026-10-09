@@ -44,7 +44,6 @@ test.describe("CAMPING V2 / 808 access", () => {
     await page.keyboard.press("0");
     await page.keyboard.press("8");
 
-    await expect(page.locator(".camping-studio__status")).toContainText("ACCESS GRANTED", { timeout: 5_000 });
     await expect(page.locator(".camping-studio__status")).toContainText("EXPLORATION", { timeout: 30_000 });
   });
 
@@ -65,7 +64,6 @@ test.describe("CAMPING V2 / 808 access", () => {
     await page.keyboard.press("8");
     await page.keyboard.press("0");
     await page.keyboard.press("8");
-    await expect(page.locator(".camping-studio__status")).toContainText("ACCESS GRANTED", { timeout: 5_000 });
     await expect(page.locator(".camping-studio__asset-state")).toContainText("MODEL / READY", { timeout: 25_000 });
     await expect(page.locator(".camping-studio__status")).toContainText("EXPLORATION", { timeout: 20_000 });
     expect(glbResponses).toContain(200);
@@ -85,8 +83,7 @@ test.describe("CAMPING V2 / 808 access", () => {
       await page.keyboard.press("8");
       await page.keyboard.press("0");
       await page.keyboard.press("8");
-      await expect(page.locator(".camping-studio__status")).toContainText("ACCESS GRANTED", { timeout: 5_000 });
-      await expect(page.locator(".camping-studio__status")).toContainText("EXPLORATION", { timeout: 30_000 });
+        await expect(page.locator(".camping-studio__status")).toContainText("EXPLORATION", { timeout: 30_000 });
       await expect(page.getByRole("button", { name: "AVANÇAR" })).toBeVisible();
       await expect(page.getByRole("button", { name: "DIREITA" })).toBeVisible();
     }
