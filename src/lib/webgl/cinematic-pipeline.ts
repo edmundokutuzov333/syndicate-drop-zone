@@ -58,15 +58,9 @@ export class CinematicPipeline {
       gl.bindBuffer(gl.ARRAY_BUFFER, null);
     }
 
+    // The copy pass is required for transitions and DOM-to-canvas overlays.
+    // Multi-pass and master-effect programs are compiled only when selected.
     this.compile("cinematic:copy", COPY_FRAGMENT);
-    this.compile("halation:isolate", halationIsolate);
-    this.compile("halation:blur-h", halationBlurH);
-    this.compile("halation:blur-v", halationBlurV);
-    this.compile("halation:composite", halationComposite);
-    this.compile("kinetic:flow", kineticFlow);
-    this.compile("kinetic:melt", kineticMelt);
-    this.compile("master:cathode-crt", masterCathode);
-    this.compile("master:paper-film", masterPaperFilm);
   }
 
   resize(width: number, height: number): void {
@@ -76,8 +70,10 @@ export class CinematicPipeline {
     this.width = Math.max(1, Math.round(width));
     this.height = Math.max(1, Math.round(height));
 
+    // Resize only resources that were actually allocated. All cinematic
+    // framebuffers are otherwise created lazily when their effect is used.
     for (const framebuffer of Object.values(this.framebuffers)) {
-      framebuffer.create(gl, this.width, this.height);
+      if (framebuffer.get()) framebuffer.create(gl, this.width, this.height);
     }
   }
 
@@ -92,7 +88,11 @@ export class CinematicPipeline {
     const gl = this.gl;
     if (!gl || this.destroyed) return;
 
-    this.ensureSize();
+    this.compile("halation:isolate", halationIsolate);
+    this.compile("halation:blur-h", halationBlurH);
+    this.compile("halation:blur-v", halationBlurV);
+    this.compile("halation:composite", halationComposite);
+    this.ensureSize(["a", "b"]);
 
     const isolate = this.framebuffers.a.get();
     const blurH = this.framebuffers.b.get();
@@ -185,7 +185,9 @@ export class CinematicPipeline {
     const gl = this.gl;
     if (!gl || this.destroyed) return;
 
-    this.ensureSize();
+    this.compile("kinetic:flow", kineticFlow);
+    this.compile("kinetic:melt", kineticMelt);
+    this.ensureSize(["motion", "feedbackA", "feedbackB"]);
 
     const motionFramebuffer = this.framebuffers.motion.get();
     const feedbackFramebuffer = this.feedbackUsesA
@@ -246,8 +248,6 @@ export class CinematicPipeline {
     const gl = this.gl;
     if (!gl || this.destroyed) return;
 
-    this.ensureSize();
-
     const enabled: MasterOverlayId[] = [];
     if (cathodeEnabled) enabled.push("cathode-crt");
     if (paperFilmEnabled) enabled.push("paper-film");
@@ -256,6 +256,14 @@ export class CinematicPipeline {
       this.drawCopy(destination, inputTexture);
       return;
     }
+
+    if (enabled.includes("cathode-crt")) {
+      this.compile("master:cathode-crt", masterCathode);
+    }
+    if (enabled.includes("paper-film")) {
+      this.compile("master:paper-film", masterPaperFilm);
+    }
+    if (enabled.length > 1) this.ensureSize(["overlay"]);
 
     let source = inputTexture;
     const scratch = this.framebuffers.overlay.get();
@@ -329,12 +337,14 @@ export class CinematicPipeline {
     this.feedbackReady = false;
   }
 
-  private ensureSize(): void {
+  private ensureSize(
+    keys: Array<keyof typeof this.framebuffers>,
+  ): void {
     const gl = this.gl;
     if (!gl || this.width <= 0 || this.height <= 0) return;
 
-    for (const framebuffer of Object.values(this.framebuffers)) {
-      framebuffer.create(gl, this.width, this.height);
+    for (const key of keys) {
+      this.framebuffers[key].create(gl, this.width, this.height);
     }
   }
 
