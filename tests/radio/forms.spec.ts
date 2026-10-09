@@ -28,11 +28,16 @@ async function unlock(page: Page) {
 }
 
 test.describe("Cartão de Fã and public proposals", () => {
-  test("creates a fan card without contact, photo or signature", async ({ page }) => {
+  test("creates a fan card with the required local photo and without contact or signature", async ({ page }) => {
     await unlock(page);
     await mockPublicBackend(page);
     await page.goto("/filiar");
     await page.getByLabel("NOME OU APELIDO").fill("TESTE");
+    await page.locator("#fan-photo").setInputFiles({
+      name: "foto-teste.svg",
+      mimeType: "image/svg+xml",
+      buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="540" height="960"><rect width="540" height="960" fill="#222"/><circle cx="270" cy="280" r="120" fill="#bd252b"/></svg>'),
+    });
     await page.getByLabel(/Aceito o Código do Fã/).check();
     await page.getByRole("button", { name: "CRIAR O MEU CARTÃO" }).click();
     await expect(page.getByText("CARTÃO DE FÃ CRIADO", { exact: true })).toBeVisible();
@@ -45,13 +50,13 @@ test.describe("Cartão de Fã and public proposals", () => {
     await mockPublicBackend(page);
     await page.goto("/");
     await page.getByRole("button", { name: "Abrir proposta de parceria MASTER" }).click();
-    await page.getByPlaceholder("Nome da marca / responsável").fill("Marca Teste");
-    await page.getByPlaceholder("Nome da empresa").fill("Empresa Teste");
-    await page.getByPlaceholder("Email, telefone ou WhatsApp").fill("contacto@empresa.co.mz");
-    await page.locator("select").selectOption({ label: "Patrocínio · MASTER" });
-    await page.getByPlaceholder("Explique a marca, objectivo da parceria e o que pretende activar.").fill("Proposta real de activação da marca no Sindicato do Trap.");
+    await page.getByPlaceholder("Nome de contacto").fill("Marca Teste");
+    await page.getByPlaceholder("Nome da marca").fill("Empresa Teste");
+    await page.getByPlaceholder("Email ou telefone").fill("contacto@empresa.co.mz");
+    await page.getByLabel("TIPO DE PARCERIA").selectOption({ label: "Patrocínio" });
+    await page.getByPlaceholder("Descreva a ideia, objectivos e activação pretendida.").fill("Proposta real de activação da marca no Sindicato do Trap.");
     await page.getByRole("button", { name: "ENVIAR PROPOSTA" }).click();
-    await expect(page.getByText("PROPOSTA RECEBIDA", { exact: true })).toBeVisible();
-    await expect(page.getByText("A equipa do Sindicato recebeu os dados e entra em contacto para dar seguimento.")).toBeVisible();
+    await expect(page.getByText("PROPOSTA REGISTADA. A EQUIPA JÁ A PODE CONSULTAR NO CONTROL ROOM.", { exact: false })).toBeVisible();
+    await expect(page.getByText("PROPOSTA REGISTADA. A EQUIPA JÁ A PODE CONSULTAR NO CONTROL ROOM.")).toBeVisible();
   });
 });

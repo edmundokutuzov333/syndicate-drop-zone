@@ -471,7 +471,7 @@ export function Filiacao() {
                     <p className="mt-1 text-xs leading-5 text-muted-foreground">1080 × 1920 píxeis · MP4 · música incluída.</p>
                   </div>
                 </div>
-                <p className="mt-3 text-xs leading-5 text-muted-foreground">O motor de vídeo gratuito só é carregado quando clicares em “CRIAR VÍDEO”. A primeira vez pode demorar e usa a memória do teu dispositivo.</p>
+                <p className="mt-3 text-xs leading-5 text-muted-foreground">O vídeo é renderizado no servidor com FFmpeg, com 30 segundos de música real e waveform sincronizada. A fotografia do cartão é enviada apenas para esta renderização temporária e eliminada no fim.</p>
                 <button type="button" onClick={() => void createVideo()} disabled={videoBusy || !selectedTrack || !photo} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 border border-blood bg-blood px-4 py-4 font-mono text-[10px] tracking-[0.16em] text-primary-foreground disabled:cursor-wait disabled:opacity-60">
                   {videoBusy ? <><Loader2 size={15} className="animate-spin" /> A RENDERIZAR NO SERVIDOR...</> : <><Video size={15} /> CRIAR VÍDEO</>}
                 </button>
