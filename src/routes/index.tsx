@@ -9,6 +9,7 @@ import { useKey } from "@/components/use-key";
 import { useMember } from "@/components/use-member";
 import { Halftone } from "@/components/Halftone";
 import { Sponsors } from "@/components/Sponsors";
+import { PartnershipForm } from "@/components/PartnershipForm";
 import logo from "@/assets/brand/sindicato-logo.png.asset.json";
 import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 import { musicEventJsonLd } from "@/lib/seo";
@@ -65,6 +66,7 @@ function Hub() {
         <Tapes tapes={tapes} state={state} level={level} />
         <Artistas artists={artists} />
         <Sponsors />
+        <PartnershipForm />
         <Merch merch={merch} armed={canEnterMerch(armed, { isSyndicateMember: Boolean(member) })} member={Boolean(member)} />
       </main>
     </>
