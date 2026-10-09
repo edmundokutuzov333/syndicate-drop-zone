@@ -4,8 +4,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import ffmpegPath from "ffmpeg-static";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import fanVideoHandler from "../../api/fan-video";
+import siteServer from "../server";
 
 const directory = await mkdtemp(join(tmpdir(), "sdt-fan-video-api-test-"));
 afterAll(async () => {
@@ -33,6 +34,59 @@ function runFfmpeg(args: string[]): Promise<void> {
     });
   });
 }
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+
+describe("encaminhamento do endpoint de vídeo", () => {
+  it("encaminha o pedido do servidor Lovable para a função nativa Vercel antes do SSR HTML-only", async () => {
+    const mp4Bytes = new Uint8Array([
+      0, 0, 0, 20, 0x66, 0x74, 0x79, 0x70,
+      0x69, 0x73, 0x6f, 0x6d, 0, 0, 2, 0,
+      0x69, 0x73, 0x6f, 0x6d,
+    ]);
+    const upstreamFetch = vi.fn().mockResolvedValue(new Response(mp4Bytes, {
+      status: 200,
+      headers: {
+        "Content-Type": "video/mp4",
+        "Content-Length": String(mp4Bytes.length),
+        "X-Request-Id": "proxy-fan-video-001",
+      },
+    }));
+    vi.stubGlobal("fetch", upstreamFetch);
+
+    const request = new Request(
+      "https://id-preview--67a20cf5-03a6-4c64-ab1e-c6089a5ecca0.lovable.app/api/fan-video",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "video/mp4, application/json",
+          "X-Request-Id": "proxy-fan-video-001",
+          "cf-connecting-ip": "203.0.113.243",
+          Origin: "https://id-preview--67a20cf5-03a6-4c64-ab1e-c6089a5ecca0.lovable.app",
+        },
+        body: JSON.stringify({
+          trackId: "T1",
+          imageData: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2Q==",
+        }),
+      },
+    );
+
+    const response = await siteServer.fetch(request, {}, {});
+    expect(upstreamFetch).toHaveBeenCalledTimes(1);
+    const call = upstreamFetch.mock.calls[0] as unknown as [URL | RequestInfo, RequestInit];
+    expect(String(call[0])).toBe("https://syndicate-drop-zone.vercel.app/api/fan-video");
+    expect(call[1].method).toBe("POST");
+    expect(new Headers(call[1].headers).get("x-request-id")).toBe("proxy-fan-video-001");
+    expect(new Headers(call[1].headers).get("origin")).toBeNull();
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toBe("video/mp4");
+    expect(new Uint8Array(await response.arrayBuffer())).toEqual(mp4Bytes);
+  });
+});
 
 describe("API real de renderização do cartão de fã", () => {
   it("renderiza um MP4 real de 30 segundos com fotografia, faixa de áudio e waveform", async () => {
