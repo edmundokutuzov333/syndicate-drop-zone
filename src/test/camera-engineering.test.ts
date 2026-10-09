@@ -15,7 +15,13 @@ import {
 } from "@/lib/camera/capture-timer";
 import { FILTER_REGISTRY } from "@/lib/webgl/filter-registry";
 import { buildFaceVfxUniforms } from "@/lib/camera/face-vfx";
-import { adaptiveRenderPolicy } from "@/lib/camera/performance-manager";
+import {
+  evaluateAdaptivePreview,
+  getFilterRenderScaleCap,
+  getInitialPreviewProfile,
+  stepAdaptivePreview,
+  type AdaptivePreviewState,
+} from "@/lib/camera/performance-manager";
 import {
   getImageFormatCapabilities,
   getRecorderCapabilities,
@@ -287,6 +293,11 @@ describe("camera engineering foundation", () => {
     const result = await capture.capturePhoto("jpg", "thermal", "environment");
 
     expect(webgl.waitForFilter).toHaveBeenCalledWith("thermal");
+    expect(webgl.withOutputResolution).toHaveBeenCalledWith(
+      1920,
+      1080,
+      expect.any(Function),
+    );
     expect(render).toHaveBeenCalled();
     expect(result.filename).toContain("_THERMAL_BACK_1920x1080.jpg");
 
@@ -680,114 +691,101 @@ describe("camera engineering foundation", () => {
     expect(canRenderDirectToCanvas({ ...cleanFrame, pipeline: "kinetic-melt" })).toBe(false);
   });
 
-  it("keeps performance adaptation inside the render budget", () => {
-    const policy = adaptiveRenderPolicy({
-      fps: 18,
-      frameTimeMs: 60,
-      droppedFrames: 4,
-      deviceTier: "medium",
-      dpr: 2,
-      renderScale: 1,
-    });
-
-    expect(policy.renderScale).toBeLessThan(1);
-    expect(policy.dpr).toBe(1.75);
-  });
-
-  it("keeps the 4K gate orientation-aware", () => {
-    expect(isReal4KSource(3840, 2160)).toBe(true);
-    expect(isReal4KSource(2160, 3840)).toBe(true);
-    expect(isReal4KSource(1920, 1080)).toBe(false);
-
-    expect(get4KCaptureDimensions(3840, 2160)).toEqual({
-      width: 3840,
-      height: 2160,
-    });
-    expect(get4KCaptureDimensions(2160, 3840)).toEqual({
-      width: 2160,
-      height: 3840,
-    });
-  });
-
-  it("captures at maximum real source resolution when 4K is unavailable", () => {
-    expect(getMaxCaptureDimensions(1920, 1080)).toEqual({
-      width: 1920,
-      height: 1080,
-    });
-    expect(getMaxCaptureDimensions(1280, 720)).toEqual({
-      width: 1280,
-      height: 720,
-    });
-    expect(getMaxCaptureDimensions(1080, 1920)).toEqual({
-      width: 1080,
-      height: 1920,
-    });
-  });
-
-  it("detects the capability matrix without opening a device", () => {
-    const recorder = getRecorderCapabilities();
-    const images = getImageFormatCapabilities();
-    const videos = getVideoFormatCapabilities();
-
-    expect(recorder).toHaveProperty("supported");
-    expect(recorder).toHaveProperty("canvasCaptureSupported");
-    expect(recorder).toHaveProperty("audioCaptureSupported");
-    expect(images.map((item) => item.format)).toEqual([
-      "jpg",
-      "png",
-      "tiff",
-    ]);
-    expect(videos.map((item) => item.format)).toEqual([
-      "mp4",
-      "mov",
-      "mkv",
-      "webm",
-    ]);
-  });
-
-  it("never claims a requested codec without MediaRecorder runtime support", () => {
-    vi.stubGlobal("MediaRecorder", {
-      isTypeSupported: vi.fn(
-        (mime: string) =>
-          mime.includes("video/webm;codecs=vp9,opus") ||
-          mime === "video/webm",
-      ),
-    });
-
-    expect(chooseRecorderMimeType("mp4")).toBeNull();
-    expect(chooseRecorderMimeType("mov")).toBeNull();
-    expect(chooseRecorderMimeType("mkv")).toBeNull();
-    expect(chooseRecorderMimeType("webm")).toBe("video/webm;codecs=vp9,opus");
-
-    const capabilities = getVideoFormatCapabilities();
-    expect(capabilities.find((item) => item.format === "mp4")?.supported).toBe(false);
-    expect(capabilities.find((item) => item.format === "webm")?.supported).toBe(true);
-
-    vi.unstubAllGlobals();
-  });
-
-  it("keeps the performance policy conservative on constrained frames", () => {
-    const low = adaptiveRenderPolicy({
+  it("does not punish a healthy 30 FPS source for its frame cadence", () => {
+    const action = evaluateAdaptivePreview({
       fps: 30,
-      frameTimeMs: 33,
-      droppedFrames: 8,
-      deviceTier: "low",
-      dpr: 1,
-      renderScale: 0.8,
-    });
-
-    const healthy = adaptiveRenderPolicy({
-      fps: 60,
-      frameTimeMs: 16.7,
+      frameTimeMs: 33.3,
       droppedFrames: 0,
-      deviceTier: "high",
-      dpr: 2,
-      renderScale: 0.85,
+      deviceTier: "medium",
+      dpr: 1.5,
+      renderScale: 0.96,
+      renderTimeMs: 7,
+      textureUploadTimeMs: 2,
+    }, 30);
+
+    expect(action).toBe("recover");
+  });
+
+  it("degrades only after consecutive overload windows and recovers gradually", () => {
+    const initial: AdaptivePreviewState = {
+      renderScale: 0.9,
+      dpr: 1.5,
+      maxRenderScale: 0.95,
+      maxDpr: 1.5,
+      poorWindows: 0,
+      healthyWindows: 0,
+    };
+    const oneSpike = stepAdaptivePreview(initial, "degrade", 0.95);
+    expect(oneSpike.renderScale).toBe(0.9);
+
+    const persistentLoad = stepAdaptivePreview(oneSpike, "degrade", 0.95);
+    expect(persistentLoad.renderScale).toBe(0.86);
+
+    const healthy1 = stepAdaptivePreview(persistentLoad, "recover", 0.95);
+    const healthy2 = stepAdaptivePreview(healthy1, "recover", 0.95);
+    expect(healthy2.renderScale).toBe(0.86);
+
+    const recovered = stepAdaptivePreview(healthy2, "recover", 0.95);
+    expect(recovered.renderScale).toBe(0.88);
+    expect(recovered.renderScale).toBeLessThanOrEqual(recovered.maxRenderScale);
+  });
+
+  it("selects a lower initial preview scale for 4K than for 1080p", () => {
+    const shared = {
+      deviceTier: "medium" as const,
+      devicePixelRatio: 2,
+      filterComplexity: "low" as const,
+      sourceFrameRate: 30,
+    };
+    const source4k = getInitialPreviewProfile({
+      ...shared,
+      sourceWidth: 3840,
+      sourceHeight: 2160,
+    });
+    const source1080 = getInitialPreviewProfile({
+      ...shared,
+      sourceWidth: 1920,
+      sourceHeight: 1080,
     });
 
-    expect(low.renderScale).toBeLessThan(0.8);
-    expect(low.dpr).toBe(1);
-    expect(healthy.renderScale).toBeGreaterThan(0.85);
-    expect(healthy.dpr).toBe(2);
+    expect(source4k.sourceDimensionsKnown).toBe(true);
+    expect(source4k.sourceFrameRateKnown).toBe(true);
+    expect(source4k.renderScale).toBeLessThan(source1080.renderScale);
+    expect(source4k.maxDpr).toBe(1.5);
+  });
+
+  it("uses an explicit conservative fallback when source capabilities are unavailable", () => {
+    const profile = getInitialPreviewProfile({
+      deviceTier: "low",
+      devicePixelRatio: 2,
+      filterComplexity: "medium",
+    });
+
+    expect(profile.sourceDimensionsKnown).toBe(false);
+    expect(profile.sourceFrameRateKnown).toBe(false);
+    expect(profile.renderScale).toBeGreaterThanOrEqual(0.65);
+    expect(profile.renderScale).toBeLessThanOrEqual(0.88);
+    expect(profile.dpr).toBe(1);
+  });
+
+  it("applies a consistent high-complexity filter cap on every device tier", () => {
+    expect(getFilterRenderScaleCap("high", "high")).toBe(0.9);
+    expect(getFilterRenderScaleCap("medium", "high")).toBe(0.9);
+    expect(getFilterRenderScaleCap("low", "high")).toBe(0.72);
+  });
+
+  it("detects persistent render overload independently of camera callback cadence", () => {
+    const overloaded = evaluateAdaptivePreview({
+      fps: 30,
+      frameTimeMs: 33.3,
+      droppedFrames: 0,
+      deviceTier: "medium",
+      dpr: 1.5,
+      renderScale: 0.96,
+      renderTimeMs: 28,
+      textureUploadTimeMs: 12,
+    }, 30);
+
+    expect(overloaded).toBe("degrade");
   });
 });

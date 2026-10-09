@@ -16,9 +16,12 @@ import {
   createAstroHazeLut,
 } from "./lut";
 import {
-  adaptiveRenderPolicy,
   detectPerformanceTier,
+  evaluateAdaptivePreview,
   getFilterRenderScaleCap,
+  getInitialPreviewProfile,
+  stepAdaptivePreview,
+  type AdaptivePreviewState,
 } from "@/lib/camera/performance-manager";
 import {
   type FaceVfxUniformState,
@@ -152,6 +155,16 @@ export class WebGLEngine {
     drawCalls: 0,
     gcEvents: 0,
   };
+  private adaptivePreviewState: AdaptivePreviewState = {
+    renderScale: 1,
+    dpr: 1,
+    maxRenderScale: 1,
+    maxDpr: 1,
+    poorWindows: 0,
+    healthyWindows: 0,
+  };
+  private previewProfileKey = "";
+  private sourceFrameRate: number | undefined;
   private readonly config: Required<WebglEngineConfig>;
 
   constructor(config: WebglEngineConfig = {}) {
@@ -474,7 +487,10 @@ export class WebGLEngine {
       this.lastFrameAt === 0 ? 0 : timestamp - this.lastFrameAt;
     this.lastFrameAt = timestamp;
 
-    if (frameTime > (1000 / this.config.targetFps) * 1.75) {
+    const expectedSourceFps =
+      this.getSourceFrameRate(this.frameSource) ??
+      (this.metrics.fps > 0 ? Math.max(15, Math.min(120, this.metrics.fps)) : this.config.targetFps);
+    if (frameTime > (1000 / expectedSourceFps) * 1.75) {
       this.metrics.droppedFrames += 1;
     }
 
@@ -497,6 +513,7 @@ export class WebGLEngine {
 
     if (sourceSize.width <= 0 || sourceSize.height <= 0) return;
 
+    this.syncPreviewProfile(sourceSize);
     this.videoResolutionUniform[0] = sourceSize.width;
     this.videoResolutionUniform[1] = sourceSize.height;
 
@@ -736,6 +753,16 @@ export class WebGLEngine {
     this.gcEvents = 0;
     this.lastFrameAt = 0;
     this.frameCounter = 0;
+    this.previewProfileKey = "";
+    this.sourceFrameRate = undefined;
+    this.adaptivePreviewState = {
+      renderScale: 1,
+      dpr: 1,
+      maxRenderScale: 1,
+      maxDpr: 1,
+      poorWindows: 0,
+      healthyWindows: 0,
+    };
   }
 
   private scheduleIdleFilterCompilation(): void {
@@ -1390,23 +1417,77 @@ export class WebGLEngine {
     }
   }
 
-  private applyAdaptivePolicy(): void {
-    if (!this.canvas || !this.gl) return;
+  private getSourceFrameRate(source: TexImageSource | null): number | undefined {
+    if (!source || typeof HTMLVideoElement === "undefined" || !(source instanceof HTMLVideoElement)) {
+      return undefined;
+    }
+    const stream = source.srcObject as
+      | { getVideoTracks?: () => Array<{ getSettings?: () => { frameRate?: number } }> }
+      | null;
+    const track = stream?.getVideoTracks?.()[0];
+    try {
+      const frameRate = track?.getSettings?.().frameRate;
+      return typeof frameRate === "number" && Number.isFinite(frameRate) && frameRate > 0
+        ? frameRate
+        : undefined;
+    } catch {
+      return undefined;
+    }
+  }
 
-    const next = adaptiveRenderPolicy(this.metrics);
+  private syncPreviewProfile(sourceSize: SourceSize): void {
+    if (!this.canvas || !this.gl || this.forcedOutputResolution) return;
+    const frameRate = this.getSourceFrameRate(this.frameSource);
+    const key = sourceSize.width + "x" + sourceSize.height + "@" + (frameRate ?? "unknown");
+    if (key === this.previewProfileKey) return;
+
+    this.previewProfileKey = key;
+    this.sourceFrameRate = frameRate;
+    const activeFilter = this.transition?.to ?? this.filter;
+    const profile = getInitialPreviewProfile({
+      deviceTier: this.metrics.deviceTier,
+      sourceWidth: sourceSize.width,
+      sourceHeight: sourceSize.height,
+      sourceFrameRate: frameRate,
+      devicePixelRatio: typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1,
+      filterComplexity: FILTER_REGISTRY.get(activeFilter).complexity,
+    });
+    this.adaptivePreviewState = {
+      renderScale: profile.renderScale,
+      dpr: profile.dpr,
+      maxRenderScale: profile.maxRenderScale,
+      maxDpr: profile.maxDpr,
+      poorWindows: 0,
+      healthyWindows: 0,
+    };
+    this.renderScale = profile.renderScale;
+    this.dpr = profile.dpr;
+    this.resize(this.surfaceWidth, this.surfaceHeight);
+  }
+
+  private applyAdaptivePolicy(): void {
+    if (!this.canvas || !this.gl || this.forcedOutputResolution) return;
+
     const activeFilter = this.transition?.to ?? this.filter;
     const filterCap = getFilterRenderScaleCap(
       this.metrics.deviceTier,
       FILTER_REGISTRY.get(activeFilter).complexity,
     );
-    next.renderScale = Math.min(next.renderScale, filterCap);
-
-    if (
-      Math.abs(next.renderScale - this.renderScale) < 0.01 &&
-      Math.abs(next.dpr - this.dpr) < 0.01
-    ) {
-      return;
-    }
+    const action = evaluateAdaptivePreview(
+      this.metrics,
+      this.sourceFrameRate ??
+        (this.metrics.fps > 0 ? Math.max(15, Math.min(120, this.metrics.fps)) : undefined),
+    );
+    const next = stepAdaptivePreview(
+      this.adaptivePreviewState,
+      action,
+      Math.min(this.adaptivePreviewState.maxRenderScale, filterCap),
+    );
+    const changed =
+      Math.abs(next.renderScale - this.renderScale) >= 0.01 ||
+      Math.abs(next.dpr - this.dpr) >= 0.01;
+    this.adaptivePreviewState = next;
+    if (!changed) return;
 
     this.renderScale = next.renderScale;
     this.dpr = next.dpr;

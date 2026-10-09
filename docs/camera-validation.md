@@ -300,3 +300,16 @@ O fecho permanece bloqueado por:
 2. Validação física em browsers e dispositivos reais.
 
 Nenhum destes pontos é considerado PASS sem evidência real.
+
+## Fase 3 — preview adaptativo consciente do dispositivo (09 Outubro 2026)
+
+Estado da implementação de código: implementada nesta actualização; CI e deploy dependem da verificação do commit pós-alteração.
+
+- O perfil inicial usa dimensões reais entregues pelo vídeo, frame rate do track quando exposto, tier estimado, DPR e complexidade do filtro.
+- A política de adaptação usa custo de renderização e upload de textura como proxies de carga. A cadência do callback de uma fonte a 24/30 FPS não é usada isoladamente para baixar a qualidade do preview.
+- A histerese exige duas janelas consecutivas de sobrecarga para começar a reduzir a escala e três janelas saudáveis para recuperar gradualmente.
+- A captura permanece isolada da política do preview. A saída forçada não é adaptada; fontes abaixo de 4K mantêm dimensões reais e não recebem rótulo 4K falso.
+- Os testes adicionados cobrem fonte 30 FPS saudável, sobrecarga persistente, recuperação com histerese, perfil 4K versus 1080p, fallback de capacidades desconhecidas, limites de filtros de alta complexidade e dimensões da captura preservadas.
+- Nenhum teste físico de iPhone/Android/Desktop, validação térmica ou perfil de GPU real foi executado nesta actualização. Esses resultados continuam pendentes.
+
+A validação global da câmara continua PENDENTE até a matriz de dispositivos reais ser executada. Os estados de CI, Vercel e publicação têm de ser verificados no SHA desta actualização; os registos de commits anteriores nesta página são evidência histórica e não substituem a verificação do commit actual.

@@ -268,13 +268,18 @@ This phase targets startup latency, memory pressure and GPU-context overhead for
 - [x] The 300 ms cross-fade, filter registry and IDs, Master FX composition, HUD/countdown overlays, feedback state and local capture contract remain intact.
 - [ ] Runtime profiling on real devices remains pending; reduced passes/allocations are structural improvements and are not presented as measured FPS gains.
 
-### Phase 3 — device-aware preview and capture (pending)
+### Phase 3 — device-aware preview and capture (code implemented; physical validation pending)
 
-- Add explicit adaptive preview profiles based on delivered camera capabilities and observed render cost.
-- Keep capture resolution truthful: photo/video output must use the actual source capability and must never label an upscaled lower-resolution source as native 4K.
-- Tune face inference cadence and inference input size only after confirming that the 3D effects and kinetic-melt motion remain visually correct.
-- Run a real-device matrix: iPhone Safari, Android Chrome, desktop browsers and a lower-end GPU; record startup time, FPS/frame-time metrics, dropped frames, texture upload cost and thermal degradation.
+- [x] Initial preview profile uses the actual delivered video dimensions, source frame rate when the track exposes it, device tier/DPR and active filter complexity; unavailable capabilities use an explicit tier-based fallback.
+- [x] Adaptive decisions use smoothed render CPU time and texture-upload cost as workload proxies. They do not treat a 24/30 FPS camera callback cadence as proof of slow rendering.
+- [x] Preview changes use hysteresis: two consecutive overloaded windows before degradation and three healthy windows before gradual recovery. Preview scale never changes the camera track itself.
+- [x] Dropped-frame thresholds use the reported source frame rate where available, with a fallback to observed frame cadence.
+- [x] Forced capture resolution stays outside preview adaptation. True 4K sources use orientation-correct 3840×2160 or 2160×3840 output; lower-resolution sources keep their delivered dimensions with no upscaling or false 4K label.
+- [x] Unit coverage includes a healthy 30 FPS stream, persistent overload, hysteresis/recovery, 4K-vs-1080p initial profiles, missing capabilities, high-complexity filter caps and unchanged capture output dimensions.
+- [ ] Physical profiling on iPhone Safari, Android Chrome, desktop browsers and lower-end GPUs is still required for real FPS/frame time, dropped frames, upload cost, thermal degradation, recording stability and visual fidelity.
+- [ ] MediaPipe inference cadence/input-size tuning is intentionally deferred until the 3D face effects and kinetic-melt motion can be visually checked on real devices.
 
+Render time and texture-upload duration are CPU-visible workload proxies; this implementation does not claim portable direct GPU-time measurements. FPS and frame time may reflect source-frame arrival cadence when requestVideoFrameCallback is active, so they are not used alone as renderer-overload signals.
 ### Phase 1 verification boundary
 
 No camera backend or Supabase schema change is required: capture remains local, with no media upload or camera-specific persistence. No route, global shell or Control Room contract is changed. CI results and the active deployment status are reported separately from physical-device validation; inaccessible preview hosts are not treated as a passed runtime test.
