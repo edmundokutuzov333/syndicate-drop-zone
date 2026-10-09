@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CampingAccessState } from "../interactions/access-machine";
 import { initialCampingAccessState } from "../interactions/access-machine";
+import sindicatoSelo from "@/assets/brand/sindicato-selo.png.asset.json";
 import { CampingStudioEngine } from "./CampingStudioEngine";
 import "./camping-studio.css";
 
@@ -78,7 +79,10 @@ export function CampingStudioExperience({
     if (!canvas) return;
     const engine = new CampingStudioEngine({
       onAccessChange: setAccess,
-      onHoverChange: setHover,
+      onHoverChange: (target) => {
+        setHover(target);
+        if (cursorRef.current) cursorRef.current.dataset.interactive = target ? "true" : "false";
+      },
       onMessage: (nextMessage, tone = "neutral") => {
         setMessage(nextMessage);
         setMessageTone(tone);
@@ -121,7 +125,6 @@ export function CampingStudioExperience({
   const statusMessage = message || (assetState === "loading" ? "A CARREGAR O ESTÚDIO…" : null);
   const isExploring = access.phase === "EXPLORATION" || access.phase === "INTERACTION_FOCUS";
   const hasAccess = access.phase !== "LOCKED" && access.phase !== "CODE_ENTRY" && access.phase !== "ERROR";
-  const pressFallbackKey = (key: string) => engineRef.current?.pressAccessibleKey(key);
 
   const pressMove = (direction: (typeof directions)[number]["key"], active: boolean) => {
     engineRef.current?.setVirtualMovement(direction, active);
@@ -141,7 +144,7 @@ export function CampingStudioExperience({
 
       <header className="camping-studio__header">
         <div className="camping-studio__identity">
-          <span className="camping-studio__seal" aria-hidden="true">ST</span>
+          <img className="camping-studio__seal-image" src={sindicatoSelo.url} alt="Selo oficial do Sindicato" />
           <div>
             <p className="camping-studio__eyebrow">O SINDICATO DO TRAP</p>
             <p className="camping-studio__room">CAMPING / STUDIO XOYENS</p>
@@ -190,12 +193,8 @@ export function CampingStudioExperience({
           <p className="camping-studio__micro-label">WEBGL NOT AVAILABLE</p>
           <h2>ACESSO ALTERNATIVO</h2>
           <p>O browser não conseguiu iniciar a cena 3D. Pode introduzir o código por teclado ou usar os registos públicos sem perder o acesso ao resto do site.</p>
-          <div className="camping-studio__fallback-keypad">
-            {["1", "2", "3", "4", "5", "6", "7", "8", "9", "CLR", "0", "ENTER"].map((key) => (
-              <button type="button" key={key} onClick={() => pressFallbackKey(key)}>{key}</button>
-            ))}
-          </div>
           <button type="button" className="camping-studio__button" onClick={onToggleRecords}>ABRIR REGISTOS PÚBLICOS</button>
+          <button type="button" className="camping-studio__button camping-studio__button--quiet" onClick={onLeave}>SAIR DA EXPERIÊNCIA</button>
         </div>
       )}
 
