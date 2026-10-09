@@ -16,7 +16,7 @@ O motor usa um reducer testável em \`interactions/access-machine.ts\`. A entrad
 
 ## Porta, câmara e movimento
 
-A entrada foi construída em geometria Three.js, com aro, folha de porta, dobradiças e maçaneta. A folha roda a partir do pivô lateral. Após acesso aceite, o motor faz o carregamento lazy do GLB, abre a porta e interpola a câmara até à sala. O renderer usa delta-time, adaptação ao tamanho do canvas e limpeza dos listeners, RAF e recursos GPU em unmount. Quando o separador fica oculto, pausa o trabalho de renderização.
+A entrada foi construída em geometria Three.js, com aro, folha de porta, dobradiças, maçaneta e o logo oficial aplicado à porta através do manifesto de asset existente, sem redesenhar a marca. A folha roda a partir do pivô lateral. Após acesso aceite, o motor faz o carregamento lazy do GLB, abre a porta e interpola a câmara até à sala. O renderer usa delta-time, adaptação ao tamanho do canvas e limpeza dos listeners, RAF e recursos GPU em unmount. Quando o separador fica oculto, pausa o trabalho de renderização.
 
 Desktop: WASD/setas, rato para olhar, clique para interagir e ESC para fechar o focus activo. Mobile: arrastar para olhar, tocar nos elementos e botões direccionais tácteis. A navegação guiada oferece pontos de câmara para a entrada, o estúdio, produção, fotografia, roupa e parede de membros.
 

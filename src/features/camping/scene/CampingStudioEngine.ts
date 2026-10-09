@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import sindicatoLogo from "@/assets/brand/sindicato-logo.png.asset.json";
 import { click, hiss } from "@/lib/sfx";
 import {
   campingAccessReducer,
@@ -454,6 +455,38 @@ export class CampingStudioEngine {
     const innerPanel = new THREE.Mesh(new THREE.BoxGeometry(1.42, 2.44, 0.025), darkWoodMat);
     innerPanel.position.set(0.84, 1.36, 0.079);
     panel.add(innerPanel);
+
+    // Apply the original managed Sindicato logo to the physical door, without redrawing it.
+    const logoLoader = new THREE.TextureLoader();
+    logoLoader.load(
+      sindicatoLogo.url,
+      (texture) => {
+        if (this.disposed) {
+          texture.dispose();
+          return;
+        }
+        texture.colorSpace = THREE.SRGBColorSpace;
+        const logo = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.94, 0.42),
+          new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: true,
+            toneMapped: false,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+            polygonOffset: true,
+            polygonOffsetFactor: -1,
+          }),
+        );
+        logo.position.set(0.84, 2.02, 0.102);
+        logo.renderOrder = 2;
+        panel.add(logo);
+      },
+      undefined,
+      () => {
+        // The door remains usable if the managed brand asset is unavailable.
+      },
+    );
     for (const y of [0.24, 2.48]) {
       const rail = new THREE.Mesh(new THREE.BoxGeometry(1.42, 0.07, 0.035), trimMat);
       rail.position.set(0.84, y, 0.1);
