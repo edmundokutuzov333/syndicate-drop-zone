@@ -1,0 +1,701 @@
+{
+  "version": 1,
+  "phase": 2,
+  "status": "model-produced-not-yet-mounted",
+  "model": "/models/camping/xoyens-studio.glb",
+  "sourceCommit": "dc5197505155b0c9e7b0d2a7b11d2900216db618",
+  "format": "glTF 2.0 binary",
+  "units": "metres",
+  "boundsMeters": {
+    "width": 14.2,
+    "length": 9.2,
+    "wallHeight": 3.2,
+    "ceilingApex": 4.35
+  },
+  "forwardAxis": "entry from +Z, room back -Z",
+  "reference": "Xoyens studio panorama supplied 2026-10-09",
+  "geometry": {
+    "objectGroups": 102,
+    "meshes": 102,
+    "primitives": 150,
+    "materials": 26,
+    "embeddedImages": 13,
+    "officialBrandImages": [
+      "/__l5e/assets-v1/8d1c8b73-1330-4900-8723-85f98946699a/sindicato-logo.png",
+      "/__l5e/assets-v1/1fa67bdd-f452-442e-a0d5-a9fb482388de/sindicato-selo.png"
+    ]
+  },
+  "interactions": [
+    {
+      "id": "studio.imac",
+      "node": "studio.imac",
+      "action": "open-diegetic-os",
+      "source": "music/beats/artists/merch/archive/sessions"
+    },
+    {
+      "id": "studio.artists-wall",
+      "node": "studio.artists-wall",
+      "action": "focus-on-wall",
+      "source": "published artists"
+    },
+    {
+      "id": "studio.artist-photo.001..017",
+      "node": "studio.artist-slot-*",
+      "action": "open-artist-dossier",
+      "source": "published artists",
+      "placeholder": true
+    },
+    {
+      "id": "studio.merch-rack",
+      "node": "studio.clothing-rack",
+      "action": "open-product-and-cart",
+      "source": "merch_products + merch_variants + reservations"
+    },
+    {
+      "id": "studio.photo-backdrop",
+      "node": "studio.photo-backdrop",
+      "action": "open-published-visuals",
+      "source": "gallery_items + media_assets"
+    },
+    {
+      "id": "studio.production-desk",
+      "node": "studio.production-desk",
+      "action": "open-music-or-sessions",
+      "source": "catalogues"
+    },
+    {
+      "id": "studio.audio-system",
+      "node": "studio.audio-system",
+      "action": "open-listening-experience",
+      "source": "approved music catalogue"
+    },
+    {
+      "id": "studio.inner-door",
+      "node": "studio.inner-door",
+      "action": "transition-to-next-room",
+      "source": "room manifest"
+    }
+  ],
+  "objects": [
+    {
+      "name": "studio.floor",
+      "nodeIndex": 0,
+      "meshIndex": 0,
+      "interactionId": null
+    },
+    {
+      "name": "studio.left-wall",
+      "nodeIndex": 1,
+      "meshIndex": 1,
+      "interactionId": null
+    },
+    {
+      "name": "studio.right-wall",
+      "nodeIndex": 2,
+      "meshIndex": 2,
+      "interactionId": null
+    },
+    {
+      "name": "studio.back-wall",
+      "nodeIndex": 3,
+      "meshIndex": 3,
+      "interactionId": null
+    },
+    {
+      "name": "studio.baseboards",
+      "nodeIndex": 4,
+      "meshIndex": 4,
+      "interactionId": null
+    },
+    {
+      "name": "studio.vaulted-timber-ceiling",
+      "nodeIndex": 5,
+      "meshIndex": 5,
+      "interactionId": null
+    },
+    {
+      "name": "studio.ceiling-arches",
+      "nodeIndex": 6,
+      "meshIndex": 6,
+      "interactionId": null
+    },
+    {
+      "name": "studio.ceiling-cross-beams",
+      "nodeIndex": 7,
+      "meshIndex": 7,
+      "interactionId": null
+    },
+    {
+      "name": "studio.desk-wall-panel",
+      "nodeIndex": 8,
+      "meshIndex": 8,
+      "interactionId": null
+    },
+    {
+      "name": "studio.desk-wall-slats",
+      "nodeIndex": 9,
+      "meshIndex": 9,
+      "interactionId": null
+    },
+    {
+      "name": "studio.acoustic-panel",
+      "nodeIndex": 10,
+      "meshIndex": 10,
+      "interactionId": null
+    },
+    {
+      "name": "studio.parquet",
+      "nodeIndex": 11,
+      "meshIndex": 11,
+      "interactionId": null
+    },
+    {
+      "name": "studio.inner-door",
+      "nodeIndex": 12,
+      "meshIndex": 12,
+      "interactionId": "studio.inner-door"
+    },
+    {
+      "name": "studio.door-panel",
+      "nodeIndex": 13,
+      "meshIndex": 13,
+      "interactionId": null
+    },
+    {
+      "name": "studio.door-handle",
+      "nodeIndex": 14,
+      "meshIndex": 14,
+      "interactionId": null
+    },
+    {
+      "name": "studio.air-conditioner",
+      "nodeIndex": 15,
+      "meshIndex": 15,
+      "interactionId": null
+    },
+    {
+      "name": "studio.ac-grille",
+      "nodeIndex": 16,
+      "meshIndex": 16,
+      "interactionId": null
+    },
+    {
+      "name": "studio.production-desk",
+      "nodeIndex": 17,
+      "meshIndex": 17,
+      "interactionId": "studio.production-desk"
+    },
+    {
+      "name": "studio.desk-legs",
+      "nodeIndex": 18,
+      "meshIndex": 18,
+      "interactionId": null
+    },
+    {
+      "name": "studio.keyboard-tray",
+      "nodeIndex": 19,
+      "meshIndex": 19,
+      "interactionId": null
+    },
+    {
+      "name": "studio.midi-keyboard",
+      "nodeIndex": 20,
+      "meshIndex": 20,
+      "interactionId": null
+    },
+    {
+      "name": "studio.midi-keys",
+      "nodeIndex": 21,
+      "meshIndex": 21,
+      "interactionId": null
+    },
+    {
+      "name": "studio.midi-black-keys",
+      "nodeIndex": 22,
+      "meshIndex": 22,
+      "interactionId": null
+    },
+    {
+      "name": "studio.imac-foot",
+      "nodeIndex": 23,
+      "meshIndex": 23,
+      "interactionId": null
+    },
+    {
+      "name": "studio.imac-stand",
+      "nodeIndex": 24,
+      "meshIndex": 24,
+      "interactionId": null
+    },
+    {
+      "name": "studio.imac-body",
+      "nodeIndex": 25,
+      "meshIndex": 25,
+      "interactionId": null
+    },
+    {
+      "name": "studio.imac-bezel",
+      "nodeIndex": 26,
+      "meshIndex": 26,
+      "interactionId": null
+    },
+    {
+      "name": "studio.imac-screen",
+      "nodeIndex": 27,
+      "meshIndex": 27,
+      "interactionId": null
+    },
+    {
+      "name": "studio.imac-daw-track",
+      "nodeIndex": 28,
+      "meshIndex": 28,
+      "interactionId": null
+    },
+    {
+      "name": "studio.monitor-speakers",
+      "nodeIndex": 29,
+      "meshIndex": 29,
+      "interactionId": null
+    },
+    {
+      "name": "studio.monitor-cones",
+      "nodeIndex": 30,
+      "meshIndex": 30,
+      "interactionId": null
+    },
+    {
+      "name": "studio.monitor-tweeters",
+      "nodeIndex": 31,
+      "meshIndex": 31,
+      "interactionId": null
+    },
+    {
+      "name": "studio.subwoofer",
+      "nodeIndex": 32,
+      "meshIndex": 32,
+      "interactionId": null
+    },
+    {
+      "name": "studio.chair-pedestal",
+      "nodeIndex": 33,
+      "meshIndex": 33,
+      "interactionId": null
+    },
+    {
+      "name": "studio.chair-seat",
+      "nodeIndex": 34,
+      "meshIndex": 34,
+      "interactionId": null
+    },
+    {
+      "name": "studio.chair-back",
+      "nodeIndex": 35,
+      "meshIndex": 35,
+      "interactionId": null
+    },
+    {
+      "name": "studio.chair-arms",
+      "nodeIndex": 36,
+      "meshIndex": 36,
+      "interactionId": null
+    },
+    {
+      "name": "studio.chair-arm-pads",
+      "nodeIndex": 37,
+      "meshIndex": 37,
+      "interactionId": null
+    },
+    {
+      "name": "studio.photo-backdrop-frame",
+      "nodeIndex": 38,
+      "meshIndex": 38,
+      "interactionId": null
+    },
+    {
+      "name": "studio.photo-backdrop",
+      "nodeIndex": 39,
+      "meshIndex": 39,
+      "interactionId": "studio.photo-backdrop"
+    },
+    {
+      "name": "studio.photo-floor",
+      "nodeIndex": 40,
+      "meshIndex": 40,
+      "interactionId": null
+    },
+    {
+      "name": "studio.photo-backdrop-seal",
+      "nodeIndex": 41,
+      "meshIndex": 41,
+      "interactionId": null
+    },
+    {
+      "name": "studio.softbox-stands",
+      "nodeIndex": 42,
+      "meshIndex": 42,
+      "interactionId": null
+    },
+    {
+      "name": "studio.tripod-legs",
+      "nodeIndex": 43,
+      "meshIndex": 43,
+      "interactionId": null
+    },
+    {
+      "name": "studio.softboxes",
+      "nodeIndex": 44,
+      "meshIndex": 44,
+      "interactionId": null
+    },
+    {
+      "name": "studio.softbox-diffusers",
+      "nodeIndex": 45,
+      "meshIndex": 45,
+      "interactionId": null
+    },
+    {
+      "name": "studio.rack-uprights",
+      "nodeIndex": 46,
+      "meshIndex": 46,
+      "interactionId": null
+    },
+    {
+      "name": "studio.rack-feet",
+      "nodeIndex": 47,
+      "meshIndex": 47,
+      "interactionId": null
+    },
+    {
+      "name": "studio.rack-rail",
+      "nodeIndex": 48,
+      "meshIndex": 48,
+      "interactionId": null
+    },
+    {
+      "name": "studio.hangers",
+      "nodeIndex": 49,
+      "meshIndex": 49,
+      "interactionId": null
+    },
+    {
+      "name": "studio.hanger-hooks",
+      "nodeIndex": 50,
+      "meshIndex": 50,
+      "interactionId": null
+    },
+    {
+      "name": "studio.garments",
+      "nodeIndex": 51,
+      "meshIndex": 51,
+      "interactionId": null
+    },
+    {
+      "name": "studio.clothing-rack",
+      "nodeIndex": 52,
+      "meshIndex": 52,
+      "interactionId": "studio.merch-rack"
+    },
+    {
+      "name": "studio.sofa-base",
+      "nodeIndex": 53,
+      "meshIndex": 53,
+      "interactionId": null
+    },
+    {
+      "name": "studio.sofa-seat",
+      "nodeIndex": 54,
+      "meshIndex": 54,
+      "interactionId": null
+    },
+    {
+      "name": "studio.sofa-back",
+      "nodeIndex": 55,
+      "meshIndex": 55,
+      "interactionId": null
+    },
+    {
+      "name": "studio.sofa-arm",
+      "nodeIndex": 56,
+      "meshIndex": 56,
+      "interactionId": null
+    },
+    {
+      "name": "studio.mural-base",
+      "nodeIndex": 57,
+      "meshIndex": 57,
+      "interactionId": null
+    },
+    {
+      "name": "studio.mural-colours",
+      "nodeIndex": 58,
+      "meshIndex": 58,
+      "interactionId": null
+    },
+    {
+      "name": "studio.mural-eyes",
+      "nodeIndex": 59,
+      "meshIndex": 59,
+      "interactionId": null
+    },
+    {
+      "name": "studio.mural-pupils",
+      "nodeIndex": 60,
+      "meshIndex": 60,
+      "interactionId": null
+    },
+    {
+      "name": "studio.guitar-body",
+      "nodeIndex": 61,
+      "meshIndex": 61,
+      "interactionId": null
+    },
+    {
+      "name": "studio.guitar-neck",
+      "nodeIndex": 62,
+      "meshIndex": 62,
+      "interactionId": null
+    },
+    {
+      "name": "studio.guitar-fretboard",
+      "nodeIndex": 63,
+      "meshIndex": 63,
+      "interactionId": null
+    },
+    {
+      "name": "studio.guitar-frets",
+      "nodeIndex": 64,
+      "meshIndex": 64,
+      "interactionId": null
+    },
+    {
+      "name": "studio.guitar-head",
+      "nodeIndex": 65,
+      "meshIndex": 65,
+      "interactionId": null
+    },
+    {
+      "name": "studio.guitar-stand",
+      "nodeIndex": 66,
+      "meshIndex": 66,
+      "interactionId": null
+    },
+    {
+      "name": "studio.plant-pot",
+      "nodeIndex": 67,
+      "meshIndex": 67,
+      "interactionId": null
+    },
+    {
+      "name": "studio.plant-stem",
+      "nodeIndex": 68,
+      "meshIndex": 68,
+      "interactionId": null
+    },
+    {
+      "name": "studio.plant-branches",
+      "nodeIndex": 69,
+      "meshIndex": 69,
+      "interactionId": null
+    },
+    {
+      "name": "studio.plant-leaves",
+      "nodeIndex": 70,
+      "meshIndex": 70,
+      "interactionId": null
+    },
+    {
+      "name": "studio.archive-posters",
+      "nodeIndex": 71,
+      "meshIndex": 71,
+      "interactionId": null
+    },
+    {
+      "name": "studio.archive-poster-images",
+      "nodeIndex": 72,
+      "meshIndex": 72,
+      "interactionId": null
+    },
+    {
+      "name": "studio.archive-tape",
+      "nodeIndex": 73,
+      "meshIndex": 73,
+      "interactionId": null
+    },
+    {
+      "name": "studio.artists-wall",
+      "nodeIndex": 74,
+      "meshIndex": 74,
+      "interactionId": "studio.artists-wall"
+    },
+    {
+      "name": "studio.artist-slot-001",
+      "nodeIndex": 75,
+      "meshIndex": 75,
+      "interactionId": "studio.artist-photo.001"
+    },
+    {
+      "name": "studio.artist-slot-002",
+      "nodeIndex": 76,
+      "meshIndex": 76,
+      "interactionId": "studio.artist-photo.002"
+    },
+    {
+      "name": "studio.artist-slot-003",
+      "nodeIndex": 77,
+      "meshIndex": 77,
+      "interactionId": "studio.artist-photo.003"
+    },
+    {
+      "name": "studio.artist-slot-004",
+      "nodeIndex": 78,
+      "meshIndex": 78,
+      "interactionId": "studio.artist-photo.004"
+    },
+    {
+      "name": "studio.artist-slot-005",
+      "nodeIndex": 79,
+      "meshIndex": 79,
+      "interactionId": "studio.artist-photo.005"
+    },
+    {
+      "name": "studio.artist-slot-006",
+      "nodeIndex": 80,
+      "meshIndex": 80,
+      "interactionId": "studio.artist-photo.006"
+    },
+    {
+      "name": "studio.artist-slot-007",
+      "nodeIndex": 81,
+      "meshIndex": 81,
+      "interactionId": "studio.artist-photo.007"
+    },
+    {
+      "name": "studio.artist-slot-008",
+      "nodeIndex": 82,
+      "meshIndex": 82,
+      "interactionId": "studio.artist-photo.008"
+    },
+    {
+      "name": "studio.artist-slot-009",
+      "nodeIndex": 83,
+      "meshIndex": 83,
+      "interactionId": "studio.artist-photo.009"
+    },
+    {
+      "name": "studio.artist-slot-010",
+      "nodeIndex": 84,
+      "meshIndex": 84,
+      "interactionId": "studio.artist-photo.010"
+    },
+    {
+      "name": "studio.artist-slot-011",
+      "nodeIndex": 85,
+      "meshIndex": 85,
+      "interactionId": "studio.artist-photo.011"
+    },
+    {
+      "name": "studio.artist-slot-012",
+      "nodeIndex": 86,
+      "meshIndex": 86,
+      "interactionId": "studio.artist-photo.012"
+    },
+    {
+      "name": "studio.artist-slot-013",
+      "nodeIndex": 87,
+      "meshIndex": 87,
+      "interactionId": "studio.artist-photo.013"
+    },
+    {
+      "name": "studio.artist-slot-014",
+      "nodeIndex": 88,
+      "meshIndex": 88,
+      "interactionId": "studio.artist-photo.014"
+    },
+    {
+      "name": "studio.artist-slot-015",
+      "nodeIndex": 89,
+      "meshIndex": 89,
+      "interactionId": "studio.artist-photo.015"
+    },
+    {
+      "name": "studio.artist-slot-016",
+      "nodeIndex": 90,
+      "meshIndex": 90,
+      "interactionId": "studio.artist-photo.016"
+    },
+    {
+      "name": "studio.artist-slot-017",
+      "nodeIndex": 91,
+      "meshIndex": 91,
+      "interactionId": "studio.artist-photo.017"
+    },
+    {
+      "name": "studio.wall-posters",
+      "nodeIndex": 92,
+      "meshIndex": 92,
+      "interactionId": null
+    },
+    {
+      "name": "studio.poster-art",
+      "nodeIndex": 93,
+      "meshIndex": 93,
+      "interactionId": null
+    },
+    {
+      "name": "studio.audio-system",
+      "nodeIndex": 94,
+      "meshIndex": 94,
+      "interactionId": "studio.audio-system"
+    },
+    {
+      "name": "studio.audio-grille",
+      "nodeIndex": 95,
+      "meshIndex": 95,
+      "interactionId": null
+    },
+    {
+      "name": "studio.audio-driver",
+      "nodeIndex": 96,
+      "meshIndex": 96,
+      "interactionId": null
+    },
+    {
+      "name": "studio.ceiling-lamp-cords",
+      "nodeIndex": 97,
+      "meshIndex": 97,
+      "interactionId": null
+    },
+    {
+      "name": "studio.ceiling-lamp-cups",
+      "nodeIndex": 98,
+      "meshIndex": 98,
+      "interactionId": null
+    },
+    {
+      "name": "studio.warm-bulbs",
+      "nodeIndex": 99,
+      "meshIndex": 99,
+      "interactionId": null
+    },
+    {
+      "name": "studio.red-led",
+      "nodeIndex": 100,
+      "meshIndex": 100,
+      "interactionId": null
+    },
+    {
+      "name": "studio.visible-cables",
+      "nodeIndex": 101,
+      "meshIndex": 101,
+      "interactionId": null
+    }
+  ],
+  "notes": [
+    "True 3D geometry; no panorama used as a flat environment.",
+    "Includes curved timber ceiling, parquet, weathered walls, workstation/iMac, speakers, chair, sofa, guitar, plant, mural, photo backdrop, softboxes, tripods and clothing rack.",
+    "Seventeen portrait slots remain empty until connected to the official roster; no artists are invented.",
+    "Official logo and seal are referenced from existing managed assets.",
+    "Single-panorama reconstruction is not survey-grade: hidden geometry and exact measurements need more references.",
+    "GLB is not yet mounted on /camping. First-person controller, collision, access 808 and runtime interactions belong to Phase 3 and later."
+  ]
+}
