@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { BunkerMap, type Room } from "@/components/BunkerMap";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Room } from "@/components/BunkerMap";
+import { CampingStudioExperience } from "@/features/camping/scene/CampingStudioExperience";
+import "@/features/camping/scene/camping-route.css";
 import { ArtistPresence } from "@/components/ArtistPresence";
 import { CampingLive } from "@/components/CampingLive";
 import { CampingSessions } from "@/components/CampingSessions";
@@ -60,6 +62,7 @@ function Camping() {
   const { sessions, camp, gallery, live: initialLive } = Route.useLoaderData();
   const [live, setLive] = useState(initialLive);
   const [selectedRoom, setSelectedRoom] = useState("estudio");
+  const [recordsOpen, setRecordsOpen] = useState(false);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -67,15 +70,17 @@ function Camping() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const day = campingDayRange(camp.start, camp.end, now);
   useEffect(() => subscribeCampingLive(setLive), []);
 
+  const day = campingDayRange(camp.start, camp.end, now);
   const currentSession = useMemo(
     () => sessions.find((session) => new Date(session.startsAt).getTime() <= now && new Date(session.endsAt).getTime() > now) ?? null,
     [now, sessions],
   );
   const nextSession = useMemo(
-    () => sessions.filter((session) => new Date(session.startsAt).getTime() > now).sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())[0] ?? null,
+    () => sessions
+      .filter((session) => new Date(session.startsAt).getTime() > now)
+      .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime())[0] ?? null,
     [now, sessions],
   );
 
@@ -83,53 +88,78 @@ function Camping() {
     if (currentSession?.roomId) setSelectedRoom(currentSession.roomId);
   }, [currentSession?.roomId]);
 
-  const pickRoom = (room: Room) => setSelectedRoom(room.id);
+  const pickRoom = useCallback((room: Room) => setSelectedRoom(room.id), []);
+  const toggleRecords = useCallback(() => setRecordsOpen((open) => !open), []);
+  const closeRecords = useCallback(() => setRecordsOpen(false), []);
+  const leaveCamping = useCallback(() => navigate({ to: "/" }), [navigate]);
+  const selectedGallery = gallery[selectedRoom] ?? [];
 
   return (
-    <main className="mx-auto max-w-7xl px-4 pb-24 pt-12 md:px-8">
-      <header className="relative border-y border-border py-6">
-        <p className="text-xs tracking-[0.22em] text-blood">1ª EDIÇÃO · STUDIO XOYENS · BUNKER</p>
-        <div className="mt-2 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+    <main className="camping-studio-route">
+      <CampingStudioExperience
+        day={day ? { current: day.current, total: day.total } : null}
+        recordsOpen={recordsOpen}
+        onToggleRecords={toggleRecords}
+        onClosePanels={closeRecords}
+        onLeave={leaveCamping}
+      />
+
+      <aside className="camping-records-drawer" hidden={!recordsOpen} aria-label="Registos operacionais do Camping">
+        <header className="camping-records-drawer__header">
           <div>
-            <h1 className="font-gothic text-6xl leading-[0.85] md:text-8xl">O Camping</h1>
-            <p className="mt-3 max-w-2xl font-stamp text-sm text-muted-foreground">A planta viva: salas, escala, presença e sinal.</p>
+            <p className="camping-records-drawer__eyebrow">CAMPING / CONTROL LOG</p>
+            <h2>REGISTOS DO ESTÚDIO</h2>
+            <p>Dados publicados a partir dos serviços existentes.</p>
           </div>
-          {day && (
-            <div className="border border-blood px-4 py-3 text-right font-mono">
-              <p className="text-[8px] tracking-[0.2em] text-muted-foreground">CAMP</p>
-              <p className="text-2xl text-blood">DIA {String(day.current).padStart(2, "0")}/{String(day.total).padStart(2, "0")}</p>
-            </div>
-          )}
+          <button type="button" onClick={closeRecords} aria-label="Fechar registos">×</button>
+        </header>
+
+        <div className="camping-records-drawer__body">
+          <section className="camping-records-drawer__section">
+            <p className="camping-records-drawer__section-label">01 / SESSÕES</p>
+            <CampingSessions sessions={sessions} selectedRoomId={selectedRoom} onPickRoom={pickRoom} />
+          </section>
+
+          <section className="camping-records-drawer__section">
+            <p className="camping-records-drawer__section-label">02 / TRANSMISSÃO</p>
+            <CampingLive live={live} nextSession={nextSession} />
+            {currentSession && (
+              <div className="camping-records-drawer__current">
+                <p>● AGORA / SESSÃO ACTIVA</p>
+                <h3>{currentSession.title}</h3>
+                <span>{currentSession.roomName}</span>
+              </div>
+            )}
+          </section>
+
+          <section className="camping-records-drawer__section">
+            <p className="camping-records-drawer__section-label">03 / ARQUIVO VISUAL</p>
+            <h3>{selectedRoom.toUpperCase()} / GALERIA</h3>
+            {selectedGallery.length ? (
+              <div className="camping-records-drawer__gallery">
+                {selectedGallery.slice(0, 12).map((item) => (
+                  <button
+                    type="button"
+                    key={item.id}
+                    onClick={() => navigate({ to: "/revelacao", search: { media: item.id } })}
+                    aria-label={"Abrir registo " + item.caption}
+                  >
+                    <img src={item.src} alt={item.caption} loading="lazy" decoding="async" />
+                    <span>{item.caption || item.tag}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="camping-records-drawer__empty">SEM REGISTOS PUBLICADOS NESTA SALA.</p>
+            )}
+          </section>
+
+          <section className="camping-records-drawer__section">
+            <p className="camping-records-drawer__section-label">04 / PRESENÇA</p>
+            <ArtistPresence />
+          </section>
         </div>
-      </header>
-
-      <section className="mt-8">
-        <BunkerMap
-          liveOn={live.on}
-          selectedRoomId={selectedRoom}
-          galleryByRoom={gallery}
-          onPick={pickRoom}
-          onOpenMedia={(id) => navigate({ to: "/revelacao", search: { media: id } })}
-        />
-      </section>
-
-      <section className="mt-8 grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-        <CampingSessions sessions={sessions} selectedRoomId={selectedRoom} onPickRoom={pickRoom} />
-        <div className="space-y-8">
-          <CampingLive live={live} nextSession={nextSession} />
-          {currentSession && (
-            <div className="border border-blood bg-blood/5 p-4">
-              <p className="font-mono text-[9px] tracking-[0.2em] text-blood">● AGORA</p>
-              <p className="mt-1 font-gothic text-3xl">{currentSession.title}</p>
-              <p className="mt-1 font-mono text-[9px] text-muted-foreground">{currentSession.roomName}</p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className="mt-8">
-        <ArtistPresence />
-      </section>
+      </aside>
     </main>
   );
 }

@@ -181,8 +181,10 @@ function LightModeToggle() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const isCameraSurface = useRouterState({
-    select: (state) => state.location.pathname.startsWith("/camera"),
+  const isImmersiveSurface = useRouterState({
+    select: (state) =>
+      state.location.pathname.startsWith("/camera") ||
+      state.location.pathname.startsWith("/camping"),
   });
   const [open, setOpen] = useState(() => isGateOpen());
   const { site } = Route.useLoaderData();
@@ -202,14 +204,14 @@ function RootComponent() {
       <div
         id="site"
         className={
-          isCameraSurface
+          isImmersiveSurface
             ? "camera-root relative min-h-screen overflow-hidden bg-black"
             : "grain scanlines relative min-h-screen overflow-x-hidden bg-background"
         }
       >
-        {!isCameraSurface && <TacticalNav />}
+        {!isImmersiveSurface && <TacticalNav />}
         <Outlet />
-        {!isCameraSurface && (
+        {!isImmersiveSurface && (
           <footer className="border-t border-border px-4 py-10 pb-28 text-center">
             <p className="text-[10px] tracking-widest text-muted-foreground">IDEALIZADO POR</p>
             <div className="mt-4 flex items-center justify-center gap-10">
