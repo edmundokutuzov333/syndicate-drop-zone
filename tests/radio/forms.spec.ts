@@ -13,13 +13,13 @@ async function mockPublicBackend(page: Page) {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify({
+        body: JSON.stringify([{
           code: "ABC123",
           member_number: 42,
           alias: "TESTE",
           since: "2026-10-08T20:00:00.000Z",
           already_member: false,
-        }),
+        }]),
       });
       return;
     }
