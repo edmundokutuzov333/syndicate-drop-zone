@@ -18,7 +18,7 @@ const engine = {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocked.FFmpeg.mockImplementation(() => engine);
+  mocked.FFmpeg.mockImplementation(function MockFFmpeg() { return engine as any; });
   mocked.toBlobURL.mockResolvedValue("blob:ffmpeg-core");
   mocked.fetchFile.mockResolvedValue(new Uint8Array([1, 2, 3]));
 });

@@ -6,7 +6,8 @@ const INK = "#101010";
 const PAPER = "#eee7da";
 const RED = "#bd252b";
 
-export function drawFanCard(canvas: HTMLCanvasElement, fan: FanPublic, photo?: HTMLImageElement | null): void {
+export function drawFanCard(canvas: HTMLCanvasElement, fan: FanPublic, photo: HTMLImageElement, stamp?: HTMLImageElement | null): void {
+  if (!photo) throw new Error("A fotografia é obrigatória para criar o cartão.");
   canvas.width = WIDTH;
   canvas.height = HEIGHT;
   const context = canvas.getContext("2d");
@@ -48,11 +49,9 @@ export function drawFanCard(canvas: HTMLCanvasElement, fan: FanPublic, photo?: H
   context.fillText("FÃ Nº " + String(fan.fanNumber).padStart(4, "0"), WIDTH - 72, 82);
   context.textAlign = "left";
 
-  context.fillStyle = PAPER;
-  context.font = '84px "Pirata One", serif';
-  context.fillText("SOU DO", 72, 154);
   context.fillStyle = RED;
-  context.fillText("SINDICATO.", 72, 240);
+  context.font = '84px "Pirata One", serif';
+  context.fillText("SINDIIICALIZADO", 72, 174);
 
   context.strokeStyle = RED;
   context.lineWidth = 5;
@@ -60,30 +59,64 @@ export function drawFanCard(canvas: HTMLCanvasElement, fan: FanPublic, photo?: H
   context.fillStyle = "#1d1b1b";
   context.fillRect(80, 374, WIDTH - 160, 724);
 
-  if (photo) {
-    const sourceWidth = photo.naturalWidth || photo.width;
-    const sourceHeight = photo.naturalHeight || photo.height;
-    const crop = Math.max((WIDTH - 160) / sourceWidth, 724 / sourceHeight);
-    const drawWidth = sourceWidth * crop;
-    const drawHeight = sourceHeight * crop;
-    context.save();
-    context.beginPath();
-    context.rect(80, 374, WIDTH - 160, 724);
-    context.clip();
-    context.drawImage(photo, 80 + ((WIDTH - 160) - drawWidth) / 2, 374 + (724 - drawHeight) / 2, drawWidth, drawHeight);
-    context.fillStyle = "#0808083b";
-    context.fillRect(80, 374, WIDTH - 160, 724);
-    context.restore();
-  } else {
-    context.fillStyle = RED;
-    context.font = '260px "Pirata One", serif';
-    context.textAlign = "center";
-    context.fillText("SDT", WIDTH / 2, 575);
-    context.textAlign = "left";
-    context.fillStyle = PAPER;
-    context.font = '700 24px "Space Mono", monospace';
-    context.fillText("CARTÃO OFICIAL DE FÃ", 118, 950);
+  const sourceWidth = photo.naturalWidth || photo.width;
+  const sourceHeight = photo.naturalHeight || photo.height;
+  const crop = Math.max((WIDTH - 160) / sourceWidth, 724 / sourceHeight);
+  const drawWidth = sourceWidth * crop;
+  const drawHeight = sourceHeight * crop;
+  context.save();
+  context.beginPath();
+  context.rect(80, 374, WIDTH - 160, 724);
+  context.clip();
+  context.filter = "grayscale(1) contrast(1.45) brightness(0.92)";
+  context.drawImage(photo, 80 + ((WIDTH - 160) - drawWidth) / 2, 374 + (724 - drawHeight) / 2, drawWidth, drawHeight);
+  context.filter = "none";
+  context.fillStyle = "rgba(8, 8, 8, 0.20)";
+  context.fillRect(80, 374, WIDTH - 160, 724);
+
+  // Match the artists' halftone print, photocopy wear and crushed shadows.
+  const halftoneTile = document.createElement("canvas");
+  halftoneTile.width = 4;
+  halftoneTile.height = 4;
+  const tileContext = halftoneTile.getContext("2d");
+  if (tileContext) {
+    tileContext.fillStyle = "rgba(0, 0, 0, 0.68)";
+    tileContext.beginPath();
+    tileContext.arc(2, 2, 0.9, 0, Math.PI * 2);
+    tileContext.fill();
+    const pattern = context.createPattern(halftoneTile, "repeat");
+    if (pattern) {
+      context.fillStyle = pattern;
+      context.globalAlpha = 0.85;
+      context.fillRect(80, 374, WIDTH - 160, 724);
+      context.globalAlpha = 1;
+    }
   }
+
+  const xeroxShade = context.createLinearGradient(80, 374, 80, 1098);
+  xeroxShade.addColorStop(0, "rgba(255, 255, 255, 0.03)");
+  xeroxShade.addColorStop(0.48, "rgba(0, 0, 0, 0.02)");
+  xeroxShade.addColorStop(1, "rgba(0, 0, 0, 0.48)");
+  context.fillStyle = xeroxShade;
+  context.fillRect(80, 374, WIDTH - 160, 724);
+
+  // Repeat the official seal like the overprinted stamps in the artist dossiers.
+  if (stamp) {
+    context.save();
+    context.globalAlpha = 0.94;
+    context.translate(905, 936);
+    context.rotate(-0.19);
+    context.drawImage(stamp, -82, -82, 164, 164);
+    context.restore();
+
+    context.save();
+    context.globalAlpha = 0.76;
+    context.translate(178, 485);
+    context.rotate(0.14);
+    context.drawImage(stamp, -58, -58, 116, 116);
+    context.restore();
+  }
+  context.restore();
 
   context.fillStyle = INK;
   context.fillRect(102, 1000, WIDTH - 204, 210);

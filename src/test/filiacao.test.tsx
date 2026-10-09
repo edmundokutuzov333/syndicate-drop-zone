@@ -35,8 +35,17 @@ beforeEach(() => {
   vi.mocked(fanPublic).mockResolvedValue(null);
   vi.mocked(registerFan).mockResolvedValue(createdFan);
   vi.stubGlobal("URL", {
-    createObjectURL: vi.fn(() => "blob:fan-video"),
+    createObjectURL: vi.fn(() => "blob:fan-photo"),
     revokeObjectURL: vi.fn(),
+  });
+  vi.stubGlobal("Image", class TestImage {
+    naturalWidth = 100;
+    naturalHeight = 100;
+    width = 100;
+    height = 100;
+    onload: ((event: Event) => void) | null = null;
+    onerror: ((event: Event) => void) | null = null;
+    set src(_value: string) { this.onload?.(new Event("load")); }
   });
 });
 
@@ -53,6 +62,8 @@ describe("Código do Fã", () => {
     expect(screen.getByText("APOIO")).toBeTruthy();
     expect(screen.getByText("CRÉDITO")).toBeTruthy();
     expect(screen.getByText("UNIÃO")).toBeTruthy();
+    expect(screen.getByText("SINDIIICALIZADO")).toBeTruthy();
+    expect(screen.getByLabelText(/ADICIONAR FOTOGRAFIA OBRIGATÓRIA/i)).toBeTruthy();
     expect(screen.queryByLabelText(/whatsapp|email|assinatura/i)).toBeNull();
   });
 
@@ -63,6 +74,12 @@ describe("Código do Fã", () => {
     expect(registerFan).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByLabelText(/Aceito o Código do Fã/i));
+    fireEvent.click(screen.getByRole("button", { name: /CRIAR O MEU CARTÃO/i }));
+    expect(registerFan).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText(/ADICIONAR FOTOGRAFIA OBRIGATÓRIA/i), {
+      target: { files: [new File(["portrait"], "portrait.png", { type: "image/png" })] },
+    });
+    await screen.findByText("FOTOGRAFIA SELECCIONADA");
     fireEvent.click(screen.getByRole("button", { name: /CRIAR O MEU CARTÃO/i }));
     expect(await screen.findByText("CARTÃO DE FÃ CRIADO")).toBeTruthy();
     expect(registerFan).toHaveBeenCalledWith({ alias: "FÃ TESTE", rulesVersion: "v1", referredBy: null });
@@ -75,6 +92,10 @@ describe("Código do Fã", () => {
     render(<Filiacao />);
     fireEvent.change(screen.getByLabelText("NOME OU APELIDO"), { target: { value: "FÃ TESTE" } });
     fireEvent.click(screen.getByLabelText(/Aceito o Código do Fã/i));
+    fireEvent.change(screen.getByLabelText(/ADICIONAR FOTOGRAFIA OBRIGATÓRIA/i), {
+      target: { files: [new File(["portrait"], "portrait.png", { type: "image/png" })] },
+    });
+    await screen.findByText("FOTOGRAFIA SELECCIONADA");
     fireEvent.click(screen.getByRole("button", { name: /CRIAR O MEU CARTÃO/i }));
     await screen.findByText("CARTÃO DE FÃ CRIADO");
 

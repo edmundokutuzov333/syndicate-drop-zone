@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Check, Copy, Download, Loader2, Pause, Play, Share2, Upload, Video } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { TAPES } from "@/lib/data";
+import selo from "@/assets/brand/sindicato-selo.png.asset.json";
 import { downloadFanCard, downloadVideoBlob, drawFanCard, shareFanCard } from "@/lib/fan-card";
 import { fanPublic, getStoredFanCode, registerFan, storeFanCode, type FanPublic } from "@/lib/fan-membership";
 import { track } from "@/lib/track";
@@ -27,7 +27,26 @@ const CLAUSES = [
   { title: "UNIÃO", body: "Não divulgues conteúdos privados ou lançamentos sem autorização." },
 ] as const;
 
-const TRACKS = TAPES.filter((item) => Boolean(item.src)).slice(0, 4);
+const TRACKS = [
+  {
+    id: "T1",
+    title: "A NOVA WAVE",
+    feat: "Bruno The Goat, Alemão Wav, Elton Penicela",
+    src: "/audio/Phantom, Bruno The Goat, Alemão Wav & Elton Penicela - A Nova Wave.mp3",
+  },
+  {
+    id: "T2",
+    title: "PHANTOM MODE",
+    feat: "INF8M8US, HEYYG, Kingston Siriro",
+    src: "/audio/PHANTOM Mode 2 - The Final Movie W_ INF8M8US, HEYYG, KINGSTON SIRIRO.mp3",
+  },
+  {
+    id: "T3",
+    title: "FASHIION D'PHANTOM",
+    feat: "Kingston Siriro, Kaká Machava, Elton Penicela",
+    src: "/audio/(Unmastered) PHANTOM, Kingston Siriro, Elton Penicela - Fashion de Phantom.mp3",
+  },
+] as const;
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString("pt-PT");
@@ -56,6 +75,8 @@ export function Filiacao() {
   const [videoBusy, setVideoBusy] = useState(false);
   const [videoProgress, setVideoProgress] = useState(0);
   const [videoError, setVideoError] = useState("");
+  const [previewError, setPreviewError] = useState("");
+  const [stampImage, setStampImage] = useState<HTMLImageElement | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const cardCanvasRef = useRef<HTMLCanvasElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -96,9 +117,17 @@ export function Filiacao() {
   }, []);
 
   useEffect(() => {
-    if (!card || !cardCanvasRef.current) return;
-    drawFanCard(cardCanvasRef.current, card, photo);
-  }, [card, photo]);
+    let active = true;
+    void loadImage(selo.url)
+      .then((image) => { if (active) setStampImage(image); })
+      .catch(() => { if (active) setStampImage(null); });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!card || !photo || !cardCanvasRef.current) return;
+    drawFanCard(cardCanvasRef.current, card, photo, stampImage);
+  }, [card, photo, stampImage]);
 
   useEffect(() => {
     return () => {
@@ -112,6 +141,7 @@ export function Filiacao() {
     if (audioRef.current) audioRef.current.currentTime = 0;
     setPreviewPlaying(false);
     setVideoError("");
+    setPreviewError("");
     setVideoProgress(0);
     if (videoObjectUrlRef.current) {
       URL.revokeObjectURL(videoObjectUrlRef.current);
@@ -156,6 +186,10 @@ export function Filiacao() {
       setError("O NOME OU APELIDO DEVE TER ENTRE 2 E 20 CARACTERES.");
       return;
     }
+    if (!photo) {
+      setError("A FOTOGRAFIA É OBRIGATÓRIA PARA CRIAR O CARTÃO.");
+      return;
+    }
     if (registering) return;
 
     const params = new URLSearchParams(window.location.search);
@@ -180,7 +214,7 @@ export function Filiacao() {
   };
 
   const downloadPng = async () => {
-    if (!card || !cardCanvasRef.current) return;
+    if (!card || !photo || !cardCanvasRef.current) return;
     try {
       await downloadFanCard(cardCanvasRef.current, "sindicato-cartao-fa-" + card.code + ".png");
       track("card_share", { method: "download_png" });
@@ -191,7 +225,7 @@ export function Filiacao() {
   };
 
   const sharePng = async () => {
-    if (!card || !cardCanvasRef.current) return;
+    if (!card || !photo || !cardCanvasRef.current) return;
     try {
       const result = await shareFanCard(cardCanvasRef.current, "sindicato-cartao-fa-" + card.code + ".png");
       if (result === "cancelled") {
@@ -217,7 +251,7 @@ export function Filiacao() {
   };
 
   const createVideo = async () => {
-    if (!card || !cardCanvasRef.current || !selectedTrack || videoBusy) return;
+    if (!card || !photo || !cardCanvasRef.current || !selectedTrack || videoBusy) return;
     setVideoBusy(true);
     setVideoError("");
     setVideoProgress(1);
@@ -282,8 +316,9 @@ export function Filiacao() {
       audio.pause();
       return;
     }
+    setPreviewError("");
     try { await audio.play(); } catch {
-      setVideoError("NÃO FOI POSSÍVEL REPRODUZIR A PRÉVIA.");
+      setPreviewError("NÃO FOI POSSÍVEL REPRODUZIR A PRÉVIA. VERIFICA A LIGAÇÃO E EXPERIMENTA OUTRA MÚSICA.");
     }
   };
 
@@ -312,7 +347,7 @@ export function Filiacao() {
         <section className="mx-auto mt-8 max-w-3xl border border-border bg-card">
           <div className="border-b-2 border-blood bg-[#111] p-5 md:p-7">
             <p className="font-mono text-[9px] tracking-[0.2em] text-blood">CÓDIGO DO FÃ // V1</p>
-            <h2 className="mt-2 font-stamp text-3xl text-foreground md:text-4xl">SOU DO SINDICATO.</h2>
+            <h2 className="mt-2 font-stamp text-3xl text-foreground md:text-4xl">SINDIIICALIZADO</h2>
             <p className="mt-2 text-sm text-muted-foreground">Quatro regras. Um cartão. A tua forma de representar.</p>
           </div>
 
@@ -345,10 +380,10 @@ export function Filiacao() {
 
             <div className="space-y-2">
               <label htmlFor="fan-photo" className="flex min-h-12 cursor-pointer items-center justify-center gap-2 border border-dashed border-border px-4 py-3 font-mono text-[10px] tracking-[0.14em] hover:border-blood">
-                <Upload size={15} /> {photo ? "FOTOGRAFIA SELECCIONADA" : "ADICIONAR FOTO (OPCIONAL)"}
+                <Upload size={15} /> {photo ? "FOTOGRAFIA SELECCIONADA" : "ADICIONAR FOTOGRAFIA OBRIGATÓRIA"}
               </label>
-              <input id="fan-photo" type="file" accept="image/*" className="sr-only" onChange={(event) => void selectPhoto(event.target.files?.[0])} />
-              <p className="text-xs text-muted-foreground">A foto fica neste dispositivo e não é enviada para o servidor.</p>
+              <input id="fan-photo" type="file" accept="image/*" aria-required="true" className="sr-only" onChange={(event) => void selectPhoto(event.target.files?.[0])} />
+              <p className="text-xs text-muted-foreground">Obrigatória. A fotografia recebe o efeito de impressão e fotocópia dos artistas. Fica neste dispositivo e não é enviada para o servidor.</p>
             </div>
 
             {error && <p role="alert" aria-live="assertive" className="border border-blood/60 bg-blood/10 p-3 font-mono text-[10px] leading-5 text-blood">{error}</p>}
@@ -371,13 +406,22 @@ export function Filiacao() {
               </div>
               <span className="stamp px-2 py-1 text-[8px] font-bold tracking-[0.12em]">FÃ SDT</span>
             </div>
+            {!photo && (
+              <div className="mb-4 space-y-2 border border-dashed border-blood p-4">
+                <label htmlFor="fan-photo-existing" className="flex min-h-12 cursor-pointer items-center justify-center gap-2 font-mono text-[10px] tracking-[0.12em]">
+                  <Upload size={15} /> ADICIONAR FOTOGRAFIA OBRIGATÓRIA
+                </label>
+                <input id="fan-photo-existing" type="file" accept="image/*" aria-required="true" className="sr-only" onChange={(event) => void selectPhoto(event.target.files?.[0])} />
+                <p className="text-xs leading-5 text-muted-foreground">Este cartão foi aberto sem a fotografia local. Selecciona-a novamente para gerar o PNG ou vídeo. A imagem não é enviada para o servidor.</p>
+              </div>
+            )}
             <div className="overflow-hidden border border-border bg-black">
-              <canvas ref={cardCanvasRef} className="h-auto w-full" aria-label="Prévia do cartão de fã" />
+              {photo ? <canvas ref={cardCanvasRef} className="h-auto w-full" aria-label="Prévia do cartão de fã" /> : <div className="flex aspect-[9/16] items-center justify-center p-6 text-center font-mono text-xs leading-6 text-muted-foreground">A FOTOGRAFIA É OBRIGATÓRIA<br />PARA GERAR O CARTÃO.</div>}
             </div>
             <p className="mt-3 text-xs text-muted-foreground">PNG em 1080 × 1920 píxeis.</p>
             <div className="mt-4 grid gap-2">
-              <button type="button" onClick={() => void downloadPng()} className="flex min-h-12 items-center justify-center gap-2 border border-blood bg-blood px-4 py-3 font-mono text-[10px] tracking-[0.14em] text-primary-foreground"><Download size={15} /> DESCARREGAR IMAGEM PNG</button>
-              <button type="button" onClick={() => void sharePng()} className="flex min-h-12 items-center justify-center gap-2 border border-border px-4 py-3 font-mono text-[10px] tracking-[0.14em] hover:border-blood"><Share2 size={15} /> PARTILHAR PNG</button>
+              <button type="button" onClick={() => void downloadPng()} disabled={!photo} className="flex min-h-12 items-center justify-center gap-2 border border-blood bg-blood px-4 py-3 font-mono text-[10px] tracking-[0.14em] text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"><Download size={15} /> DESCARREGAR IMAGEM PNG</button>
+              <button type="button" onClick={() => void sharePng()} disabled={!photo} className="flex min-h-12 items-center justify-center gap-2 border border-border px-4 py-3 font-mono text-[10px] tracking-[0.14em] hover:border-blood disabled:cursor-not-allowed disabled:opacity-50"><Share2 size={15} /> PARTILHAR PNG</button>
               <button type="button" onClick={() => void copyLink()} className="flex min-h-12 items-center justify-center gap-2 border border-border px-4 py-3 font-mono text-[10px] tracking-[0.14em] hover:border-blood"><Copy size={15} /> COPIAR LINK DO CARTÃO</button>
               {shareState && <p role="status" className="break-words text-center font-mono text-[9px] leading-5 text-blood">{shareState}</p>}
             </div>
@@ -400,6 +444,7 @@ export function Filiacao() {
                 <button type="button" onClick={() => void togglePreview()} disabled={!selectedTrack} className="flex min-h-11 w-full items-center justify-center gap-2 border border-border px-4 py-3 font-mono text-[10px] tracking-[0.14em] hover:border-blood disabled:opacity-50">
                   {previewPlaying ? <Pause size={15} /> : <Play size={15} />} {previewPlaying ? "PAUSAR PRÉVIA" : "OUVIR PRÉVIA"}
                 </button>
+                {previewError && <p role="alert" className="border border-blood/60 bg-blood/10 p-3 text-xs leading-5 text-blood">{previewError}</p>}
                 <div className="flex h-16 items-center justify-center gap-1 overflow-hidden border border-border bg-[#101010] px-4" aria-label="Prévia visual do som">
                   {Array.from({ length: 36 }, (_, index) => (
                     <span key={index} className={previewPlaying ? "fan-eq-bar" : ""} style={{ height: (10 + ((index * 17) % 35)) + "px", width: "5px", background: "#bd252b", opacity: previewPlaying ? 1 : 0.65, animationDelay: (index * 18) + "ms" }} />
@@ -416,7 +461,7 @@ export function Filiacao() {
                   </div>
                 </div>
                 <p className="mt-3 text-xs leading-5 text-muted-foreground">O motor de vídeo gratuito só é carregado quando clicares em “CRIAR VÍDEO”. A primeira vez pode demorar e usa a memória do teu dispositivo.</p>
-                <button type="button" onClick={() => void createVideo()} disabled={videoBusy || !selectedTrack} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 border border-blood bg-blood px-4 py-4 font-mono text-[10px] tracking-[0.16em] text-primary-foreground disabled:cursor-wait disabled:opacity-60">
+                <button type="button" onClick={() => void createVideo()} disabled={videoBusy || !selectedTrack || !photo} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 border border-blood bg-blood px-4 py-4 font-mono text-[10px] tracking-[0.16em] text-primary-foreground disabled:cursor-wait disabled:opacity-60">
                   {videoBusy ? <><Loader2 size={15} className="animate-spin" /> A CRIAR VÍDEO {videoProgress}%</> : <><Video size={15} /> CRIAR VÍDEO</>}
                 </button>
                 {videoBusy && (
