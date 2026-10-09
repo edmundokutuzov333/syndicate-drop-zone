@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { KEY_TTL_MS } from "@/lib/config";
-import { grantKey, hasKey, keyLeftMs } from "@/lib/key";
+import { canEnterMerch, grantKey, hasKey, keyLeftMs } from "@/lib/key";
 import { IDLE_STATE, tape } from "@/lib/tape-engine";
 import { GATE_BOOT, GATE_SESSION_KEY, isGateOpen, openGate } from "@/lib/gate";
 import { isMuted, setMuted, subscribeMute } from "@/lib/audio-bus";
@@ -32,6 +32,13 @@ describe("FASE 1 key", () => {
     grantKey(now);
     expect(hasKey(now + 1000)).toBe(true);
     expect(keyLeftMs(now + 1000)).toBe(KEY_TTL_MS - 1000);
+  });
+
+  it("unlocks merch only after a valid listening key is granted", () => {
+    const now = Date.now();
+    expect(canEnterMerch(hasKey(now))).toBe(false);
+    grantKey(now);
+    expect(canEnterMerch(hasKey(now + 10_000))).toBe(true);
   });
 
   it("expires after 24 hours", () => {
