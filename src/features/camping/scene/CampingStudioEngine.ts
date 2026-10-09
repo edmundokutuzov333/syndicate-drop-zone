@@ -747,6 +747,20 @@ export class CampingStudioEngine {
               material.needsUpdate = true;
             }
           }
+          const runtimeInteractionIds: Record<string, string> = {
+            "studio.imac-screen": "studio.imac",
+            "studio.imac-daw-track": "studio.imac",
+            "studio.photo-backdrop-seal": "studio.photo-backdrop",
+            "studio.garments": "studio.merch-rack",
+            "studio.door-panel": "studio.inner-door",
+            "studio.door-handle": "studio.inner-door",
+            "studio.audio-grille": "studio.audio-system",
+            "studio.audio-driver": "studio.audio-system",
+          };
+          const runtimeId = runtimeInteractionIds[object.name];
+          if (runtimeId && !object.userData?.interactionId) {
+            object.userData.interactionId = runtimeId;
+          }
           const interactionId = object.userData?.interactionId;
           if (typeof interactionId === "string" && interactionId) this.interactiveRoots.push(object);
         });
