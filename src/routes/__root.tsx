@@ -37,7 +37,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     return {
       meta: [
         { charSet: "utf-8" },
-        { name: "viewport", content: "width=device-width, initial-scale=1" },
         { title: seo.title },
         { name: "description", content: seo.description },
         { property: "og:type", content: seo.ogType },
@@ -71,6 +70,7 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-MZ" suppressHydrationWarning>
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <script dangerouslySetInnerHTML={{ __html: GATE_BOOT }} />
         <HeadContent />
       </head>
