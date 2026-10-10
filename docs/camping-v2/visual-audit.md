@@ -2,73 +2,93 @@
 
 **Data:** 2026-10-10  
 **Branch:** `main`  
-**Estado:** correcções visuais implementadas no código. A validação no browser e a publicação integral do HEAD continuam pendentes.
+**Estado:** correcções visuais implementadas no código. A validação visual no browser e a publicação integral do HEAD continuam pendentes.
 
 ## Referência e método
 
-A panorâmica Xoyens fornecida é a referência da sala: tecto curvo em madeira, vigas, parquet, iluminação quente, zona de produção, mural de cores, área de fotografia preta e branding do Sindicato. O GLB continua a ser geometria glTF real, não uma imagem de fundo.
+A panorâmica Xoyens fornecida é a referência visual principal: tecto curvo de madeira, vigas visíveis, parquet quente, iluminação prática, zona de produção, mural colorido, fundo fotográfico preto, rack de roupa e identidade do Sindicato. A cena continua a usar geometria glTF real e materiais 3D, não uma imagem panorâmica como fundo.
 
-O modelo tem envelope declarado de 14,2 × 9,2 m, altura de parede de 3,2 m, 102 meshes, 150 primitivas, 26 materiais e 13 imagens embebidas. A estrutura foi inspeccionada pelo JSON interno do GLB. Como existe apenas uma panorâmica, as superfícies ocultas e as medidas exactas do espaço não podem ser provadas como réplicas métricas perfeitas; os ajustes mantêm o eixo, o envelope e a distribuição já aprovada no modelo.
+O GLB declara um envelope de 14,2 × 9,2 m, paredes de 3,2 m, tecto até 4,35 m, 102 meshes, 150 primitivas, 26 materiais e 13 imagens embebidas. O modelo tem materiais de madeira, gesso, metal, tecido, couro, papel e ecrã, com mapas de cor e normais para os materiais principais.
 
-## Problemas concretos encontrados
+Existe uma limitação objectiva: a referência disponível é uma só panorâmica, sem fotografias das paredes ocultas, distâncias métricas confirmadas ou vistas adicionais. A composição pode seguir essa imagem, mas não é possível certificar fidelidade geométrica absoluta das superfícies que não aparecem nela sem mais referência visual.
 
-1. **Parede dos artistas:** os 17 slots físicos existiam, mas os nós `studio.artist-slot-001` até `studio.artist-slot-017` estavam marcados como placeholders. O runtime não estava a substituir as superfícies pretas pelas fotografias publicadas.
-2. **Logo Xoyens:** o asset oficial `src/assets/brand/xoyens.png.asset.json` existia no repositório, mas não era usado pelo motor 3D.
-3. **Pano do Sindicato:** o selo oficial estava representado por uma superfície plana sobre o fundo de fotografia preto. Faltava uma superfície de tecido com parallax, pregas e fixações físicas.
-4. **Entrada 808:** antes da porta aparecer aberta, a interface repetia a descrição do protocolo, as instruções de teclado/rato, o código e vários labels de ambiente.
+## Auditoria: problemas concretos encontrados
 
-## Correcções efectuadas
+1. **Parede de artistas:** os 17 slots físicos existiam, mas o GLB marcava-os como placeholders. O runtime não estava a aplicar as fotografias publicadas às superfícies pretas das molduras.
+2. **Logo Xoyens:** o asset oficial `src/assets/brand/xoyens.png.asset.json` existia no repositório, mas não era utilizado pelo motor 3D.
+3. **Pano do Sindicato:** o selo estava aplicado a um plano simples sobre o fundo fotográfico preto. Faltavam volume de tecido, pequenas pregas e fixações físicas.
+4. **Materiais:** o ambiente usava os mapas do GLB, mas não tinha uma environment map de reflexão e a filtragem anisotrópica não aproveitava o limite da GPU.
+5. **Entrada 808:** havia labels duplicados, um texto longo de instruções, um estado de acesso no cabeçalho e instruções repetidas no painel.
+6. **Raycasting:** o selo plano antigo ficava escondido sob o novo pano, mas um objecto invisível podia continuar a entrar na lista de alvos de raycast.
 
-### Retratos reais, visíveis sem clique
+## Correcções implementadas
 
-- O motor inicia a leitura do roster publicado enquanto o visitante ainda está na entrada.
-- Os registos são mapeados por código canónico `SDT-01` a `SDT-17`, nunca pela posição de um array não validado.
-- A imagem `photo_url` de cada artista publicada é aplicada ao material da superfície fotográfica dentro da moldura física do GLB.
-- O código reconhece tanto slots GLTF com primitivas separadas como meshes com múltiplos materiais; substitui somente a superfície preta da fotografia, preservando moldura, papel e madeira.
-- A textura é configurada para os UVs do GLTF, espaço de cor sRGB e filtragem anisotrópica limitada.
-- Se faltar um artista ou uma imagem, o runtime não desloca a fotografia de outro membro nem fabrica um retrato. O roster observado no Supabase tem 17 artistas publicados e URLs de fotografia presentes.
+### 1. Fotografias reais nas 17 molduras
 
-### Logo oficial Xoyens com backlight
+- Foi criada a função `buildCampingArtistPortraitBindings` em `camping-visual-contracts.ts`. Só aceita códigos oficiais `SDT-01` a `SDT-17` e imagens reais.
+- A fonte de verdade é `getLiveArtistsForSite()`, que lê artistas publicados do Supabase e mapeia `photo_url` para `img`.
+- Cada código corresponde ao nó físico `studio.artist-slot-NNN`. Não há indexação cega que possa atribuir a fotografia de um artista ao membro errado.
+- O motor percorre a moldura e substitui apenas o material preto que corresponde à fotografia. A moldura de madeira e o papel continuam visíveis.
+- O código trata tanto modelos GLTF com primitivas separadas como meshes com vários materiais.
+- A textura usa sRGB, UVs GLTF, mipmaps e filtragem anisotrópica limitada. O enquadramento é recortado ao centro conforme o aspecto da fotografia e da moldura, evitando deformar rostos.
+- A cena mantém-se em estado de carregamento até as tentativas de carregamento das fotografias terminarem. Assim, o percurso de entrada não deve ultrapassar a porta com a parede ainda a preencher as molduras.
+- Os pedidos falhados são contabilizados e comunicados por uma mensagem transitória. Não se reutiliza a foto de outro membro, e os slots sem registo ficam vazios.
 
-- Foi usado o asset oficial existente, não foi redesenhado nem substituído por uma imitação.
-- O letreiro é um conjunto físico no painel de madeira da zona de produção: caixa escura com espessura, moldura metálica, canal LED quente e luz de recorte por trás.
-- O plano de imagem está à frente da caixa e usa o asset transparente `xoyens.png`. A iluminação é emitida por materiais e luzes 3D, não por um elemento HTML sobreposto ao ecrã.
+A auditoria ao Supabase encontrou 17 artistas publicados com os respectivos URLs de fotografia. Não foi criado um artista número 18.
 
-### Bandeira preta com selo grande
+### 2. Letreiro físico Xoyens com iluminação traseira
 
-- Foi acrescentado um pano de 5,25 × 2,78 m no suporte que já existe na zona de fotografia.
-- A superfície tem 48 × 28 subdivisões, ondulação pequena e irregular, um material escuro derivado do material PBR de tecido do próprio GLB e cópias próprias dos mapas de cor e normal.
-- Foram adicionados uma barra metálica e três grampos físicos.
-- O selo é o PNG oficial do Sindicato, mapeado numa superfície própria sobre o tecido. O antigo plano do selo é ocultado para não gerar duas impressões sobrepostas.
-- A área continua ligada ao identificador `studio.photo-backdrop`; a nova geometria mantém a interacção do fundo fotográfico.
+O motor utiliza o ficheiro original `xoyens.png`, sem redesenhar o símbolo. O letreiro fica na parede da zona de produção sobre a mesa, com caixa preta tridimensional, moldura metálica, canal LED âmbar e uma luz pontual atrás do conjunto. A imagem oficial é uma textura sobre um plano montado à frente da caixa. O objecto completo está integrado no espaço 3D.
 
-### Entrada reduzida ao essencial
+### 3. Bandeira gigante preta com o selo original
 
-- A zona de entrada apresenta apenas `STUDIO XOYENS`, `808`, `Código de acesso` e os três dígitos.
-- Os labels verticais de marketing e o bloco de instruções de teclado/rato desaparecem enquanto a porta está fechada.
-- Durante a transição, a mensagem foi reduzida para `A preparar o estúdio` ou `Pode entrar`.
-- As instruções de movimento ficam disponíveis quando o utilizador já está dentro. O modo de navegação guiada e o acesso aos registos mantêm-se para acessibilidade.
+- Pano de 5,25 × 2,78 m, ajustado à armação da área de fotografia.
+- Geometria subdividida em 48 × 28 segmentos para criar ondulação pequena e pregas com parallax.
+- Material derivado do tecido PBR do próprio GLB, com mapa de cor e mapa normal repetidos, acabamento preto, roughness elevada e metalness zero.
+- Barra de suporte metálica e três grampos.
+- Selo oficial do Sindicato aplicado como textura sobre o pano, em grande escala. O selo plano antigo fica escondido para evitar duplicação.
+- A superfície nova continua ligada ao ID `studio.photo-backdrop`.
 
-## Testes adicionados
+O objecto plano oculto é agora excluído dos alvos do raycast. O banner visível é o alvo da interacção, não o selo antigo por baixo.
 
-`src/features/camping/scene/camping-visual-contracts.ts` e o respectivo teste validam:
-- mapeamento dos 17 códigos de artista para os 17 nós de moldura;
-- ausência de colisões entre slots;
-- exclusão de códigos inválidos, duplicados, imagens vazias e membros fora do roster;
-- ausência de retratos inventados para slots sem registo publicado.
+### 4. Realismo PBR e iluminação
 
-O teste do contrato visual foi acrescentado ao conjunto Vitest existente. Não foi possível executar os testes do repositório num sandbox Vercel: a criação de sandbox devolveu `403 forbidden`. A ferramenta de workflows GitHub disponível não expõe os runs de push e o estado Vercel está limitado por `build-rate-limit`. Por isso, não é correcto afirmar que Vitest, lint, Playwright ou uma inspeção visual de browser passaram.
+- O motor gera uma environment map com `RoomEnvironment` e `PMREMGenerator`, com intensidade baixa para preservar os pretos e o ambiente quente.
+- Os materiais do GLB mantêm os mapas PBR existentes. A filtragem anisotrópica aproveita até 16x em GPUs classificadas como high e até 8x nas restantes, sempre limitada à capacidade real reportada pela GPU.
+- O perfil high passou a usar sombras de 2048 px; o perfil móvel/limitado mantém 512 px, e o desktop equilibrado 1024 px.
+- O tecto de madeira, parquet, gesso, metal, tecido e couro mantêm os mapas existentes. Não foi substituído o GLB por uma panorâmica nem foram acrescentados materiais de plástico genérico.
+- Reflexos e sombras continuam condicionados pela capacidade do dispositivo. Esta abordagem melhora a resposta dos materiais sem impor o custo máximo em telemóveis.
 
-## Publicação e bloqueios
+Não foi importado um pacote externo de texturas PBR nem reexportado o GLB. O modelo existente já contém mapas de cor e normais, e a redução da qualidade em mobile deve ser medida em hardware real antes de se introduzirem assets de maior resolução ou novos decoders.
 
-O deployment Vercel conhecido como `READY` continua associado ao commit anterior de runtime `2eede7f4157f603bc9c27202b60d496c3fd7f25b`. As correcções dos retratos, do letreiro, da bandeira e da entrada estão na `main`, mas ainda não foram comprovadas numa publicação Vercel que contenha todas estas alterações. O estado do Lovable também não foi confirmado para o commit mais recente do motor.
+### 5. Entrada 808 simplificada
 
-## Critérios para fechar a auditoria
+O painel de entrada apresenta agora apenas `STUDIO XOYENS`, `808`, `Código de acesso` e os três dígitos. Foram removidos do estado anterior à porta os labels verticais de marketing, o texto `ENTRY PROTOCOL`, a indicação `ACCESS LEVEL / 808` e o bloco de instruções `WASD / DRAG LOOK`. O cabeçalho reduz-se à identidade do estúdio e o estado da sala só aparece depois de entrar. Durante a transição, o texto ficou reduzido a `A preparar o estúdio` e `Pode entrar`.
 
-1. Verificar o deployment que inclua o commit do motor, a UI e o manifesto actualizado.
-2. Abrir `/camping` no browser, introduzir `808` e confirmar visualmente as 17 fotografias, o letreiro Xoyens, as pregas do pano e o selo em grande escala.
-3. Inspeccionar os erros da rede para os 17 `photo_url` e para os assets `xoyens.png` e `sindicato-selo.png`; confirmar que todos respondem com sucesso.
-4. Correr `npm test`, `npm run lint`, `npm run build` e `npm run test:e2e` no mesmo commit.
-5. Repetir a experiência em desktop e móvel e comparar proporções, leitura das molduras, sombra, exposição e qualidade das texturas.
+A navegação guiada, os registos e os controlos mobile continuam disponíveis para acessibilidade. As instruções de movimento aparecem quando o utilizador já está dentro do estúdio.
 
-**Conclusão:** as faltas visuais identificadas foram corrigidas no código. A fidelidade métrica absoluta não pode ser garantida com uma única imagem de referência e a certificação visual final depende de inspeccionar o runtime actualizado no browser.
+## Testes preparados
+
+- `camping-visual-contracts.test.ts` cobre o mapeamento dos 17 slots, códigos inválidos, duplicados, imagens ausentes e slots vazios sem substituições fictícias.
+- `camping-object-contracts.test.ts` cobre os perfis de renderização, incluindo o perfil high com sombra de 2048 px.
+- `tests/radio/camping-entry.spec.ts` foi actualizado para verificar o painel mínimo 808, a identidade Xoyens e a ausência de instruções duplicadas antes da porta.
+
+**Importante:** estes testes foram escritos ou actualizados, mas os resultados de Vitest, lint, build e Playwright ainda não foram obtidos nesta execução. O conector de workflow não disponibilizou os runs de push e o ambiente Vercel sandbox devolveu 403 ao pedido de criação. Não se declara qualquer teste aprovado sem os logs.
+
+## Estado de publicação
+
+- Código de entrada mínimo e renderização adaptativa estão na `main`.
+- Motor visual mais recente durante esta auditoria: `556e32482e836a277199390a357c69e17280b854`.
+- O projecto Lovable sincronizou esse commit e reporta estado `ready`. O screenshot automático disponível é uma captura do projecto, mas as ferramentas de browser usadas nesta execução não permitiram abrir a imagem nem inspeccionar a cena interactiva.
+- O deployment Vercel associado ao alias de produção continua em estado `READY` para o commit anterior `ab8e73644569dcdd9b2ef410eab01d955e7160bb`. Os commits visuais subsequentes estão a receber `build-rate-limit`, por isso as alterações novas não estão confirmadas na publicação Vercel.
+- Não foi feita promoção manual de um deployment antigo.
+
+## Critérios que continuam abertos
+
+1. Publicar, sem o bloqueio de rate limit, um deployment que inclua o motor visual actual, a interface simplificada e o manifesto actualizado.
+2. Abrir `/camping` num browser real, digitar 808 e verificar visualmente a parede com as 17 fotografias, o letreiro Xoyens retroiluminado e o pano preto com o selo oficial.
+3. Confirmar no separador Network que as 17 fotografias, `xoyens.png` e `sindicato-selo.png` são entregues com sucesso.
+4. Executar `npm test`, `npm run lint`, `npm run build` e `npm run test:e2e` sobre o mesmo commit.
+5. Medir FPS, memória e carregamento em Chrome desktop, Safari/iPhone e Android. Nenhuma medição em dispositivo físico foi realizada.
+
+**Conclusão:** as faltas visuais identificadas foram tratadas no código, e o runtime agora aguarda pelas tentativas de carregar os retratos antes de abrir a experiência. A correspondência com a referência está melhorada, mas a certificação de hiper-realismo e a publicação integral continuam pendentes da inspecção interactiva e dos testes executados num browser real.
