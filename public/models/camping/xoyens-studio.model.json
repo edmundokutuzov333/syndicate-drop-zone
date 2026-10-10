@@ -746,7 +746,16 @@
       "surface": "the inner black primitive in each physical frame",
       "loading": "The GLB scene remains in loading state until each available portrait texture request has settled.",
       "crop": "Each image is centre-cropped to fit the actual frame aspect ratio instead of being stretched.",
-      "completion": "Only successful textures are counted; failed images are reported by a transient runtime status. Missing rows remain empty."
+      "completion": "Only successful textures are counted; failed images are reported by a transient runtime status. Missing rows remain empty.",
+      "browserTest": {
+        "status": "authored-not-run",
+        "file": "tests/radio/camping-entry.spec.ts",
+        "assertions": [
+          "17 portrait asset requests complete before exploration is reported",
+          "all 17 portrait responses return HTTP 200",
+          "entry panel remains minimal before 808 access"
+        ]
+      }
     },
     "xoyensBacklitSign": {
       "status": "runtime-geometry",
@@ -783,7 +792,7 @@
         "keyboard-and-mouse instruction paragraph"
       ]
     },
-    "implementationCommit": "556e32482e836a277199390a357c69e17280b854",
+    "implementationCommit": "ec16cbea7c5f38a747f4eb646223425324e56e81",
     "publishedRuntimeCommit": "2eede7f4157f603bc9c27202b60d496c3fd7f25b",
     "status": "source-updated-publication-pending",
     "materials": {
@@ -800,7 +809,8 @@
       },
       "constraints": "Preserve the warm practical lights and keep reflections subtle to maintain black levels."
     },
-    "interactionSafety": "The replaced hidden flat seal is excluded from raycast targets so the visible cloth banner is the unique photo-backdrop target."
+    "interactionSafety": "The replaced hidden flat seal is excluded from raycast targets so the visible cloth banner is the unique photo-backdrop target.",
+    "testCommit": "398f4cd592b04fa5ca83a2ec4a24032e244c86af"
   },
   "auditUpdatedAt": "2026-10-10"
 }
