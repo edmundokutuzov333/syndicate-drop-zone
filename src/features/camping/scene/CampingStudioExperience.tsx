@@ -80,6 +80,27 @@ export function CampingStudioExperience({
   useEffect(() => {
     recordsRef.current = recordsOpen;
   }, [recordsOpen]);
+  useEffect(() => {
+    const handleAccessKeys = (event: KeyboardEvent) => {
+      const phase = accessRef.current.phase;
+      if ((phase !== "LOCKED" && phase !== "CODE_ENTRY") || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      if (target && (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable)) return;
+      const isCanvas = target === canvasRef.current;
+      const isActionControl = Boolean(target && /^(BUTTON|A)$/.test(target.tagName));
+      if (!isCanvas && !isActionControl) return;
+      const command = /^\\d$/.test(event.key) ? event.key : event.key === "Backspace" ? "BACK" : null;
+      if (!command) return;
+
+      // Capture digits before the canvas/window engine listeners so a key is processed once
+      // even when focus is on an interface button instead of the canvas.
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      engineRef.current?.pressAccessibleKey(command);
+    };
+    window.addEventListener("keydown", handleAccessKeys, true);
+    return () => window.removeEventListener("keydown", handleAccessKeys, true);
+  }, []);
 
   const closePanels = useCallback(() => {
     setGuidedOpen(false);
