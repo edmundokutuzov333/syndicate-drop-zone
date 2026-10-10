@@ -9,7 +9,8 @@ import {
   type ProbeResult,
 } from "@/lib/backend-schema-contract";
 
-function label(result?: ProbeResult) {
+function label(result?: ProbeResult, access?: string) {
+  if (access === "rpc-only") return "RPC ONLY / SEM ACESSO DIRECTO";
   if (!result) return "A VERIFICAR";
   if (result.status === "present") return "ACESSÍVEL";
   if (result.status === "missing") return "AUSENTE";
@@ -47,7 +48,8 @@ export function BackendSchemaPanel() {
 
   useEffect(() => { void load(); }, []);
 
-  const tableResults = BACKEND_TABLES.map((item) => tables[item.name]).filter((item): item is ProbeResult => Boolean(item));
+  const directTables = BACKEND_TABLES.filter((item) => item.access !== "rpc-only");
+  const tableResults = directTables.map((item) => tables[item.name]).filter((item): item is ProbeResult => Boolean(item));
   const summary = summarizeProbes(tableResults);
   const rpcResults = READ_ONLY_RPCS.map((item) => rpcs[item.name]).filter((item): item is ProbeResult => Boolean(item));
   const rpcSummary = summarizeProbes(rpcResults);
@@ -65,7 +67,7 @@ export function BackendSchemaPanel() {
         </button>
       </header>
       <div className="grid gap-px bg-white/10 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric value={busy ? "--" : summary.present + "/" + BACKEND_TABLES.length} label="ENDPOINTS ACESSÍVEIS" />
+        <Metric value={busy ? "--" : summary.present + "/" + directTables.length} label="ENDPOINTS ACESSÍVEIS" />
         <Metric value={busy ? "--" : String(summary.missing)} label="AUSENTES" alert={summary.missing > 0} />
         <Metric value={busy ? "--" : String(summary.restricted)} label="RESTRITOS / NÃO VERIFICADOS" alert={summary.restricted > 0} />
         <Metric value={busy ? "--" : rpcSummary.present + "/" + READ_ONLY_RPCS.length} label="RPCs DE LEITURA" />
@@ -79,7 +81,7 @@ export function BackendSchemaPanel() {
               const result = tables[entry.name];
               return <div key={entry.name} className="flex items-start justify-between gap-3 px-3 py-2.5 font-mono text-[9px]">
                 <div><p className="text-white/65">{entry.name}</p><p className="mt-1 text-[8px] text-white/25">{entry.area} · {entry.access.toUpperCase()}</p></div>
-                <span className={tone(result)}>{label(result)}</span>
+                <span className={tone(result)}>{label(result, entry.access)}</span>
               </div>;
             })}
           </div>

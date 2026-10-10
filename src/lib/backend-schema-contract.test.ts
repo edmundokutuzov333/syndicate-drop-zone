@@ -15,5 +15,8 @@ describe("backend schema contract", () => {
       expect(names.has(name), name).toBe(true);
     }
     expect(READ_ONLY_RPCS.every((rpc) => !/create|delete|reserve|register|join|submit/i.test(rpc.name))).toBe(true);
+    expect(BACKEND_TABLES.find((item) => item.name === "frequency_listeners")?.access).toBe("rpc-only");
+    expect(BACKEND_TABLES.find((item) => item.name === "beats")?.access).toBe("authenticated");
+    expect(BACKEND_TABLES.find((item) => item.name === "beats_public")?.access).toBe("public");
   });
 });

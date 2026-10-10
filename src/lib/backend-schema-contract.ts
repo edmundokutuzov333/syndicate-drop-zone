@@ -4,14 +4,14 @@ export type ProbeStatus = "present" | "missing" | "restricted" | "error";
 export type ProbeArea = "ARTISTAS" | "MÚSICA" | "CAMPING" | "MEDIA" | "MERCH" | "RÁDIO" | "CONTROL ROOM" | "MEMBROS" | "ANÁLISE";
 export type ProbeResult = { name: string; area: ProbeArea; kind: "table" | "view" | "rpc"; status: ProbeStatus; httpStatus?: number; code?: string; checkedAt: string };
 
-export const BACKEND_TABLES: readonly { name: string; area: ProbeArea; access: "public" | "authenticated" }[] = [
+export const BACKEND_TABLES: readonly { name: string; area: ProbeArea; access: "public" | "authenticated" | "rpc-only" }[] = [
   {name:"artists",area:"ARTISTAS",access:"public"},{name:"artist_releases",area:"ARTISTAS",access:"public"},{name:"artist_socials",area:"ARTISTAS",access:"public"},
   {name:"artist_status",area:"CAMPING",access:"public"},{name:"tapes",area:"MÚSICA",access:"public"},{name:"releases",area:"MÚSICA",access:"public"},{name:"beats",area:"MÚSICA",access:"authenticated"},{name:"beats_public",area:"MÚSICA",access:"public"},
-  {name:"camping_events",area:"CAMPING",access:"public"},{name:"camping_sessions",area:"CAMPING",access:"public"},{name:"site_flags",area:"CAMPING",access:"public"},{name:"live_notifications",area:"CAMPING",access:"authenticated"},
-  {name:"gallery_items",area:"MEDIA",access:"public"},{name:"revelation_media",area:"MEDIA",access:"public"},{name:"media_assets",area:"MEDIA",access:"authenticated"},
+  {name:"camping_events",area:"CAMPING",access:"public"},{name:"camping_sessions",area:"CAMPING",access:"public"},{name:"site_flags",area:"CAMPING",access:"public"},{name:"live_notifications",area:"CAMPING",access:"rpc-only"},
+  {name:"gallery_items",area:"MEDIA",access:"public"},{name:"revelation_media",area:"MEDIA",access:"public"},{name:"media_assets",area:"MEDIA",access:"public"},
   {name:"merch_products",area:"MERCH",access:"public"},{name:"merch_variants",area:"MERCH",access:"public"},{name:"inventory_movements",area:"MERCH",access:"authenticated"},{name:"reservations",area:"MERCH",access:"authenticated"},
   {name:"radio_tracks",area:"RÁDIO",access:"public"},{name:"radio_station",area:"RÁDIO",access:"public"},{name:"radio_blocks",area:"RÁDIO",access:"public"},
-  {name:"frequency_station",area:"RÁDIO",access:"authenticated"},{name:"frequency_listeners",area:"RÁDIO",access:"authenticated"},{name:"frequency_badges",area:"RÁDIO",access:"authenticated"},
+  {name:"frequency_station",area:"RÁDIO",access:"rpc-only"},{name:"frequency_listeners",area:"RÁDIO",access:"rpc-only"},{name:"frequency_badges",area:"RÁDIO",access:"rpc-only"},
   {name:"site_settings",area:"CONTROL ROOM",access:"public"},{name:"site_sections",area:"CONTROL ROOM",access:"public"},{name:"drop_campaigns",area:"CONTROL ROOM",access:"public"},
   {name:"admin_profiles",area:"CONTROL ROOM",access:"authenticated"},{name:"audit_logs",area:"CONTROL ROOM",access:"authenticated"},
   {name:"events",area:"ANÁLISE",access:"authenticated"},{name:"members",area:"MEMBROS",access:"authenticated"},{name:"fan_memberships",area:"MEMBROS",access:"authenticated"},
@@ -57,6 +57,9 @@ export async function auditBackendSchema(options:AuditOptions={}){
   const tableHeaders=publicSupabaseHeaders(cfg.key,options.accessToken?{Authorization:"Bearer "+options.accessToken}:undefined);
   const tables=await limitedMap(BACKEND_TABLES,4,async item=>{
     const at=checkedAt();
+    if (item.access === "rpc-only") {
+      return {name:item.name,area:item.area,kind:"table" as const,status:"restricted" as const,httpStatus:403,code:"RPC_ONLY",checkedAt:at};
+    }
     try{
       const response=await request(cfg.url+"/rest/v1/"+encodeURIComponent(item.name)+"?select=*&limit=0",{method:"GET",headers:tableHeaders});
       const code=await readErrorCode(response);
