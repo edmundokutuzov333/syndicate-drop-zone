@@ -89,7 +89,7 @@ export function CampingStudioExperience({
       const isCanvas = target === canvasRef.current;
       const isActionControl = Boolean(target && /^(BUTTON|A)$/.test(target.tagName));
       if (!isCanvas && !isActionControl) return;
-      const command = /^\\d$/.test(event.key) ? event.key : event.key === "Backspace" ? "BACK" : null;
+      const command = /^\d$/.test(event.key) ? event.key : event.key === "Backspace" ? "BACK" : null;
       if (!command) return;
 
       // Capture digits before the canvas/window engine listeners so a key is processed once

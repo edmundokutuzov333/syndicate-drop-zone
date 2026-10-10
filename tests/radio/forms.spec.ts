@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 function createPhotoFixture(): Buffer {
   // Known valid 1x1 PNG fixture: the test should exercise the upload flow, not PNG encoding.
-  return Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGNgAAAAAgABSK+kcQAAAABJRU5ErkJggg==", "base64");
+  return Buffer.from("iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAGUlEQVR42mNsaGhgIAUwMZAIRjWMahg6GgDJTAGg54KQ4AAAAABJRU5ErkJggg==", "base64");
 }
 
 async function mockPublicBackend(page: Page) {
