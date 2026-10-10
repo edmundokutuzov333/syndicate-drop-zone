@@ -74,6 +74,7 @@ export function CampingStudioExperience({
   const [messageTone, setMessageTone] = useState<"neutral" | "danger" | "success">("neutral");
   const [assetState, setAssetState] = useState<AssetState>("idle");
   const [webglError, setWebglError] = useState<string | null>(null);
+  const [rendererAttempt, setRendererAttempt] = useState(0);
   const [guidedOpen, setGuidedOpen] = useState(false);
   const [currentRoom, setCurrentRoom] = useState<CampingRoomId>("studio");
 
@@ -118,6 +119,8 @@ export function CampingStudioExperience({
   useClientLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    setWebglError(null);
+    setAssetState("loading");
 
     const engine = new CampingStudioEngine({
       onAccessChange: (nextAccess) => {
@@ -185,7 +188,17 @@ export function CampingStudioExperience({
         if (engineRef.current === engine) engineRef.current = null;
       }
     };
-  }, [closePanels, onClosePanels]);
+  }, [closePanels, onClosePanels, rendererAttempt]);
+
+  const retry3D = useCallback(() => {
+    pendingAccessKeysRef.current = [];
+    accessRef.current = { ...initialCampingAccessState };
+    setAccess({ ...initialCampingAccessState });
+    setWebglError(null);
+    setMessage(null);
+    setAssetState("idle");
+    setRendererAttempt((attempt) => attempt + 1);
+  }, []);
 
   const enterGuided = () => {
     setGuidedOpen((current) => !current);
@@ -206,6 +219,7 @@ export function CampingStudioExperience({
       aria-label="Experiência tridimensional do estúdio Xoyens"
     >
       <canvas
+        key={rendererAttempt}
         ref={canvasRef}
         className="camping-studio__canvas"
         aria-label="Estúdio 3D. Arraste para olhar à volta e clique nos objectos identificados."
@@ -262,10 +276,15 @@ export function CampingStudioExperience({
 
       {showAccessFallback && (
         <div className="camping-studio__fallback" role="region" aria-label="Acesso alternativo">
-          <p className="camping-studio__micro-label">WEBGL NOT AVAILABLE</p>
-          <h2>ACESSO ALTERNATIVO</h2>
-          <p>O browser não conseguiu iniciar a cena 3D. Pode introduzir o código por teclado ou usar os registos públicos sem perder o acesso ao resto do site.</p>
-          <button type="button" className="camping-studio__button" onClick={onToggleRecords}>ABRIR REGISTOS PÚBLICOS</button>
+          <p className="camping-studio__micro-label">
+            {webglError?.toLowerCase().includes("webgl") || webglError?.toLowerCase().includes("context")
+              ? "WEBGL / RECUPERAÇÃO"
+              : "STUDIO / RECUPERAÇÃO"}
+          </p>
+          <h2>{webglError?.toLowerCase().includes("webgl") ? "INICIALIZAÇÃO 3D FALHOU" : "O ESTÚDIO NÃO ARRANCOU"}</h2>
+          <p>O motor vai tentar arrancar novamente com uma configuração gráfica mais compatível. Se o browser bloquear WebGL 2, o erro técnico fica registado no canvas para diagnóstico.</p>
+          <button type="button" className="camping-studio__button" onClick={retry3D}>TENTAR INICIAR 3D</button>
+          <button type="button" className="camping-studio__button camping-studio__button--quiet" onClick={onToggleRecords}>ABRIR REGISTOS PÚBLICOS</button>
           <button type="button" className="camping-studio__button camping-studio__button--quiet" onClick={onLeave}>SAIR DA EXPERIÊNCIA</button>
         </div>
       )}
