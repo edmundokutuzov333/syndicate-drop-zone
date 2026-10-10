@@ -1847,14 +1847,14 @@ export class CampingStudioEngine {
     })));
     // Do not leave the 808 door stuck if one third-party image request never settles.
     // Late image callbacks can still populate their physical frame after this fallback.
-    let watchdog: number | null = null;
+    const watchdog = { id: 0 };
     await Promise.race([
       portraitLoads,
       new Promise<void>((resolve) => {
-        watchdog = window.setTimeout(resolve, 8000);
+        watchdog.id = window.setTimeout(resolve, 8000);
       }),
     ]);
-    if (watchdog !== null) window.clearTimeout(watchdog);
+    window.clearTimeout(watchdog.id);
     return { requested: bindings.length, loaded: loadedCount };
   }
 
