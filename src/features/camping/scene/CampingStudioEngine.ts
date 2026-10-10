@@ -99,11 +99,13 @@ export function resolveCampingRenderProfile(input: CampingRenderProfileInput): C
   const width = Number.isFinite(input.viewportWidth) && input.viewportWidth > 0
     ? input.viewportWidth
     : 1024;
-  const memory = Number.isFinite(input.deviceMemory) && (input.deviceMemory ?? 0) > 0
-    ? input.deviceMemory
+  const memoryValue = input.deviceMemory;
+  const memory = typeof memoryValue === "number" && Number.isFinite(memoryValue) && memoryValue > 0
+    ? memoryValue
     : null;
-  const cores = Number.isFinite(input.hardwareConcurrency) && (input.hardwareConcurrency ?? 0) > 0
-    ? input.hardwareConcurrency
+  const coresValue = input.hardwareConcurrency;
+  const cores = typeof coresValue === "number" && Number.isFinite(coresValue) && coresValue > 0
+    ? coresValue
     : null;
   const mobile = input.coarsePointer === true || width <= 768;
   const constrained = mobile && ((memory !== null && memory <= 4) || (cores !== null && cores <= 4));
@@ -112,7 +114,7 @@ export function resolveCampingRenderProfile(input: CampingRenderProfileInput): C
   const maxPixelRatio = constrained ? 0.95 : mobile ? 1.15 : limited ? 1.25 : highEnd ? 1.65 : 1.4;
 
   return {
-    tier: constrained ? "low" : mobile || limited ? "balanced" : "high",
+    tier: constrained ? "low" : highEnd ? "high" : "balanced",
     pixelRatio: Math.max(0.75, Math.min(dpr, maxPixelRatio)),
     antialias: !constrained && !(mobile && dpr >= 2.5),
     shadowsEnabled: !constrained,
