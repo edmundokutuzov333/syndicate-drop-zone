@@ -142,6 +142,15 @@ test.describe("CAMPING V2 / 808 access", () => {
     await page.keyboard.press("8");
     await expect(page.locator(".camping-studio__asset-state")).toContainText("MODEL / READY", { timeout: 25_000 });
     await expect(page.locator(".camping-studio__status")).toContainText("EXPLORATION", { timeout: 20_000 });
+    const canvas = page.locator("canvas.camping-studio__canvas");
+    await expect(canvas).toHaveAttribute("data-camping-scene-status", "ready");
+    await expect(canvas).toHaveAttribute("data-camping-scene-missing-nodes", "");
+    await expect(canvas).toHaveAttribute("data-camping-artist-slots", "17");
+    await expect(canvas).toHaveAttribute("data-camping-banner-status", "ready");
+    await expect(canvas).toHaveAttribute("data-camping-xoyens-sign-status", "ready");
+    await expect(canvas).toHaveAttribute("data-camping-portraits-requested", "17");
+    await expect(canvas).toHaveAttribute("data-camping-portraits-loaded", "17");
+    await expect(canvas).toHaveAttribute("data-camping-portraits-complete", "true");
     expect(glbResponses).toContain(200);
     expect(portraitResponses.size).toBe(17);
     expect([...portraitResponses.values()].every((status) => status === 200)).toBe(true);
