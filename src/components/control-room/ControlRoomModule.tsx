@@ -37,7 +37,7 @@ export const MODULE_CONFIG: Record<string, ModuleDefinition> = {
     title: "MÚSICA",
     eyebrow: "TAPES + RELEASES",
     description: "Conteúdo musical centralizado no banco. Edição, estado editorial, preview e publicação sem tocar no código.",
-    tables: ["tapes", "releases", "artist_releases"],
+    tables: ["tapes", "releases", "artist_releases", "beats"],
     roles: ["OWNER", "ADMIN", "EDITOR"],
   },
   camping: {

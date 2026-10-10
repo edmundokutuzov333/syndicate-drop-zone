@@ -54,7 +54,7 @@ function Merch() {
   const canOpen = canEnterMerch(armed);
   const previousKey = useRef(armed);
   const { merch, tapes } = Route.useLoaderData();
-  const p = merch[sel]!;
+  const p = merch[sel];
 
   useEffect(() => {
     tape.setQueue(tapes);
@@ -110,7 +110,7 @@ function Merch() {
     }
   };
 
-  const visibleTapes = tapes.length ? tapes : TAPES;
+  const visibleTapes = tapes.length ? tapes : import.meta.env.DEV ? TAPES : [];
   const activeTape = visibleTapes.find((item) => item.id === tapeState.id) ?? null;
   const listenedSeconds = activeTape ? Math.min(KEY_LISTEN_SECONDS, tapeState.t) : 0;
   const listenProgress = armed ? 100 : Math.min(100, (listenedSeconds / KEY_LISTEN_SECONDS) * 100);
@@ -158,6 +158,7 @@ function Merch() {
                     );
                   })}
                 </div>
+                {!visibleTapes.length && <p className="border border-border p-4 font-mono text-[10px] text-muted-foreground">NENHUMA FAIXA PUBLICADA. O CATÁLOGO ESTÁ TEMPORARIAMENTE INDISPONÍVEL.</p>}
                 <div className="border border-border bg-card/70 p-4 font-mono text-[9px] tracking-[0.12em] text-muted-foreground">
                   <div className="flex items-center justify-between gap-4"><span>{activeTape ? activeTape.title : "PASSO 1 · ESCOLHER FAIXA"}</span><span className="shrink-0 text-blood">{tapeState.error ? "ERRO DE ÁUDIO" : activeTape ? Math.min(KEY_LISTEN_SECONDS,Math.floor(tapeState.t))+"/"+KEY_LISTEN_SECONDS+" SEG" : "0/"+KEY_LISTEN_SECONDS+" SEG"}</span></div>
                   <div className="mt-3 h-1 overflow-hidden bg-muted" role="progressbar" aria-label="Escuta necessária para abrir o cofre" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(listenProgress)}><div className="h-full bg-blood transition-[width]" style={{width:listenProgress+"%"}} /></div>
@@ -176,7 +177,8 @@ function Merch() {
         {canOpen && <span className="border border-blood px-2 py-1 font-mono text-[9px] tracking-widest text-blood">{openedStamp ? "ABERTO" : keyLabel}</span>}
       </div>
 
-      {canOpen && (
+      {canOpen && !p && <section className="mt-10 border border-border p-6 font-mono text-xs leading-6 text-muted-foreground">CATÁLOGO EM PREPARAÇÃO. NÃO EXISTEM PRODUTOS PUBLICADOS COM STOCK CONFIRMADO.</section>}
+      {canOpen && p && (
       <div className="mt-10 grid gap-8 lg:grid-cols-[1.3fr_1fr]">
         <div>
           <div className="relative aspect-square border border-border">

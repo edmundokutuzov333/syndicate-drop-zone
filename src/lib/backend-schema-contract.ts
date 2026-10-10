@@ -6,7 +6,7 @@ export type ProbeResult = { name: string; area: ProbeArea; kind: "table" | "view
 
 export const BACKEND_TABLES: readonly { name: string; area: ProbeArea; access: "public" | "authenticated" }[] = [
   {name:"artists",area:"ARTISTAS",access:"public"},{name:"artist_releases",area:"ARTISTAS",access:"public"},{name:"artist_socials",area:"ARTISTAS",access:"public"},
-  {name:"artist_status",area:"CAMPING",access:"public"},{name:"tapes",area:"MÚSICA",access:"public"},{name:"releases",area:"MÚSICA",access:"public"},
+  {name:"artist_status",area:"CAMPING",access:"public"},{name:"tapes",area:"MÚSICA",access:"public"},{name:"releases",area:"MÚSICA",access:"public"},{name:"beats",area:"MÚSICA",access:"authenticated"},{name:"beats_public",area:"MÚSICA",access:"public"},
   {name:"camping_events",area:"CAMPING",access:"public"},{name:"camping_sessions",area:"CAMPING",access:"public"},{name:"site_flags",area:"CAMPING",access:"public"},{name:"live_notifications",area:"CAMPING",access:"authenticated"},
   {name:"gallery_items",area:"MEDIA",access:"public"},{name:"revelation_media",area:"MEDIA",access:"public"},{name:"media_assets",area:"MEDIA",access:"authenticated"},
   {name:"merch_products",area:"MERCH",access:"public"},{name:"merch_variants",area:"MERCH",access:"public"},{name:"inventory_movements",area:"MERCH",access:"authenticated"},{name:"reservations",area:"MERCH",access:"authenticated"},

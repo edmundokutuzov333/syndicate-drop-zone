@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { getLiveArtistsForSite, getLiveMerchProducts, getLiveRevelationMedia, getLiveTapes, createPublicMerchReservation, type LiveMerchProduct, type LiveTape } from "@/lib/site-content";
+import { getLiveArtistsForSite, getLiveBeats, getLiveMerchProducts, getLiveRevelationMedia, getLiveTapes, createPublicMerchReservation, type LiveBeat, type LiveMerchProduct, type LiveTape } from "@/lib/site-content";
 import { getLiveCampingSessions, type CampingSessionRow } from "@/lib/camping-data";
 import type { Artist } from "@/lib/artists";
 import type { RevelationMedia } from "@/lib/revelacao-media";
@@ -102,6 +102,10 @@ export function CampingObjectInterface({ focusedId, onClose, onEnterRoom }: Prop
   const [merch, setMerch] = useState<DataState<LiveMerchProduct[]>>({ value: EMPTY_MERCH, loading: false, error: null });
   const [tapes, setTapes] = useState<DataState<LiveTape[]>>({ value: EMPTY_TAPES, loading: false, error: null });
   const [media, setMedia] = useState<DataState<RevelationMedia[]>>({ value: EMPTY_MEDIA, loading: false, error: null });
+  const [beats, setBeats] = useState<DataState<LiveBeat[]>>({ value: [], loading: false, error: null });
+  const beatAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [activeBeatId, setActiveBeatId] = useState<string | null>(null);
+  const [beatPlaying, setBeatPlaying] = useState(false);
   const [sessions, setSessions] = useState<DataState<CampingSessionRow[]>>({ value: EMPTY_SESSIONS, loading: false, error: null });
   const [selectedArtistSlug, setSelectedArtistSlug] = useState<string | null>(null);
   const [forceArtistGrid, setForceArtistGrid] = useState(false);
@@ -159,7 +163,11 @@ export function CampingObjectInterface({ focusedId, onClose, onEnterRoom }: Prop
             tape.setQueue(value);
             setTapes({ value, loading: false, error: null });
           }
-        } else if (section === "BEATS" || section === "ARCHIVE") {
+        } else if (section === "BEATS") {
+          setBeats((state) => ({ ...state, loading: true, error: null }));
+          const value = await getLiveBeats();
+          if (!cancelled) setBeats({ value, loading: false, error: null });
+        } else if (section === "ARCHIVE") {
           setMedia((state) => ({ ...state, loading: true, error: null }));
           const value = await getLiveRevelationMedia();
           if (!cancelled) setMedia({ value, loading: false, error: null });
@@ -174,7 +182,8 @@ export function CampingObjectInterface({ focusedId, onClose, onEnterRoom }: Prop
         if (section === "ARTISTS") setArtists((state) => ({ ...state, loading: false, error: message }));
         if (section === "MERCH") setMerch((state) => ({ ...state, loading: false, error: message }));
         if (section === "MUSIC") setTapes((state) => ({ ...state, loading: false, error: message }));
-        if (section === "BEATS" || section === "ARCHIVE") setMedia((state) => ({ ...state, loading: false, error: message }));
+        if (section === "BEATS") setBeats((state) => ({ ...state, loading: false, error: message }));
+        if (section === "ARCHIVE") setMedia((state) => ({ ...state, loading: false, error: message }));
         if (section === "SESSIONS") setSessions((state) => ({ ...state, loading: false, error: message }));
       }
     };
@@ -198,7 +207,7 @@ export function CampingObjectInterface({ focusedId, onClose, onEnterRoom }: Prop
   const cartCount = cart.reduce((sum, line) => sum + line.quantity, 0);
   const cartTotal = cart.reduce((sum, line) => sum + line.price * line.quantity, 0);
   const sessionNow = Date.now();
-  const beatMedia = media.value.filter((item) => /beat|instrumental|producer/i.test([item.roll, item.tag, item.caption, item.alt].join(" ")));
+  const activeBeat = beats.value.find((beat) => beat.id === activeBeatId) ?? null;
 
   function openFolder(next: CampingObjectSection) {
     setLaunchedFromDesktop(true);
@@ -401,16 +410,42 @@ export function CampingObjectInterface({ focusedId, onClose, onEnterRoom }: Prop
 
           {section === "BEATS" && (
             <>
-              {media.loading && <p className="camping-object-interface__status">A LER O ARQUIVO DE PRODUÇÃO…</p>}
-              <p className="camping-object-interface__footnote">O código actual não expõe um catálogo de beats de áudio com BPM, produtor e ficheiros de preview. Esta vista não inventa faixas. Mostra apenas registos publicados que estão identificados como beats.</p>
+              {beats.loading && <p className="camping-object-interface__status">A LER O CATÁLOGO DE PRODUÇÃO…</p>}
+              {beats.error && <p className="camping-object-interface__status camping-object-interface__status--error">{beats.error}</p>}
+              <p className="camping-object-interface__footnote">CATÁLOGO OFICIAL · BPM, PRODUTOR E PREVIEW PUBLICADOS PELO CONTROL ROOM. O ficheiro completo não é exposto neste catálogo.</p>
               <div className="camping-object-interface__media-list">
-                {beatMedia.map((item, index) => <a className="camping-object-track camping-object-track--link" key={item.id} href={"/revelacao?media=" + encodeURIComponent(item.id)}>
-                  <span className="camping-object-track__index">{String(index + 1).padStart(2, "0")}</span>
-                  <div className="camping-object-track__copy"><strong>{item.caption || item.alt}</strong><span>{item.roll} / {item.type.toUpperCase()}</span></div>
-                  <span>OPEN FILE ↗</span>
-                </a>)}
+                {beats.value.map((beat, index) => (
+                  <div className="camping-object-track" key={beat.id}>
+                    <span className="camping-object-track__index">{String(index + 1).padStart(2, "0")}</span>
+                    <div className="camping-object-track__copy">
+                      <strong>{beat.title}</strong>
+                      <span>{beat.producer} / {beat.bpm ? beat.bpm + " BPM" : "BPM N/D"}{beat.keySignature ? " / " + beat.keySignature : ""}</span>
+                    </div>
+                    <button type="button" onClick={async () => {
+                      const audio = beatAudioRef.current;
+                      if (!audio) return;
+                      if (activeBeatId === beat.id && !audio.paused) {
+                        audio.pause();
+                        return;
+                      }
+                      if (activeBeatId !== beat.id) {
+                        audio.pause();
+                        audio.src = beat.previewUrl;
+                        audio.currentTime = 0;
+                        setActiveBeatId(beat.id);
+                      }
+                      try {
+                        await audio.play();
+                      } catch {
+                        setFeedback({ tone: "error", text: "O PREVIEW NÃO PÔDE SER REPRODUZIDO." });
+                      }
+                    }}>{activeBeatId === beat.id && beatPlaying ? "PAUSAR" : "OUVIR PREVIEW"}</button>
+                    {beat.price !== null && <span>{money(beat.price)}</span>}
+                  </div>
+                ))}
               </div>
-              {!media.loading && !beatMedia.length && <p className="camping-object-interface__empty">SEM REGISTOS DE BEATS PUBLICADOS. O CATÁLOGO DE ÁUDIO PRECISA DE UMA FONTE PRÓPRIA.</p>}
+              <audio ref={beatAudioRef} preload="none" onPlay={() => setBeatPlaying(true)} onPause={() => setBeatPlaying(false)} onEnded={() => setBeatPlaying(false)} />
+              {!beats.loading && !beats.value.length && !beats.error && <p className="camping-object-interface__empty">SEM BEATS PUBLICADOS.</p>}
               <Link to="/frequencia" className="camping-object-interface__primary">ABRIR FREQUÊNCIA 808</Link>
             </>
           )}
