@@ -194,15 +194,15 @@ export function CampingStudioExperience({
       <div className="camping-studio__vignette" aria-hidden="true" />
       <div className="camping-studio__grain" aria-hidden="true" />
 
-      <header className="camping-studio__header">
-        <div className="camping-studio__identity">
-          <img className="camping-studio__seal-image" src={sindicatoSelo.url} alt="Selo oficial do Sindicato" />
-          <div>
-            <p className="camping-studio__eyebrow">O SINDICATO DO TRAP</p>
-            <p className="camping-studio__room">STUDIO XOYENS</p>
+      {isExploring && (
+        <header className="camping-studio__header">
+          <div className="camping-studio__identity">
+            <img className="camping-studio__seal-image" src={sindicatoSelo.url} alt="Selo oficial do Sindicato" />
+            <div>
+              <p className="camping-studio__eyebrow">O SINDICATO DO TRAP</p>
+              <p className="camping-studio__room">STUDIO XOYENS</p>
+            </div>
           </div>
-        </div>
-        {isExploring && (
           <div className="camping-studio__header-right">
             <span className={"camping-studio__status camping-studio__status--" + (hasAccess ? "open" : "locked")}>
               <span className="camping-studio__status-dot" />
@@ -214,8 +214,8 @@ export function CampingStudioExperience({
               </span>
             )}
           </div>
-        )}
-      </header>
+        </header>
+      )}
 
       {isExploring && (
         <div className="camping-studio__side-label" aria-hidden="true">
