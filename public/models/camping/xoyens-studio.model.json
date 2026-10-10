@@ -792,9 +792,9 @@
         "keyboard-and-mouse instruction paragraph"
       ]
     },
-    "implementationCommit": "0a6e24beb69898a4de5851e14c9364f9c7ab1776",
+    "implementationCommit": "57dd48b24db224a5ec86d7d6f3ece68c9bfbd61f",
     "publishedRuntimeCommit": "306c33f0d9804b7dca544cdcb43ff2e88921b7bb",
-    "status": "primary-visuals-published-follow-up-hardening-pending",
+    "status": "source-updated-publication-pending",
     "materials": {
       "reflections": "Three.js RoomEnvironment converted through PMREMGenerator",
       "sceneEnvironmentIntensity": {
@@ -845,6 +845,13 @@
         "Eight-second portrait request watchdog"
       ],
       "latestMainVercelCheck": "build-rate-limit"
+    },
+    "portraitTextureBudget": {
+      "highMaxDimension": 1536,
+      "balancedMaxDimension": 768,
+      "lowMaxDimension": 512,
+      "source": "published artist photo_url",
+      "strategy": "downsample on client before assigning the GPU texture; preserve frame aspect ratio with a centred crop"
     }
   },
   "auditUpdatedAt": "2026-10-10"
