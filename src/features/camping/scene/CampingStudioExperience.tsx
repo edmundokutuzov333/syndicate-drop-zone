@@ -121,6 +121,11 @@ export function CampingStudioExperience({
     if (!canvas) return;
     setWebglError(null);
     setAssetState("loading");
+    // Listen before creating WebGLRenderer: context loss can occur while the
+    // renderer/environment is first being initialized.
+    canvas.addEventListener("webglcontextlost", (event) => {
+      event.preventDefault();
+    }, { once: true });
 
     const engine = new CampingStudioEngine({
       onAccessChange: (nextAccess) => {
@@ -170,6 +175,8 @@ export function CampingStudioExperience({
       const reason = error instanceof Error
         ? error.message
         : "Não foi possível iniciar o motor 3D neste dispositivo.";
+      canvas.dataset.campingWebglStatus = "startup-error";
+      canvas.dataset.campingWebglError = reason.slice(0, 400);
       try {
         engine.dispose();
       } catch {
@@ -281,8 +288,8 @@ export function CampingStudioExperience({
               ? "WEBGL / RECUPERAÇÃO"
               : "STUDIO / RECUPERAÇÃO"}
           </p>
-          <h2>{webglError?.toLowerCase().includes("webgl") ? "INICIALIZAÇÃO 3D FALHOU" : "O ESTÚDIO NÃO ARRANCOU"}</h2>
-          <p>O motor vai tentar arrancar novamente com uma configuração gráfica mais compatível. Se o browser bloquear WebGL 2, o erro técnico fica registado no canvas para diagnóstico.</p>
+          <h2>ACESSO ALTERNATIVO</h2>
+          <p>A inicialização automática falhou. Pode tentar arrancar novamente com uma configuração gráfica mais compatível ou abrir os registos públicos.</p>
           <button type="button" className="camping-studio__button" onClick={retry3D}>TENTAR INICIAR 3D</button>
           <button type="button" className="camping-studio__button camping-studio__button--quiet" onClick={onToggleRecords}>ABRIR REGISTOS PÚBLICOS</button>
           <button type="button" className="camping-studio__button camping-studio__button--quiet" onClick={onLeave}>SAIR DA EXPERIÊNCIA</button>
