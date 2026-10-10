@@ -208,37 +208,40 @@ const STATIC_RADIO_FALLBACK: LiveRadioTrack[] = STATIC_RADIO_TRACKS.map((track, 
   temporarilyDisabled: false,
 }));
 
-export async function getLiveRadioTracks(): Promise<LiveRadioTrack[]> {
+export function mapLiveRadioCatalogRows(rows: readonly ContentRow[], development = import.meta.env.DEV): LiveRadioTrack[] {
   const allowedRadioSources = new Set(STATIC_RADIO_FALLBACK.map((track) => track.src));
+  const mapped = rows
+    .map((row, index) => {
+      const src = String(row.audio_url ?? "").trim();
+      if (!src || !allowedRadioSources.has(src) || Boolean(row.temporarily_disabled)) return null;
+      return {
+        id: String(row.id ?? "radio-" + String(index + 1)),
+        title: String(row.title ?? "FAIXA " + String(index + 1).padStart(2, "0")),
+        artist: String(row.artist ?? "SINDICATO 808"),
+        src,
+        durationSec: numberValue(row, ["duration_seconds"], 0),
+        kind: String(row.kind ?? "music") as LiveRadioTrack["kind"],
+        rotationWeight: Math.max(1, Math.floor(Number(row.rotation_weight ?? 1))),
+        position: Number(row.track_position ?? row.position ?? index + 1),
+        failureCount: Math.max(0, Math.floor(Number(row.failure_count ?? 0))),
+        temporarilyDisabled: false,
+      } satisfies LiveRadioTrack;
+    })
+    .filter((track): track is LiveRadioTrack => Boolean(track && track.src))
+    .sort((a, b) => a.position - b.position);
 
+  // Production treats the backend catalog as authoritative. A failed/empty response must not
+  // silently resurrect a track that an editor disabled or removed in the Control Room.
+  if (mapped.length > 0) return mapped;
+  return development ? [...STATIC_RADIO_FALLBACK] : [];
+}
+
+export async function getLiveRadioTracks(): Promise<LiveRadioTrack[]> {
   try {
     const rows = await getRadioCatalog();
-    const mapped = rows
-      .map((row, index) => {
-        const src = String(row.audio_url ?? "").trim();
-        if (!src || !allowedRadioSources.has(src)) return null;
-        return {
-          id: String(row.id ?? "radio-" + String(index + 1)),
-          title: String(row.title ?? "FAIXA " + String(index + 1).padStart(2, "0")),
-          artist: String(row.artist ?? "SINDICATO 808"),
-          src,
-          durationSec: numberValue(row as unknown as ContentRow, ["duration_seconds"], 0),
-          kind: (String(row.kind ?? "music") as LiveRadioTrack["kind"]),
-          rotationWeight: Math.max(1, Math.floor(Number(row.rotation_weight ?? 1))),
-          position: Number(row.track_position ?? row.position ?? index + 1),
-          failureCount: Math.max(0, Math.floor(Number(row.failure_count ?? 0))),
-          temporarilyDisabled: Boolean(row.temporarily_disabled),
-        } satisfies LiveRadioTrack;
-      })
-      .filter((track): track is LiveRadioTrack => Boolean(track && track.src && !track.temporarilyDisabled));
-
-    const ordered = [...STATIC_RADIO_FALLBACK].map(
-      (fallback) => mapped.find((track) => track.src === fallback.src) ?? fallback,
-    );
-
-    return ordered.filter((track) => Boolean(track.src));
+    return mapLiveRadioCatalogRows(rows as unknown as ContentRow[]);
   } catch {
-    return STATIC_RADIO_FALLBACK;
+    return import.meta.env.DEV ? [...STATIC_RADIO_FALLBACK] : [];
   }
 }
 
