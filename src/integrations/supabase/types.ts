@@ -27,7 +27,7 @@ export type Database = {
           active?: boolean
           created_at?: string
           display_name?: string
-          role?: string
+          role: string
           updated_at?: string
           user_id: string
         }
@@ -46,12 +46,9 @@ export type Database = {
           artist_id: string
           created_at: string
           id: string
-          kind: string
           position: number
-          release_date: string | null
           spotify_url: string | null
           status: string
-          thumbnail_url: string | null
           title: string
           updated_at: string
           youtube_id: string | null
@@ -60,13 +57,10 @@ export type Database = {
           artist_id: string
           created_at?: string
           id?: string
-          kind?: string
-          position: number
-          release_date?: string | null
+          position?: number
           spotify_url?: string | null
           status?: string
-          thumbnail_url?: string | null
-          title?: string
+          title: string
           updated_at?: string
           youtube_id?: string | null
         }
@@ -74,12 +68,9 @@ export type Database = {
           artist_id?: string
           created_at?: string
           id?: string
-          kind?: string
           position?: number
-          release_date?: string | null
           spotify_url?: string | null
           status?: string
-          thumbnail_url?: string | null
           title?: string
           updated_at?: string
           youtube_id?: string | null
@@ -100,6 +91,9 @@ export type Database = {
           created_at: string
           id: string
           platform: string
+          position: number
+          status: string
+          updated_at: string
           url: string
         }
         Insert: {
@@ -107,6 +101,9 @@ export type Database = {
           created_at?: string
           id?: string
           platform: string
+          position?: number
+          status?: string
+          updated_at?: string
           url: string
         }
         Update: {
@@ -114,6 +111,9 @@ export type Database = {
           created_at?: string
           id?: string
           platform?: string
+          position?: number
+          status?: string
+          updated_at?: string
           url?: string
         }
         Relationships: [
@@ -126,107 +126,88 @@ export type Database = {
           },
         ]
       }
-      artist_tapes: {
+      artist_status: {
         Row: {
           artist_id: string
-          tape_id: string
+          status: string
+          updated_at: string
         }
         Insert: {
           artist_id: string
-          tape_id: string
+          status?: string
+          updated_at?: string
         }
         Update: {
           artist_id?: string
-          tape_id?: string
+          status?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "artist_tapes_artist_id_fkey"
+            foreignKeyName: "artist_status_artist_id_fkey"
             columns: ["artist_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "artists"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "artist_tapes_tape_id_fkey"
-            columns: ["tape_id"]
-            isOneToOne: false
-            referencedRelation: "tapes"
             referencedColumns: ["id"]
           },
         ]
       }
       artists: {
         Row: {
-          alt_text: string | null
           bio: string
-          canonical_url: string | null
           code: string
           created_at: string
           edition: string
           faixas: string[]
-          focal_position: string | null
           frase: string
           id: string
-          meta_description: string | null
-          meta_title: string | null
           name: string
-          og_image: string | null
-          photo_url: string
+          photo_url: string | null
+          position: number
           presence: string
           role: string
           slug: string
-          spotify_artist_id: string
+          spotify_artist_id: string | null
           status: string
           studio: string
           updated_at: string
           zona: string
         }
         Insert: {
-          alt_text?: string | null
           bio?: string
-          canonical_url?: string | null
           code: string
           created_at?: string
           edition?: string
           faixas?: string[]
-          focal_position?: string | null
           frase?: string
           id?: string
-          meta_description?: string | null
-          meta_title?: string | null
           name: string
-          og_image?: string | null
-          photo_url?: string
+          photo_url?: string | null
+          position?: number
           presence?: string
           role?: string
           slug: string
-          spotify_artist_id?: string
+          spotify_artist_id?: string | null
           status?: string
           studio?: string
           updated_at?: string
           zona?: string
         }
         Update: {
-          alt_text?: string | null
           bio?: string
-          canonical_url?: string | null
           code?: string
           created_at?: string
           edition?: string
           faixas?: string[]
-          focal_position?: string | null
           frase?: string
           id?: string
-          meta_description?: string | null
-          meta_title?: string | null
           name?: string
-          og_image?: string | null
-          photo_url?: string
+          photo_url?: string | null
+          position?: number
           presence?: string
           role?: string
           slug?: string
-          spotify_artist_id?: string
+          spotify_artist_id?: string | null
           status?: string
           studio?: string
           updated_at?: string
@@ -238,6 +219,7 @@ export type Database = {
         Row: {
           action: string
           actor_user_id: string | null
+          changed_fields: string[]
           created_at: string
           entity_id: string | null
           entity_type: string
@@ -247,6 +229,7 @@ export type Database = {
         Insert: {
           action: string
           actor_user_id?: string | null
+          changed_fields?: string[]
           created_at?: string
           entity_id?: string | null
           entity_type: string
@@ -256,6 +239,7 @@ export type Database = {
         Update: {
           action?: string
           actor_user_id?: string | null
+          changed_fields?: string[]
           created_at?: string
           entity_id?: string | null
           entity_type?: string
@@ -264,36 +248,96 @@ export type Database = {
         }
         Relationships: []
       }
+      beats: {
+        Row: {
+          audio_url: string | null
+          bpm: number | null
+          created_at: string
+          currency: string
+          id: string
+          key_signature: string | null
+          licence_terms: string | null
+          position: number
+          preview_url: string | null
+          price: number | null
+          producer: string
+          slug: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audio_url?: string | null
+          bpm?: number | null
+          created_at?: string
+          currency?: string
+          id?: string
+          key_signature?: string | null
+          licence_terms?: string | null
+          position?: number
+          preview_url?: string | null
+          price?: number | null
+          producer: string
+          slug: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audio_url?: string | null
+          bpm?: number | null
+          created_at?: string
+          currency?: string
+          id?: string
+          key_signature?: string | null
+          licence_terms?: string | null
+          position?: number
+          preview_url?: string | null
+          price?: number | null
+          producer?: string
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       camping_events: {
         Row: {
           created_at: string
-          day_label: string
           description: string
-          event_time: string | null
+          ends_at: string | null
           id: string
-          order_index: number
+          number: string
+          position: number
+          slug: string
+          starts_at: string | null
           status: string
           title: string
           updated_at: string
         }
         Insert: {
           created_at?: string
-          day_label: string
           description?: string
-          event_time?: string | null
+          ends_at?: string | null
           id?: string
-          order_index?: number
+          number?: string
+          position?: number
+          slug: string
+          starts_at?: string | null
           status?: string
           title: string
           updated_at?: string
         }
         Update: {
           created_at?: string
-          day_label?: string
           description?: string
-          event_time?: string | null
+          ends_at?: string | null
           id?: string
-          order_index?: number
+          number?: string
+          position?: number
+          slug?: string
+          starts_at?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -303,85 +347,112 @@ export type Database = {
       camping_sessions: {
         Row: {
           created_at: string
+          day: number
           description: string
+          ends_at: string | null
+          event_id: string | null
+          gallery_tag: string
           id: string
-          order_index: number
-          status: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string
-          id?: string
-          order_index?: number
-          status?: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string
-          id?: string
-          order_index?: number
-          status?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      drop_campaigns: {
-        Row: {
-          banner_url: string | null
-          closing_message: string
-          created_at: string
-          enabled: boolean
-          id: string
-          opening_message: string
-          primary_product_id: string | null
+          position: number
+          room_id: string
+          room_name: string
+          slug: string | null
           starts_at: string | null
           status: string
-          timezone: string
           title: string
           updated_at: string
         }
         Insert: {
-          banner_url?: string | null
-          closing_message?: string
           created_at?: string
-          enabled?: boolean
+          day?: number
+          description?: string
+          ends_at?: string | null
+          event_id?: string | null
+          gallery_tag?: string
           id?: string
-          opening_message?: string
-          primary_product_id?: string | null
+          position?: number
+          room_id?: string
+          room_name?: string
+          slug?: string | null
           starts_at?: string | null
           status?: string
-          timezone?: string
           title: string
           updated_at?: string
         }
         Update: {
-          banner_url?: string | null
-          closing_message?: string
           created_at?: string
-          enabled?: boolean
+          day?: number
+          description?: string
+          ends_at?: string | null
+          event_id?: string | null
+          gallery_tag?: string
           id?: string
-          opening_message?: string
-          primary_product_id?: string | null
+          position?: number
+          room_id?: string
+          room_name?: string
+          slug?: string | null
           starts_at?: string | null
           status?: string
-          timezone?: string
           title?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "drop_campaigns_primary_product_id_fkey"
-            columns: ["primary_product_id"]
+            foreignKeyName: "camping_sessions_event_id_fkey"
+            columns: ["event_id"]
             isOneToOne: false
-            referencedRelation: "merch_products"
+            referencedRelation: "camping_events"
             referencedColumns: ["id"]
           },
         ]
+      }
+      drop_campaigns: {
+        Row: {
+          created_at: string
+          description: string
+          drop_at: string | null
+          ends_at: string | null
+          id: string
+          marquee: string | null
+          name: string
+          position: number
+          slug: string
+          starts_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          drop_at?: string | null
+          ends_at?: string | null
+          id?: string
+          marquee?: string | null
+          name: string
+          position?: number
+          slug: string
+          starts_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          drop_at?: string | null
+          ends_at?: string | null
+          id?: string
+          marquee?: string | null
+          name?: string
+          position?: number
+          slug?: string
+          starts_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       events: {
         Row: {
@@ -406,6 +477,50 @@ export type Database = {
           sid?: string
         }
         Relationships: []
+      }
+      fan_memberships: {
+        Row: {
+          alias: string
+          code: string
+          created_at: string
+          fan_number: number
+          id: string
+          referred_by_fan_id: string | null
+          rules_version: string
+          since: string
+          status: string
+        }
+        Insert: {
+          alias: string
+          code: string
+          created_at?: string
+          fan_number?: number
+          id?: string
+          referred_by_fan_id?: string | null
+          rules_version?: string
+          since?: string
+          status?: string
+        }
+        Update: {
+          alias?: string
+          code?: string
+          created_at?: string
+          fan_number?: number
+          id?: string
+          referred_by_fan_id?: string | null
+          rules_version?: string
+          since?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fan_memberships_referred_by_fan_id_fkey"
+            columns: ["referred_by_fan_id"]
+            isOneToOne: false
+            referencedRelation: "fan_memberships"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       frequency_badges: {
         Row: {
@@ -450,7 +565,7 @@ export type Database = {
         Insert: {
           id?: number
           program_seed?: number
-          station_started_at: string
+          station_started_at?: string
           updated_at?: string
         }
         Update: {
@@ -461,43 +576,157 @@ export type Database = {
         }
         Relationships: []
       }
+      gallery_items: {
+        Row: {
+          alt: string
+          caption: string
+          created_at: string
+          day: number
+          download_name: string | null
+          downloadable: boolean
+          id: string
+          media_asset_id: string | null
+          position: number
+          poster_media_asset_id: string | null
+          poster_url: string | null
+          ratio: string
+          roll: string
+          slug: string
+          status: string
+          tag: string
+          timecode: string
+          type: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          alt?: string
+          caption?: string
+          created_at?: string
+          day?: number
+          download_name?: string | null
+          downloadable?: boolean
+          id?: string
+          media_asset_id?: string | null
+          position?: number
+          poster_media_asset_id?: string | null
+          poster_url?: string | null
+          ratio?: string
+          roll?: string
+          slug: string
+          status?: string
+          tag?: string
+          timecode?: string
+          type: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          alt?: string
+          caption?: string
+          created_at?: string
+          day?: number
+          download_name?: string | null
+          downloadable?: boolean
+          id?: string
+          media_asset_id?: string | null
+          position?: number
+          poster_media_asset_id?: string | null
+          poster_url?: string | null
+          ratio?: string
+          roll?: string
+          slug?: string
+          status?: string
+          tag?: string
+          timecode?: string
+          type?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_items_media_asset_id_fkey"
+            columns: ["media_asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gallery_items_poster_media_asset_id_fkey"
+            columns: ["poster_media_asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_movements: {
         Row: {
           actor_user_id: string | null
           created_at: string
-          delta: number
           id: string
-          product_variant_id: string
-          reason: string
+          movement_type: string
+          notes: string
+          quantity: number
           reference: string | null
+          variant_id: string
         }
         Insert: {
           actor_user_id?: string | null
           created_at?: string
-          delta: number
           id?: string
-          product_variant_id: string
-          reason: string
+          movement_type: string
+          notes?: string
+          quantity: number
           reference?: string | null
+          variant_id: string
         }
         Update: {
           actor_user_id?: string | null
           created_at?: string
-          delta?: number
           id?: string
-          product_variant_id?: string
-          reason?: string
+          movement_type?: string
+          notes?: string
+          quantity?: number
           reference?: string | null
+          variant_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "inventory_movements_product_variant_id_fkey"
-            columns: ["product_variant_id"]
+            foreignKeyName: "inventory_movements_variant_id_fkey"
+            columns: ["variant_id"]
             isOneToOne: false
             referencedRelation: "merch_variants"
             referencedColumns: ["id"]
           },
         ]
+      }
+      live_notifications: {
+        Row: {
+          contact_key: string
+          contact_type: string
+          contact_value: string
+          created_at: string
+          id: string
+          kind: string
+        }
+        Insert: {
+          contact_key: string
+          contact_type: string
+          contact_value: string
+          created_at?: string
+          id?: string
+          kind?: string
+        }
+        Update: {
+          contact_key?: string
+          contact_type?: string
+          contact_value?: string
+          created_at?: string
+          id?: string
+          kind?: string
+        }
+        Relationships: []
       }
       media_assets: {
         Row: {
@@ -505,114 +734,217 @@ export type Database = {
           asset_type: string
           created_at: string
           format: string | null
-          height: number | null
           id: string
+          mime_type: string | null
           name: string
-          size_bytes: number | null
+          public_url: string | null
+          size_bytes: number
           status: string
-          storage_url: string
+          storage_path: string | null
+          storage_url: string | null
           tags: string[]
           updated_at: string
           uploader_user_id: string | null
-          width: number | null
+          url: string | null
         }
         Insert: {
           alt_text?: string
-          asset_type: string
+          asset_type?: string
           created_at?: string
           format?: string | null
-          height?: number | null
           id?: string
+          mime_type?: string | null
           name: string
-          size_bytes?: number | null
+          public_url?: string | null
+          size_bytes?: number
           status?: string
-          storage_url: string
+          storage_path?: string | null
+          storage_url?: string | null
           tags?: string[]
           updated_at?: string
           uploader_user_id?: string | null
-          width?: number | null
+          url?: string | null
         }
         Update: {
           alt_text?: string
           asset_type?: string
           created_at?: string
           format?: string | null
-          height?: number | null
           id?: string
+          mime_type?: string | null
           name?: string
-          size_bytes?: number | null
+          public_url?: string | null
+          size_bytes?: number
           status?: string
-          storage_url?: string
+          storage_path?: string | null
+          storage_url?: string | null
           tags?: string[]
           updated_at?: string
           uploader_user_id?: string | null
-          width?: number | null
+          url?: string | null
         }
         Relationships: []
       }
-      merch_products: {
+      members: {
         Row: {
-          batch: string | null
+          alias: string
+          code: string
+          contact_key: string
+          contact_type: string
+          contact_value: string
           created_at: string
-          currency: string
-          description: string
           id: string
-          name: string
-          price: number
-          sku: string | null
+          member_number: number
+          referred_by_member_id: string | null
+          signature_present: boolean
+          since: string
           status: string
+          statute_version: string
           updated_at: string
         }
         Insert: {
-          batch?: string | null
+          alias: string
+          code: string
+          contact_key: string
+          contact_type: string
+          contact_value: string
           created_at?: string
-          currency?: string
-          description?: string
           id?: string
-          name: string
-          price?: number
-          sku?: string | null
+          member_number?: number
+          referred_by_member_id?: string | null
+          signature_present?: boolean
+          since?: string
           status?: string
+          statute_version?: string
           updated_at?: string
         }
         Update: {
-          batch?: string | null
+          alias?: string
+          code?: string
+          contact_key?: string
+          contact_type?: string
+          contact_value?: string
+          created_at?: string
+          id?: string
+          member_number?: number
+          referred_by_member_id?: string | null
+          signature_present?: boolean
+          since?: string
+          status?: string
+          statute_version?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "members_referred_by_member_id_fkey"
+            columns: ["referred_by_member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merch_products: {
+        Row: {
+          code: string
+          created_at: string
+          currency: string
+          description: string
+          detail: string[]
+          id: string
+          image_url: string | null
+          media_asset_id: string | null
+          name: string
+          position: number
+          price: number
+          slug: string
+          spec: string
+          status: string
+          subtitle: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
           created_at?: string
           currency?: string
           description?: string
+          detail?: string[]
           id?: string
-          name?: string
+          image_url?: string | null
+          media_asset_id?: string | null
+          name: string
+          position?: number
           price?: number
-          sku?: string | null
+          slug: string
+          spec?: string
           status?: string
+          subtitle?: string
           updated_at?: string
         }
-        Relationships: []
+        Update: {
+          code?: string
+          created_at?: string
+          currency?: string
+          description?: string
+          detail?: string[]
+          id?: string
+          image_url?: string | null
+          media_asset_id?: string | null
+          name?: string
+          position?: number
+          price?: number
+          slug?: string
+          spec?: string
+          status?: string
+          subtitle?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merch_products_media_asset_id_fkey"
+            columns: ["media_asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       merch_variants: {
         Row: {
+          created_at: string
           id: string
           product_id: string
           size: string
+          sku: string | null
+          status: string
           stock_reserved: number
           stock_sold: number
           stock_total: number
+          updated_at: string
         }
         Insert: {
+          created_at?: string
           id?: string
           product_id: string
           size: string
+          sku?: string | null
+          status?: string
           stock_reserved?: number
           stock_sold?: number
           stock_total?: number
+          updated_at?: string
         }
         Update: {
+          created_at?: string
           id?: string
           product_id?: string
           size?: string
+          sku?: string | null
+          status?: string
           stock_reserved?: number
           stock_sold?: number
           stock_total?: number
+          updated_at?: string
         }
         Relationships: [
           {
@@ -635,13 +967,12 @@ export type Database = {
           message: string
           name: string
           notes: string
-          owner_user_id: string | null
           partnership_type: string
           priority: boolean
           status: string
         }
         Insert: {
-          budget: string
+          budget?: string
           company: string
           contact: string
           created_at?: string
@@ -650,7 +981,6 @@ export type Database = {
           message: string
           name: string
           notes?: string
-          owner_user_id?: string | null
           partnership_type: string
           priority?: boolean
           status?: string
@@ -665,7 +995,6 @@ export type Database = {
           message?: string
           name?: string
           notes?: string
-          owner_user_id?: string | null
           partnership_type?: string
           priority?: boolean
           status?: string
@@ -744,7 +1073,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "radio_station_active_block_fk"
+            foreignKeyName: "radio_station_active_block_id_fkey"
             columns: ["active_block_id"]
             isOneToOne: false
             referencedRelation: "radio_blocks"
@@ -826,13 +1155,13 @@ export type Database = {
           created_at: string
           description: string
           id: string
-          kind: string
-          release_date: string | null
-          spotify_url: string | null
+          position: number
+          published_at: string | null
+          slug: string
           status: string
+          subtitle: string
           title: string
           updated_at: string
-          youtube_url: string | null
         }
         Insert: {
           artist_id?: string | null
@@ -840,13 +1169,13 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
-          kind?: string
-          release_date?: string | null
-          spotify_url?: string | null
+          position?: number
+          published_at?: string | null
+          slug: string
           status?: string
+          subtitle?: string
           title: string
           updated_at?: string
-          youtube_url?: string | null
         }
         Update: {
           artist_id?: string | null
@@ -854,13 +1183,13 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
-          kind?: string
-          release_date?: string | null
-          spotify_url?: string | null
+          position?: number
+          published_at?: string | null
+          slug?: string
           status?: string
+          subtitle?: string
           title?: string
           updated_at?: string
-          youtube_url?: string | null
         }
         Relationships: [
           {
@@ -874,189 +1203,412 @@ export type Database = {
       }
       reservations: {
         Row: {
+          alias: string
+          amount: number | null
+          code: string | null
+          codename: string | null
           created_at: string
-          customer_name: string
           id: string
-          product_variant_id: string
-          reservation_code: string
+          item_name: string | null
+          merch_product_id: string | null
+          merch_variant_id: string | null
+          price: number | null
+          product_id: string | null
+          product_name: string | null
+          qty: number | null
+          quantity: number
+          recipient_alias: string | null
+          reference: string | null
+          selected_size: string | null
+          serial_number: number | null
+          size: string | null
           status: string
+          unit_price: number | null
+          variant_id: string | null
         }
         Insert: {
+          alias?: string
+          amount?: number | null
+          code?: string | null
+          codename?: string | null
           created_at?: string
-          customer_name: string
           id?: string
-          product_variant_id: string
-          reservation_code: string
+          item_name?: string | null
+          merch_product_id?: string | null
+          merch_variant_id?: string | null
+          price?: number | null
+          product_id?: string | null
+          product_name?: string | null
+          qty?: number | null
+          quantity?: number
+          recipient_alias?: string | null
+          reference?: string | null
+          selected_size?: string | null
+          serial_number?: number | null
+          size?: string | null
           status?: string
+          unit_price?: number | null
+          variant_id?: string | null
         }
         Update: {
+          alias?: string
+          amount?: number | null
+          code?: string | null
+          codename?: string | null
           created_at?: string
-          customer_name?: string
           id?: string
-          product_variant_id?: string
-          reservation_code?: string
+          item_name?: string | null
+          merch_product_id?: string | null
+          merch_variant_id?: string | null
+          price?: number | null
+          product_id?: string | null
+          product_name?: string | null
+          qty?: number | null
+          quantity?: number
+          recipient_alias?: string | null
+          reference?: string | null
+          selected_size?: string | null
+          serial_number?: number | null
+          size?: string | null
           status?: string
+          unit_price?: number | null
+          variant_id?: string | null
+        }
+        Relationships: []
+      }
+      revelation_media: {
+        Row: {
+          alt: string
+          caption: string
+          created_at: string
+          day: number
+          download_name: string | null
+          downloadable: boolean
+          id: string
+          media_asset_id: string | null
+          position: number
+          poster_media_asset_id: string | null
+          poster_url: string | null
+          ratio: string
+          roll: string
+          status: string
+          tag: string
+          timecode: string
+          type: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          alt?: string
+          caption?: string
+          created_at?: string
+          day?: number
+          download_name?: string | null
+          downloadable?: boolean
+          id?: string
+          media_asset_id?: string | null
+          position?: number
+          poster_media_asset_id?: string | null
+          poster_url?: string | null
+          ratio?: string
+          roll?: string
+          status?: string
+          tag?: string
+          timecode?: string
+          type?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          alt?: string
+          caption?: string
+          created_at?: string
+          day?: number
+          download_name?: string | null
+          downloadable?: boolean
+          id?: string
+          media_asset_id?: string | null
+          position?: number
+          poster_media_asset_id?: string | null
+          poster_url?: string | null
+          ratio?: string
+          roll?: string
+          status?: string
+          tag?: string
+          timecode?: string
+          type?: string
+          updated_at?: string
+          url?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "reservations_product_variant_id_fkey"
-            columns: ["product_variant_id"]
+            foreignKeyName: "revelation_media_media_asset_id_fkey"
+            columns: ["media_asset_id"]
             isOneToOne: false
-            referencedRelation: "merch_variants"
+            referencedRelation: "media_assets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revelation_media_poster_media_asset_id_fkey"
+            columns: ["poster_media_asset_id"]
+            isOneToOne: false
+            referencedRelation: "media_assets"
             referencedColumns: ["id"]
           },
         ]
       }
-      revelation_media: {
-        Row: {
-          alt_text: string
-          caption: string
-          created_at: string
-          download_name: string | null
-          downloadable: boolean
-          id: string
-          media_type: string
-          order_index: number
-          public_id: string
-          src: string | null
-          status: string
-          tags: string[]
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          alt_text?: string
-          caption?: string
-          created_at?: string
-          download_name?: string | null
-          downloadable?: boolean
-          id?: string
-          media_type: string
-          order_index?: number
-          public_id: string
-          src?: string | null
-          status?: string
-          tags?: string[]
-          title?: string
-          updated_at?: string
-        }
-        Update: {
-          alt_text?: string
-          caption?: string
-          created_at?: string
-          download_name?: string | null
-          downloadable?: boolean
-          id?: string
-          media_type?: string
-          order_index?: number
-          public_id?: string
-          src?: string | null
-          status?: string
-          tags?: string[]
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      site_sections: {
-        Row: {
-          enabled: boolean
-          key: string
-          settings: Json
-          sort_order: number
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          enabled?: boolean
-          key: string
-          settings?: Json
-          sort_order?: number
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          enabled?: boolean
-          key?: string
-          settings?: Json
-          sort_order?: number
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
-      site_settings: {
+      site_flags: {
         Row: {
           key: string
           updated_at: string
-          updated_by: string | null
           value: Json
         }
         Insert: {
           key: string
           updated_at?: string
-          updated_by?: string | null
           value?: Json
         }
         Update: {
           key?: string
           updated_at?: string
-          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
+      site_sections: {
+        Row: {
+          content: Json
+          created_at: string
+          description: string
+          id: string
+          key: string
+          position: number
+          status: string
+          subtitle: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          description?: string
+          id?: string
+          key: string
+          position?: number
+          status?: string
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          description?: string
+          id?: string
+          key?: string
+          position?: number
+          status?: string
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          position: number
+          status: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          position?: number
+          status?: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          position?: number
+          status?: string
+          updated_at?: string
           value?: Json
         }
         Relationships: []
       }
       tapes: {
         Row: {
-          audio_url: string
           cover_url: string | null
           created_at: string
           description: string
-          duration_seconds: number
+          dur: string
+          feat: string
           id: string
-          kind: string
-          name: string
-          release_date: string | null
+          position: number
           slug: string
+          src: string
           status: string
+          title: string
           updated_at: string
         }
         Insert: {
-          audio_url?: string
           cover_url?: string | null
           created_at?: string
           description?: string
-          duration_seconds?: number
+          dur?: string
+          feat?: string
           id?: string
-          kind?: string
-          name: string
-          release_date?: string | null
+          position?: number
           slug: string
+          src: string
           status?: string
+          title: string
           updated_at?: string
         }
         Update: {
-          audio_url?: string
           cover_url?: string | null
           created_at?: string
           description?: string
-          duration_seconds?: number
+          dur?: string
+          feat?: string
           id?: string
-          kind?: string
-          name?: string
-          release_date?: string | null
+          position?: number
           slug?: string
+          src?: string
           status?: string
+          title?: string
           updated_at?: string
         }
         Relationships: []
       }
     }
     Views: {
-      [_ in never]: never
+      beats_public: {
+        Row: {
+          bpm: number | null
+          currency: string | null
+          id: string | null
+          key_signature: string | null
+          licence_terms: string | null
+          position: number | null
+          preview_url: string | null
+          price: number | null
+          producer: string | null
+          slug: string | null
+          status: string | null
+          title: string | null
+        }
+        Insert: {
+          bpm?: number | null
+          currency?: string | null
+          id?: string | null
+          key_signature?: string | null
+          licence_terms?: string | null
+          position?: number | null
+          preview_url?: string | null
+          price?: number | null
+          producer?: string | null
+          slug?: string | null
+          status?: string | null
+          title?: string | null
+        }
+        Update: {
+          bpm?: number | null
+          currency?: string | null
+          id?: string | null
+          key_signature?: string | null
+          licence_terms?: string | null
+          position?: number | null
+          preview_url?: string | null
+          price?: number | null
+          producer?: string | null
+          slug?: string | null
+          status?: string | null
+          title?: string | null
+        }
+        Relationships: []
+      }
+      partnership_public: {
+        Row: {
+          budget: string | null
+          company: string | null
+          created_at: string | null
+          id: string | null
+          name: string | null
+          partnership_type: string | null
+          priority: boolean | null
+          status: string | null
+        }
+        Insert: {
+          budget?: string | null
+          company?: string | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          partnership_type?: string | null
+          priority?: boolean | null
+          status?: string | null
+        }
+        Update: {
+          budget?: string | null
+          company?: string | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          partnership_type?: string | null
+          priority?: boolean | null
+          status?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      create_live_notification: {
+        Args: {
+          p_contact_type: string
+          p_contact_value: string
+          p_kind: string
+        }
+        Returns: {
+          accepted: boolean
+        }[]
+      }
+      create_public_merch_reservation: {
+        Args: {
+          p_alias: string
+          p_price: number
+          p_product_id: string
+          p_product_name: string
+          p_size: string
+          p_variant_id: string
+        }
+        Returns: Json
+      }
       current_admin_role: { Args: never; Returns: string }
+      delegados: {
+        Args: never
+        Returns: {
+          alias: string
+          referrals: number
+        }[]
+      }
+      fan_public: {
+        Args: { p_code: string }
+        Returns: {
+          alias: string
+          code: string
+          fan_number: number
+          since: string
+        }[]
+      }
       frequency_award_night: {
         Args: { p_code: string; p_local_hour: number }
         Returns: boolean
@@ -1116,7 +1668,57 @@ export type Database = {
           tag_interval: number
         }[]
       }
-      is_radio_editor: { Args: never; Returns: boolean }
+      join_union: {
+        Args: {
+          p_alias: string
+          p_contact_type: string
+          p_contact_value: string
+          p_referred_by?: string
+          p_signature_present?: boolean
+          p_statute_version?: string
+        }
+        Returns: {
+          alias: string
+          already_member: boolean
+          code: string
+          member_number: number
+          since: string
+        }[]
+      }
+      member_count: { Args: never; Returns: number }
+      member_public: {
+        Args: { p_code: string }
+        Returns: {
+          alias: string
+          code: string
+          member_number: number
+          since: string
+        }[]
+      }
+      register_fan: {
+        Args: {
+          p_alias: string
+          p_referred_by?: string
+          p_rules_version?: string
+        }
+        Returns: {
+          alias: string
+          code: string
+          fan_number: number
+          since: string
+        }[]
+      }
+      submit_partnership_request: {
+        Args: {
+          p_budget: string
+          p_company: string
+          p_contact: string
+          p_message: string
+          p_name: string
+          p_partnership_type: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
