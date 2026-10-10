@@ -1529,7 +1529,17 @@ export class CampingStudioEngine {
     const legacyRail = root.getObjectByName("studio.artists-wall");
     if (legacyRail) legacyRail.visible = false;
 
-    const slots: THREE.Object3D[] = [];
+    // The GLB's decorative side-wall poster strip intersects the official 17-portrait
+    // grid. Keep the left mural and the large banner, but clear this shared right-wall
+    // area so each published mugshot is visible as an independent physical frame.
+    for (const name of ["studio.wall-posters", "studio.poster-art"]) {
+      const overlappingPoster = root.getObjectByName(name);
+      if (overlappingPoster) {
+        overlappingPoster.visible = false;
+        overlappingPoster.userData.replacedByArtistsWall = true;
+      }
+    }
+
     for (let slot = 1; slot <= 17; slot += 1) {
       const name = "studio.artist-slot-" + String(slot).padStart(3, "0");
       const object = root.getObjectByName(name);
@@ -1558,7 +1568,6 @@ export class CampingStudioEngine {
       });
       object.userData.wallMounted = true;
       object.userData.wallFacing = "interior/-X";
-      slots.push(object);
     }
 
     const mounts = new THREE.Group();
