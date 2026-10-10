@@ -187,28 +187,28 @@
 }
 
 .camping-studio__access-panel h1 {
-  margin: 13px 0 9px;
+  margin: 11px 0 0;
   color: #e7dbc6;
   font-family: Impact, "Arial Narrow", sans-serif;
-  font-size: clamp(27px, 3.7vw, 39px);
+  font-size: clamp(58px, 7vw, 76px);
   font-stretch: condensed;
   font-weight: 500;
-  letter-spacing: 0.045em;
-  line-height: 0.92;
+  letter-spacing: 0.025em;
+  line-height: 0.84;
 }
 
 .camping-studio__access-instruction {
   max-width: 255px;
-  margin: 12px 0 0;
+  margin: 8px 0 0;
   color: #9e9180;
   font-size: 9px;
-  line-height: 1.7;
+  line-height: 1.55;
 }
 
 .camping-studio__code-slots {
   display: flex;
   gap: 8px;
-  margin-top: 15px;
+  margin-top: 12px;
 }
 
 .camping-studio__code-slots span {
