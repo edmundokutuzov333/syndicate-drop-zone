@@ -743,7 +743,10 @@
       "imageField": "photo_url",
       "memberCodePattern": "SDT-01..SDT-17",
       "missingRecordBehavior": "leave the matching slot empty; do not borrow another image or invent an artist",
-      "surface": "the inner black primitive in each physical frame"
+      "surface": "the inner black primitive in each physical frame",
+      "loading": "The GLB scene remains in loading state until each available portrait texture request has settled.",
+      "crop": "Each image is centre-cropped to fit the actual frame aspect ratio instead of being stretched.",
+      "completion": "Only successful textures are counted; failed images are reported by a transient runtime status. Missing rows remain empty."
     },
     "xoyensBacklitSign": {
       "status": "runtime-geometry",
@@ -779,7 +782,25 @@
         "vertical marketing labels",
         "keyboard-and-mouse instruction paragraph"
       ]
-    }
+    },
+    "implementationCommit": "556e32482e836a277199390a357c69e17280b854",
+    "publishedRuntimeCommit": "2eede7f4157f603bc9c27202b60d496c3fd7f25b",
+    "status": "source-updated-publication-pending",
+    "materials": {
+      "reflections": "Three.js RoomEnvironment converted through PMREMGenerator",
+      "sceneEnvironmentIntensity": {
+        "high": 0.32,
+        "other": 0.22
+      },
+      "anisotropicFiltering": "Up to 16x on high profile; up to 8x otherwise, capped by GPU capability",
+      "adaptiveShadowMap": {
+        "low": 512,
+        "balanced": 512,
+        "high": 2048
+      },
+      "constraints": "Preserve the warm practical lights and keep reflections subtle to maintain black levels."
+    },
+    "interactionSafety": "The replaced hidden flat seal is excluded from raycast targets so the visible cloth banner is the unique photo-backdrop target."
   },
   "auditUpdatedAt": "2026-10-10"
 }
