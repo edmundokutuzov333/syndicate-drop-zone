@@ -27,8 +27,12 @@ test.describe("CAMPING V2 / 808 access", () => {
       return;
     }
 
-    await expect(page.getByRole("heading", { name: /ENTER\s+ACCESS CODE/i })).toBeVisible();
-    await expect(page.locator(".camping-studio__status")).toContainText("ACCESS LOCKED");
+    await expect(page.getByRole("heading", { name: "808", exact: true })).toBeVisible();
+    await expect(page.locator(".camping-studio__room")).toHaveText("STUDIO XOYENS");
+    await expect(page.locator(".camping-studio__access-panel")).toContainText("Código de acesso");
+    await expect(page.locator(".camping-studio__access-panel")).not.toContainText("ENTRY PROTOCOL");
+    await expect(page.locator(".camping-studio__access-panel")).not.toContainText("WASD / DRAG LOOK");
+    await expect(page.locator(".camping-studio__header-right")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "NAVEGAÇÃO GUIADA" })).toBeVisible();
     await expect(page.getByRole("button", { name: "REGISTOS" })).toBeVisible();
   });
