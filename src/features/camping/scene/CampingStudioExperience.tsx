@@ -121,12 +121,6 @@ export function CampingStudioExperience({
     if (!canvas) return;
     setWebglError(null);
     setAssetState("loading");
-    // Listen before creating WebGLRenderer: context loss can occur while the
-    // renderer/environment is first being initialized.
-    canvas.addEventListener("webglcontextlost", (event) => {
-      event.preventDefault();
-    }, { once: true });
-
     const engine = new CampingStudioEngine({
       onAccessChange: (nextAccess) => {
         accessRef.current = nextAccess;
