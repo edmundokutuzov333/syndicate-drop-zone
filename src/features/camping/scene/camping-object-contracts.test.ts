@@ -78,7 +78,7 @@ describe("CAMPING adaptive rendering profile", () => {
     expect(profile.pixelRatio).toBe(1.65);
     expect(profile.antialias).toBe(true);
     expect(profile.shadowsEnabled).toBe(true);
-    expect(profile.shadowMapSize).toBe(1024);
+    expect(profile.shadowMapSize).toBe(2048);
     expect(profile.powerPreference).toBe("high-performance");
   });
 
