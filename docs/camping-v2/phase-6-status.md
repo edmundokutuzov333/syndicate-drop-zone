@@ -43,6 +43,7 @@ O GLB não declara extensões de compressão Meshopt, Draco ou KTX2. Nesta execu
 - Runtime com perfil adaptativo e gestão de contexto: `2eede7f4157f603bc9c27202b60d496c3fd7f25b`.
 - Limpeza do fallback React após restauração WebGL: `a53c96eb155e9708fd3cd5abf4bee5f10596aaf4`.
 - Testes unitários do perfil gráfico: `51a3b6274e2301aadcb49a767d8e91407ede489c`.
+- Guardas de tipos explícitos para as APIs de memória e núcleos opcionais e classificação correcta do perfil High: `dff0e317da92103513d3cca4e254ed41bcbe4966` (HEAD de código observado na `main` durante esta revisão).
 
 A Vercel concluiu com estado `READY` o deployment `dpl_EFQp7RCZ4GY84qLtWmx3Q4nJMVTf`, associado ao commit de runtime `2eede7f`, com os aliases `syndicate-drop-zone.vercel.app`, `syndicate-drop-zone-kutuzov.vercel.app` e `syndicate-drop-zone-git-main-kutuzov.vercel.app`. A consulta posterior ao alias de produção resolveu para esse deployment.
 
