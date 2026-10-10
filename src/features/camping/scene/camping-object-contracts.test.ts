@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { resolveCampingRenderProfile } from "./CampingStudioEngine";
 import { canReserveLiveProduct, getArtistSlotIndex, getCampingObjectSection, getRoomTransitionTarget, roomRequiresBackendAuthorization } from "./camping-object-contracts";
 
 describe("CAMPING object interaction contracts", () => {
@@ -43,5 +44,54 @@ describe("CAMPING object interaction contracts", () => {
     expect(roomRequiresBackendAuthorization("secret")).toBe(true);
     expect(roomRequiresBackendAuthorization("archive")).toBe(false);
     expect(roomRequiresBackendAuthorization("studio")).toBe(false);
+  });
+});
+
+describe("CAMPING adaptive rendering profile", () => {
+  it("reduces pixel ratio and expensive shadows on constrained mobile hardware", () => {
+    const profile = resolveCampingRenderProfile({
+      devicePixelRatio: 3,
+      viewportWidth: 390,
+      deviceMemory: 4,
+      hardwareConcurrency: 4,
+      coarsePointer: true,
+    });
+
+    expect(profile.tier).toBe("low");
+    expect(profile.pixelRatio).toBe(0.95);
+    expect(profile.antialias).toBe(false);
+    expect(profile.shadowsEnabled).toBe(false);
+    expect(profile.shadowMapSize).toBe(512);
+    expect(profile.powerPreference).toBe("low-power");
+  });
+
+  it("preserves high visual quality on a capable desktop", () => {
+    const profile = resolveCampingRenderProfile({
+      devicePixelRatio: 2,
+      viewportWidth: 1920,
+      deviceMemory: 16,
+      hardwareConcurrency: 16,
+      coarsePointer: false,
+    });
+
+    expect(profile.tier).toBe("high");
+    expect(profile.pixelRatio).toBe(1.65);
+    expect(profile.antialias).toBe(true);
+    expect(profile.shadowsEnabled).toBe(true);
+    expect(profile.shadowMapSize).toBe(1024);
+    expect(profile.powerPreference).toBe("high-performance");
+  });
+
+  it("handles missing device-memory APIs without producing invalid budgets", () => {
+    const profile = resolveCampingRenderProfile({
+      devicePixelRatio: Number.NaN,
+      viewportWidth: 1440,
+      hardwareConcurrency: 8,
+    });
+
+    expect(profile.pixelRatio).toBe(1);
+    expect(Number.isFinite(profile.pixelRatio)).toBe(true);
+    expect(profile.shadowsEnabled).toBe(true);
+    expect(profile.shadowMapSize).toBe(1024);
   });
 });
