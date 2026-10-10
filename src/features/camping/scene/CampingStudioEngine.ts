@@ -618,6 +618,10 @@ export class CampingStudioEngine {
   mount(canvas: HTMLCanvasElement): void {
     this.canvas = canvas;
     this.disposed = false;
+    // Listen before asking the browser for a context. GPU/context loss during
+    // renderer setup must be handled rather than left to the browser default.
+    canvas.addEventListener("webglcontextlost", this.onWebGLContextLost);
+    canvas.addEventListener("webglcontextrestored", this.onWebGLContextRestored);
     // Start loading the published roster while the visitor is still at the 808 door.
     // The physical portraits are bound to the GLB slots only after real backend records arrive.
     this.artistDataPromise = getLiveArtistsForSite().catch(() => []);
@@ -674,8 +678,6 @@ export class CampingStudioEngine {
     this.canvas.addEventListener("pointerup", this.onPointerUp);
     this.canvas.addEventListener("pointercancel", this.onPointerCancel);
     this.canvas.addEventListener("contextmenu", this.onContextMenu);
-    this.canvas.addEventListener("webglcontextlost", this.onWebGLContextLost);
-    this.canvas.addEventListener("webglcontextrestored", this.onWebGLContextRestored);
     this.canvas.style.touchAction = "none";
     window.addEventListener("resize", this.onWindowResize, { passive: true });
     window.addEventListener("keydown", this.onKeyDown);
