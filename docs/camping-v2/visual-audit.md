@@ -82,7 +82,7 @@ A navegação guiada, os registos e os controlos mobile continuam disponíveis p
 ## Estado de publicação
 
 - Código de entrada mínimo e renderização adaptativa estão na `main`.
-- Motor visual mais recente durante esta auditoria: `0a6e24beb69898a4de5851e14c9364f9c7ab1776`. Teste E2E das fotografias: `398f4cd592b04fa5ca83a2ec4a24032e244c86af`.
+- Motor visual mais recente durante esta auditoria: `57dd48b24db224a5ec86d7d6f3ece68c9bfbd61f`. Manifesto visual sincronizado: `48f6ce6461d35d170ba5d913b32c4fb123a53c66`. Teste E2E das fotografias: `398f4cd592b04fa5ca83a2ec4a24032e244c86af`.
 - O projecto Lovable sincronizou esse commit e reporta estado `ready`. O screenshot automático disponível é uma captura do projecto, mas as ferramentas de browser usadas nesta execução não permitiram abrir a imagem nem inspeccionar a cena interactiva.
 - O deployment Vercel associado ao alias de produção continua em estado `READY` para o commit anterior `ab8e73644569dcdd9b2ef410eab01d955e7160bb`. O runtime de código e materiais mais recente na `main` é `fb474947`, mas não está ainda publicado na Vercel. Os commits visuais subsequentes estão a receber `build-rate-limit`, por isso as alterações novas não estão confirmadas na publicação Vercel.
 - Não foi feita promoção manual de um deployment antigo.
