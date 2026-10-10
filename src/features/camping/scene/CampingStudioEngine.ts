@@ -1,6 +1,9 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import sindicatoLogo from "@/assets/brand/sindicato-logo.png.asset.json";
+import xoyensLogo from "@/assets/brand/xoyens.png.asset.json";
+import sindicatoSeloAsset from "@/assets/brand/sindicato-selo.png.asset.json";
+import { getLiveArtistsForSite } from "@/lib/site-content";
+import { buildCampingArtistPortraitBindings } from "./camping-visual-contracts";
 import { click, hiss } from "@/lib/sfx";
 import {
   campingAccessReducer,
@@ -192,6 +195,7 @@ export class CampingStudioEngine {
   private canvas: HTMLCanvasElement | null = null;
   private renderer: THREE.WebGLRenderer | null = null;
   private renderProfile: CampingRenderProfile | null = null;
+  private artistDataPromise: ReturnType<typeof getLiveArtistsForSite> | null = null;
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(68, 1, 0.05, 70);
   private raycaster = new THREE.Raycaster();
@@ -278,6 +282,9 @@ export class CampingStudioEngine {
   mount(canvas: HTMLCanvasElement): void {
     this.canvas = canvas;
     this.disposed = false;
+    // Start loading the published roster while the visitor is still at the 808 door.
+    // The physical portraits are bound to the GLB slots only after real backend records arrive.
+    this.artistDataPromise = getLiveArtistsForSite().catch(() => []);
     this.phase = "LOCKED";
     this.currentRoom = "studio";
     this.roomLayout = null;
@@ -1172,6 +1179,8 @@ export class CampingStudioEngine {
         root.name = "CAMPING / XOYENS STUDIO GLB";
         root.visible = this.phase !== "LOCKED" && this.phase !== "CODE_ENTRY" && this.phase !== "ACCESS_GRANTED";
         this.prepareInnerDoorPivot(root);
+        this.addSyndicateBanner(root);
+        this.addXoyensBacklitSign(root);
         root.traverse((object) => {
           const mesh = object as THREE.Mesh;
           if (mesh.isMesh) {
@@ -1208,6 +1217,9 @@ export class CampingStudioEngine {
         this.scene.add(root);
         this.studioLoaded = true;
         this.loader = null;
+        // The frames are part of the actual room geometry. Their picture surfaces get
+        // the corresponding published artist image before the visitor can approach them.
+        void this.applyArtistPortraits(root);
         this.callbacks.onAssetState("ready");
         if (this.phase === "DOOR_OPENING" && performance.now() - this.phaseStartedAt >= 1450) {
           this.doorOpened = true;
@@ -1223,6 +1235,297 @@ export class CampingStudioEngine {
         this.callbacks.onWebGLFailure(reason);
       },
     );
+  }
+
+
+  private findStudioMaterial(root: THREE.Object3D, name: string): THREE.MeshStandardMaterial | null {
+    let found: THREE.MeshStandardMaterial | null = null;
+    root.traverse((object) => {
+      if (found || !(object instanceof THREE.Mesh)) return;
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      found = materials.find(
+        (material): material is THREE.MeshStandardMaterial =>
+          material instanceof THREE.MeshStandardMaterial && material.name === name,
+      ) ?? null;
+    });
+    return found;
+  }
+
+  private addXoyensBacklitSign(root: THREE.Group): void {
+    if (root.getObjectByName("studio.xoyens-backlit-sign")) return;
+
+    const sign = new THREE.Group();
+    sign.name = "studio.xoyens-backlit-sign";
+    const x = -2.72;
+    const y = 2.56;
+    const backZ = -4.325;
+    const plate = new THREE.Mesh(
+      new THREE.BoxGeometry(1.64, 0.84, 0.08),
+      new THREE.MeshStandardMaterial({
+        color: 0x0b0a09,
+        metalness: 0.58,
+        roughness: 0.5,
+      }),
+    );
+    plate.name = "studio.xoyens-sign.housing";
+    plate.position.set(x, y, backZ);
+    plate.castShadow = true;
+    plate.receiveShadow = true;
+    sign.add(plate);
+
+    const frameMaterial = new THREE.MeshStandardMaterial({
+      color: 0x393025,
+      metalness: 0.78,
+      roughness: 0.34,
+    });
+    const ledMaterial = new THREE.MeshStandardMaterial({
+      color: 0x9b5c31,
+      emissive: 0xff9b50,
+      emissiveIntensity: 1.35,
+      metalness: 0.2,
+      roughness: 0.36,
+    });
+    const addSignPart = (
+      name: string,
+      geometry: THREE.BufferGeometry,
+      material: THREE.Material,
+      position: [number, number, number],
+    ) => {
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.name = name;
+      mesh.position.set(...position);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      sign.add(mesh);
+      return mesh;
+    };
+
+    const frameZ = -4.274;
+    addSignPart("studio.xoyens-sign.frame.top", new THREE.BoxGeometry(1.62, 0.024, 0.022), frameMaterial, [x, y + 0.39, frameZ]);
+    addSignPart("studio.xoyens-sign.frame.bottom", new THREE.BoxGeometry(1.62, 0.024, 0.022), frameMaterial, [x, y - 0.39, frameZ]);
+    addSignPart("studio.xoyens-sign.frame.left", new THREE.BoxGeometry(0.024, 0.76, 0.022), frameMaterial, [x - 0.80, y, frameZ]);
+    addSignPart("studio.xoyens-sign.frame.right", new THREE.BoxGeometry(0.024, 0.76, 0.022), frameMaterial, [x + 0.80, y, frameZ]);
+
+    // A narrow amber LED channel sits behind the dark metal frame, not as a UI glow.
+    const ledZ = -4.282;
+    addSignPart("studio.xoyens-sign.led.top", new THREE.BoxGeometry(1.48, 0.012, 0.012), ledMaterial, [x, y + 0.355, ledZ]);
+    addSignPart("studio.xoyens-sign.led.bottom", new THREE.BoxGeometry(1.48, 0.012, 0.012), ledMaterial, [x, y - 0.355, ledZ]);
+    addSignPart("studio.xoyens-sign.led.left", new THREE.BoxGeometry(0.012, 0.66, 0.012), ledMaterial, [x - 0.735, y, ledZ]);
+    addSignPart("studio.xoyens-sign.led.right", new THREE.BoxGeometry(0.012, 0.66, 0.012), ledMaterial, [x + 0.735, y, ledZ]);
+
+    const textureLoader = new THREE.TextureLoader();
+    const logoTexture = textureLoader.load(xoyensLogo.url, (texture) => {
+      if (this.disposed) {
+        texture.dispose();
+        return;
+      }
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(this.renderer?.capabilities.getMaxAnisotropy() ?? 1, 8);
+      texture.needsUpdate = true;
+    });
+    const logo = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.28, 0.58),
+      new THREE.MeshStandardMaterial({
+        name: "CAMPING / official Xoyens sign",
+        map: logoTexture,
+        emissive: new THREE.Color(0x9b5b32),
+        emissiveMap: logoTexture,
+        emissiveIntensity: 0.28,
+        roughness: 0.62,
+        metalness: 0.08,
+        transparent: true,
+        alphaTest: 0.025,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+      }),
+    );
+    logo.name = "studio.xoyens-sign.official-logo";
+    logo.position.set(x, y, -4.257);
+    logo.renderOrder = 3;
+    sign.add(logo);
+
+    const backLight = new THREE.PointLight(0xffa45d, 5.5, 2.3, 2);
+    backLight.name = "studio.xoyens-sign.backlight";
+    backLight.position.set(x, y, -4.355);
+    sign.add(backLight);
+    root.add(sign);
+  }
+
+  private addSyndicateBanner(root: THREE.Group): void {
+    if (root.getObjectByName("studio.syndicate-banner.fabric")) return;
+
+    const width = 5.25;
+    const height = 2.78;
+    const centerX = 3.95;
+    const centerY = 1.82;
+    const centerZ = -4.105;
+
+    const fabricSource = this.findStudioMaterial(root, "fabric");
+    const fabric = fabricSource?.clone() ?? new THREE.MeshStandardMaterial({ color: 0x11100f, roughness: 0.96 });
+    fabric.name = "CAMPING / black woven banner";
+    fabric.color.setHex(0x262523);
+    fabric.roughness = 0.96;
+    fabric.metalness = 0;
+    fabric.side = THREE.DoubleSide;
+    fabric.envMapIntensity = 0.12;
+
+    const repeatTexture = (source: THREE.Texture | null, repeatX: number, repeatY: number) => {
+      if (!source) return null;
+      const texture = source.clone();
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(repeatX, repeatY);
+      texture.needsUpdate = true;
+      return texture;
+    };
+    fabric.map = repeatTexture(fabricSource?.map ?? null, 4.8, 2.25);
+    fabric.normalMap = repeatTexture(fabricSource?.normalMap ?? null, 4.8, 2.25);
+    if (fabric.normalMap) fabric.normalScale.set(0.68, 0.68);
+    fabric.needsUpdate = true;
+
+    // The 5.25 x 2.78 m panel follows the existing photo-backdrop frame.
+    // Subtle, subdivided folds create real parallax instead of a perfectly flat black card.
+    const geometry = new THREE.PlaneGeometry(width, height, 48, 28);
+    const positions = geometry.getAttribute("position") as THREE.BufferAttribute;
+    for (let index = 0; index < positions.count; index += 1) {
+      const px = positions.getX(index);
+      const py = positions.getY(index);
+      const u = (px + width / 2) / width;
+      const v = (py + height / 2) / height;
+      const verticalTension = 0.35 + 0.65 * Math.sin(Math.PI * v);
+      const pleats =
+        Math.sin(u * Math.PI * 8 + v * 1.7) * 0.018 +
+        Math.sin(u * Math.PI * 3 - v * 2.4) * 0.012;
+      positions.setZ(index, pleats * verticalTension);
+      positions.setY(index, py - Math.pow(v, 2) * Math.sin(u * Math.PI * 5) * 0.009);
+    }
+    geometry.computeVertexNormals();
+
+    const banner = new THREE.Mesh(geometry, fabric);
+    banner.name = "studio.syndicate-banner.fabric";
+    banner.position.set(centerX, centerY, centerZ);
+    banner.castShadow = true;
+    banner.receiveShadow = true;
+    banner.userData.interactionId = "studio.photo-backdrop";
+    banner.userData.action = "open-published-visuals";
+    root.add(banner);
+
+    const metal = new THREE.MeshStandardMaterial({ color: 0x1a1917, metalness: 0.74, roughness: 0.42 });
+    const rail = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.023, 0.023, width + 0.2, 16),
+      metal,
+    );
+    rail.name = "studio.syndicate-banner.rail";
+    rail.rotation.z = Math.PI / 2;
+    rail.position.set(centerX, centerY + height / 2 + 0.025, centerZ - 0.015);
+    rail.castShadow = true;
+    root.add(rail);
+
+    const clampMaterial = new THREE.MeshStandardMaterial({ color: 0x252321, metalness: 0.72, roughness: 0.46 });
+    for (const [index, offset] of [-width / 2 + 0.12, 0, width / 2 - 0.12].entries()) {
+      const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.13, 0.06), clampMaterial);
+      clamp.name = "studio.syndicate-banner.clamp-" + String(index + 1).padStart(2, "0");
+      clamp.position.set(centerX + offset, centerY + height / 2 - 0.015, centerZ + 0.015);
+      clamp.castShadow = true;
+      root.add(clamp);
+    }
+
+    // Print the original seal file onto the cloth. It remains a real, textured surface,
+    // aligned with the existing 3.1 x 2.1 m mark in the reference panorama.
+    const oldSeal = root.getObjectByName("studio.photo-backdrop-seal");
+    if (oldSeal) oldSeal.visible = false;
+    const sealTexture = new THREE.TextureLoader().load(sindicatoSeloAsset.url, (texture) => {
+      if (this.disposed) {
+        texture.dispose();
+        return;
+      }
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = Math.min(this.renderer?.capabilities.getMaxAnisotropy() ?? 1, 8);
+      texture.needsUpdate = true;
+    });
+    const seal = new THREE.Mesh(
+      new THREE.PlaneGeometry(3.0, 2.05),
+      new THREE.MeshStandardMaterial({
+        name: "CAMPING / official Sindicato banner print",
+        map: sealTexture,
+        color: 0xe5ded0,
+        roughness: 0.96,
+        metalness: 0,
+        transparent: true,
+        alphaTest: 0.035,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+      }),
+    );
+    seal.name = "studio.syndicate-banner.official-seal";
+    seal.position.set(centerX, centerY, centerZ + 0.072);
+    seal.renderOrder = 4;
+    root.add(seal);
+  }
+
+  private async applyArtistPortraits(root: THREE.Group): Promise<void> {
+    let artists: Awaited<ReturnType<typeof getLiveArtistsForSite>> = [];
+    try {
+      artists = await (this.artistDataPromise ?? getLiveArtistsForSite());
+    } catch {
+      artists = [];
+    }
+    if (this.disposed || this.studioRoot !== root) return;
+
+    const bindings = buildCampingArtistPortraitBindings(artists);
+    if (!bindings.length) return;
+
+    const loader = new THREE.TextureLoader();
+    await Promise.all(bindings.map((binding) => new Promise<void>((resolve) => {
+      const slot = root.getObjectByName(binding.nodeName);
+      if (!(slot instanceof THREE.Mesh)) {
+        resolve();
+        return;
+      }
+
+      loader.load(
+        binding.src,
+        (texture) => {
+          if (this.disposed || this.studioRoot !== root) {
+            texture.dispose();
+            resolve();
+            return;
+          }
+          texture.colorSpace = THREE.SRGBColorSpace;
+          // These are glTF-authored UVs, so keep the same vertical convention as GLTFLoader.
+          texture.flipY = false;
+          texture.anisotropy = Math.min(this.renderer?.capabilities.getMaxAnisotropy() ?? 1, 8);
+          texture.generateMipmaps = true;
+          texture.minFilter = THREE.LinearMipmapLinearFilter;
+          texture.magFilter = THREE.LinearFilter;
+          texture.needsUpdate = true;
+
+          const materials = Array.isArray(slot.material) ? [...slot.material] : [slot.material];
+          if (materials.length < 3) {
+            texture.dispose();
+            resolve();
+            return;
+          }
+
+          materials[2] = new THREE.MeshStandardMaterial({
+            name: "CAMPING / published portrait / " + binding.code,
+            map: texture,
+            color: 0xffffff,
+            roughness: 0.94,
+            metalness: 0,
+            side: THREE.DoubleSide,
+          });
+          slot.material = materials;
+          slot.userData.artistCode = binding.code;
+          slot.userData.portraitTextureReady = true;
+          resolve();
+        },
+        undefined,
+        () => resolve(),
+      );
+    })));
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
