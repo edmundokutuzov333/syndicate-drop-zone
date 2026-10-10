@@ -56,6 +56,26 @@ async function openCamping(page: import("@playwright/test").Page) {
 }
 
 test.describe("CAMPING V2 / 808 access", () => {
+  test("keeps the studio entry available when optional Supabase catalogues fail", async ({ page }) => {
+    await page.addInitScript(() => {
+      sessionStorage.setItem("sdt-open", "1");
+    });
+    await page.route("**/rest/v1/**", async (route) => {
+      await route.abort("failed");
+    });
+
+    await page.goto("/camping");
+    await expect(page.locator("main.camping-studio-route")).toBeVisible();
+    await expect(page.locator("canvas.camping-studio__canvas")).toBeVisible();
+    await expect(
+      page.locator(".camping-studio__access-panel").or(
+        page.getByRole("heading", { name: "ACESSO ALTERNATIVO" }),
+      ),
+    ).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("SINAL CORROMPIDO")).toHaveCount(0);
+    await expect(page.getByText("ACESSO NEGADO · 500")).toHaveCount(0);
+  });
+
   test("mounts the 3D entry or an accessible WebGL fallback", async ({ page }) => {
     await openCamping(page);
 
