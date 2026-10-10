@@ -4,7 +4,10 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import xoyensLogo from "@/assets/brand/xoyens.png.asset.json";
 import sindicatoSeloAsset from "@/assets/brand/sindicato-selo.png.asset.json";
 import { getLiveArtistsForSite } from "@/lib/site-content";
-import { buildCampingArtistPortraitBindings } from "./camping-visual-contracts";
+import {
+  buildCampingArtistPortraitBindings,
+  resolveCampingArtistMountPose,
+} from "./camping-visual-contracts";
 import { click, hiss } from "@/lib/sfx";
 import {
   campingAccessReducer,
@@ -1552,10 +1555,16 @@ export class CampingStudioEngine {
       // and keep its back edge 5 mm off the plaster wall at x=6.95 m.
       const center = bounds.getCenter(new THREE.Vector3());
       const size = bounds.getSize(new THREE.Vector3());
-      const targetCenterX = 6.945 - size.z / 2;
+      const pose = resolveCampingArtistMountPose({
+        centerX: center.x,
+        centerY: center.y,
+        centerZ: center.z,
+        depth: size.z,
+      });
+      if (!pose) continue;
       const transform = new THREE.Matrix4()
-        .makeTranslation(targetCenterX, center.y, center.z)
-        .multiply(new THREE.Matrix4().makeRotationY(-Math.PI / 2))
+        .makeTranslation(pose.centerX, pose.centerY, pose.centerZ)
+        .multiply(new THREE.Matrix4().makeRotationY(pose.rotationY))
         .multiply(new THREE.Matrix4().makeTranslation(-center.x, -center.y, -center.z));
 
       object.traverse((candidate) => {
@@ -1567,7 +1576,7 @@ export class CampingStudioEngine {
         candidate.geometry = geometry;
       });
       object.userData.wallMounted = true;
-      object.userData.wallFacing = "interior/-X";
+      object.userData.wallFacing = pose.wallFacing;
     }
 
     const mounts = new THREE.Group();
