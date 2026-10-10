@@ -1263,16 +1263,31 @@ export class CampingStudioEngine {
         this.studioRoot = root;
         this.studioRoot.visible = this.phase !== "LOCKED" && this.phase !== "CODE_ENTRY" && this.phase !== "ACCESS_GRANTED";
         this.scene.add(root);
-        this.studioLoaded = true;
-        this.loader = null;
-        // The frames are part of the actual room geometry. Their picture surfaces get
-        // the corresponding published artist image before the visitor can approach them.
-        void this.applyArtistPortraits(root);
-        this.callbacks.onAssetState("ready");
-        if (this.phase === "DOOR_OPENING" && performance.now() - this.phaseStartedAt >= 1450) {
-          this.doorOpened = true;
-          this.dispatch({ type: "ENTERING_STUDIO" });
-        }
+        // Keep the entry transition in "loading" until the real portrait texture requests
+        // have settled, so the first interior view never races the mugshot wall.
+        void this.applyArtistPortraits(root).then(({ requested, loaded }) => {
+          if (this.disposed || this.studioRoot !== root) return;
+          this.studioLoaded = true;
+          this.loader = null;
+          this.callbacks.onAssetState("ready");
+          if (requested > 0 && loaded < requested) {
+            this.setTransientMessage("PORTRAIT ASSETS / " + loaded + " OF " + requested, "danger", 3200);
+          }
+          if (this.phase === "DOOR_OPENING" && performance.now() - this.phaseStartedAt >= 1450) {
+            this.doorOpened = true;
+            this.dispatch({ type: "ENTERING_STUDIO" });
+          }
+        }).catch(() => {
+          if (this.disposed || this.studioRoot !== root) return;
+          this.studioLoaded = true;
+          this.loader = null;
+          this.callbacks.onAssetState("ready");
+          this.setTransientMessage("PORTRAIT ASSETS PARTIAL", "danger", 3200);
+          if (this.phase === "DOOR_OPENING" && performance.now() - this.phaseStartedAt >= 1450) {
+            this.doorOpened = true;
+            this.dispatch({ type: "ENTERING_STUDIO" });
+          }
+        });
       },
       undefined,
       (error) => {
@@ -1513,18 +1528,19 @@ export class CampingStudioEngine {
     root.add(seal);
   }
 
-  private async applyArtistPortraits(root: THREE.Group): Promise<void> {
+  private async applyArtistPortraits(root: THREE.Group): Promise<{ requested: number; loaded: number }> {
     let artists: Awaited<ReturnType<typeof getLiveArtistsForSite>> = [];
     try {
       artists = await (this.artistDataPromise ?? getLiveArtistsForSite());
     } catch {
       artists = [];
     }
-    if (this.disposed || this.studioRoot !== root) return;
+    if (this.disposed || this.studioRoot !== root) return { requested: 0, loaded: 0 };
 
     const bindings = buildCampingArtistPortraitBindings(artists);
-    if (!bindings.length) return;
+    if (!bindings.length) return { requested: 0, loaded: 0 };
 
+    let loadedCount = 0;
     const loader = new THREE.TextureLoader();
     await Promise.all(bindings.map((binding) => new Promise<void>((resolve) => {
       const slotRoot = root.getObjectByName(binding.nodeName);
@@ -1593,12 +1609,14 @@ export class CampingStudioEngine {
           targetMesh.userData.portraitTextureReady = true;
           slotRoot.userData.artistCode = binding.code;
           slotRoot.userData.portraitTextureReady = true;
+          loadedCount += 1;
           resolve();
         },
         undefined,
         () => resolve(),
       );
     })));
+    return { requested: bindings.length, loaded: loadedCount };
   }
 
   private handleKeyDown(event: KeyboardEvent): void {
