@@ -199,20 +199,22 @@ export function CampingStudioExperience({
           <img className="camping-studio__seal-image" src={sindicatoSelo.url} alt="Selo oficial do Sindicato" />
           <div>
             <p className="camping-studio__eyebrow">O SINDICATO DO TRAP</p>
-            <p className="camping-studio__room">CAMPING / STUDIO XOYENS</p>
+            <p className="camping-studio__room">STUDIO XOYENS</p>
           </div>
         </div>
-        <div className="camping-studio__header-right">
-          <span className={"camping-studio__status camping-studio__status--" + (hasAccess ? "open" : "locked")}>
-            <span className="camping-studio__status-dot" />
-            {phaseLabel[access.phase]}
-          </span>
-          {day && (
-            <span className="camping-studio__day">
-              CAMP {String(day.current).padStart(2, "0")}/{String(day.total).padStart(2, "0")}
+        {isExploring && (
+          <div className="camping-studio__header-right">
+            <span className={"camping-studio__status camping-studio__status--" + (hasAccess ? "open" : "locked")}>
+              <span className="camping-studio__status-dot" />
+              {phaseLabel[access.phase]}
             </span>
-          )}
-        </div>
+            {day && (
+              <span className="camping-studio__day">
+                CAMP {String(day.current).padStart(2, "0")}/{String(day.total).padStart(2, "0")}
+              </span>
+            )}
+          </div>
+        )}
       </header>
 
       {isExploring && (
