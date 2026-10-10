@@ -1751,7 +1751,7 @@ export class CampingStudioEngine {
 
     let loadedCount = 0;
     const loader = new THREE.TextureLoader();
-    await Promise.all(bindings.map((binding) => new Promise<void>((resolve) => {
+    const portraitLoads = Promise.all(bindings.map((binding) => new Promise<void>((resolve) => {
       const slotRoot = root.getObjectByName(binding.nodeName);
       if (!slotRoot) {
         resolve();
@@ -1845,6 +1845,16 @@ export class CampingStudioEngine {
         () => resolve(),
       );
     })));
+    // Do not leave the 808 door stuck if one third-party image request never settles.
+    // Late image callbacks can still populate their physical frame after this fallback.
+    let watchdog: number | null = null;
+    await Promise.race([
+      portraitLoads,
+      new Promise<void>((resolve) => {
+        watchdog = window.setTimeout(resolve, 8000);
+      }),
+    ]);
+    if (watchdog !== null) window.clearTimeout(watchdog);
     return { requested: bindings.length, loaded: loadedCount };
   }
 
