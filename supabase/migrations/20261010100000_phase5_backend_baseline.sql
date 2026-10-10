@@ -964,7 +964,7 @@ revoke all on function public.frequency_listener_count() from public;
 grant execute on function public.frequency_listener_count() to anon,authenticated;
 
 create or replace function public.frequency_radio_catalog()
-returns table(id uuid,title text,artist text,artist_slug text,audio_url text,duration_seconds numeric,kind text,rotation_weight integer,position integer,failure_count integer,temporarily_disabled boolean)
+returns table(id uuid,title text,artist text,artist_slug text,audio_url text,duration_seconds numeric,kind text,rotation_weight integer,track_position integer,failure_count integer,temporarily_disabled boolean)
 language sql stable security definer set search_path = ''
 as $$
   select t.id,t.title,t.artist,t.artist_slug,t.audio_url,t.duration_seconds,t.kind,t.rotation_weight,t.position,t.failure_count,t.temporarily_disabled

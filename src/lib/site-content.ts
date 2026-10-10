@@ -189,7 +189,7 @@ export async function getLiveRadioTracks(): Promise<LiveRadioTrack[]> {
           durationSec: numberValue(row as unknown as ContentRow, ["duration_seconds"], 0),
           kind: (String(row.kind ?? "music") as LiveRadioTrack["kind"]),
           rotationWeight: Math.max(1, Math.floor(Number(row.rotation_weight ?? 1))),
-          position: Number(row.position ?? index + 1),
+          position: Number(row.track_position ?? row.position ?? index + 1),
           failureCount: Math.max(0, Math.floor(Number(row.failure_count ?? 0))),
           temporarilyDisabled: Boolean(row.temporarily_disabled),
         } satisfies LiveRadioTrack;

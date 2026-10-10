@@ -79,6 +79,7 @@ type RadioCatalogRow = {
   kind: "music" | "jingle" | "sfx" | string;
   rotation_weight?: number | null;
   position?: number | null;
+  track_position?: number | null;
   failure_count?: number | null;
   temporarily_disabled?: boolean | null;
 };
