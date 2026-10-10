@@ -71,14 +71,14 @@ A navegação guiada, os registos e os controlos mobile continuam disponíveis p
 
 - `camping-visual-contracts.test.ts` cobre o mapeamento dos 17 slots, códigos inválidos, duplicados, imagens ausentes e slots vazios sem substituições fictícias.
 - `camping-object-contracts.test.ts` cobre os perfis de renderização, incluindo o perfil high com sombra de 2048 px.
-- `tests/radio/camping-entry.spec.ts` foi actualizado para verificar o painel mínimo 808, a identidade Xoyens e a ausência de instruções duplicadas antes da porta.
+- `tests/radio/camping-entry.spec.ts` foi actualizado para verificar o painel mínimo 808, a identidade Xoyens, a ausência de instruções duplicadas e as respostas HTTP das 17 fotografias antes de declarar a entrada pronta. O cenário de teste usa fixtures apenas no browser de teste e não escreve dados na produção.
 
 **Importante:** estes testes foram escritos ou actualizados, mas os resultados de Vitest, lint, build e Playwright ainda não foram obtidos nesta execução. O conector de workflow não disponibilizou os runs de push e o ambiente Vercel sandbox devolveu 403 ao pedido de criação. Não se declara qualquer teste aprovado sem os logs.
 
 ## Estado de publicação
 
 - Código de entrada mínimo e renderização adaptativa estão na `main`.
-- Motor visual mais recente durante esta auditoria: `556e32482e836a277199390a357c69e17280b854`.
+- Motor visual mais recente durante esta auditoria: `ec16cbea7c5f38a747f4eb646223425324e56e81`. Teste E2E das fotografias: `398f4cd592b04fa5ca83a2ec4a24032e244c86af`.
 - O projecto Lovable sincronizou esse commit e reporta estado `ready`. O screenshot automático disponível é uma captura do projecto, mas as ferramentas de browser usadas nesta execução não permitiram abrir a imagem nem inspeccionar a cena interactiva.
 - O deployment Vercel associado ao alias de produção continua em estado `READY` para o commit anterior `ab8e73644569dcdd9b2ef410eab01d955e7160bb`. Os commits visuais subsequentes estão a receber `build-rate-limit`, por isso as alterações novas não estão confirmadas na publicação Vercel.
 - Não foi feita promoção manual de um deployment antigo.
