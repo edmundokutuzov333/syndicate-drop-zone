@@ -129,10 +129,46 @@ export async function getLiveTapes(): Promise<LiveTape[]> {
       })
       .filter((item): item is LiveTape => Boolean(item));
 
-    return tapes.length ? tapes : STATIC_TAPES;
+    return tapes.length ? tapes : import.meta.env.DEV ? STATIC_TAPES : [];
   } catch {
-    return STATIC_TAPES;
+    return import.meta.env.DEV ? STATIC_TAPES : [];
   }
+}
+
+export type LiveBeat = {
+  id: string;
+  slug: string;
+  title: string;
+  producer: string;
+  bpm: number | null;
+  keySignature: string | null;
+  previewUrl: string;
+  price: number | null;
+  currency: string;
+  licenceTerms: string;
+  position: number;
+};
+
+/** Reads only the public view, which never exposes the full/private beat asset URL. */
+export async function getLiveBeats(): Promise<LiveBeat[]> {
+  const rows = await tableRows("beats_public");
+  return rows
+    .filter(isPublic)
+    .sort((a, b) => orderValue(a, 0) - orderValue(b, 0))
+    .map((row, index) => ({
+      id: stringValue(row, ["id", "slug"]),
+      slug: stringValue(row, ["slug"]),
+      title: stringValue(row, ["title", "name"], "BEAT " + String(index + 1).padStart(2, "0")),
+      producer: stringValue(row, ["producer"], "PRODUTOR"),
+      bpm: value(row, ["bpm"]) === undefined ? null : numberValue(row, ["bpm"]),
+      keySignature: stringValue(row, ["key_signature"]) || null,
+      previewUrl: stringValue(row, ["preview_url"]),
+      price: value(row, ["price"]) === undefined ? null : numberValue(row, ["price"]),
+      currency: stringValue(row, ["currency"], "MZN"),
+      licenceTerms: stringValue(row, ["licence_terms"]),
+      position: orderValue(row, index),
+    }))
+    .filter((beat) => Boolean(beat.id && beat.title && beat.previewUrl));
 }
 
 export type LiveRadioTrack = {
@@ -318,12 +354,12 @@ export async function getLiveMerchProducts(): Promise<LiveMerchProduct[]> {
         spec: stringValue(row, ["spec", "summary", "description"]),
         price: numberValue(row, ["price", "price_mt", "amount"]),
         left,
-        detail: arrayValue(row, ["detail", "details", "features", "bullet_points"], STATIC_MERCH[index]?.detail ?? []),
+        detail: arrayValue(row, ["detail", "details", "features", "bullet_points"], import.meta.env.DEV ? STATIC_MERCH[index]?.detail ?? [] : []),
         variants: productVariants,
       };
     });
 
-    return mapped.length ? mapped : STATIC_MERCH.map((item) => ({
+    const developmentFallback = () => STATIC_MERCH.map((item) => ({
       id: "static-" + item.n,
       n: item.n,
       img: item.img,
@@ -335,8 +371,9 @@ export async function getLiveMerchProducts(): Promise<LiveMerchProduct[]> {
       detail: item.detail,
       variants: SIZES.map((size) => ({ id: "static-" + item.n + "-" + size, size, stockTotal: item.left, stockReserved: 0, stockSold: 0 })),
     }));
+    return mapped.length ? mapped : import.meta.env.DEV ? developmentFallback() : [];
   } catch {
-    return STATIC_MERCH.map((item) => ({
+    return import.meta.env.DEV ? STATIC_MERCH.map((item) => ({
       id: "static-" + item.n,
       n: item.n,
       img: item.img,
@@ -347,7 +384,7 @@ export async function getLiveMerchProducts(): Promise<LiveMerchProduct[]> {
       left: item.left,
       detail: item.detail,
       variants: SIZES.map((size) => ({ id: "static-" + item.n + "-" + size, size, stockTotal: item.left, stockReserved: 0, stockSold: 0 })),
-    }));
+    })) : [];
   }
 }
 

@@ -35,7 +35,9 @@ export function publicSupabaseHeaders(key: string, init?: HeadersInit): Headers 
 }
 
 export function getPublicSupabaseConfig(): PublicSupabaseConfig {
-  const browserHost = typeof window !== "undefined" ? window.location.hostname : "";
+  const browserHost = typeof window !== "undefined"
+    ? window.location.hostname
+    : import.meta.env.PROD ? "server-production" : "";
   const configuredUrl = (import.meta.env["VITE_SUPABASE_URL"] as string | undefined)?.trim();
   const configuredKey = (import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"] as string | undefined)?.trim() ||
     (import.meta.env["VITE_SUPABASE_ANON_KEY"] as string | undefined)?.trim();

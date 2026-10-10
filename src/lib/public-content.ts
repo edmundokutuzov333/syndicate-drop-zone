@@ -48,7 +48,7 @@ export async function getLiveArtistBySlug(slug: string): Promise<Artist | null> 
       "/rest/v1/artists?select=*&slug=eq." + encodeURIComponent(slug) + "&status=eq.published&limit=1",
     );
     const row = rows[0];
-    if (!row) return fallback;
+    if (!row) return import.meta.env.DEV ? fallback : null;
     return {
       ...(fallback ?? {}),
       id: row.id,
@@ -67,7 +67,7 @@ export async function getLiveArtistBySlug(slug: string): Promise<Artist | null> 
       img: row.photo_url,
     } as Artist;
   } catch {
-    return fallback;
+    return import.meta.env.DEV ? fallback : null;
   }
 }
 
@@ -110,7 +110,7 @@ export async function getLiveArtistChannels(slug: string) {
 export async function getLiveArtists(): Promise<Artist[]> {
   try {
     const rows = await getJson<DbArtist[]>("/rest/v1/artists?select=*&status=eq.published&order=code.asc");
-    if (!rows.length) return ARTISTS;
+    if (!rows.length) return import.meta.env.DEV ? ARTISTS : [];
     return rows.map((row, index) => {
       const fallback = ARTISTS.find((artist) => artist.slug === row.slug) ?? ARTISTS[index];
       return {
@@ -132,6 +132,6 @@ export async function getLiveArtists(): Promise<Artist[]> {
       } as Artist;
     });
   } catch {
-    return ARTISTS;
+    return import.meta.env.DEV ? ARTISTS : [];
   }
 }
