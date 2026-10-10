@@ -1479,12 +1479,37 @@ export class CampingStudioEngine {
 
     const loader = new THREE.TextureLoader();
     await Promise.all(bindings.map((binding) => new Promise<void>((resolve) => {
-      const slot = root.getObjectByName(binding.nodeName);
-      if (!(slot instanceof THREE.Mesh)) {
+      const slotRoot = root.getObjectByName(binding.nodeName);
+      if (!slotRoot) {
         resolve();
         return;
       }
 
+      // GLTFLoader represents a mesh with several primitives as a Group containing
+      // separate child meshes. Some exporters instead keep a three-material mesh.
+      // In both cases, target only the inner black portrait surface, never the frame.
+      let photoSurface: THREE.Mesh | null = null;
+      let photoMaterialIndex = 0;
+      slotRoot.traverse((candidate) => {
+        if (!(candidate instanceof THREE.Mesh) || photoSurface) return;
+        const candidateMaterials = Array.isArray(candidate.material) ? candidate.material : [candidate.material];
+        if (candidateMaterials.length >= 3 && candidateMaterials.some((material) => material.name === "black")) {
+          photoSurface = candidate;
+          photoMaterialIndex = 2;
+          return;
+        }
+        if (candidateMaterials.length === 1 && candidateMaterials[0]?.name === "black") {
+          photoSurface = candidate;
+          photoMaterialIndex = 0;
+        }
+      });
+      if (!photoSurface) {
+        resolve();
+        return;
+      }
+
+      const targetMesh = photoSurface;
+      const targetMaterialIndex = photoMaterialIndex;
       loader.load(
         binding.src,
         (texture) => {
@@ -1502,14 +1527,14 @@ export class CampingStudioEngine {
           texture.magFilter = THREE.LinearFilter;
           texture.needsUpdate = true;
 
-          const materials = Array.isArray(slot.material) ? [...slot.material] : [slot.material];
-          if (materials.length < 3) {
+          const materials = Array.isArray(targetMesh.material) ? [...targetMesh.material] : [targetMesh.material];
+          if (targetMaterialIndex >= materials.length) {
             texture.dispose();
             resolve();
             return;
           }
 
-          materials[2] = new THREE.MeshStandardMaterial({
+          materials[targetMaterialIndex] = new THREE.MeshStandardMaterial({
             name: "CAMPING / published portrait / " + binding.code,
             map: texture,
             color: 0xffffff,
@@ -1517,9 +1542,11 @@ export class CampingStudioEngine {
             metalness: 0,
             side: THREE.DoubleSide,
           });
-          slot.material = materials;
-          slot.userData.artistCode = binding.code;
-          slot.userData.portraitTextureReady = true;
+          targetMesh.material = Array.isArray(targetMesh.material) ? materials : materials[0]!;
+          targetMesh.userData.artistCode = binding.code;
+          targetMesh.userData.portraitTextureReady = true;
+          slotRoot.userData.artistCode = binding.code;
+          slotRoot.userData.portraitTextureReady = true;
           resolve();
         },
         undefined,
