@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, type ErrorComponentProps } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Room } from "@/components/BunkerMap";
 import { CampingStudioExperience } from "@/features/camping/scene/CampingStudioExperience";
@@ -61,7 +61,37 @@ export const Route = createFileRoute("/camping")({
     ],
   }),
   component: Camping,
+  errorComponent: CampingRouteErrorBoundary,
 });
+
+function CampingRouteErrorBoundary({ reset }: ErrorComponentProps) {
+  return (
+    <main className="grid min-h-screen place-items-center bg-black px-5 text-[#e8dac2]">
+      <section role="alert" className="w-full max-w-lg border border-[#6b1717] bg-[#100d0a] p-6 text-center md:p-9">
+        <p className="font-mono text-[10px] tracking-[0.24em] text-[#bd4840]">CAMPING / RECUPERAÇÃO</p>
+        <h1 className="mt-3 font-gothic text-4xl md:text-6xl">O estúdio não arrancou</h1>
+        <p className="mt-4 text-sm leading-6 text-[#b9aa94]">
+          A experiência 3D encontrou uma falha inesperada. A entrada foi isolada para manter o resto do site disponível.
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3 font-mono text-[10px] tracking-[0.12em]">
+          <button
+            type="button"
+            onClick={() => {
+              reset();
+              window.location.reload();
+            }}
+            className="min-h-11 border border-[#bd4840] px-4 py-3 hover:bg-[#bd4840] hover:text-white"
+          >
+            TENTAR DE NOVO
+          </button>
+          <a href="/" className="min-h-11 border border-[#514638] px-4 py-3 text-[#cdbda6] hover:border-[#bd4840]">
+            VOLTAR AO HUB
+          </a>
+        </div>
+      </section>
+    </main>
+  );
+}
 
 function Camping() {
   const navigate = useNavigate({ from: "/camping" });
