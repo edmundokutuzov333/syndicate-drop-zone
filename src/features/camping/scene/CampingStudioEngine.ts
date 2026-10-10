@@ -38,9 +38,9 @@ type DoorWoodTextureSet = {
   roughness: THREE.CanvasTexture;
 };
 
-function createDoorWoodTextureSet(): DoorWoodTextureSet {
-  const width = 512;
-  const height = 1024;
+function createDoorWoodTextureSet(resolution: 256 | 512): DoorWoodTextureSet {
+  const width = resolution;
+  const height = resolution * 2;
 
   const drawColor = (ctx: CanvasRenderingContext2D, dark: boolean) => {
     const gradient = ctx.createLinearGradient(0, 0, width, 0);
@@ -994,7 +994,7 @@ export class CampingStudioEngine {
 
   private createEntrySet(): void {
     const wallMat = new THREE.MeshStandardMaterial({ color: 0x2c2620, roughness: 0.92 });
-    const doorWoodTextures = createDoorWoodTextureSet();
+    const doorWoodTextures = createDoorWoodTextureSet(this.renderProfile?.tier === "high" ? 512 : 256);
     const textureAnisotropy = Math.min(this.renderer?.capabilities.getMaxAnisotropy() ?? 1, this.renderProfile?.tier === "high" ? 16 : 8);
     const woodMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
@@ -1026,16 +1026,12 @@ export class CampingStudioEngine {
       metalness: 0,
     });
     floorMat.normalScale.set(0.18, 0.18);
-    const entryTextures = [
-      doorWoodTextures.lightColor,
-      doorWoodTextures.darkColor,
-      doorWoodTextures.normal,
-      doorWoodTextures.roughness,
-      ...(Array.isArray(darkWoodMat.normalMap) ? darkWoodMat.normalMap : darkWoodMat.normalMap ? [darkWoodMat.normalMap] : []),
-    ];
-    for (const texture of entryTextures) {
-      texture.anisotropy = textureAnisotropy;
-      texture.needsUpdate = true;
+    for (const material of [woodMat, darkWoodMat, floorMat]) {
+      for (const texture of [material.map, material.normalMap, material.roughnessMap]) {
+        if (!texture) continue;
+        texture.anisotropy = textureAnisotropy;
+        texture.needsUpdate = true;
+      }
     }
     const box = (geometry: THREE.BoxGeometry, material: THREE.Material, position: [number, number, number]) => {
       const mesh = new THREE.Mesh(geometry, material);
