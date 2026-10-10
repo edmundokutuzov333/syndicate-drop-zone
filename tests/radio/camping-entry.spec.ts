@@ -81,6 +81,7 @@ test.describe("CAMPING V2 / 808 access", () => {
 
     const fallback = page.getByRole("heading", { name: "ACESSO ALTERNATIVO" });
     if (await fallback.isVisible()) {
+      await expect(page.getByRole("button", { name: "TENTAR INICIAR 3D" })).toBeVisible();
       await expect(page.getByRole("button", { name: "ABRIR REGISTOS PÚBLICOS" })).toBeVisible();
       await expect(page.getByRole("button", { name: "SAIR DA EXPERIÊNCIA" })).toBeVisible();
       return;
@@ -94,6 +95,20 @@ test.describe("CAMPING V2 / 808 access", () => {
     await expect(page.locator(".camping-studio__header-right")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "NAVEGAÇÃO GUIADA" })).toBeVisible();
     await expect(page.getByRole("button", { name: "REGISTOS" })).toBeVisible();
+  });
+
+  test("retries 3D initialization without leaving CAMPING after WebGL is unavailable", async ({ page }) => {
+    await openCamping(page);
+    const fallback = page.getByRole("heading", { name: "ACESSO ALTERNATIVO" });
+    if (!(await fallback.isVisible())) {
+      test.skip(true, "Este Chromium disponibiliza WebGL e não deve entrar no fallback.");
+    }
+
+    await page.getByRole("button", { name: "TENTAR INICIAR 3D" }).click();
+    await expect(page.locator("main.camping-studio-route")).toBeVisible();
+    await expect(page.locator("canvas.camping-studio__canvas")).toBeVisible();
+    await expect(page.getByRole("button", { name: "ABRIR REGISTOS PÚBLICOS" })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("ACESSO NEGADO · 500")).toHaveCount(0);
   });
 
   test("captures 808 while a non-input interface button has keyboard focus", async ({ page }) => {
