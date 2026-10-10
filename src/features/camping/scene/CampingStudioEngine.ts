@@ -1253,11 +1253,13 @@ export class CampingStudioEngine {
             "studio.audio-grille": "studio.audio-system",
             "studio.audio-driver": "studio.audio-system",
           };
-          const runtimeId = runtimeInteractionIds[object.name];
+          // Hidden replacement geometry must not remain a raycast target.
+          // The flat GLB seal is deliberately hidden beneath the new cloth banner.
+          const runtimeId = object.visible ? runtimeInteractionIds[object.name] : undefined;
           if (runtimeId && !object.userData?.interactionId) {
             object.userData.interactionId = runtimeId;
           }
-          const interactionId = object.userData?.interactionId;
+          const interactionId = object.visible ? object.userData?.interactionId : null;
           if (typeof interactionId === "string" && interactionId) this.interactiveRoots.push(object);
         });
         this.studioRoot = root;
