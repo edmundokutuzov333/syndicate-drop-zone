@@ -31,6 +31,19 @@ import {
 } from "./CampingRoomWorld";
 import { getRoomTransitionTarget } from "./camping-object-contracts";
 
+function fitTexturedPlaneToImage(mesh: THREE.Mesh, texture: THREE.Texture, maxWidth: number, maxHeight: number): void {
+  const image = texture.image as { width?: number; height?: number } | undefined;
+  if (!image?.width || !image.height) return;
+  const imageAspect = image.width / image.height;
+  const frameAspect = maxWidth / maxHeight;
+  // Keep transparent logo and stamp artwork geometrically honest instead of stretching it to the panel.
+  if (imageAspect > frameAspect) {
+    mesh.scale.y = frameAspect / imageAspect;
+  } else if (imageAspect < frameAspect) {
+    mesh.scale.x = imageAspect / frameAspect;
+  }
+}
+
 type DoorWoodTextureSet = {
   lightColor: THREE.CanvasTexture;
   darkColor: THREE.CanvasTexture;
@@ -1586,6 +1599,7 @@ export class CampingStudioEngine {
     addSignPart("studio.xoyens-sign.led.right", new THREE.BoxGeometry(0.012, 0.66, 0.012), ledMaterial, [x + 0.735, y, ledZ]);
 
     const textureLoader = new THREE.TextureLoader();
+    const logoPlaneRef: { current: THREE.Mesh | null } = { current: null };
     const logoTexture = textureLoader.load(xoyensLogo.url, (texture) => {
       if (this.disposed) {
         texture.dispose();
@@ -1593,6 +1607,7 @@ export class CampingStudioEngine {
       }
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.anisotropy = Math.min(this.renderer?.capabilities.getMaxAnisotropy() ?? 1, 8);
+      if (logoPlaneRef.current) fitTexturedPlaneToImage(logoPlaneRef.current, texture, 1.28, 0.58);
       texture.needsUpdate = true;
     });
     const logo = new THREE.Mesh(
@@ -1614,6 +1629,7 @@ export class CampingStudioEngine {
     logo.name = "studio.xoyens-sign.official-logo";
     logo.position.set(x, y, backZ + 0.068);
     logo.renderOrder = 3;
+    logoPlaneRef.current = logo;
     sign.add(logo);
 
     const backLight = new THREE.PointLight(0xffa45d, 5.5, 2.3, 2);
@@ -1706,6 +1722,7 @@ export class CampingStudioEngine {
     // aligned with the existing 3.1 x 2.1 m mark in the reference panorama.
     const oldSeal = root.getObjectByName("studio.photo-backdrop-seal");
     if (oldSeal) oldSeal.visible = false;
+    const sealPlaneRef: { current: THREE.Mesh | null } = { current: null };
     const sealTexture = new THREE.TextureLoader().load(sindicatoSeloAsset.url, (texture) => {
       if (this.disposed) {
         texture.dispose();
@@ -1713,6 +1730,7 @@ export class CampingStudioEngine {
       }
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.anisotropy = Math.min(this.renderer?.capabilities.getMaxAnisotropy() ?? 1, 8);
+      if (sealPlaneRef.current) fitTexturedPlaneToImage(sealPlaneRef.current, texture, 3.0, 2.05);
       texture.needsUpdate = true;
     });
     const seal = new THREE.Mesh(
@@ -1734,6 +1752,7 @@ export class CampingStudioEngine {
     seal.name = "studio.syndicate-banner.official-seal";
     seal.position.set(centerX, centerY, centerZ + 0.072);
     seal.renderOrder = 4;
+    sealPlaneRef.current = seal;
     root.add(seal);
   }
 
