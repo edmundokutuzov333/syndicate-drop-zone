@@ -1494,6 +1494,35 @@ export class CampingStudioEngine {
         this.prepareArtistWallMounting(root);
         this.addSyndicateBanner(root);
         this.addXoyensBacklitSign(root);
+
+        // Non-sensitive diagnostics let browser tests verify the real loaded scene,
+        // not infer scene quality from the GLB request alone.
+        const requiredSceneNodes = [
+          "studio.floor",
+          "studio.vaulted-timber-ceiling",
+          "studio.ceiling-arches",
+          "studio.parquet",
+          "studio.production-desk",
+          "studio.photo-backdrop",
+        ];
+        const missingSceneNodes = requiredSceneNodes.filter((name) => !root.getObjectByName(name));
+        const presentPortraitSlots = Array.from({ length: 17 }, (_, index) =>
+          root.getObjectByName("studio.artist-slot-" + String(index + 1).padStart(3, "0")),
+        ).filter(Boolean).length;
+        if (this.canvas) {
+          this.canvas.dataset.campingSceneStatus = missingSceneNodes.length ? "partial" : "ready";
+          this.canvas.dataset.campingSceneMissingNodes = missingSceneNodes.join(",");
+          this.canvas.dataset.campingArtistSlots = String(presentPortraitSlots);
+          this.canvas.dataset.campingBannerStatus =
+            root.getObjectByName("studio.syndicate-banner.fabric") &&
+            root.getObjectByName("studio.syndicate-banner.official-seal")
+              ? "ready" : "missing";
+          this.canvas.dataset.campingXoyensSignStatus =
+            root.getObjectByName("studio.xoyens-sign.official-logo") &&
+            root.getObjectByName("studio.xoyens-sign.backlight")
+              ? "ready" : "missing";
+        }
+
         root.traverse((object) => {
           const mesh = object as THREE.Mesh;
           if (mesh.isMesh) {
@@ -1981,6 +2010,11 @@ export class CampingStudioEngine {
     // dossier/content panels still resolve against the live backend and are not fabricated.
     const portraitSources = artists.length ? artists : ARTISTS;
     const bindings = buildCampingArtistPortraitBindings(portraitSources);
+    if (this.canvas) {
+      this.canvas.dataset.campingPortraitsRequested = String(bindings.length);
+      this.canvas.dataset.campingPortraitsLoaded = "0";
+      this.canvas.dataset.campingPortraitsComplete = "false";
+    }
     if (!bindings.length) return { requested: 0, loaded: 0 };
 
     let loadedCount = 0;
@@ -2078,6 +2112,10 @@ export class CampingStudioEngine {
           slotRoot.userData.artistCode = binding.code;
           slotRoot.userData.portraitTextureReady = true;
           loadedCount += 1;
+          if (this.canvas) {
+            this.canvas.dataset.campingPortraitsLoaded = String(loadedCount);
+            this.canvas.dataset.campingPortraitsComplete = String(loadedCount === bindings.length);
+          }
           resolve();
         },
         undefined,
@@ -2094,6 +2132,11 @@ export class CampingStudioEngine {
       }),
     ]);
     window.clearTimeout(watchdog.id);
+    if (this.canvas) {
+      this.canvas.dataset.campingPortraitsRequested = String(bindings.length);
+      this.canvas.dataset.campingPortraitsLoaded = String(loadedCount);
+      this.canvas.dataset.campingPortraitsComplete = String(loadedCount === bindings.length);
+    }
     return { requested: bindings.length, loaded: loadedCount };
   }
 
