@@ -1585,10 +1585,30 @@ export class CampingStudioEngine {
           texture.colorSpace = THREE.SRGBColorSpace;
           // These are glTF-authored UVs, so keep the same vertical convention as GLTFLoader.
           texture.flipY = false;
+          texture.wrapS = THREE.ClampToEdgeWrapping;
+          texture.wrapT = THREE.ClampToEdgeWrapping;
           texture.anisotropy = Math.min(this.renderer?.capabilities.getMaxAnisotropy() ?? 1, 8);
           texture.generateMipmaps = true;
           texture.minFilter = THREE.LinearMipmapLinearFilter;
           texture.magFilter = THREE.LinearFilter;
+
+          // Fill each physical portrait frame without stretching faces. Crop symmetrically
+          // when the source image and the frame use different aspect ratios.
+          targetMesh.geometry.computeBoundingBox();
+          const frameBounds = targetMesh.geometry.boundingBox;
+          const frameSize = frameBounds?.getSize(new THREE.Vector3());
+          const image = texture.image as { width?: number; height?: number } | undefined;
+          if (frameSize && frameSize.x > 0 && frameSize.y > 0 && image?.width && image.height) {
+            const frameAspect = frameSize.x / frameSize.y;
+            const imageAspect = image.width / image.height;
+            if (imageAspect > frameAspect) {
+              texture.repeat.set(frameAspect / imageAspect, 1);
+              texture.offset.set((1 - texture.repeat.x) / 2, 0);
+            } else if (imageAspect < frameAspect) {
+              texture.repeat.set(1, imageAspect / frameAspect);
+              texture.offset.set(0, (1 - texture.repeat.y) / 2);
+            }
+          }
           texture.needsUpdate = true;
 
           const materials = Array.isArray(targetMesh.material) ? [...targetMesh.material] : [targetMesh.material];
