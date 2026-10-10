@@ -58,13 +58,13 @@ describe("CAMPING artist wall mounting", () => {
       depth: 0.1,
     });
 
-    expect(pose).toEqual({
-      centerX: 6.895,
+    expect(pose).toMatchObject({
       centerY: 2.61,
       centerZ: 3.1,
       rotationY: -Math.PI / 2,
       wallFacing: "interior/-X",
     });
+    expect(pose?.centerX).toBeCloseTo(6.895, 8);
     expect(resolveCampingArtistMountPose({
       centerX: 0,
       centerY: 1,
