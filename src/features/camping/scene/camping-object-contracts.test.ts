@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolveCampingRenderProfile } from "./CampingStudioEngine";
+import { ARTISTS } from "@/lib/artists";
+import { buildCampingArtistPortraitBindings } from "./camping-visual-contracts";
 import { canReserveLiveProduct, getArtistSlotIndex, getCampingObjectSection, getRoomTransitionTarget, roomRequiresBackendAuthorization } from "./camping-object-contracts";
 
 describe("CAMPING object interaction contracts", () => {
@@ -93,5 +95,22 @@ describe("CAMPING adaptive rendering profile", () => {
     expect(Number.isFinite(profile.pixelRatio)).toBe(true);
     expect(profile.shadowsEnabled).toBe(true);
     expect(profile.shadowMapSize).toBe(1024);
+  });
+});
+
+describe("CAMPING physical artist wall", () => {
+  it("binds all 17 bundled real portrait assets to visible wall slots without creating synthetic records", () => {
+    const bindings = buildCampingArtistPortraitBindings(ARTISTS);
+
+    expect(bindings).toHaveLength(17);
+    expect(new Set(bindings.map((binding) => binding.nodeName)).size).toBe(17);
+    expect(bindings.every((binding) => /^studio\.artist-slot-\d{3}$/.test(binding.nodeName))).toBe(true);
+    expect(bindings.every((binding) => binding.src.length > 0)).toBe(true);
+    expect(bindings[0]?.nodeName).toBe("studio.artist-slot-001");
+    expect(bindings[16]?.nodeName).toBe("studio.artist-slot-017");
+  });
+
+  it("does not fabricate portrait bindings for an empty live roster", () => {
+    expect(buildCampingArtistPortraitBindings([])).toEqual([]);
   });
 });
