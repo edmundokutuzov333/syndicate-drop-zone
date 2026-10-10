@@ -156,13 +156,34 @@ export function CampingStudioExperience({
       },
     });
     engineRef.current = engine;
-    engine.mount(canvas);
-    const queuedKeys = pendingAccessKeysRef.current.splice(0);
-    for (const key of queuedKeys) engine.pressAccessibleKey(key);
+    try {
+      engine.mount(canvas);
+      const queuedKeys = pendingAccessKeysRef.current.splice(0);
+      for (const key of queuedKeys) engine.pressAccessibleKey(key);
+    } catch (error) {
+      // A synchronous WebGL/Canvas/driver failure must not bubble into the root
+      // TanStack boundary and turn the entire /camping route into HTTP/UI 500.
+      // Keep the route mounted and expose its accessible fallback instead.
+      const reason = error instanceof Error
+        ? error.message
+        : "Não foi possível iniciar o motor 3D neste dispositivo.";
+      try {
+        engine.dispose();
+      } catch {
+        // Partial renderer initialisation can leave resources unavailable to dispose.
+      }
+      engineRef.current = null;
+      pendingAccessKeysRef.current = [];
+      setAssetState("error");
+      setWebglError(reason);
+    }
     return () => {
       pendingAccessKeysRef.current = [];
-      engine.dispose();
-      engineRef.current = null;
+      try {
+        engine.dispose();
+      } finally {
+        if (engineRef.current === engine) engineRef.current = null;
+      }
     };
   }, [closePanels, onClosePanels]);
 
