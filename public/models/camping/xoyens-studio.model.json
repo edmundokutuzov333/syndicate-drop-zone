@@ -792,8 +792,8 @@
         "keyboard-and-mouse instruction paragraph"
       ]
     },
-    "implementationCommit": "ec16cbea7c5f38a747f4eb646223425324e56e81",
-    "publishedRuntimeCommit": "2eede7f4157f603bc9c27202b60d496c3fd7f25b",
+    "implementationCommit": "fb47494783582999642f39370e24a782d5ce6fcd",
+    "publishedRuntimeCommit": "ab8e73644569dcdd9b2ef410eab01d955e7160bb",
     "status": "source-updated-publication-pending",
     "materials": {
       "reflections": "Three.js RoomEnvironment converted through PMREMGenerator",
@@ -810,7 +810,30 @@
       "constraints": "Preserve the warm practical lights and keep reflections subtle to maintain black levels."
     },
     "interactionSafety": "The replaced hidden flat seal is excluded from raycast targets so the visible cloth banner is the unique photo-backdrop target.",
-    "testCommit": "398f4cd592b04fa5ca83a2ec4a24032e244c86af"
+    "testCommit": "398f4cd592b04fa5ca83a2ec4a24032e244c86af",
+    "entryDoorMaterial": {
+      "status": "procedural-pbr-detail",
+      "materials": [
+        "door leaf",
+        "inner door panels",
+        "entry threshold floor"
+      ],
+      "maps": [
+        "base color with grain and knots",
+        "normal map",
+        "roughness map"
+      ],
+      "resolution": {
+        "high": "512 × 1024",
+        "balancedAndLow": "256 × 512"
+      },
+      "details": [
+        "long grain lines",
+        "growth rings",
+        "fine wear scratches"
+      ],
+      "rationale": "Higher texture resolution is limited to the high device tier; mobile keeps a smaller GPU footprint."
+    }
   },
   "auditUpdatedAt": "2026-10-10"
 }
