@@ -1618,7 +1618,7 @@ export class CampingStudioEngine {
         const screw = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.008, 12), screwMaterial);
         screw.name = "studio.artists-wall.mount-screw";
         screw.rotation.z = Math.PI / 2;
-        screw.position.set(railX - 0.018, y, z);
+        screw.position.set(railX - 0.017, y, z);
         mounts.add(screw);
       }
     }
