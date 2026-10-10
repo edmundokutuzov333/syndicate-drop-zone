@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { createCampingMaxQualityProfile } from "./CampingStudioEngine";
 import { ARTISTS } from "@/lib/artists";
@@ -46,6 +47,16 @@ describe("CAMPING object interaction contracts", () => {
     expect(roomRequiresBackendAuthorization("secret")).toBe(true);
     expect(roomRequiresBackendAuthorization("archive")).toBe(false);
     expect(roomRequiresBackendAuthorization("studio")).toBe(false);
+  });
+});
+
+describe("CAMPING entry asset initialization", () => {
+  it("loads the door stamp from the imported asset instead of an undefined identifier", () => {
+    const engineSource = readFileSync(new URL("./CampingStudioEngine.ts", import.meta.url), "utf8");
+
+    expect(engineSource).toContain('import sindicatoSeloAsset from "@/assets/brand/sindicato-selo.png.asset.json";');
+    expect(engineSource).toContain("sindicatoSeloAsset.url");
+    expect(engineSource).not.toContain("sindicatoLogo.url");
   });
 });
 
