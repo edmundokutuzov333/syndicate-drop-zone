@@ -750,9 +750,11 @@
       "browserTest": {
         "status": "authored-not-run",
         "file": "tests/radio/camping-entry.spec.ts",
+        "testCommit": "7ec0470935299114a26b9e3ffe0e243a7235ff1e",
         "assertions": [
           "17 portrait asset requests complete before exploration is reported",
           "all 17 portrait responses return HTTP 200",
+          "official Xoyens logo and Sindicato seal assets both return HTTP 200",
           "entry panel remains minimal before 808 access"
         ]
       },
@@ -763,6 +765,16 @@
         "officialSlotCount": 17,
         "physicalMounts": "three dark-metal mounting rails with screw heads",
         "conflictMitigation": "legacy poster strip that intersected the portrait grid is hidden while the left mural and main banner are preserved"
+      },
+      "wallContractTest": {
+        "status": "authored-not-run",
+        "file": "src/features/camping/scene/camping-visual-contracts.test.ts",
+        "commit": "795d7b58251ea33ced775606ff166b629ccb62b8",
+        "assertions": [
+          "face normal points into studio (-X)",
+          "portrait backside sits near x=6.95 m wall",
+          "invalid zero-thickness mount is rejected"
+        ]
       }
     },
     "xoyensBacklitSign": {
