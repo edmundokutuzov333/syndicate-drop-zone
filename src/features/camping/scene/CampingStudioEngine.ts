@@ -1334,7 +1334,8 @@ export class CampingStudioEngine {
     sign.name = "studio.xoyens-backlit-sign";
     const x = -2.72;
     const y = 2.56;
-    const backZ = -4.325;
+    // A 4 cm stand-off leaves a physical gap for the warm backlight to spill onto the timber wall.
+    const backZ = -4.295;
     const plate = new THREE.Mesh(
       new THREE.BoxGeometry(1.64, 0.84, 0.08),
       new THREE.MeshStandardMaterial({
@@ -1376,14 +1377,14 @@ export class CampingStudioEngine {
       return mesh;
     };
 
-    const frameZ = -4.274;
+    const frameZ = backZ + 0.051;
     addSignPart("studio.xoyens-sign.frame.top", new THREE.BoxGeometry(1.62, 0.024, 0.022), frameMaterial, [x, y + 0.39, frameZ]);
     addSignPart("studio.xoyens-sign.frame.bottom", new THREE.BoxGeometry(1.62, 0.024, 0.022), frameMaterial, [x, y - 0.39, frameZ]);
     addSignPart("studio.xoyens-sign.frame.left", new THREE.BoxGeometry(0.024, 0.76, 0.022), frameMaterial, [x - 0.80, y, frameZ]);
     addSignPart("studio.xoyens-sign.frame.right", new THREE.BoxGeometry(0.024, 0.76, 0.022), frameMaterial, [x + 0.80, y, frameZ]);
 
     // A narrow amber LED channel sits behind the dark metal frame, not as a UI glow.
-    const ledZ = -4.282;
+    const ledZ = backZ + 0.043;
     addSignPart("studio.xoyens-sign.led.top", new THREE.BoxGeometry(1.48, 0.012, 0.012), ledMaterial, [x, y + 0.355, ledZ]);
     addSignPart("studio.xoyens-sign.led.bottom", new THREE.BoxGeometry(1.48, 0.012, 0.012), ledMaterial, [x, y - 0.355, ledZ]);
     addSignPart("studio.xoyens-sign.led.left", new THREE.BoxGeometry(0.012, 0.66, 0.012), ledMaterial, [x - 0.735, y, ledZ]);
@@ -1416,13 +1417,13 @@ export class CampingStudioEngine {
       }),
     );
     logo.name = "studio.xoyens-sign.official-logo";
-    logo.position.set(x, y, -4.257);
+    logo.position.set(x, y, backZ + 0.068);
     logo.renderOrder = 3;
     sign.add(logo);
 
     const backLight = new THREE.PointLight(0xffa45d, 5.5, 2.3, 2);
     backLight.name = "studio.xoyens-sign.backlight";
-    backLight.position.set(x, y, -4.355);
+    backLight.position.set(x, y, backZ - 0.06);
     sign.add(backLight);
     root.add(sign);
   }
