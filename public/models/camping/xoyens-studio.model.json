@@ -733,5 +733,53 @@
       "privateContentAuthorization": "backend-required",
       "note": "Discovery does not grant access to restricted files."
     }
-  }
+  },
+  "runtimeVisuals": {
+    "artistPortraits": {
+      "status": "runtime-texture-binding",
+      "slotCount": 17,
+      "nodePrefix": "studio.artist-slot-",
+      "sourceOfTruth": "published public.artists ordered by code",
+      "imageField": "photo_url",
+      "memberCodePattern": "SDT-01..SDT-17",
+      "missingRecordBehavior": "leave the matching slot empty; do not borrow another image or invent an artist",
+      "surface": "the inner black primitive in each physical frame"
+    },
+    "xoyensBacklitSign": {
+      "status": "runtime-geometry",
+      "source": "/__l5e/assets-v1/b0478989-7ffd-43dd-92e0-a801662907ae/xoyens.png",
+      "placement": "back production wall above the desk",
+      "construction": [
+        "3D dark-metal housing",
+        "bezel",
+        "warm LED channel",
+        "point-light backlight",
+        "official transparent logo texture"
+      ]
+    },
+    "syndicateBanner": {
+      "status": "runtime-geometry",
+      "dimensionsMeters": {
+        "width": 5.25,
+        "height": 2.78
+      },
+      "sourceSeal": "/__l5e/assets-v1/1fa67bdd-f452-442e-a0d5-a9fb482388de/sindicato-selo.png",
+      "fabricMaterial": "clone of the GLB fabric PBR material and normal map, darkened to near-black",
+      "mesh": "subdivided PlaneGeometry with restrained drape folds",
+      "fittings": [
+        "black metal rail",
+        "three clamps"
+      ],
+      "interactionId": "studio.photo-backdrop"
+    },
+    "accessInterface": {
+      "status": "simplified",
+      "copy": "STUDIO XOYENS / 808 / Código de acesso",
+      "hiddenBeforeEntry": [
+        "vertical marketing labels",
+        "keyboard-and-mouse instruction paragraph"
+      ]
+    }
+  },
+  "auditUpdatedAt": "2026-10-10"
 }
