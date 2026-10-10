@@ -31,6 +31,168 @@ import {
 } from "./CampingRoomWorld";
 import { getRoomTransitionTarget } from "./camping-object-contracts";
 
+type DoorWoodTextureSet = {
+  lightColor: THREE.CanvasTexture;
+  darkColor: THREE.CanvasTexture;
+  normal: THREE.CanvasTexture;
+  roughness: THREE.CanvasTexture;
+};
+
+function createDoorWoodTextureSet(): DoorWoodTextureSet {
+  const width = 512;
+  const height = 1024;
+
+  const drawColor = (ctx: CanvasRenderingContext2D, dark: boolean) => {
+    const gradient = ctx.createLinearGradient(0, 0, width, 0);
+    if (dark) {
+      gradient.addColorStop(0, "#211610");
+      gradient.addColorStop(0.22, "#302015");
+      gradient.addColorStop(0.5, "#1f1510");
+      gradient.addColorStop(0.78, "#362318");
+      gradient.addColorStop(1, "#211610");
+    } else {
+      gradient.addColorStop(0, "#51301d");
+      gradient.addColorStop(0.18, "#68402a");
+      gradient.addColorStop(0.43, "#432719");
+      gradient.addColorStop(0.7, "#70452c");
+      gradient.addColorStop(1, "#4b2b1a");
+    }
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+
+    const grain = dark
+      ? ["rgba(8,5,3,0.23)", "rgba(98,61,36,0.12)", "rgba(3,3,2,0.19)", "rgba(125,79,47,0.08)"]
+      : ["rgba(25,12,6,0.25)", "rgba(199,132,78,0.16)", "rgba(35,17,8,0.19)", "rgba(221,157,99,0.09)"];
+
+    for (let line = 0; line < 112; line += 1) {
+      const baseX = (line * 73) % width;
+      ctx.beginPath();
+      for (let y = 0; y <= height; y += 32) {
+        const wave =
+          Math.sin(y * 0.012 + line * 0.73) * (1.2 + (line % 5) * 0.9) +
+          Math.sin(y * 0.0035 + line * 0.21) * 2.8;
+        const x = baseX + wave;
+        if (y === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.lineWidth = line % 9 === 0 ? 2.2 : line % 3 === 0 ? 1.1 : 0.55;
+      ctx.strokeStyle = grain[line % grain.length];
+      ctx.stroke();
+    }
+
+    // Knots and growth rings are subtle, irregular and deterministic.
+    for (const knot of [{ x: 144, y: 248, rx: 13, ry: 31 }, { x: 374, y: 786, rx: 10, ry: 25 }]) {
+      for (let ring = 0; ring < 5; ring += 1) {
+        ctx.beginPath();
+        ctx.ellipse(
+          knot.x + Math.sin(ring * 1.3) * 2,
+          knot.y + Math.cos(ring * 0.9) * 3,
+          knot.rx + ring * 2.2,
+          knot.ry + ring * 4.2,
+          Math.sin(ring * 0.3) * 0.04,
+          0,
+          Math.PI * 2,
+        );
+        ctx.strokeStyle = dark
+          ? "rgba(5,3,2," + (0.13 - ring * 0.012) + ")"
+          : "rgba(27,12,5," + (0.16 - ring * 0.014) + ")";
+        ctx.lineWidth = ring % 2 ? 0.7 : 1.1;
+        ctx.stroke();
+      }
+    }
+
+    // Fine wear marks near the hand-height and lower edge, rather than uniform scratches everywhere.
+    for (let mark = 0; mark < 68; mark += 1) {
+      const x = (mark * 137 + 29) % width;
+      const y = (mark * 181 + 73) % height;
+      const length = 3 + (mark % 13) * 1.4;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + Math.sin(mark * 0.7) * 1.2, y + length);
+      ctx.strokeStyle = dark ? "rgba(215,170,118,0.10)" : "rgba(236,188,132,0.11)";
+      ctx.lineWidth = mark % 4 === 0 ? 1.1 : 0.55;
+      ctx.stroke();
+    }
+  };
+
+  const lightCanvas = document.createElement("canvas");
+  lightCanvas.width = width;
+  lightCanvas.height = height;
+  const lightContext = lightCanvas.getContext("2d");
+  const darkCanvas = document.createElement("canvas");
+  darkCanvas.width = width;
+  darkCanvas.height = height;
+  const darkContext = darkCanvas.getContext("2d");
+  const normalCanvas = document.createElement("canvas");
+  normalCanvas.width = width;
+  normalCanvas.height = height;
+  const normalContext = normalCanvas.getContext("2d");
+  const roughnessCanvas = document.createElement("canvas");
+  roughnessCanvas.width = width;
+  roughnessCanvas.height = height;
+  const roughnessContext = roughnessCanvas.getContext("2d");
+
+  if (lightContext) drawColor(lightContext, false);
+  if (darkContext) drawColor(darkContext, true);
+
+  if (normalContext) {
+    normalContext.fillStyle = "rgb(128,128,255)";
+    normalContext.fillRect(0, 0, width, height);
+    for (let line = 0; line < 112; line += 1) {
+      const baseX = (line * 73) % width;
+      normalContext.beginPath();
+      for (let y = 0; y <= height; y += 32) {
+        const x = baseX +
+          Math.sin(y * 0.012 + line * 0.73) * (1.2 + (line % 5) * 0.9) +
+          Math.sin(y * 0.0035 + line * 0.21) * 2.8;
+        if (y === 0) normalContext.moveTo(x, y);
+        else normalContext.lineTo(x, y);
+      }
+      normalContext.lineWidth = line % 9 === 0 ? 2.1 : 0.8;
+      normalContext.strokeStyle = line % 2 ? "rgb(132,124,252)" : "rgb(124,132,255)";
+      normalContext.stroke();
+    }
+  }
+
+  if (roughnessContext) {
+    roughnessContext.fillStyle = "rgb(202,202,202)";
+    roughnessContext.fillRect(0, 0, width, height);
+    for (let line = 0; line < 112; line += 1) {
+      const baseX = (line * 73) % width;
+      roughnessContext.beginPath();
+      for (let y = 0; y <= height; y += 32) {
+        const x = baseX +
+          Math.sin(y * 0.012 + line * 0.73) * (1.2 + (line % 5) * 0.9) +
+          Math.sin(y * 0.0035 + line * 0.21) * 2.8;
+        if (y === 0) roughnessContext.moveTo(x, y);
+        else roughnessContext.lineTo(x, y);
+      }
+      roughnessContext.lineWidth = line % 9 === 0 ? 2.1 : 0.8;
+      roughnessContext.strokeStyle = line % 2 ? "rgb(163,163,163)" : "rgb(224,224,224)";
+      roughnessContext.stroke();
+    }
+  }
+
+  const makeTexture = (canvas: HTMLCanvasElement, colorSpace: THREE.ColorSpace) => {
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = colorSpace;
+    texture.wrapS = THREE.ClampToEdgeWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.generateMipmaps = true;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.needsUpdate = true;
+    return texture;
+  };
+
+  return {
+    lightColor: makeTexture(lightCanvas, THREE.SRGBColorSpace),
+    darkColor: makeTexture(darkCanvas, THREE.SRGBColorSpace),
+    normal: makeTexture(normalCanvas, THREE.NoColorSpace),
+    roughness: makeTexture(roughnessCanvas, THREE.NoColorSpace),
+  };
+}
+
 type HoverTarget = { id: string; label: string; action: string } | null;
 
 type EngineCallbacks = {
@@ -832,12 +994,49 @@ export class CampingStudioEngine {
 
   private createEntrySet(): void {
     const wallMat = new THREE.MeshStandardMaterial({ color: 0x2c2620, roughness: 0.92 });
-    const woodMat = new THREE.MeshStandardMaterial({ color: 0x482716, roughness: 0.78 });
-    const darkWoodMat = new THREE.MeshStandardMaterial({ color: 0x211812, roughness: 0.86 });
-    const trimMat = new THREE.MeshStandardMaterial({ color: 0x5c3a24, roughness: 0.72 });
+    const doorWoodTextures = createDoorWoodTextureSet();
+    const textureAnisotropy = Math.min(this.renderer?.capabilities.getMaxAnisotropy() ?? 1, this.renderProfile?.tier === "high" ? 16 : 8);
+    const woodMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      map: doorWoodTextures.lightColor,
+      normalMap: doorWoodTextures.normal,
+      roughnessMap: doorWoodTextures.roughness,
+      roughness: 0.82,
+      metalness: 0,
+    });
+    woodMat.normalScale.set(0.36, 0.36);
+    const darkWoodMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      map: doorWoodTextures.darkColor,
+      normalMap: doorWoodTextures.normal.clone(),
+      roughnessMap: doorWoodTextures.roughness.clone(),
+      roughness: 0.92,
+      metalness: 0,
+    });
+    darkWoodMat.normalScale.set(0.26, 0.26);
+    const trimMat = new THREE.MeshStandardMaterial({ color: 0x5c3a24, metalness: 0.12, roughness: 0.72 });
     const metalMat = new THREE.MeshStandardMaterial({ color: 0x35322d, metalness: 0.74, roughness: 0.4 });
     const blackMat = new THREE.MeshStandardMaterial({ color: 0x0a0b0b, roughness: 0.8 });
-    const floorMat = new THREE.MeshStandardMaterial({ color: 0x3c2618, roughness: 0.68 });
+    const floorMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      map: doorWoodTextures.darkColor.clone(),
+      normalMap: doorWoodTextures.normal.clone(),
+      roughnessMap: doorWoodTextures.roughness.clone(),
+      roughness: 0.74,
+      metalness: 0,
+    });
+    floorMat.normalScale.set(0.18, 0.18);
+    const entryTextures = [
+      doorWoodTextures.lightColor,
+      doorWoodTextures.darkColor,
+      doorWoodTextures.normal,
+      doorWoodTextures.roughness,
+      ...(Array.isArray(darkWoodMat.normalMap) ? darkWoodMat.normalMap : darkWoodMat.normalMap ? [darkWoodMat.normalMap] : []),
+    ];
+    for (const texture of entryTextures) {
+      texture.anisotropy = textureAnisotropy;
+      texture.needsUpdate = true;
+    }
     const box = (geometry: THREE.BoxGeometry, material: THREE.Material, position: [number, number, number]) => {
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(...position);
