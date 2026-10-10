@@ -323,6 +323,7 @@ function safeDisposeMaterial(material: THREE.Material): void {
     metalnessMap?: THREE.Texture | null;
     emissiveMap?: THREE.Texture | null;
     alphaMap?: THREE.Texture | null;
+    bumpMap?: THREE.Texture | null;
   };
   const textures = [
     record.map,
@@ -331,6 +332,7 @@ function safeDisposeMaterial(material: THREE.Material): void {
     record.metalnessMap,
     record.emissiveMap,
     record.alphaMap,
+    record.bumpMap,
   ];
   const unique = new Set(textures.filter((texture): texture is THREE.Texture => Boolean(texture)));
   unique.forEach((texture) => texture.dispose());
@@ -349,6 +351,63 @@ function makeCanvasTexture(
   if (ctx) draw(ctx, width, height);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+type SurfaceDetailKind = "wood" | "plaster" | "fabric" | "leather";
+
+function surfaceDetailKind(materialName: string): SurfaceDetailKind | null {
+  const name = materialName.toLowerCase();
+  if (/screen|display|glass|logo|seal|paper|emissive|led|rubber|metal|chrome/.test(name)) return null;
+  if (/wood|timber|parquet|floor|door|oak|plank/.test(name)) return "wood";
+  if (/fabric|cloth|banner|curtain|textile/.test(name)) return "fabric";
+  if (/leather|sofa|seat|upholstery/.test(name)) return "leather";
+  if (/plaster|wall|stucco|paint|ceiling/.test(name)) return "plaster";
+  return null;
+}
+
+/** Subtle deterministic micro-relief for GLB materials whose source lacks a bump/normal map. */
+function createSurfaceDetailMap(kind: SurfaceDetailKind, resolution: 256 | 512 | 1024): THREE.CanvasTexture {
+  const canvas = document.createElement("canvas");
+  canvas.width = resolution;
+  canvas.height = resolution;
+  const context = canvas.getContext("2d");
+  if (!context) return new THREE.CanvasTexture(canvas);
+
+  const image = context.createImageData(resolution, resolution);
+  let seed = kind.split("").reduce((value, char) => (value * 31 + char.charCodeAt(0)) >>> 0, 0x51f15e);
+  const random = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+
+  for (let y = 0; y < resolution; y += 1) {
+    for (let x = 0; x < resolution; x += 1) {
+      const index = (y * resolution + x) * 4;
+      const grain = kind === "wood"
+        ? Math.sin(y * 0.11 + Math.sin(x * 0.017) * 2.4) * 13 + Math.sin(y * 0.035 + x * 0.004) * 8
+        : kind === "fabric"
+          ? Math.sin(x * 0.72) * 7 + Math.sin(y * 0.72) * 7
+          : kind === "leather"
+            ? Math.sin(x * 0.19 + Math.sin(y * 0.11) * 2) * 4
+            : 0;
+      const value = Math.max(0, Math.min(255, 128 + grain + (random() - 0.5) * (kind === "plaster" ? 26 : 18)));
+      image.data[index] = value;
+      image.data[index + 1] = value;
+      image.data[index + 2] = value;
+      image.data[index + 3] = 255;
+    }
+  }
+
+  context.putImageData(image, 0, 0);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.colorSpace = THREE.NoColorSpace;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
   texture.needsUpdate = true;
   return texture;
 }
@@ -1450,6 +1509,15 @@ export class CampingStudioEngine {
                 (material as THREE.MeshStandardMaterial).envMapIntensity = 0.42;
               }
               const textured = material as THREE.MeshStandardMaterial;
+              const detailKind = surfaceDetailKind(material.name);
+              if (detailKind && !textured.normalMap && !textured.bumpMap) {
+                const resolution = this.renderProfile?.tier === "high" ? 1024 : this.renderProfile?.tier === "balanced" ? 512 : 256;
+                textured.bumpMap = createSurfaceDetailMap(detailKind, resolution as 256 | 512 | 1024);
+                textured.bumpScale = detailKind === "wood" ? 0.018 : detailKind === "fabric" ? 0.012 : detailKind === "leather" ? 0.008 : 0.006;
+                if (detailKind === "wood") textured.bumpMap.repeat.set(1, 3);
+                else if (detailKind === "fabric") textured.bumpMap.repeat.set(3, 3);
+                else textured.bumpMap.repeat.set(2, 2);
+              }
               const maps = [
                 textured.map,
                 textured.normalMap,
