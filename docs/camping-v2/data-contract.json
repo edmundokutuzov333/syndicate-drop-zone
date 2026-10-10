@@ -2,7 +2,7 @@
   "version": 2,
   "status": "production-schema-present-functional-certification-pending",
   "auditedAt": "2026-10-10",
-  "sourceCommit": "a94dc67e23214207c97be9472510663150e94e98",
+  "sourceCommit": "44afcef0ed8d4cd2142414e09cf2d7b48ad6effc",
   "supabaseProject": {
     "ref": "hhipwyixtbleiulfnvvm",
     "name": "sindicato do trap",
@@ -159,13 +159,15 @@
     "create_public_merch_reservation is a security-definer RPC with an empty search_path and server-authoritative price and stock.",
     "Public storage bucket syndicate-media must never be used to store confidential or unpublished files.",
     "Supabase Auth leaked-password protection is reported disabled by the security advisor; it requires Auth settings access unavailable through the current project database connector.",
-    "The SECURITY DEFINER advisor includes expected public RPCs. Review each RPC by contract; do not blanket-revoke endpoints required by public membership, radio or submissions."
+    "The SECURITY DEFINER advisor includes expected public RPCs. Review each RPC by contract; do not blanket-revoke endpoints required by public membership, radio or submissions.",
+    "The Phase 5 contract panel now sends zero-row reads for declared required columns, so a successful response also validates those columns. This is a schema check, not proof of CRUD or RLS behavior."
   ],
   "unresolvedCertification": [
-    "Run full Playwright suite after the latest keyboard and valid-image-fixture fixes.",
-    "Verify production and Lovable /camping visual render after the Vercel deployment becomes READY.",
-    "Verify editor-authenticated Control Room write -> database -> published site roundtrip with an authorised owner session; current connector does not expose the owner's login credential.",
-    "Do not publish fake sessions, gallery entries, beats, products or stock. These remain empty until real editorial data is entered through the Control Room."
+    "Confirm the GitHub Actions push workflows for commit 44afcef0ed8d4cd2142414e09cf2d7b48ad6effc, including backend-schema-contract, engineering CI and Playwright. The connected workflow tool did not return push-triggered runs, so test results remain unconfirmed here.",
+    "Manually verify the published /camping route in a browser, including 808 entry, GLB loading, accessible fallback and mobile navigation. The browser tool could not inspect the deployment URL during this run.",
+    "Verify an authorised Editor/OWNER Control Room write -> Supabase -> published site roundtrip. An active OWNER profile exists, but no owner login credential was available; do not simulate the session.",
+    "Enable Supabase Auth leaked-password protection in the Auth settings before final security certification.",
+    "Keep camping_sessions, gallery_items, revelation_media, beats and merch products/variants without synthetic production rows until genuine editorial/commercial data is entered."
   ],
   "nonNegotiableRules": [
     "Never replay all repository SQL files blindly against production.",
@@ -175,5 +177,29 @@
     "Protected files require backend authorization and suitable private storage/signing.",
     "No fake artists, tracks, beats, products, sessions or stock in production."
   ],
-  "blockingIssue": "https://github.com/edmundokutuzov333/syndicate-drop-zone/issues/32"
+  "blockingIssue": "https://github.com/edmundokutuzov333/syndicate-drop-zone/issues/32",
+  "backendColumnContract": {
+    "status": "implemented-deployment-ready-tests-pending",
+    "implementationCommit": "ebd4c165f8f62c8afb2d3391a5853f3533999004",
+    "testCommit": "44afcef0ed8d4cd2142414e09cf2d7b48ad6effc",
+    "implementationFile": "src/lib/backend-schema-contract.ts",
+    "testFile": "src/lib/backend-schema-contract.test.ts",
+    "behavior": [
+      "Uses zero-row select requests with explicit required columns for direct table/view contracts.",
+      "Classifies PGRST204 and 42703 as missing schema fields rather than generic endpoint errors.",
+      "Requires preview_url but excludes audio_url from the public beats_public column contract."
+    ],
+    "verification": "The Vercel deployment for the implementation/test commit is READY. GitHub Actions push-run results were not available through the connected workflow-run interface in this execution, so the Vitest and E2E suites are not reported as passed."
+  },
+  "deploymentEvidence": {
+    "deploymentId": "dpl_3EdZGQeKPsqyYayGTNaRjHiRvkJg",
+    "state": "READY",
+    "commitSha": "44afcef0ed8d4cd2142414e09cf2d7b48ad6effc",
+    "deploymentUrl": "https://syndicate-drop-zone-pnwssp9gp-kutuzov.vercel.app",
+    "productionAliases": [
+      "https://syndicate-drop-zone.vercel.app",
+      "https://syndicate-drop-zone-kutuzov.vercel.app",
+      "https://syndicate-drop-zone-git-main-kutuzov.vercel.app"
+    ]
+  }
 }
