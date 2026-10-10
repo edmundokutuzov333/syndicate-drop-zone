@@ -1571,6 +1571,8 @@ export class CampingStudioEngine {
         if (!(candidate instanceof THREE.Mesh)) return;
         const geometry = candidate.geometry.clone();
         geometry.applyMatrix4(transform);
+        // applyMatrix4 rotates the authored normals as well; keep them instead of
+        // recomputing smooth normals across the frame's intentionally sharp edges.
         geometry.computeBoundingBox();
         geometry.computeBoundingSphere();
         candidate.geometry = geometry;
