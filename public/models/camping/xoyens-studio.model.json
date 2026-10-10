@@ -755,6 +755,14 @@
           "all 17 portrait responses return HTTP 200",
           "entry panel remains minimal before 808 access"
         ]
+      },
+      "wallMount": {
+        "wall": "right interior side wall",
+        "facing": "into studio, normal -X",
+        "rotationYRadians": -1.5707963267948966,
+        "officialSlotCount": 17,
+        "physicalMounts": "three dark-metal mounting rails with screw heads",
+        "conflictMitigation": "legacy poster strip that intersected the portrait grid is hidden while the left mural and main banner are preserved"
       }
     },
     "xoyensBacklitSign": {
@@ -792,7 +800,7 @@
         "keyboard-and-mouse instruction paragraph"
       ]
     },
-    "implementationCommit": "57dd48b24db224a5ec86d7d6f3ece68c9bfbd61f",
+    "implementationCommit": "e4c3ce9792efd4e5785d905155614d0f0f7cf025",
     "publishedRuntimeCommit": "306c33f0d9804b7dca544cdcb43ff2e88921b7bb",
     "status": "source-updated-publication-pending",
     "materials": {
