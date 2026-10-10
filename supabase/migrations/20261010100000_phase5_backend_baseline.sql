@@ -654,14 +654,14 @@ ON CONFLICT (key) DO NOTHING;
 
 WITH seed(key,title,subtitle,description,position) AS (
   VALUES
-    ('hero','O Sindicato do Trap','A união do trap. Gravado no camping.',0,'published'),
-    ('launch','Lançamento','2026-12-18T00:00:00+02:00',1,'published'),
-    ('camping-estudio','Estúdio','Os manos gravam juntos no Studio XOYENS.',2,'published'),
-    ('camping-estampa','Estampa ao vivo','Camisetas desenhadas e estampadas na hora.',3,'published'),
-    ('camping-visualizers','Visualizers','Filmagem dos visuais das faixas.',4,'published'),
-    ('camping-fotos','Fotos','Sessões de foto durante o camping.',5,'published'),
-    ('camping-networking','Networking','Conexão entre artistas da cena.',6,'published'),
-    ('camping-lives','Lives','Sessões transmitidas nas redes.',7,'published')
+    ('hero','O Sindicato do Trap','A união do trap. Gravado no camping.','',0),
+    ('launch','Lançamento','','2026-12-18T00:00:00+02:00',1),
+    ('camping-estudio','Estúdio','', 'Os manos gravam juntos no Studio XOYENS.',2),
+    ('camping-estampa','Estampa ao vivo','', 'Camisetas desenhadas e estampadas na hora.',3),
+    ('camping-visualizers','Visualizers','', 'Filmagem dos visuais das faixas.',4),
+    ('camping-fotos','Fotos','', 'Sessões de foto durante o camping.',5),
+    ('camping-networking','Networking','', 'Conexão entre artistas da cena.',6),
+    ('camping-lives','Lives','', 'Sessões transmitidas nas redes.',7)
 )
 INSERT INTO public.site_sections(key,title,subtitle,description,position,status)
 SELECT key,title,subtitle,description,position,'published' FROM seed
@@ -769,6 +769,13 @@ REVOKE ALL ON public.live_notifications FROM anon,authenticated;
 
 ALTER TABLE public.merch_products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.merch_variants ENABLE ROW LEVEL SECURITY;
+
+ALTER TABLE public.inventory_movements ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.inventory_movements FROM anon,authenticated;
+GRANT SELECT ON public.inventory_movements TO authenticated;
+DROP POLICY IF EXISTS "merch roles read inventory movements" ON public.inventory_movements;
+CREATE POLICY "merch roles read inventory movements" ON public.inventory_movements FOR SELECT TO authenticated
+USING (public.current_admin_role() IN ('OWNER','ADMIN','MERCH'));
 
 -- Admin profile reads: self or OWNER/ADMIN. Role changes remain OWNER/ADMIN-only.
 DROP POLICY IF EXISTS "admin profile self read" ON public.admin_profiles;
@@ -1243,24 +1250,21 @@ INSERT INTO storage.buckets(id,name,public,file_size_limit,allowed_mime_types)
 VALUES ('syndicate-media','syndicate-media',true,104857600,ARRAY['image/jpeg','image/png','image/webp','image/gif','video/mp4','video/webm'])
 ON CONFLICT (id) DO UPDATE SET name=excluded.name,public=true,file_size_limit=excluded.file_size_limit,allowed_mime_types=excluded.allowed_mime_types;
 
-DO $$
-BEGIN
-  DROP POLICY IF EXISTS "Control Room media read" ON storage.objects;
-  CREATE POLICY "Control Room media read" ON storage.objects FOR SELECT TO anon,authenticated USING (bucket_id='syndicate-media');
+DROP POLICY IF EXISTS "Control Room media read" ON storage.objects;
+CREATE POLICY "Control Room media read" ON storage.objects FOR SELECT TO anon,authenticated USING (bucket_id='syndicate-media');
 
-  DROP POLICY IF EXISTS "Control Room media insert" ON storage.objects;
-  CREATE POLICY "Control Room media insert" ON storage.objects FOR INSERT TO authenticated
-    WITH CHECK (bucket_id='syndicate-media' AND public.current_admin_role() IN ('OWNER','ADMIN','EDITOR'));
+DROP POLICY IF EXISTS "Control Room media insert" ON storage.objects;
+CREATE POLICY "Control Room media insert" ON storage.objects FOR INSERT TO authenticated
+  WITH CHECK (bucket_id='syndicate-media' AND public.current_admin_role() IN ('OWNER','ADMIN','EDITOR'));
 
-  DROP POLICY IF EXISTS "Control Room media update" ON storage.objects;
-  CREATE POLICY "Control Room media update" ON storage.objects FOR UPDATE TO authenticated
-    USING (bucket_id='syndicate-media' AND public.current_admin_role() IN ('OWNER','ADMIN','EDITOR'))
-    WITH CHECK (bucket_id='syndicate-media' AND public.current_admin_role() IN ('OWNER','ADMIN','EDITOR'));
+DROP POLICY IF EXISTS "Control Room media update" ON storage.objects;
+CREATE POLICY "Control Room media update" ON storage.objects FOR UPDATE TO authenticated
+  USING (bucket_id='syndicate-media' AND public.current_admin_role() IN ('OWNER','ADMIN','EDITOR'))
+  WITH CHECK (bucket_id='syndicate-media' AND public.current_admin_role() IN ('OWNER','ADMIN','EDITOR'));
 
-  DROP POLICY IF EXISTS "Control Room media delete" ON storage.objects;
-  CREATE POLICY "Control Room media delete" ON storage.objects FOR DELETE TO authenticated
-    USING (bucket_id='syndicate-media' AND public.current_admin_role() IN ('OWNER','ADMIN','EDITOR'));
-END $$;
+DROP POLICY IF EXISTS "Control Room media delete" ON storage.objects;
+CREATE POLICY "Control Room media delete" ON storage.objects FOR DELETE TO authenticated
+  USING (bucket_id='syndicate-media' AND public.current_admin_role() IN ('OWNER','ADMIN','EDITOR'));
 
 COMMENT ON TABLE public.artists IS 'Canonical artist roster for the public site, Camping and Control Room.';
 COMMENT ON TABLE public.artist_releases IS 'Published artist release links; artist data is not hardcoded in the 3D scene.';
