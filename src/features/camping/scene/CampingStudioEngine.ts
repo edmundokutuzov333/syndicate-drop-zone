@@ -1428,6 +1428,7 @@ export class CampingStudioEngine {
         root.name = "CAMPING / XOYENS STUDIO GLB";
         root.visible = this.phase !== "LOCKED" && this.phase !== "CODE_ENTRY" && this.phase !== "ACCESS_GRANTED";
         this.prepareInnerDoorPivot(root);
+        this.prepareArtistWallMounting(root);
         this.addSyndicateBanner(root);
         this.addXoyensBacklitSign(root);
         root.traverse((object) => {
@@ -1521,6 +1522,92 @@ export class CampingStudioEngine {
     );
   }
 
+
+  private prepareArtistWallMounting(root: THREE.Group): void {
+    if (root.getObjectByName("studio.artists-wall.physical-mounts")) return;
+
+    const legacyRail = root.getObjectByName("studio.artists-wall");
+    if (legacyRail) legacyRail.visible = false;
+
+    const slots: THREE.Object3D[] = [];
+    for (let slot = 1; slot <= 17; slot += 1) {
+      const name = "studio.artist-slot-" + String(slot).padStart(3, "0");
+      const object = root.getObjectByName(name);
+      if (!object) continue;
+      const bounds = new THREE.Box3().setFromObject(object);
+      if (bounds.isEmpty()) continue;
+
+      // The GLB portrait primitives are authored in world-sized coordinates. Rotate
+      // each frame from a front-facing plane to a true side-wall plane, facing -X,
+      // and keep its back edge 5 mm off the plaster wall at x=6.95 m.
+      const center = bounds.getCenter(new THREE.Vector3());
+      const size = bounds.getSize(new THREE.Vector3());
+      const targetCenterX = 6.945 - size.z / 2;
+      const transform = new THREE.Matrix4()
+        .makeTranslation(targetCenterX, center.y, center.z)
+        .multiply(new THREE.Matrix4().makeRotationY(-Math.PI / 2))
+        .multiply(new THREE.Matrix4().makeTranslation(-center.x, -center.y, -center.z));
+
+      object.traverse((candidate) => {
+        if (!(candidate instanceof THREE.Mesh)) return;
+        const geometry = candidate.geometry.clone();
+        geometry.applyMatrix4(transform);
+        geometry.computeBoundingBox();
+        geometry.computeBoundingSphere();
+        candidate.geometry = geometry;
+      });
+      object.userData.wallMounted = true;
+      object.userData.wallFacing = "interior/-X";
+      slots.push(object);
+    }
+
+    const mounts = new THREE.Group();
+    mounts.name = "studio.artists-wall.physical-mounts";
+    mounts.userData.interactionId = "studio.artists-wall";
+    mounts.userData.action = "focus-on-wall";
+    const mountMaterial = new THREE.MeshStandardMaterial({
+      color: 0x282521,
+      metalness: 0.66,
+      roughness: 0.58,
+    });
+    const railLength = 5.55;
+    const railCenterZ = 0.64;
+    const railX = 6.925;
+    const railYs = [2.955, 2.175, 1.395];
+
+    for (const [index, y] of railYs.entries()) {
+      const rail = new THREE.Mesh(
+        new THREE.BoxGeometry(0.026, 0.022, railLength),
+        mountMaterial,
+      );
+      rail.name = "studio.artists-wall.mount-rail-" + String(index + 1).padStart(2, "0");
+      rail.position.set(railX, y, railCenterZ);
+      rail.castShadow = true;
+      rail.receiveShadow = true;
+      rail.userData.interactionId = "studio.artists-wall";
+      rail.userData.action = "focus-on-wall";
+      mounts.add(rail);
+    }
+
+    // Small screw heads anchor the rails to the plaster without covering any picture.
+    const screwMaterial = new THREE.MeshStandardMaterial({
+      color: 0x8a7962,
+      metalness: 0.82,
+      roughness: 0.34,
+    });
+    for (const y of railYs) {
+      for (const z of [railCenterZ - railLength / 2 + 0.05, railCenterZ + railLength / 2 - 0.05]) {
+        const screw = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.008, 12), screwMaterial);
+        screw.name = "studio.artists-wall.mount-screw";
+        screw.rotation.z = Math.PI / 2;
+        screw.position.set(railX - 0.018, y, z);
+        mounts.add(screw);
+      }
+    }
+
+    root.add(mounts);
+    root.updateMatrixWorld(true);
+  }
 
   private findStudioMaterial(root: THREE.Object3D, name: string): THREE.MeshStandardMaterial | null {
     let found: THREE.MeshStandardMaterial | null = null;
@@ -1860,8 +1947,12 @@ export class CampingStudioEngine {
           const frameBounds = targetMesh.geometry.boundingBox;
           const frameSize = frameBounds?.getSize(new THREE.Vector3());
           const image = portraitTexture.image as { width?: number; height?: number } | undefined;
-          if (frameSize && frameSize.x > 0 && frameSize.y > 0 && image?.width && image.height) {
-            const frameAspect = frameSize.x / frameSize.y;
+          // A portrait may be mounted on either X-facing or Z-facing geometry.
+          // Use the larger horizontal world axis so rotating the physical wall never
+          // compresses the photograph into the frame's thickness.
+          const frameWidth = frameSize ? Math.max(frameSize.x, frameSize.z) : 0;
+          if (frameSize && frameWidth > 0 && frameSize.y > 0 && image?.width && image.height) {
+            const frameAspect = frameWidth / frameSize.y;
             const imageAspect = image.width / image.height;
             if (imageAspect > frameAspect) {
               texture.repeat.set(frameAspect / imageAspect, 1);
