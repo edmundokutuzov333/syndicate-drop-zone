@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveCampingRenderProfile } from "./CampingStudioEngine";
+import { getCampingRendererAttempts, resolveCampingRenderProfile } from "./CampingStudioEngine";
 import { ARTISTS } from "@/lib/artists";
 import { buildCampingArtistPortraitBindings } from "./camping-visual-contracts";
 import { canReserveLiveProduct, getArtistSlotIndex, getCampingObjectSection, getRoomTransitionTarget, roomRequiresBackendAuthorization } from "./camping-object-contracts";
@@ -46,6 +46,32 @@ describe("CAMPING object interaction contracts", () => {
     expect(roomRequiresBackendAuthorization("secret")).toBe(true);
     expect(roomRequiresBackendAuthorization("archive")).toBe(false);
     expect(roomRequiresBackendAuthorization("studio")).toBe(false);
+  });
+});
+
+describe("CAMPING WebGL renderer recovery", () => {
+  it("retries the preferred renderer with conservative settings before declaring WebGL unavailable", () => {
+    const preferred = resolveCampingRenderProfile({
+      devicePixelRatio: 2,
+      viewportWidth: 1920,
+      deviceMemory: 16,
+      hardwareConcurrency: 16,
+      coarsePointer: false,
+    });
+    const attempts = getCampingRendererAttempts(preferred);
+
+    expect(attempts).toHaveLength(3);
+    expect(attempts[0]).toMatchObject({ antialias: true, powerPreference: "high-performance" });
+    expect(attempts[1]).toMatchObject({
+      antialias: false,
+      powerPreference: "default",
+      profile: { shadowsEnabled: false, shadowMapSize: 512 },
+    });
+    expect(attempts[2]).toMatchObject({
+      antialias: false,
+      powerPreference: "low-power",
+      profile: { tier: "low", shadowsEnabled: false, pixelRatio: 0.9 },
+    });
   });
 });
 
