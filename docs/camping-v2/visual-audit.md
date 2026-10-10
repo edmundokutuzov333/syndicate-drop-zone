@@ -29,7 +29,7 @@ A geometria foi inspeccionada no GLB. As molduras estavam posicionadas junto à 
 
 - Cada slot é rodado para a parede lateral direita com a face voltada para dentro do estúdio, normal `-X`, mantendo a posição vertical e o espaçamento longitudinal.
 - A parte traseira das molduras fica junto à parede interior em `x=6.95 m`; o código aplica a rotação às geometrias clonadas e não altera a árvore global da cena.
-- Foram acrescentadas três calhas metálicas finas com cabeças de parafuso, alinhadas com as filas de retratos.
+- Foram acrescentadas três calhas metálicas finas com cabeças de parafuso, alinhadas com as filas de retratos. A rotação usa a transformação da geometria e preserva as normais já modeladas, para manter as arestas duras de madeira e papel.
 - As geometrias antigas `studio.wall-posters` e `studio.poster-art` ficam escondidas porque atravessavam as fotografias. O mural colorido da esquerda e a bandeira grande do Sindicato continuam na cena.
 - O teste de contrato agora verifica a pose de montagem, a direcção para o interior e a distância do verso da moldura à parede.
 
@@ -91,7 +91,7 @@ A navegação guiada, os registos e os controlos mobile continuam disponíveis p
 ## Estado de publicação
 
 - Código de entrada mínimo e renderização adaptativa estão na `main`.
-- Motor visual mais recente durante esta auditoria: `e4c3ce9792efd4e5785d905155614d0f0f7cf025`. Manifesto visual sincronizado: `81c825ed47485ebef4f70e7566a6c0702427525c`. Testes de contrato visual: `795d7b58251ea33ced775606ff166b629ccb62b8`. Teste E2E de fotos e assets oficiais: `7ec0470935299114a26b9e3ffe0e243a7235ff1e`.
+- Motor visual mais recente durante esta auditoria: `89d6525f925ec0544b072308866dd3453d377250`. Manifesto visual sincronizado: `4e7c6a6ae0b6ff5ecea6556a08d37fd86d7f2cf3`. Testes de contrato visual: `795d7b58251ea33ced775606ff166b629ccb62b8`. Teste E2E de fotos e assets oficiais: `7ec0470935299114a26b9e3ffe0e243a7235ff1e`.
 - O projecto Lovable sincronizou esse commit e reporta estado `ready`. O screenshot automático disponível é uma captura do projecto, mas as ferramentas de browser usadas nesta execução não permitiram abrir a imagem nem inspeccionar a cena interactiva.
 - O deployment Vercel associado ao alias de produção continua em estado `READY` para o commit anterior `ab8e73644569dcdd9b2ef410eab01d955e7160bb`. O runtime de código e materiais mais recente na `main` é `fb474947`, mas não está ainda publicado na Vercel. Os commits visuais subsequentes estão a receber `build-rate-limit`, por isso as alterações novas não estão confirmadas na publicação Vercel.
 - Não foi feita promoção manual de um deployment antigo.
