@@ -55,7 +55,7 @@ type DoorWoodTextureSet = {
   roughness: THREE.CanvasTexture;
 };
 
-function createDoorWoodTextureSet(resolution: 256 | 512): DoorWoodTextureSet {
+function createDoorWoodTextureSet(resolution: 256 | 512 | 1024): DoorWoodTextureSet {
   const width = resolution;
   const height = resolution * 2;
 
@@ -257,144 +257,63 @@ const LOOK_SENSITIVITY = 0.0027;
 const CAM_HEIGHT = 1.62;
 const STUDIO_URL = "/models/camping/xoyens-studio.glb";
 
-export type CampingRenderProfileInput = {
-  devicePixelRatio: number;
-  viewportWidth: number;
-  deviceMemory?: number;
-  hardwareConcurrency?: number;
-  coarsePointer?: boolean;
-};
-
 export type CampingRenderProfile = {
-  tier: "low" | "balanced" | "high";
+  tier: "high";
   pixelRatio: number;
-  antialias: boolean;
-  shadowsEnabled: boolean;
-  shadowMapSize: 512 | 1024 | 2048;
-  powerPreference: "low-power" | "high-performance" | "default";
+  antialias: true;
+  shadowsEnabled: true;
+  shadowMapSize: 2048;
+  powerPreference: "high-performance";
 };
 
-export type CampingRendererAttempt = {
-  profile: CampingRenderProfile;
-  antialias: boolean;
-  powerPreference: "low-power" | "high-performance" | "default";
-};
+/**
+ * One render-quality contract for every device. The browser's native pixel ratio
+ * controls physical display sampling only; it never changes shadows, textures,
+ * materials, antialiasing, or the renderer's performance profile.
+ */
+export function createCampingMaxQualityProfile(devicePixelRatio: number): CampingRenderProfile {
+  const pixelRatio = Number.isFinite(devicePixelRatio) && devicePixelRatio > 0
+    ? devicePixelRatio
+    : 1;
 
-export function getCampingRendererAttempts(profile: CampingRenderProfile): CampingRendererAttempt[] {
-  return [
-    {
-      profile,
-      antialias: profile.antialias,
-      powerPreference: profile.powerPreference,
-    },
-    {
-      profile: {
-        ...profile,
-        tier: "balanced",
-        pixelRatio: Math.min(profile.pixelRatio, 1.15),
-        antialias: false,
-        shadowsEnabled: false,
-        shadowMapSize: 512,
-        powerPreference: "default",
-      },
-      antialias: false,
-      powerPreference: "default",
-    },
-    {
-      profile: {
-        ...profile,
-        tier: "low",
-        pixelRatio: Math.min(profile.pixelRatio, 0.9),
-        antialias: false,
-        shadowsEnabled: false,
-        shadowMapSize: 512,
-        powerPreference: "low-power",
-      },
-      antialias: false,
-      powerPreference: "low-power",
-    },
-  ];
+  return {
+    tier: "high",
+    pixelRatio,
+    antialias: true,
+    shadowsEnabled: true,
+    shadowMapSize: 2048,
+    powerPreference: "high-performance",
+  };
 }
 
 function createCampingRenderer(
   canvas: HTMLCanvasElement,
-  requestedProfile: CampingRenderProfile,
+  profile: CampingRenderProfile,
 ): { renderer: THREE.WebGLRenderer; profile: CampingRenderProfile } {
-  const failures: string[] = [];
+  const renderer = new THREE.WebGLRenderer({
+    canvas,
+    antialias: true,
+    alpha: false,
+    powerPreference: "high-performance",
+    failIfMajorPerformanceCaveat: false,
+    depth: true,
+    stencil: false,
+    preserveDrawingBuffer: false,
+  });
 
-  for (const [index, attempt] of getCampingRendererAttempts(requestedProfile).entries()) {
-    let renderer: THREE.WebGLRenderer | null = null;
-    try {
-      renderer = new THREE.WebGLRenderer({
-        canvas,
-        antialias: attempt.antialias,
-        alpha: false,
-        powerPreference: attempt.powerPreference,
-        failIfMajorPerformanceCaveat: false,
-        depth: true,
-        stencil: false,
-        preserveDrawingBuffer: false,
-      });
-      renderer.setPixelRatio(attempt.profile.pixelRatio);
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.13;
-      renderer.shadowMap.enabled = attempt.profile.shadowsEnabled;
-      renderer.shadowMap.type = attempt.profile.shadowMapSize === 512 ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
-      renderer.setClearColor(0x100d0a, 1);
+  renderer.setPixelRatio(profile.pixelRatio);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.13;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.setClearColor(0x100d0a, 1);
 
-      canvas.dataset.campingWebglVersion = String(renderer.capabilities.isWebGL2 ? 2 : 1);
-      canvas.dataset.campingRendererAttempt = String(index + 1);
-      canvas.dataset.campingWebglStatus = "ready";
-      delete canvas.dataset.campingWebglError;
-      return { renderer, profile: attempt.profile };
-    } catch (error) {
-      try {
-        renderer?.dispose();
-      } catch {
-        // Continue with a conservative context configuration.
-      }
-      failures.push(error instanceof Error ? error.message : String(error));
-    }
-  }
-
-  const detail = failures.filter(Boolean).join(" | ");
-  throw new Error(
-    "Não foi possível iniciar o renderer 3D com três configurações gráficas. " +
-    (detail || "O browser não disponibilizou um contexto WebGL 2."),
-  );
-}
-
-/** Chooses a stable, testable renderer budget without relying on non-standard APIs being present. */
-export function resolveCampingRenderProfile(input: CampingRenderProfileInput): CampingRenderProfile {
-  const dpr = Number.isFinite(input.devicePixelRatio) && input.devicePixelRatio > 0
-    ? input.devicePixelRatio
-    : 1;
-  const width = Number.isFinite(input.viewportWidth) && input.viewportWidth > 0
-    ? input.viewportWidth
-    : 1024;
-  const memoryValue = input.deviceMemory;
-  const memory = typeof memoryValue === "number" && Number.isFinite(memoryValue) && memoryValue > 0
-    ? memoryValue
-    : null;
-  const coresValue = input.hardwareConcurrency;
-  const cores = typeof coresValue === "number" && Number.isFinite(coresValue) && coresValue > 0
-    ? coresValue
-    : null;
-  const mobile = input.coarsePointer === true || width <= 768;
-  const constrained = mobile && ((memory !== null && memory <= 4) || (cores !== null && cores <= 4));
-  const limited = (memory !== null && memory <= 4) || (cores !== null && cores <= 4);
-  const highEnd = memory !== null && memory >= 8 && cores !== null && cores >= 8;
-  const maxPixelRatio = constrained ? 0.95 : mobile ? 1.15 : limited ? 1.25 : highEnd ? 1.65 : 1.4;
-
-  return {
-    tier: constrained ? "low" : highEnd ? "high" : "balanced",
-    pixelRatio: Math.max(0.75, Math.min(dpr, maxPixelRatio)),
-    antialias: !constrained && !(mobile && dpr >= 2.5),
-    shadowsEnabled: !constrained,
-    shadowMapSize: constrained || mobile || limited ? 512 : highEnd ? 2048 : 1024,
-    powerPreference: constrained ? "low-power" : "high-performance",
-  };
+  canvas.dataset.campingWebglVersion = String(renderer.capabilities.isWebGL2 ? 2 : 1);
+  canvas.dataset.campingRendererProfile = "max-quality";
+  canvas.dataset.campingWebglStatus = "ready";
+  delete canvas.dataset.campingWebglError;
+  return { renderer, profile };
 }
 
 function easeInOutCubic(value: number): number {
@@ -639,38 +558,33 @@ export class CampingStudioEngine {
     this.scene.background = new THREE.Color(0x100d0a);
     this.scene.fog = new THREE.Fog(0x100d0a, 15, 30);
 
-    const profile = resolveCampingRenderProfile({
-      devicePixelRatio: window.devicePixelRatio || 1,
-      viewportWidth: window.innerWidth,
-      deviceMemory: (navigator as Navigator & { deviceMemory?: number }).deviceMemory,
-      hardwareConcurrency: navigator.hardwareConcurrency,
-      coarsePointer: window.matchMedia("(pointer: coarse)").matches,
-    });
+    const profile = createCampingMaxQualityProfile(window.devicePixelRatio || 1);
     this.renderProfile = profile;
 
     try {
       const initialized = createCampingRenderer(canvas, profile);
       this.renderer = initialized.renderer;
       this.renderProfile = initialized.profile;
+      this.createStudioEnvironment();
+      this.createLighting();
+      this.createEntrySet();
+      this.resize();
     } catch (error) {
-      this.webglFailed = true;
       const reason = error instanceof Error
         ? error.message
-        : "O browser não disponibilizou um contexto WebGL 2 utilizável.";
-      if (this.canvas) {
-        this.canvas.dataset.campingWebglStatus = "unavailable";
-        this.canvas.dataset.campingWebglError = reason.slice(0, 400);
+        : "Falha desconhecida ao inicializar o renderer e o cenário CAMPING.";
+      try {
+        this.dispose();
+      } catch {
+        // Continue to the accessible recovery UI even if partial GPU resources fail to dispose.
       }
+      canvas.dataset.campingWebglStatus = "startup-error";
+      canvas.dataset.campingWebglError = reason.slice(0, 400);
       this.callbacks.onAssetState("error");
       this.callbacks.onWebGLFailure(reason);
-      this.callbacks.onMessage("WEBGL 2 / INIT FAILED", "danger");
+      this.callbacks.onMessage("CAMPING 3D / INITIALIZATION FAILED", "danger");
       return;
     }
-
-    this.createStudioEnvironment();
-    this.createLighting();
-    this.createEntrySet();
-    this.resize();
 
     this.canvas.addEventListener("keydown", this.onKeyDown);
     this.canvas.addEventListener("pointerdown", this.onPointerDown);
@@ -1111,7 +1025,7 @@ export class CampingStudioEngine {
       this.reflectionTarget = generator.fromScene(room, 0.04);
       this.scene.environment = this.reflectionTarget.texture;
       // Low intensity preserves the warm practical lights and black levels from the reference.
-      this.scene.environmentIntensity = this.renderProfile?.tier === "high" ? 0.32 : 0.22;
+      this.scene.environmentIntensity = 0.32;
     } catch {
       // Reflections are an enhancement only. The studio must still render on limited GPUs.
       this.reflectionTarget?.dispose();
@@ -1138,8 +1052,8 @@ export class CampingStudioEngine {
     this.scene.add(new THREE.HemisphereLight(0xf4d4a5, 0x17100b, 1.7));
     const key = new THREE.DirectionalLight(0xffd4a0, 2.0);
     key.position.set(-4, 7, 3);
-    key.castShadow = this.renderProfile?.shadowsEnabled ?? true;
-    const shadowSize = this.renderProfile?.shadowMapSize ?? 1024;
+    key.castShadow = true;
+    const shadowSize = 2048;
     key.shadow.mapSize.set(shadowSize, shadowSize);
     key.shadow.camera.near = 0.5;
     key.shadow.camera.far = 25;
@@ -1165,8 +1079,8 @@ export class CampingStudioEngine {
 
   private createEntrySet(): void {
     const wallMat = new THREE.MeshStandardMaterial({ color: 0x2c2620, roughness: 0.92 });
-    const doorWoodTextures = createDoorWoodTextureSet(this.renderProfile?.tier === "high" ? 512 : 256);
-    const textureAnisotropy = Math.min(this.renderer?.capabilities.getMaxAnisotropy() ?? 1, this.renderProfile?.tier === "high" ? 16 : 8);
+    const doorWoodTextures = createDoorWoodTextureSet(1024);
+    const textureAnisotropy = Math.min(this.renderer?.capabilities.getMaxAnisotropy() ?? 1, 16);
     const woodMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       map: doorWoodTextures.lightColor,
@@ -1243,7 +1157,7 @@ export class CampingStudioEngine {
     // Apply the original managed Sindicato logo to the physical door, without redrawing it.
     const logoLoader = new THREE.TextureLoader();
     logoLoader.load(
-      sindicatoLogo.url,
+      sindicatoSeloAsset.url,
       (texture) => {
         if (this.disposed) {
           texture.dispose();
@@ -1621,13 +1535,13 @@ export class CampingStudioEngine {
         root.traverse((object) => {
           const mesh = object as THREE.Mesh;
           if (mesh.isMesh) {
-            const shadowsEnabled = this.renderProfile?.shadowsEnabled ?? true;
+            const shadowsEnabled = true;
             mesh.castShadow = shadowsEnabled;
             mesh.receiveShadow = shadowsEnabled;
             const materials = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : [];
             const maxAnisotropy = Math.min(
               this.renderer?.capabilities.getMaxAnisotropy() ?? 1,
-              this.renderProfile?.tier === "high" ? 16 : 8,
+              16,
             );
             for (const material of materials) {
               if ("envMapIntensity" in material) {
@@ -1636,7 +1550,7 @@ export class CampingStudioEngine {
               const textured = material as THREE.MeshStandardMaterial;
               const detailKind = surfaceDetailKind(material.name);
               if (detailKind && !textured.normalMap && !textured.bumpMap) {
-                const resolution = this.renderProfile?.tier === "high" ? 1024 : this.renderProfile?.tier === "balanced" ? 512 : 256;
+                const resolution = 1024;
                 textured.bumpMap = createSurfaceDetailMap(detailKind, resolution as 256 | 512 | 1024);
                 textured.bumpScale = detailKind === "wood" ? 0.018 : detailKind === "fabric" ? 0.012 : detailKind === "leather" ? 0.008 : 0.006;
                 if (detailKind === "wood") textured.bumpMap.repeat.set(1, 3);
@@ -2062,7 +1976,7 @@ export class CampingStudioEngine {
     const image = texture.image as (CanvasImageSource & { width?: number; height?: number }) | undefined;
     if (!image?.width || !image.height) return texture;
 
-    const maxDimension = this.renderProfile?.tier === "high" ? 1536 : this.renderProfile?.tier === "balanced" ? 768 : 512;
+    const maxDimension = 1536;
     const currentMax = Math.max(image.width, image.height);
     if (currentMax <= maxDimension) return texture;
 
