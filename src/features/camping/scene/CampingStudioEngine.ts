@@ -1630,6 +1630,7 @@ export class CampingStudioEngine {
     logo.position.set(x, y, backZ + 0.068);
     logo.renderOrder = 3;
     logoPlaneRef.current = logo;
+    fitTexturedPlaneToImage(logo, logoTexture, 1.28, 0.58);
     sign.add(logo);
 
     const backLight = new THREE.PointLight(0xffa45d, 5.5, 2.3, 2);
@@ -1753,6 +1754,7 @@ export class CampingStudioEngine {
     seal.position.set(centerX, centerY, centerZ + 0.072);
     seal.renderOrder = 4;
     sealPlaneRef.current = seal;
+    fitTexturedPlaneToImage(seal, sealTexture, 3.0, 2.05);
     root.add(seal);
   }
 
