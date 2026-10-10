@@ -61,7 +61,11 @@ O objecto plano oculto é agora excluído dos alvos do raycast. O banner visíve
 
 Não foi importado um pacote externo de texturas PBR nem reexportado o GLB. O modelo existente já contém mapas de cor e normais, e a redução da qualidade em mobile deve ser medida em hardware real antes de se introduzirem assets de maior resolução ou novos decoders.
 
-### 5. Entrada 808 simplificada
+### 5. Textura física da porta de entrada
+
+A porta visível antes de introduzir o código tinha apenas materiais de cor lisa. Foi acrescentado um conjunto de mapas procedurais determinísticos para a folha de madeira, painéis interiores e zona de entrada: mapa de cor com veios verticais, nós de madeira e marcas discretas de uso, mais mapas de normais e rugosidade. O perfil high usa mapas de 512 × 1024; balanced e low usam 256 × 512 para limitar memória GPU. O desenho é gerado no cliente e não introduz dependências de texturas externas nem muda o GLB do estúdio.
+
+### 6. Entrada 808 simplificada
 
 O painel de entrada apresenta agora apenas `STUDIO XOYENS`, `808`, `Código de acesso` e os três dígitos. Foram removidos do estado anterior à porta os labels verticais de marketing, o texto `ENTRY PROTOCOL`, a indicação `ACCESS LEVEL / 808` e o bloco de instruções `WASD / DRAG LOOK`. O cabeçalho reduz-se à identidade do estúdio e o estado da sala só aparece depois de entrar. Durante a transição, o texto ficou reduzido a `A preparar o estúdio` e `Pode entrar`.
 
@@ -78,9 +82,9 @@ A navegação guiada, os registos e os controlos mobile continuam disponíveis p
 ## Estado de publicação
 
 - Código de entrada mínimo e renderização adaptativa estão na `main`.
-- Motor visual mais recente durante esta auditoria: `ec16cbea7c5f38a747f4eb646223425324e56e81`. Teste E2E das fotografias: `398f4cd592b04fa5ca83a2ec4a24032e244c86af`.
+- Motor visual mais recente durante esta auditoria: `fb47494783582999642f39370e24a782d5ce6fcd`. Teste E2E das fotografias: `398f4cd592b04fa5ca83a2ec4a24032e244c86af`.
 - O projecto Lovable sincronizou esse commit e reporta estado `ready`. O screenshot automático disponível é uma captura do projecto, mas as ferramentas de browser usadas nesta execução não permitiram abrir a imagem nem inspeccionar a cena interactiva.
-- O deployment Vercel associado ao alias de produção continua em estado `READY` para o commit anterior `ab8e73644569dcdd9b2ef410eab01d955e7160bb`. Os commits visuais subsequentes estão a receber `build-rate-limit`, por isso as alterações novas não estão confirmadas na publicação Vercel.
+- O deployment Vercel associado ao alias de produção continua em estado `READY` para o commit anterior `ab8e73644569dcdd9b2ef410eab01d955e7160bb`. O runtime de código e materiais mais recente na `main` é `fb474947`, mas não está ainda publicado na Vercel. Os commits visuais subsequentes estão a receber `build-rate-limit`, por isso as alterações novas não estão confirmadas na publicação Vercel.
 - Não foi feita promoção manual de um deployment antigo.
 
 ## Critérios que continuam abertos
