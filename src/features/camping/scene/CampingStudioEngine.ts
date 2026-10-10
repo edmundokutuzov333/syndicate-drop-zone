@@ -271,8 +271,99 @@ export type CampingRenderProfile = {
   antialias: boolean;
   shadowsEnabled: boolean;
   shadowMapSize: 512 | 1024 | 2048;
-  powerPreference: "low-power" | "high-performance";
+  powerPreference: "low-power" | "high-performance" | "default";
 };
+
+export type CampingRendererAttempt = {
+  profile: CampingRenderProfile;
+  antialias: boolean;
+  powerPreference: "low-power" | "high-performance" | "default";
+};
+
+export function getCampingRendererAttempts(profile: CampingRenderProfile): CampingRendererAttempt[] {
+  return [
+    {
+      profile,
+      antialias: profile.antialias,
+      powerPreference: profile.powerPreference,
+    },
+    {
+      profile: {
+        ...profile,
+        tier: "balanced",
+        pixelRatio: Math.min(profile.pixelRatio, 1.15),
+        antialias: false,
+        shadowsEnabled: false,
+        shadowMapSize: 512,
+        powerPreference: "default",
+      },
+      antialias: false,
+      powerPreference: "default",
+    },
+    {
+      profile: {
+        ...profile,
+        tier: "low",
+        pixelRatio: Math.min(profile.pixelRatio, 0.9),
+        antialias: false,
+        shadowsEnabled: false,
+        shadowMapSize: 512,
+        powerPreference: "low-power",
+      },
+      antialias: false,
+      powerPreference: "low-power",
+    },
+  ];
+}
+
+function createCampingRenderer(
+  canvas: HTMLCanvasElement,
+  requestedProfile: CampingRenderProfile,
+): { renderer: THREE.WebGLRenderer; profile: CampingRenderProfile } {
+  const failures: string[] = [];
+
+  for (const [index, attempt] of getCampingRendererAttempts(requestedProfile).entries()) {
+    let renderer: THREE.WebGLRenderer | null = null;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: attempt.antialias,
+        alpha: false,
+        powerPreference: attempt.powerPreference,
+        failIfMajorPerformanceCaveat: false,
+        depth: true,
+        stencil: false,
+        preserveDrawingBuffer: false,
+      });
+      renderer.setPixelRatio(attempt.profile.pixelRatio);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.13;
+      renderer.shadowMap.enabled = attempt.profile.shadowsEnabled;
+      renderer.shadowMap.type = attempt.profile.shadowMapSize === 512 ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
+      renderer.setClearColor(0x100d0a, 1);
+
+      canvas.dataset.campingWebglVersion = String(renderer.capabilities.isWebGL2 ? 2 : 1);
+      canvas.dataset.campingRendererAttempt = String(index + 1);
+      canvas.dataset.campingWebglStatus = "ready";
+      delete canvas.dataset.campingWebglError;
+      return { renderer, profile: attempt.profile };
+    } catch (error) {
+      try {
+        renderer?.dispose();
+      } catch {
+        // Continue with a conservative context configuration.
+      }
+      failures.push(error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  const detail = failures.filter(Boolean).join(" | ");
+  throw new Error(
+    "Não foi possível iniciar o renderer 3D com três configurações gráficas. " +
+    (detail || "O browser não disponibilizou um contexto WebGL 2."),
+  );
+}
 
 /** Chooses a stable, testable renderer budget without relying on non-standard APIs being present. */
 export function resolveCampingRenderProfile(input: CampingRenderProfileInput): CampingRenderProfile {
@@ -497,12 +588,17 @@ export class CampingStudioEngine {
     this.webglFailed = true;
     if (this.animationFrame) window.cancelAnimationFrame(this.animationFrame);
     this.animationFrame = 0;
+    if (this.canvas) this.canvas.dataset.campingWebglStatus = "context-lost";
     this.callbacks.onWebGLFailure("O contexto WebGL foi interrompido. A aguardar recuperação do browser.");
     this.callbacks.onMessage("WEBGL CONTEXT LOST / A AGUARDAR RECUPERAÇÃO", "danger");
   };
   private readonly onWebGLContextRestored = () => {
     this.webglFailed = false;
     this.lastFrameAt = performance.now();
+    if (this.canvas) {
+      this.canvas.dataset.campingWebglStatus = "ready";
+      delete this.canvas.dataset.campingWebglError;
+    }
     this.callbacks.onWebGLFailure("");
     this.callbacks.onMessage("WEBGL CONTEXT RESTORED", "success");
     this.startFrameLoop();
@@ -549,24 +645,21 @@ export class CampingStudioEngine {
     this.renderProfile = profile;
 
     try {
-      this.renderer = new THREE.WebGLRenderer({
-        canvas,
-        antialias: profile.antialias,
-        alpha: false,
-        powerPreference: profile.powerPreference,
-      });
-      this.renderer.setPixelRatio(profile.pixelRatio);
-      this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-      this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      this.renderer.toneMappingExposure = 1.13;
-      this.renderer.shadowMap.enabled = profile.shadowsEnabled;
-      this.renderer.shadowMap.type = profile.shadowMapSize === 512 ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
-      this.renderer.setClearColor(0x100d0a, 1);
+      const initialized = createCampingRenderer(canvas, profile);
+      this.renderer = initialized.renderer;
+      this.renderProfile = initialized.profile;
     } catch (error) {
       this.webglFailed = true;
-      this.callbacks.onWebGLFailure(
-        error instanceof Error ? error.message : "WebGL não está disponível neste dispositivo.",
-      );
+      const reason = error instanceof Error
+        ? error.message
+        : "O browser não disponibilizou um contexto WebGL 2 utilizável.";
+      if (this.canvas) {
+        this.canvas.dataset.campingWebglStatus = "unavailable";
+        this.canvas.dataset.campingWebglError = reason.slice(0, 400);
+      }
+      this.callbacks.onAssetState("error");
+      this.callbacks.onWebGLFailure(reason);
+      this.callbacks.onMessage("WEBGL 2 / INIT FAILED", "danger");
       return;
     }
 
