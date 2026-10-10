@@ -115,6 +115,11 @@ export function ArtistPresence() {
       </div>
 
       {!ready && <div className="p-4 font-mono text-[9px] text-muted-foreground">A LIGAR PRESENÇA...</div>}
+      {ready && rows.length === 0 && (
+        <div role="status" className="border-t border-border p-4 font-mono text-[9px] leading-5 text-muted-foreground">
+          SEM DADOS DE PRESENÇA DISPONÍVEIS. A PRESENÇA NÃO FOI SIMULADA.
+        </div>
+      )}
     </section>
   );
 }

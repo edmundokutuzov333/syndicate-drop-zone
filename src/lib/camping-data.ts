@@ -120,7 +120,8 @@ export async function getLiveArtistPresence(): Promise<ArtistPresenceRow[]> {
       status: map.get(artist.id) && STATUS.includes(map.get(artist.id)! as (typeof STATUS)[number]) ? map.get(artist.id)! : "ATIVO",
     }));
   } catch {
-    return fallback;
+    // Do not invent ACTIVE presence when the production presence service is unavailable.
+    return import.meta.env.DEV ? fallback : [];
   }
 }
 

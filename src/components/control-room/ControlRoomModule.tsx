@@ -399,7 +399,7 @@ export function ControlRoomModule({ module }: { module: keyof typeof MODULE_CONF
 
       {module === "actividade" && activeRows.length === 0 && (
         <div className="mt-6 border border-[#d71920]/40 bg-[#d71920]/5 p-4 font-mono text-[10px] leading-6 text-white/55">
-          SEM REGISTOS DE AUDITORIA. A migração de triggers está preparada no repositório, mas a activação no Supabase depende da execução da migração.
+          SEM REGISTOS DE AUDITORIA. A tabela e os triggers existem no Supabase. O histórico será preenchido por operações auditadas; confirme com uma edição administrativa real.
         </div>
       )}
 
