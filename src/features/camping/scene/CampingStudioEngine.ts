@@ -1758,6 +1758,39 @@ export class CampingStudioEngine {
     root.add(seal);
   }
 
+  private constrainPortraitTextureResolution(texture: THREE.Texture): THREE.Texture {
+    const image = texture.image as (CanvasImageSource & { width?: number; height?: number }) | undefined;
+    if (!image?.width || !image.height) return texture;
+
+    const maxDimension = this.renderProfile?.tier === "high" ? 1536 : this.renderProfile?.tier === "balanced" ? 768 : 512;
+    const currentMax = Math.max(image.width, image.height);
+    if (currentMax <= maxDimension) return texture;
+
+    const scale = maxDimension / currentMax;
+    const width = Math.max(1, Math.round(image.width * scale));
+    const height = Math.max(1, Math.round(image.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) return texture;
+
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(image, 0, 0, width, height);
+
+    const resized = new THREE.CanvasTexture(canvas);
+    resized.colorSpace = THREE.SRGBColorSpace;
+    resized.flipY = false;
+    resized.wrapS = THREE.ClampToEdgeWrapping;
+    resized.wrapT = THREE.ClampToEdgeWrapping;
+    resized.generateMipmaps = true;
+    resized.minFilter = THREE.LinearMipmapLinearFilter;
+    resized.magFilter = THREE.LinearFilter;
+    texture.dispose();
+    return resized;
+  }
+
   private async applyArtistPortraits(root: THREE.Group): Promise<{ requested: number; loaded: number }> {
     let artists: Awaited<ReturnType<typeof getLiveArtistsForSite>> = [];
     try {
@@ -1810,22 +1843,23 @@ export class CampingStudioEngine {
             resolve();
             return;
           }
-          texture.colorSpace = THREE.SRGBColorSpace;
+          const portraitTexture = this.constrainPortraitTextureResolution(texture);
+          portraitTexture.colorSpace = THREE.SRGBColorSpace;
           // These are glTF-authored UVs, so keep the same vertical convention as GLTFLoader.
-          texture.flipY = false;
-          texture.wrapS = THREE.ClampToEdgeWrapping;
-          texture.wrapT = THREE.ClampToEdgeWrapping;
-          texture.anisotropy = Math.min(this.renderer?.capabilities.getMaxAnisotropy() ?? 1, 8);
-          texture.generateMipmaps = true;
-          texture.minFilter = THREE.LinearMipmapLinearFilter;
-          texture.magFilter = THREE.LinearFilter;
+          portraitTexture.flipY = false;
+          portraitTexture.wrapS = THREE.ClampToEdgeWrapping;
+          portraitTexture.wrapT = THREE.ClampToEdgeWrapping;
+          portraitTexture.anisotropy = Math.min(this.renderer?.capabilities.getMaxAnisotropy() ?? 1, 8);
+          portraitTexture.generateMipmaps = true;
+          portraitTexture.minFilter = THREE.LinearMipmapLinearFilter;
+          portraitTexture.magFilter = THREE.LinearFilter;
 
           // Fill each physical portrait frame without stretching faces. Crop symmetrically
           // when the source image and the frame use different aspect ratios.
           targetMesh.geometry.computeBoundingBox();
           const frameBounds = targetMesh.geometry.boundingBox;
           const frameSize = frameBounds?.getSize(new THREE.Vector3());
-          const image = texture.image as { width?: number; height?: number } | undefined;
+          const image = portraitTexture.image as { width?: number; height?: number } | undefined;
           if (frameSize && frameSize.x > 0 && frameSize.y > 0 && image?.width && image.height) {
             const frameAspect = frameSize.x / frameSize.y;
             const imageAspect = image.width / image.height;
@@ -1848,7 +1882,7 @@ export class CampingStudioEngine {
 
           materials[targetMaterialIndex] = new THREE.MeshStandardMaterial({
             name: "CAMPING / published portrait / " + binding.code,
-            map: texture,
+            map: portraitTexture,
             color: 0xffffff,
             roughness: 0.94,
             metalness: 0,
