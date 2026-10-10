@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CampingAccessState } from "../interactions/access-machine";
 import type { CampingRoomId } from "./CampingRoomWorld";
 import { initialCampingAccessState } from "../interactions/access-machine";
@@ -52,6 +52,8 @@ const roomCopy: Record<CampingRoomId, { code: string; title: string; subtitle: s
   secret: { code: "UNLISTED", title: "SECRET ROOM", subtitle: "DISCOVERY IS NOT AUTHORIZATION" },
 };
 
+const useClientLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
 export function CampingStudioExperience({
   day,
   recordsOpen,
@@ -81,7 +83,7 @@ export function CampingStudioExperience({
   useEffect(() => {
     recordsRef.current = recordsOpen;
   }, [recordsOpen]);
-  useEffect(() => {
+  useClientLayoutEffect(() => {
     const handleAccessKeys = (event: KeyboardEvent) => {
       const phase = accessRef.current.phase;
       if ((phase !== "LOCKED" && phase !== "CODE_ENTRY") || event.metaKey || event.ctrlKey || event.altKey) return;
@@ -113,7 +115,7 @@ export function CampingStudioExperience({
     onClosePanels();
   }, [onClosePanels]);
 
-  useEffect(() => {
+  useClientLayoutEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
