@@ -215,27 +215,24 @@ export function CampingStudioExperience({
         </div>
       </header>
 
-      <div className="camping-studio__side-label" aria-hidden="true">
-        <span>808</span>
-        <span>PRIVATE SPACE</span>
-        <span>EST. / MAPUTO</span>
-      </div>
+      {isExploring && (
+        <div className="camping-studio__side-label" aria-hidden="true">
+          <span>808</span>
+          <span>STUDIO XOYENS</span>
+        </div>
+      )}
 
       {(access.phase === "LOCKED" || access.phase === "CODE_ENTRY") && !showAccessFallback && (
         <div className="camping-studio__access-panel" aria-live="polite">
-          <p className="camping-studio__micro-label">01 / ENTRY PROTOCOL</p>
-          <h1>ENTER<br />ACCESS CODE</h1>
-          <p className="camping-studio__access-instruction">Introduza o código no keypad físico junto à porta.</p>
+          <p className="camping-studio__micro-label">STUDIO XOYENS</p>
+          <h1>808</h1>
+          <p className="camping-studio__access-instruction">Código de acesso</p>
           <div className="camping-studio__code-slots" aria-label={"Código introduzido: " + (access.code || "vazio")}>
             {[0, 1, 2].map((slot) => (
               <span key={slot} className={slot < access.code.length ? "is-filled" : ""}>
                 {access.code[slot] || "·"}
               </span>
             ))}
-          </div>
-          <div className="camping-studio__access-footer">
-            <span>ACCESS LEVEL / 808</span>
-            <span>WASD / DRAG LOOK</span>
           </div>
         </div>
       )}
@@ -252,10 +249,9 @@ export function CampingStudioExperience({
 
       {["ACCESS_GRANTED", "DOOR_OPENING", "ENTERING_STUDIO"].includes(access.phase) && (
         <div className="camping-studio__transition" role="status" aria-live="assertive">
-          <p className="camping-studio__micro-label">808 / SECURITY RELAY</p>
           <h2>{phaseLabel[access.phase]}</h2>
           <span className="camping-studio__transition-line"><span /></span>
-          <p>{assetState === "loading" ? "A carregar geometria e materiais do estúdio." : "A porta está a abrir. Entre."}</p>
+          <p>{assetState === "loading" ? "A preparar o estúdio." : "Pode entrar."}</p>
         </div>
       )}
 
@@ -283,16 +279,12 @@ export function CampingStudioExperience({
       </div>
 
       <footer className="camping-studio__controls">
-        <div className="camping-studio__control-copy">
-          <span className="camping-studio__micro-label">
-            {isExploring ? "MOVEMENT / LOOK" : "ACCESS / KEYPAD"}
-          </span>
-          <p>
-            {isExploring
-              ? "WASD mover · arrastar para olhar · clicar para seleccionar · ESC voltar"
-              : "Keypad 3D ou teclas 0–9 · ENTER confirmar · ESC fechar"}
-          </p>
-        </div>
+        {isExploring && (
+          <div className="camping-studio__control-copy">
+            <span className="camping-studio__micro-label">MOVIMENTO</span>
+            <p>WASD · rato · clique · ESC</p>
+          </div>
+        )}
         <div className="camping-studio__toolbar">
           <button type="button" onClick={enterGuided} aria-expanded={guidedOpen}>
             {guidedOpen ? "FECHAR GUIA" : "NAVEGAÇÃO GUIADA"}
