@@ -133,7 +133,7 @@ export function CampingStudioExperience({
         setMessageTone(tone);
       },
       onAssetState: setAssetState,
-      onWebGLFailure: (error) => setWebglError(error || "WebGL não está disponível."),
+      onWebGLFailure: (error) => setWebglError(error || null),
       onCursor: (x, y, visible) => {
         const cursor = cursorRef.current;
         if (!cursor) return;
