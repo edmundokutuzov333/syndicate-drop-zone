@@ -98,6 +98,11 @@ test.describe("CAMPING V2 / 808 access", () => {
 
     const glbResponses: number[] = [];
     const portraitResponses = new Map<string, number>();
+    const brandResponses = new Map<string, number>();
+    const officialBrandPaths = [
+      "/__l5e/assets-v1/b0478989-7ffd-43dd-92e0-a801662907ae/xoyens.png",
+      "/__l5e/assets-v1/1fa67bdd-f452-442e-a0d5-a9fb482388de/sindicato-selo.png",
+    ];
     page.on("response", (response) => {
       const pathname = new URL(response.url()).pathname;
       if (pathname.endsWith("/models/camping/xoyens-studio.glb")) {
@@ -105,6 +110,9 @@ test.describe("CAMPING V2 / 808 access", () => {
       }
       if ((ARTIST_PHOTO_URLS as readonly string[]).includes(pathname)) {
         portraitResponses.set(pathname, response.status());
+      }
+      if (officialBrandPaths.includes(pathname)) {
+        brandResponses.set(pathname, response.status());
       }
     });
 
@@ -117,6 +125,8 @@ test.describe("CAMPING V2 / 808 access", () => {
     expect(glbResponses).toContain(200);
     expect(portraitResponses.size).toBe(17);
     expect([...portraitResponses.values()].every((status) => status === 200)).toBe(true);
+    expect(brandResponses.size).toBe(2);
+    expect([...brandResponses.values()].every((status) => status === 200)).toBe(true);
   });
 
   test("keeps navigation and records usable at a mobile viewport", async ({ page }) => {
