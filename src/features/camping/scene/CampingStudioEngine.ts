@@ -4,6 +4,7 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import xoyensLogo from "@/assets/brand/xoyens.png.asset.json";
 import sindicatoSeloAsset from "@/assets/brand/sindicato-selo.png.asset.json";
 import { getLiveArtistsForSite } from "@/lib/site-content";
+import { ARTISTS } from "@/lib/artists";
 import {
   buildCampingArtistPortraitBindings,
   resolveCampingArtistMountPose,
@@ -1975,7 +1976,11 @@ export class CampingStudioEngine {
     }
     if (this.disposed || this.studioRoot !== root) return { requested: 0, loaded: 0 };
 
-    const bindings = buildCampingArtistPortraitBindings(artists);
+    // The bundled artist profiles contain the real approved portrait assets.
+    // Use them only for physical wall imagery when the live roster is unavailable;
+    // dossier/content panels still resolve against the live backend and are not fabricated.
+    const portraitSources = artists.length ? artists : ARTISTS;
+    const bindings = buildCampingArtistPortraitBindings(portraitSources);
     if (!bindings.length) return { requested: 0, loaded: 0 };
 
     let loadedCount = 0;
