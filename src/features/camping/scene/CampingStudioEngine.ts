@@ -74,6 +74,53 @@ const LOOK_SENSITIVITY = 0.0027;
 const CAM_HEIGHT = 1.62;
 const STUDIO_URL = "/models/camping/xoyens-studio.glb";
 
+export type CampingRenderProfileInput = {
+  devicePixelRatio: number;
+  viewportWidth: number;
+  deviceMemory?: number;
+  hardwareConcurrency?: number;
+  coarsePointer?: boolean;
+};
+
+export type CampingRenderProfile = {
+  tier: "low" | "balanced" | "high";
+  pixelRatio: number;
+  antialias: boolean;
+  shadowsEnabled: boolean;
+  shadowMapSize: 512 | 1024;
+  powerPreference: "low-power" | "high-performance";
+};
+
+/** Chooses a stable, testable renderer budget without relying on non-standard APIs being present. */
+export function resolveCampingRenderProfile(input: CampingRenderProfileInput): CampingRenderProfile {
+  const dpr = Number.isFinite(input.devicePixelRatio) && input.devicePixelRatio > 0
+    ? input.devicePixelRatio
+    : 1;
+  const width = Number.isFinite(input.viewportWidth) && input.viewportWidth > 0
+    ? input.viewportWidth
+    : 1024;
+  const memory = Number.isFinite(input.deviceMemory) && (input.deviceMemory ?? 0) > 0
+    ? input.deviceMemory
+    : null;
+  const cores = Number.isFinite(input.hardwareConcurrency) && (input.hardwareConcurrency ?? 0) > 0
+    ? input.hardwareConcurrency
+    : null;
+  const mobile = input.coarsePointer === true || width <= 768;
+  const constrained = mobile && ((memory !== null && memory <= 4) || (cores !== null && cores <= 4));
+  const limited = (memory !== null && memory <= 4) || (cores !== null && cores <= 4);
+  const highEnd = memory !== null && memory >= 8 && cores !== null && cores >= 8;
+  const maxPixelRatio = constrained ? 0.95 : mobile ? 1.15 : limited ? 1.25 : highEnd ? 1.65 : 1.4;
+
+  return {
+    tier: constrained ? "low" : mobile || limited ? "balanced" : "high",
+    pixelRatio: Math.max(0.75, Math.min(dpr, maxPixelRatio)),
+    antialias: !constrained && !(mobile && dpr >= 2.5),
+    shadowsEnabled: !constrained,
+    shadowMapSize: mobile || limited ? 512 : 1024,
+    powerPreference: constrained ? "low-power" : "high-performance",
+  };
+}
+
 function easeInOutCubic(value: number): number {
   return value < 0.5
     ? 4 * value * value * value
@@ -142,6 +189,7 @@ export class CampingStudioEngine {
   private readonly callbacks: EngineCallbacks;
   private canvas: HTMLCanvasElement | null = null;
   private renderer: THREE.WebGLRenderer | null = null;
+  private renderProfile: CampingRenderProfile | null = null;
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(68, 1, 0.05, 70);
   private raycaster = new THREE.Raycaster();
@@ -191,6 +239,27 @@ export class CampingStudioEngine {
   private readonly onWindowResize = () => this.resize();
   private readonly onDocumentVisibility = () => {
     this.lastFrameAt = performance.now();
+    if (document.hidden) {
+      if (this.animationFrame) window.cancelAnimationFrame(this.animationFrame);
+      this.animationFrame = 0;
+      return;
+    }
+    this.startFrameLoop();
+  };
+  private readonly onWebGLContextLost = (event: Event) => {
+    event.preventDefault();
+    this.webglFailed = true;
+    if (this.animationFrame) window.cancelAnimationFrame(this.animationFrame);
+    this.animationFrame = 0;
+    this.callbacks.onWebGLFailure("O contexto WebGL foi interrompido. A aguardar recuperação do browser.");
+    this.callbacks.onMessage("WEBGL CONTEXT LOST / A AGUARDAR RECUPERAÇÃO", "danger");
+  };
+  private readonly onWebGLContextRestored = () => {
+    this.webglFailed = false;
+    this.lastFrameAt = performance.now();
+    this.callbacks.onWebGLFailure("");
+    this.callbacks.onMessage("WEBGL CONTEXT RESTORED", "success");
+    this.startFrameLoop();
   };
   private readonly onKeyDown = (event: KeyboardEvent) => this.handleKeyDown(event);
   private readonly onKeyUp = (event: KeyboardEvent) => this.handleKeyUp(event);
@@ -221,19 +290,28 @@ export class CampingStudioEngine {
     this.scene.background = new THREE.Color(0x100d0a);
     this.scene.fog = new THREE.Fog(0x100d0a, 15, 30);
 
+    const profile = resolveCampingRenderProfile({
+      devicePixelRatio: window.devicePixelRatio || 1,
+      viewportWidth: window.innerWidth,
+      deviceMemory: (navigator as Navigator & { deviceMemory?: number }).deviceMemory,
+      hardwareConcurrency: navigator.hardwareConcurrency,
+      coarsePointer: window.matchMedia("(pointer: coarse)").matches,
+    });
+    this.renderProfile = profile;
+
     try {
       this.renderer = new THREE.WebGLRenderer({
         canvas,
-        antialias: true,
+        antialias: profile.antialias,
         alpha: false,
-        powerPreference: "high-performance",
+        powerPreference: profile.powerPreference,
       });
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.65));
+      this.renderer.setPixelRatio(profile.pixelRatio);
       this.renderer.outputColorSpace = THREE.SRGBColorSpace;
       this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
       this.renderer.toneMappingExposure = 1.13;
-      this.renderer.shadowMap.enabled = true;
-      this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      this.renderer.shadowMap.enabled = profile.shadowsEnabled;
+      this.renderer.shadowMap.type = profile.shadowMapSize === 512 ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
       this.renderer.setClearColor(0x100d0a, 1);
     } catch (error) {
       this.webglFailed = true;
@@ -253,6 +331,8 @@ export class CampingStudioEngine {
     this.canvas.addEventListener("pointerup", this.onPointerUp);
     this.canvas.addEventListener("pointercancel", this.onPointerCancel);
     this.canvas.addEventListener("contextmenu", this.onContextMenu);
+    this.canvas.addEventListener("webglcontextlost", this.onWebGLContextLost);
+    this.canvas.addEventListener("webglcontextrestored", this.onWebGLContextRestored);
     this.canvas.style.touchAction = "none";
     window.addEventListener("resize", this.onWindowResize, { passive: true });
     window.addEventListener("keydown", this.onKeyDown);
@@ -263,7 +343,7 @@ export class CampingStudioEngine {
       if (this.canvas.parentElement) this.resizeObserver.observe(this.canvas.parentElement);
     }
 
-    this.animationFrame = window.requestAnimationFrame(this.tick);
+    this.startFrameLoop();
     this.publishAccess();
     this.drawKeypadDisplay();
   }
@@ -277,6 +357,7 @@ export class CampingStudioEngine {
     window.removeEventListener("keydown", this.onKeyDown);
     window.removeEventListener("keyup", this.onKeyUp);
     document.removeEventListener("visibilitychange", this.onDocumentVisibility);
+    this.animationFrame = 0;
 
     if (this.canvas) {
       this.canvas.removeEventListener("keydown", this.onKeyDown);
@@ -285,6 +366,8 @@ export class CampingStudioEngine {
       this.canvas.removeEventListener("pointerup", this.onPointerUp);
       this.canvas.removeEventListener("pointercancel", this.onPointerCancel);
       this.canvas.removeEventListener("contextmenu", this.onContextMenu);
+      this.canvas.removeEventListener("webglcontextlost", this.onWebGLContextLost);
+      this.canvas.removeEventListener("webglcontextrestored", this.onWebGLContextRestored);
       this.canvas.style.touchAction = "";
     }
 
@@ -635,13 +718,18 @@ export class CampingStudioEngine {
     this.loadStudio();
   }
 
-  private readonly tick = (now: number) => {
-    if (this.disposed) return;
+  private startFrameLoop(): void {
+    if (this.disposed || this.webglFailed || !this.renderer || document.hidden || this.animationFrame) return;
     this.animationFrame = window.requestAnimationFrame(this.tick);
-    if (document.hidden || !this.renderer) {
+  }
+
+  private readonly tick = (now: number) => {
+    this.animationFrame = 0;
+    if (this.disposed || this.webglFailed || !this.renderer || document.hidden) {
       this.lastFrameAt = now;
       return;
     }
+    this.animationFrame = window.requestAnimationFrame(this.tick);
 
     this.advanceRoomDoorMotion(now);
     const delta = this.lastFrameAt > 0
@@ -667,8 +755,9 @@ export class CampingStudioEngine {
     this.scene.add(new THREE.HemisphereLight(0xf4d4a5, 0x17100b, 1.7));
     const key = new THREE.DirectionalLight(0xffd4a0, 2.0);
     key.position.set(-4, 7, 3);
-    key.castShadow = true;
-    key.shadow.mapSize.set(1024, 1024);
+    key.castShadow = this.renderProfile?.shadowsEnabled ?? true;
+    const shadowSize = this.renderProfile?.shadowMapSize ?? 1024;
+    key.shadow.mapSize.set(shadowSize, shadowSize);
     key.shadow.camera.near = 0.5;
     key.shadow.camera.far = 25;
     key.shadow.camera.left = -9;
@@ -1084,8 +1173,9 @@ export class CampingStudioEngine {
         root.traverse((object) => {
           const mesh = object as THREE.Mesh;
           if (mesh.isMesh) {
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
+            const shadowsEnabled = this.renderProfile?.shadowsEnabled ?? true;
+            mesh.castShadow = shadowsEnabled;
+            mesh.receiveShadow = shadowsEnabled;
             const materials = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : [];
             for (const material of materials) {
               if ("envMapIntensity" in material) {
