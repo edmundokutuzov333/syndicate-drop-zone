@@ -86,9 +86,7 @@ export function CampingStudioExperience({
       if ((phase !== "LOCKED" && phase !== "CODE_ENTRY") || event.metaKey || event.ctrlKey || event.altKey) return;
       const target = event.target instanceof HTMLElement ? event.target : null;
       if (target && (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable)) return;
-      const isCanvas = target === canvasRef.current;
-      const isActionControl = Boolean(target && /^(BUTTON|A)$/.test(target.tagName));
-      if (!isCanvas && !isActionControl) return;
+      // Keyboard access works from any non-editable interface element, not only the canvas.
       const command = /^\d$/.test(event.key) ? event.key : event.key === "Backspace" ? "BACK" : null;
       if (!command) return;
 
