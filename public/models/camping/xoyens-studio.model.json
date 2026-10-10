@@ -792,9 +792,9 @@
         "keyboard-and-mouse instruction paragraph"
       ]
     },
-    "implementationCommit": "fb47494783582999642f39370e24a782d5ce6fcd",
-    "publishedRuntimeCommit": "ab8e73644569dcdd9b2ef410eab01d955e7160bb",
-    "status": "source-updated-publication-pending",
+    "implementationCommit": "0a6e24beb69898a4de5851e14c9364f9c7ab1776",
+    "publishedRuntimeCommit": "306c33f0d9804b7dca544cdcb43ff2e88921b7bb",
+    "status": "primary-visuals-published-follow-up-hardening-pending",
     "materials": {
       "reflections": "Three.js RoomEnvironment converted through PMREMGenerator",
       "sceneEnvironmentIntensity": {
@@ -833,6 +833,18 @@
         "fine wear scratches"
       ],
       "rationale": "Higher texture resolution is limited to the high device tier; mobile keeps a smaller GPU footprint."
+    },
+    "publisherEvidence": {
+      "deploymentId": "dpl_EWp1jsMEQasHwXJWs1BspDXiPscb",
+      "deploymentState": "READY",
+      "productionAlias": "https://syndicate-drop-zone.vercel.app",
+      "publishedCommit": "306c33f0d9804b7dca544cdcb43ff2e88921b7bb",
+      "unpublishedFollowUps": [
+        "Device-adaptive door texture resolution",
+        "Aspect-ratio-preserving official brand planes",
+        "Eight-second portrait request watchdog"
+      ],
+      "latestMainVercelCheck": "build-rate-limit"
     }
   },
   "auditUpdatedAt": "2026-10-10"
