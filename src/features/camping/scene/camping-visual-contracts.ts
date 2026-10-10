@@ -41,3 +41,41 @@ export function buildCampingArtistPortraitBindings(
 
   return [...bySlot.values()].sort((a, b) => a.slot - b.slot);
 }
+
+export type CampingArtistMountInput = {
+  centerX: number;
+  centerY: number;
+  centerZ: number;
+  depth: number;
+};
+
+export type CampingArtistMountPose = {
+  centerX: number;
+  centerY: number;
+  centerZ: number;
+  rotationY: number;
+  wallFacing: "interior/-X";
+};
+
+/**
+ * Returns a physical pose for mounting a portrait flush to the interior side wall.
+ * The source GLB has baked vertex coordinates, so the engine applies this rotation
+ * around the frame centre instead of changing the shared scene root.
+ */
+export function resolveCampingArtistMountPose(input: CampingArtistMountInput): CampingArtistMountPose | null {
+  if (
+    !Number.isFinite(input.centerX) ||
+    !Number.isFinite(input.centerY) ||
+    !Number.isFinite(input.centerZ) ||
+    !Number.isFinite(input.depth) ||
+    input.depth <= 0
+  ) return null;
+
+  return {
+    centerX: 6.945 - input.depth / 2,
+    centerY: input.centerY,
+    centerZ: input.centerZ,
+    rotationY: -Math.PI / 2,
+    wallFacing: "interior/-X",
+  };
+}
