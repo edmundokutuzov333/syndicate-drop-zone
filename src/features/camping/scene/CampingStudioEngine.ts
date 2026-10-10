@@ -1488,28 +1488,26 @@ export class CampingStudioEngine {
       // GLTFLoader represents a mesh with several primitives as a Group containing
       // separate child meshes. Some exporters instead keep a three-material mesh.
       // In both cases, target only the inner black portrait surface, never the frame.
-      let photoSurface: THREE.Mesh | null = null;
-      let photoMaterialIndex = 0;
+      const photoCandidates: Array<{ mesh: THREE.Mesh; materialIndex: number }> = [];
       slotRoot.traverse((candidate) => {
-        if (!(candidate instanceof THREE.Mesh) || photoSurface) return;
+        if (!(candidate instanceof THREE.Mesh)) return;
         const candidateMaterials = Array.isArray(candidate.material) ? candidate.material : [candidate.material];
         if (candidateMaterials.length >= 3 && candidateMaterials.some((material) => material.name === "black")) {
-          photoSurface = candidate;
-          photoMaterialIndex = 2;
+          photoCandidates.push({ mesh: candidate, materialIndex: 2 });
           return;
         }
         if (candidateMaterials.length === 1 && candidateMaterials[0]?.name === "black") {
-          photoSurface = candidate;
-          photoMaterialIndex = 0;
+          photoCandidates.push({ mesh: candidate, materialIndex: 0 });
         }
       });
-      if (!photoSurface) {
+      const photoTarget = photoCandidates[0];
+      if (!photoTarget) {
         resolve();
         return;
       }
 
-      const targetMesh = photoSurface;
-      const targetMaterialIndex = photoMaterialIndex;
+      const targetMesh = photoTarget.mesh;
+      const targetMaterialIndex = photoTarget.materialIndex;
       loader.load(
         binding.src,
         (texture) => {
