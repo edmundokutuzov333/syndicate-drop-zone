@@ -21,11 +21,17 @@ export const Route = createFileRoute("/camping")({
     media: typeof search.media === "string" ? search.media : undefined,
   }),
   loader: async () => {
+    // The immersive studio is the primary experience. Optional backend content
+    // must never prevent /camping from rendering when a catalogue or media table
+    // is temporarily unavailable.
     const [sessions, flags, gallery, revelation] = await Promise.all([
-      getLiveCampingSessions(),
-      getLiveFlags(),
-      getLiveCampingGallery(),
-      getLiveRevelationMedia(),
+      getLiveCampingSessions().catch(() => []),
+      getLiveFlags().catch(() => ({
+        live: { on: false, url: "" },
+        camp: { start: null, end: null },
+      })),
+      getLiveCampingGallery().catch(() => ({})),
+      getLiveRevelationMedia().catch(() => []),
     ]);
     const galleryFallback = { ...gallery };
     if (!Object.keys(galleryFallback).length) {
