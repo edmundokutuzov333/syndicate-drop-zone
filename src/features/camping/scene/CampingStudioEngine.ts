@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import xoyensLogo from "@/assets/brand/xoyens.png.asset.json";
 import sindicatoSeloAsset from "@/assets/brand/sindicato-selo.png.asset.json";
 import { getLiveArtistsForSite } from "@/lib/site-content";
@@ -90,7 +91,7 @@ export type CampingRenderProfile = {
   pixelRatio: number;
   antialias: boolean;
   shadowsEnabled: boolean;
-  shadowMapSize: 512 | 1024;
+  shadowMapSize: 512 | 1024 | 2048;
   powerPreference: "low-power" | "high-performance";
 };
 
@@ -121,7 +122,7 @@ export function resolveCampingRenderProfile(input: CampingRenderProfileInput): C
     pixelRatio: Math.max(0.75, Math.min(dpr, maxPixelRatio)),
     antialias: !constrained && !(mobile && dpr >= 2.5),
     shadowsEnabled: !constrained,
-    shadowMapSize: mobile || limited ? 512 : 1024,
+    shadowMapSize: constrained || mobile || limited ? 512 : highEnd ? 2048 : 1024,
     powerPreference: constrained ? "low-power" : "high-performance",
   };
 }
@@ -195,6 +196,7 @@ export class CampingStudioEngine {
   private canvas: HTMLCanvasElement | null = null;
   private renderer: THREE.WebGLRenderer | null = null;
   private renderProfile: CampingRenderProfile | null = null;
+  private reflectionTarget: THREE.WebGLRenderTarget | null = null;
   private artistDataPromise: ReturnType<typeof getLiveArtistsForSite> | null = null;
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(68, 1, 0.05, 70);
@@ -330,6 +332,7 @@ export class CampingStudioEngine {
       return;
     }
 
+    this.createStudioEnvironment();
     this.createLighting();
     this.createEntrySet();
     this.resize();
@@ -404,6 +407,9 @@ export class CampingStudioEngine {
         }
       }
     });
+    this.scene.environment = null;
+    this.reflectionTarget?.dispose();
+    this.reflectionTarget = null;
     this.renderer?.dispose();
     this.renderer = null;
     this.scene.clear();
@@ -759,6 +765,30 @@ export class CampingStudioEngine {
     this.renderer.render(this.scene, this.camera);
     this.advanceTransientMessage(now);
   };
+
+
+  private createStudioEnvironment(): void {
+    if (!this.renderer) return;
+    let room: RoomEnvironment | null = null;
+    let generator: THREE.PMREMGenerator | null = null;
+    try {
+      generator = new THREE.PMREMGenerator(this.renderer);
+      generator.compileEquirectangularShader();
+      room = new RoomEnvironment();
+      this.reflectionTarget = generator.fromScene(room, 0.04);
+      this.scene.environment = this.reflectionTarget.texture;
+      // Low intensity preserves the warm practical lights and black levels from the reference.
+      this.scene.environmentIntensity = this.renderProfile?.tier === "high" ? 0.32 : 0.22;
+    } catch {
+      // Reflections are an enhancement only. The studio must still render on limited GPUs.
+      this.reflectionTarget?.dispose();
+      this.reflectionTarget = null;
+      this.scene.environment = null;
+    } finally {
+      room?.dispose();
+      generator?.dispose();
+    }
+  }
 
   private createLighting(): void {
     this.scene.add(new THREE.HemisphereLight(0xf4d4a5, 0x17100b, 1.7));
@@ -1188,9 +1218,27 @@ export class CampingStudioEngine {
             mesh.castShadow = shadowsEnabled;
             mesh.receiveShadow = shadowsEnabled;
             const materials = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : [];
+            const maxAnisotropy = Math.min(
+              this.renderer?.capabilities.getMaxAnisotropy() ?? 1,
+              this.renderProfile?.tier === "high" ? 16 : 8,
+            );
             for (const material of materials) {
               if ("envMapIntensity" in material) {
                 (material as THREE.MeshStandardMaterial).envMapIntensity = 0.42;
+              }
+              const textured = material as THREE.MeshStandardMaterial;
+              const maps = [
+                textured.map,
+                textured.normalMap,
+                textured.roughnessMap,
+                textured.metalnessMap,
+                textured.emissiveMap,
+                textured.bumpMap,
+              ];
+              for (const texture of maps) {
+                if (!texture) continue;
+                texture.anisotropy = maxAnisotropy;
+                texture.needsUpdate = true;
               }
               material.needsUpdate = true;
             }
