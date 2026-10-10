@@ -61,6 +61,7 @@ export function CampingStudioExperience({
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<CampingStudioEngine | null>(null);
+  const pendingAccessKeysRef = useRef<string[]>([]);
   const cursorRef = useRef<HTMLDivElement>(null);
   const guidedRef = useRef(false);
   const recordsRef = useRef(recordsOpen);
@@ -94,7 +95,14 @@ export function CampingStudioExperience({
       // even when focus is on an interface button instead of the canvas.
       event.preventDefault();
       event.stopImmediatePropagation();
-      engineRef.current?.pressAccessibleKey(command);
+      const engine = engineRef.current;
+      if (!engine) {
+        // React may paint the canvas before its effect mounts Three.js. Preserve early
+        // keystrokes instead of swallowing the access code during that short window.
+        pendingAccessKeysRef.current.push(command);
+        return;
+      }
+      engine.pressAccessibleKey(command);
     };
     window.addEventListener("keydown", handleAccessKeys, true);
     return () => window.removeEventListener("keydown", handleAccessKeys, true);
@@ -147,7 +155,10 @@ export function CampingStudioExperience({
     });
     engineRef.current = engine;
     engine.mount(canvas);
+    const queuedKeys = pendingAccessKeysRef.current.splice(0);
+    for (const key of queuedKeys) engine.pressAccessibleKey(key);
     return () => {
+      pendingAccessKeysRef.current = [];
       engine.dispose();
       engineRef.current = null;
     };

@@ -1,7 +1,14 @@
 import { test, expect, type Page } from "@playwright/test";
 function createPhotoFixture(): Buffer {
-  // Valid, textured 256x256 PNG so Chromium tests the upload flow with a decodable image.
-  return Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAIAAADTED8xAAAECUlEQVR42u3dPXLyMBSGUZJhEV4eLStyy1JTpMzgGJDlK73ntN9PkLmPZEgmfC3LcoFU3y4BAgABgABAACAAEAAIAAQAAgABgABAACAAEAAIAAQAAgABgABAACAAEAAIAAQAAgABgABAACAAEAD0cT36C9xuN1eZTzweDycACAAEAAIAAYAAQAAgABAACAAEAAIAAYAAQAAgABAACAAEgABAACAAEAAIAAQAAgABgABAACAAEAAM75q8+HVdn/3R/X63XgFkDf2zvzb0cKStVwCfjsKzfzjcWKStVwDtR2HQsUhbrxfBh0/DQf+b9ToBhhmF+ltj2nqdAGduXdW2xrT1CuD8Z6vOTKStVwBVnqcKM5G2XgHUeobOnYm09QoABFBsc/J1BZA7/W69BAACCN7++z+GtPUKAARQfivyDTgBgABAACCAuNtQP4UqABAACAAEAAIAAYAAQAAggCaq/b6aox9P2noFAAIAAYAASt+G9nkkaesVAAig/FbU8zGkrVcAIIDCG1L/r562XgHUfVZ8XQGAACIPAbdeAshtwLtPAshtwDfgBJDbgJ9CncPMH5P6+5w1/8U1ZUchbb1OgBOev/rTkLZeJ0CnrXGgUUhbrwCOHYtBRyFtvQJ4+dndGI5phiBtvQKw1VmvF8EgABAACAAEAAIAAYAAQAAIAAQAAgABgABAACAAEAAIAAQAAgABAACAAEAAIAAQAAgABAACCACtZ1bf5JcnNclsBVXz3B/L1EOR+lcY0d/XVdfWLKs0uUU4LXAHgNYNuz/QtgYm51XDcngM3PFRAAZAawcZonb4E+OtsJgBPAIRB5CNj+404ADZh+t0AXDXjvKzcA3xNwfZwA0Vuj7T89gO1Nbu752F5d4PEYegJkNmD6BZDbgOkXQO69svt+Abyz7c0xN/+uIvmdsfQTYPoGTL8Achsw/QJo1sBYGex5wKZfAK9NwygN7Hmcpl8AczZg+gVweAM1M9j5wEy/ABrMR6kM9j8Y0y+AllNyegYvPQDT/9fVJdiYlZ2z9fvXOo/XS+EZfQG8mcH+Oevz6wTfOHBMvwA6NXBcCW/faJl+AXS9Hdqe2v2vsHu+khEAB2bQfLKNfkPeBZpttky/E2CAo8DoC2CSo+D0Esy9AEIPBKMvgMQDwdwLYIzXoA1jMPQCGDuGix9eEIAeXIRqfB8AAYAAQAAgABAACAAEAAIAAYAAQAAgABAACAAEAAIAAYAAQAAgABAACAAEAAIAAYAAQAAgABAACAAEAAIAAYAAQAAgABAACAA+9LUsi6uAEwAEAAIAAYAAQAAgABAACAAEAAIAAYAAQAAgABAACAAEAAIAAYAAQAAgABAACAAEAAIAAYAAQADQwQ8OMqe9v8qn5AAAAABJRU5ErkJggg==", "base64");
+  // A small valid SVG image avoids brittle hand-encoded PNG bytes in this browser test.
+  return Buffer.from(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">' +
+      '<rect width="256" height="256" fill="#181818"/><circle cx="128" cy="96" r="54" fill="#a0a0a0"/>' +
+      '<path d="M32 256c8-62 44-88 96-88s88 26 96 88" fill="#777"/>' +
+      '<circle cx="108" cy="90" r="7" fill="#111"/><circle cx="148" cy="90" r="7" fill="#111"/>' +
+      '<path d="M104 118q24 18 48 0" stroke="#111" stroke-width="6" fill="none"/></svg>',
+    "utf-8",
+  );
 }
 
 async function mockPublicBackend(page: Page) {
@@ -38,8 +45,8 @@ test.describe("Cartão de Fã and public proposals", () => {
     await page.goto("/filiar");
     await page.getByLabel("NOME OU APELIDO").fill("TESTE");
     await page.locator("#fan-photo").setInputFiles({
-      name: "foto-teste.png",
-      mimeType: "image/png",
+      name: "foto-teste.svg",
+      mimeType: "image/svg+xml",
       buffer: createPhotoFixture(),
     });
     await expect(page.getByText("FOTOGRAFIA SELECCIONADA", { exact: true })).toBeVisible();
