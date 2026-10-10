@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildCampingArtistPortraitBindings, CAMPING_ARTIST_SLOT_COUNT } from "./camping-visual-contracts";
+import {
+  buildCampingArtistPortraitBindings,
+  CAMPING_ARTIST_SLOT_COUNT,
+  resolveCampingArtistMountPose,
+} from "./camping-visual-contracts";
 
 describe("CAMPING artist wall visual contract", () => {
   it("maps official member codes to the 17 physical portrait meshes", () => {
@@ -42,5 +46,30 @@ describe("CAMPING artist wall visual contract", () => {
 
     expect(bindings.map((item) => item.slot)).toEqual([1, 3]);
     expect(bindings.some((item) => item.slot === 2)).toBe(false);
+  });
+});
+
+describe("CAMPING artist wall mounting", () => {
+  it("turns each portrait towards the studio and keeps its back close to the side wall", () => {
+    const pose = resolveCampingArtistMountPose({
+      centerX: 6.79,
+      centerY: 2.61,
+      centerZ: 3.1,
+      depth: 0.1,
+    });
+
+    expect(pose).toEqual({
+      centerX: 6.895,
+      centerY: 2.61,
+      centerZ: 3.1,
+      rotationY: -Math.PI / 2,
+      wallFacing: "interior/-X",
+    });
+    expect(resolveCampingArtistMountPose({
+      centerX: 0,
+      centerY: 1,
+      centerZ: 0,
+      depth: 0,
+    })).toBeNull();
   });
 });
