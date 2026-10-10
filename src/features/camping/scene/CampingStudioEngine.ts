@@ -1976,7 +1976,7 @@ export class CampingStudioEngine {
     }
     if (this.disposed || this.studioRoot !== root) return { requested: 0, loaded: 0 };
 
-    // The bundled artist profiles contain the real approved portrait assets.
+    // The bundled artist profiles contain the real portrait assets.
     // Use them only for physical wall imagery when the live roster is unavailable;
     // dossier/content panels still resolve against the live backend and are not fabricated.
     const portraitSources = artists.length ? artists : ARTISTS;
