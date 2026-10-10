@@ -461,7 +461,7 @@ export async function getLiveRevelationMedia(): Promise<RevelationMedia[]> {
     // Fallback para o pacote estático abaixo.
   }
 
-  return STATIC_REVELACAO_MEDIA;
+  return import.meta.env.DEV ? STATIC_REVELACAO_MEDIA : [];
 }
 
 export async function getLiveCamping() {
@@ -482,9 +482,9 @@ export async function getLiveCamping() {
       title: stringValue(row, ["title", "name", "label"], "EVENTO " + String(index + 1).padStart(2, "0")),
       description: stringValue(row, ["description", "summary", "text"]),
     }));
-    return blocks.length ? blocks : fallback;
+    return blocks.length ? blocks : import.meta.env.DEV ? fallback : [];
   } catch {
-    return fallback;
+    return import.meta.env.DEV ? fallback : [];
   }
 }
 
