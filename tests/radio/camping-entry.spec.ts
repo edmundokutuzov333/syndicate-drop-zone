@@ -69,7 +69,7 @@ test.describe("CAMPING V2 / 808 access", () => {
     await expect(page.locator("canvas.camping-studio__canvas")).toBeVisible();
     await expect(
       page.locator(".camping-studio__access-panel").or(
-        page.getByRole("heading", { name: "ACESSO ALTERNATIVO" }),
+        page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]'),
       ),
     ).toBeVisible({ timeout: 15_000 });
     await expect(page.getByText("SINAL CORROMPIDO")).toHaveCount(0);
@@ -79,7 +79,7 @@ test.describe("CAMPING V2 / 808 access", () => {
   test("mounts the 3D entry or an accessible WebGL fallback", async ({ page }) => {
     await openCamping(page);
 
-    const fallback = page.getByRole("heading", { name: "ACESSO ALTERNATIVO" });
+    const fallback = page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]');
     if (await fallback.isVisible()) {
       await expect(page.getByRole("button", { name: "TENTAR INICIAR 3D" })).toBeVisible();
       await expect(page.getByRole("button", { name: "ABRIR REGISTOS PÚBLICOS" })).toBeVisible();
@@ -99,7 +99,7 @@ test.describe("CAMPING V2 / 808 access", () => {
 
   test("retries 3D initialization without leaving CAMPING after WebGL is unavailable", async ({ page }) => {
     await openCamping(page);
-    const fallback = page.getByRole("heading", { name: "ACESSO ALTERNATIVO" });
+    const fallback = page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]');
     if (!(await fallback.isVisible())) {
       test.skip(true, "Este Chromium disponibiliza WebGL e não deve entrar no fallback.");
     }
@@ -113,7 +113,7 @@ test.describe("CAMPING V2 / 808 access", () => {
 
   test("captures 808 while a non-input interface button has keyboard focus", async ({ page }) => {
     await openCamping(page);
-    if (await page.getByRole("heading", { name: "ACESSO ALTERNATIVO" }).isVisible()) {
+    if (await page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]').isVisible()) {
       test.skip(true, "O runtime Chromium deste job não disponibiliza WebGL.");
     }
 
@@ -127,7 +127,7 @@ test.describe("CAMPING V2 / 808 access", () => {
 
   test("accepts 808 and enters the loaded studio when WebGL is available", async ({ page }) => {
     await openCamping(page);
-    if (await page.getByRole("heading", { name: "ACESSO ALTERNATIVO" }).isVisible()) {
+    if (await page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]').isVisible()) {
       test.skip(true, "O runtime Chromium deste job não disponibiliza WebGL.");
     }
 
@@ -180,7 +180,7 @@ test.describe("CAMPING V2 / 808 access", () => {
     await expect(page.getByRole("button", { name: "REGISTOS" })).toBeVisible();
     await expect(page.getByRole("button", { name: "SAIR" })).toBeVisible();
 
-    if (await page.getByRole("heading", { name: "ACESSO ALTERNATIVO" }).isVisible()) {
+    if (await page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]').isVisible()) {
       await page.getByRole("button", { name: "ABRIR REGISTOS PÚBLICOS" }).click();
     } else {
       await page.locator("canvas.camping-studio__canvas").focus();
