@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CampingAccessState } from "../interactions/access-machine";
 import type { CampingRoomId } from "./CampingRoomWorld";
 import { initialCampingAccessState } from "../interactions/access-machine";
@@ -60,7 +60,6 @@ export function CampingStudioExperience({
   onLeave,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const pendingAccessKeysRef = useRef<string[]>([]);
   const engineRef = useRef<CampingStudioEngine | null>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   const guidedRef = useRef(false);
@@ -86,33 +85,6 @@ export function CampingStudioExperience({
     setGuidedOpen(false);
     onClosePanels();
   }, [onClosePanels]);
-
-  const handleAccessKey = (event: ReactKeyboardEvent<HTMLElement>) => {
-    const phase = accessRef.current.phase;
-    if (phase !== "LOCKED" && phase !== "CODE_ENTRY") return;
-
-    const target = event.target instanceof HTMLElement ? event.target : null;
-    const key = /^\d$/.test(event.key)
-      ? event.key
-      : event.key === "Enter" || event.key === "NumpadEnter"
-        ? "ENTER"
-        : event.key === "Backspace"
-          ? "BACK"
-          : null;
-    if (!key) return;
-    // Preserve native Enter activation for focused buttons and links. Digits,
-    // Backspace and Enter on the canvas still use the 808 keypad state machine.
-    if (key === "ENTER" && target && /^(BUTTON|A)$/.test(target.tagName)) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (!engineRef.current) {
-      pendingAccessKeysRef.current.push(key);
-      return;
-    }
-    engineRef.current.pressAccessibleKey(key);
-  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -156,10 +128,7 @@ export function CampingStudioExperience({
     });
     engineRef.current = engine;
     engine.mount(canvas);
-    const pendingKeys = pendingAccessKeysRef.current.splice(0);
-    for (const key of pendingKeys) engine.pressAccessibleKey(key);
     return () => {
-      pendingAccessKeysRef.current = [];
       engine.dispose();
       engineRef.current = null;
     };
@@ -182,7 +151,6 @@ export function CampingStudioExperience({
     <section
       className="camping-studio"
       aria-label="Experiência tridimensional do estúdio Xoyens"
-      onKeyDownCapture={handleAccessKey}
     >
       <canvas
         ref={canvasRef}
