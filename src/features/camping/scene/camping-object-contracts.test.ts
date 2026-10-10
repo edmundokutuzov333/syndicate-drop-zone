@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getCampingRendererAttempts, resolveCampingRenderProfile } from "./CampingStudioEngine";
+import { createCampingMaxQualityProfile } from "./CampingStudioEngine";
 import { ARTISTS } from "@/lib/artists";
 import { buildCampingArtistPortraitBindings } from "./camping-visual-contracts";
 import { canReserveLiveProduct, getArtistSlotIndex, getCampingObjectSection, getRoomTransitionTarget, roomRequiresBackendAuthorization } from "./camping-object-contracts";
@@ -49,78 +49,38 @@ describe("CAMPING object interaction contracts", () => {
   });
 });
 
-describe("CAMPING WebGL renderer recovery", () => {
-  it("retries the preferred renderer with conservative settings before declaring WebGL unavailable", () => {
-    const preferred = resolveCampingRenderProfile({
-      devicePixelRatio: 2,
-      viewportWidth: 1920,
-      deviceMemory: 16,
-      hardwareConcurrency: 16,
-      coarsePointer: false,
-    });
-    const attempts = getCampingRendererAttempts(preferred);
+describe("CAMPING uniform max-quality renderer profile", () => {
+  it("uses the same maximum quality settings for desktop and mobile", () => {
+    const devicePixelRatios = [1, 1.5, 2, 3, 4];
+    const profiles = devicePixelRatios.map((ratio) => createCampingMaxQualityProfile(ratio));
 
-    expect(attempts).toHaveLength(3);
-    expect(attempts[0]).toMatchObject({ antialias: true, powerPreference: "high-performance" });
-    expect(attempts[1]).toMatchObject({
-      antialias: false,
-      powerPreference: "default",
-      profile: { shadowsEnabled: false, shadowMapSize: 512 },
-    });
-    expect(attempts[2]).toMatchObject({
-      antialias: false,
-      powerPreference: "low-power",
-      profile: { tier: "low", shadowsEnabled: false, pixelRatio: 0.9 },
-    });
-  });
-});
+    for (const profile of profiles) {
+      expect(profile.tier).toBe("high");
+      expect(profile.antialias).toBe(true);
+      expect(profile.shadowsEnabled).toBe(true);
+      expect(profile.shadowMapSize).toBe(2048);
+      expect(profile.powerPreference).toBe("high-performance");
+    }
 
-describe("CAMPING adaptive rendering profile", () => {
-  it("reduces pixel ratio and expensive shadows on constrained mobile hardware", () => {
-    const profile = resolveCampingRenderProfile({
-      devicePixelRatio: 3,
-      viewportWidth: 390,
-      deviceMemory: 4,
-      hardwareConcurrency: 4,
-      coarsePointer: true,
-    });
-
-    expect(profile.tier).toBe("low");
-    expect(profile.pixelRatio).toBe(0.95);
-    expect(profile.antialias).toBe(false);
-    expect(profile.shadowsEnabled).toBe(false);
-    expect(profile.shadowMapSize).toBe(512);
-    expect(profile.powerPreference).toBe("low-power");
+    expect(profiles.map((profile) => ({
+      tier: profile.tier,
+      antialias: profile.antialias,
+      shadowsEnabled: profile.shadowsEnabled,
+      shadowMapSize: profile.shadowMapSize,
+      powerPreference: profile.powerPreference,
+    }))).toEqual(Array.from({ length: devicePixelRatios.length }, () => ({
+      tier: "high",
+      antialias: true,
+      shadowsEnabled: true,
+      shadowMapSize: 2048,
+      powerPreference: "high-performance",
+    })));
+    expect(profiles.map((profile) => profile.pixelRatio)).toEqual(devicePixelRatios);
   });
 
-  it("preserves high visual quality on a capable desktop", () => {
-    const profile = resolveCampingRenderProfile({
-      devicePixelRatio: 2,
-      viewportWidth: 1920,
-      deviceMemory: 16,
-      hardwareConcurrency: 16,
-      coarsePointer: false,
-    });
-
-    expect(profile.tier).toBe("high");
-    expect(profile.pixelRatio).toBe(1.65);
-    expect(profile.antialias).toBe(true);
-    expect(profile.shadowsEnabled).toBe(true);
-    expect(profile.shadowMapSize).toBe(2048);
-    expect(profile.powerPreference).toBe("high-performance");
-  });
-
-  it("handles missing device-memory APIs without producing invalid budgets", () => {
-    const profile = resolveCampingRenderProfile({
-      devicePixelRatio: Number.NaN,
-      viewportWidth: 1440,
-      hardwareConcurrency: 8,
-    });
-
-    expect(profile.pixelRatio).toBe(1);
-    expect(Number.isFinite(profile.pixelRatio)).toBe(true);
-    expect(profile.shadowsEnabled).toBe(true);
-    expect(profile.shadowMapSize).toBe(1024);
+  it("uses a valid default ratio when the browser reports a bad value", () => {
+    expect(createCampingMaxQualityProfile(Number.NaN).pixelRatio).toBe(1);
+    expect(createCampingMaxQualityProfile(0).pixelRatio).toBe(1);
   });
 });
 
