@@ -60,8 +60,8 @@ export async function auditBackendSchema(options:AuditOptions={}){
     try{
       const response=await request(cfg.url+"/rest/v1/"+encodeURIComponent(item.name)+"?select=*&limit=0",{method:"GET",headers:tableHeaders});
       const code=await readErrorCode(response);
-      return {name:item.name,area:item.area,kind:(item.name==="partnership_public"?"view":"table") as "view"|"table",status:classifyProbe(response.status,code),httpStatus:response.status,code,checkedAt:at};
-    }catch{return {name:item.name,area:item.area,kind:(item.name==="partnership_public"?"view":"table") as "view"|"table",status:"error" as ProbeStatus,checkedAt:at};}
+      return {name:item.name,area:item.area,kind:(["partnership_public","beats_public"].includes(item.name)?"view":"table") as "view"|"table",status:classifyProbe(response.status,code),httpStatus:response.status,code,checkedAt:at};
+    }catch{return {name:item.name,area:item.area,kind:(["partnership_public","beats_public"].includes(item.name)?"view":"table") as "view"|"table",status:"error" as ProbeStatus,checkedAt:at};}
   });
   const rpcs=await limitedMap(READ_ONLY_RPCS,3,async item=>{
     const at=checkedAt();

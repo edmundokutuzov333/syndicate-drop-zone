@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Check, ExternalLink, RefreshCw, TriangleAlert } from "lucide-react";
 import { adminQuery, checkStorageBucket, getMediaBucket, publicQuery } from "@/lib/control-room-auth";
 import { getFrequencyClock, getFrequencyListenerCount } from "@/lib/frequency-api";
+import { BackendSchemaPanel } from "@/components/control-room/BackendSchemaPanel";
 
 const TABLES = [
   "artists","artist_releases","tapes","releases","camping_events","camping_sessions",
@@ -85,6 +86,8 @@ function System() {
           </button>
         </div>
       </header>
+
+      <BackendSchemaPanel />
 
       <section className="mt-6 grid gap-px border border-white/10 bg-white/10 md:grid-cols-4">
         {[

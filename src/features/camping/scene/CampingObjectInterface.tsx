@@ -207,7 +207,6 @@ export function CampingObjectInterface({ focusedId, onClose, onEnterRoom }: Prop
   const cartCount = cart.reduce((sum, line) => sum + line.quantity, 0);
   const cartTotal = cart.reduce((sum, line) => sum + line.price * line.quantity, 0);
   const sessionNow = Date.now();
-  const activeBeat = beats.value.find((beat) => beat.id === activeBeatId) ?? null;
 
   function openFolder(next: CampingObjectSection) {
     setLaunchedFromDesktop(true);
@@ -432,6 +431,7 @@ export function CampingObjectInterface({ focusedId, onClose, onEnterRoom }: Prop
                         audio.pause();
                         audio.src = beat.previewUrl;
                         audio.currentTime = 0;
+                        audio.load();
                         setActiveBeatId(beat.id);
                       }
                       try {
