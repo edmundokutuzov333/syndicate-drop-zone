@@ -1,3 +1,4 @@
+import { mkdirSync, writeFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { unlockSite } from "./site-gate";
 
@@ -263,8 +264,11 @@ test.describe("CAMPING V2 / 808 access", () => {
       geometries: element.getAttribute("data-camping-perf-geometries"),
       textures: element.getAttribute("data-camping-perf-textures"),
     }));
+    const diagnosticsJson = JSON.stringify(renderStats, null, 2);
+    mkdirSync("test-results", { recursive: true });
+    writeFileSync("test-results/camping-renderer-diagnostics.json", diagnosticsJson, "utf8");
     await test.info().attach("camping-renderer-diagnostics.json", {
-      body: Buffer.from(JSON.stringify(renderStats, null, 2)),
+      body: Buffer.from(diagnosticsJson),
       contentType: "application/json",
     });
     expect(Number(renderStats.pixelRatio)).toBeLessThanOrEqual(2);
