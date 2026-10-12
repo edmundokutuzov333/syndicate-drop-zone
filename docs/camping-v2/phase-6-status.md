@@ -75,7 +75,7 @@ Alterações incluídas na `main`:
 - Actualizar o colisor de movimento para acompanhar a posição real do stand.
 - Adicionar testes de contrato de composição e um teste de folga lateral do colisor.
 
-Commits da intervenção: `79d709f8fc7d60ffe1380b8cfe84fc0429562a48`, `ee47196cd76ad9add3915101f83ce0e2567c5a20`, `37ed8cb85033e824d0594bcdd096e7b1f46d9e0a`, `c81d13faf07800eabfd41a93447c4d502124f429` e `e61247d4109f41ecc2d55a1d8f2fc06aa34bd823`.
+Commits da intervenção: `79d709f8fc7d60ffe1380b8cfe84fc0429562a48`, `ee47196cd76ad9add3915101f83ce0e2567c5a20`, `37ed8cb85033e824d0594bcdd096e7b1f46d9e0a`, `c81d13faf07800eabfd41a93447c4d502124f429`, `e61247d4109f41ecc2d55a1d8f2fc06aa34bd823`, `99ae33e51a4b5b19c7ade7aa49482b88af6a91b4`, `f093cd34d9753931c014e2c10bdbb2adc52ed71a` e `c5d88a1d519572211520ff52e38ade20f926bb4e`. Os materiais alterados especificamente para o chão fotográfico, o pano e o estuque são clonados por mesh antes da mudança, evitando efeitos colaterais em outros objectos que partilham materiais GLB.
 
 Não houve alterações de schema, migrações, dados de produção, RLS, Auth ou contratos de backend. A base de dados e o Control Room foram deixados intactos.
 
