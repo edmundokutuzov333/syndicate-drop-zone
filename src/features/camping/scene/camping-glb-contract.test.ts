@@ -99,6 +99,23 @@ describe("CAMPING reference composition corrections", () => {
     );
   });
 
+  it("isolates local material corrections from other meshes sharing the GLB material", () => {
+    const root = new THREE.Group();
+    const shared = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+    const photoFloor = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), shared);
+    photoFloor.name = "studio.photo-floor";
+    const unrelated = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), shared);
+    unrelated.name = "studio.unrelated-object";
+    root.add(photoFloor, unrelated);
+
+    applyCampingReferenceComposition(root);
+
+    expect((photoFloor.material as THREE.MeshStandardMaterial).color.getHex())
+      .toBe(CAMPING_REFERENCE_COMPOSITION.photoFloorColor);
+    expect(unrelated.material).toBe(shared);
+    expect(shared.color.getHex()).toBe(0xffffff);
+  });
+
   it("is idempotent so scene corrections cannot compound after a retry", () => {
     const root = makeScene();
     applyCampingReferenceComposition(root);
