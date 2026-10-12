@@ -249,6 +249,31 @@ test.describe("CAMPING V2 / 808 access", () => {
     expect([...portraitResponses.values()].every((status) => status === 200)).toBe(true);
     expect(brandResponses.size).toBe(2);
     expect([...brandResponses.values()].every((status) => status === 200)).toBe(true);
+
+    // Capture actual browser runtime counters. CPU frame time is diagnostic only;
+    // GPU frame time requires a profiler and is not inferred from these values.
+    await expect(canvas).toHaveAttribute("data-camping-perf-fps", /^\\d+(?:\\.\\d+)?$/, { timeout: 12_000 });
+    const renderStats = await canvas.evaluate((element) => ({
+      pixelRatio: element.getAttribute("data-camping-render-pixel-ratio"),
+      fps: element.getAttribute("data-camping-perf-fps"),
+      cpuFrameMsAvg: element.getAttribute("data-camping-perf-cpu-frame-ms-avg"),
+      cpuFrameMsMax: element.getAttribute("data-camping-perf-cpu-frame-ms-max"),
+      drawCalls: element.getAttribute("data-camping-perf-draw-calls"),
+      triangles: element.getAttribute("data-camping-perf-triangles"),
+      geometries: element.getAttribute("data-camping-perf-geometries"),
+      textures: element.getAttribute("data-camping-perf-textures"),
+    }));
+    await test.info().attach("camping-renderer-diagnostics.json", {
+      body: Buffer.from(JSON.stringify(renderStats, null, 2)),
+      contentType: "application/json",
+    });
+    expect(Number(renderStats.pixelRatio)).toBeLessThanOrEqual(2);
+    expect(Number(renderStats.drawCalls)).toBeGreaterThan(0);
+    expect(Number(renderStats.triangles)).toBeGreaterThan(0);
+    expect(Number(renderStats.geometries)).toBeGreaterThan(0);
+    expect(Number(renderStats.textures)).toBeGreaterThan(0);
+    expect(Number(renderStats.fps)).toBeGreaterThan(0);
+    expect(Number(renderStats.cpuFrameMsAvg)).toBeGreaterThan(0);
   });
 
   test("keeps navigation and records usable at a mobile viewport", async ({ page }) => {
