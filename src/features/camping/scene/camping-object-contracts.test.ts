@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { createCampingMaxQualityProfile } from "./CampingStudioEngine";
+import { createCampingMaxQualityProfile, getCampingMaterialRenderPolicy, getCampingShadowPolicy, resolveCampingEffectivePixelRatio } from "./CampingStudioEngine";
 import { ARTISTS } from "@/lib/artists";
 import { buildCampingArtistPortraitBindings } from "./camping-visual-contracts";
 import { canReserveLiveProduct, getArtistSlotIndex, getCampingObjectSection, getRoomTransitionTarget, roomRequiresBackendAuthorization } from "./camping-object-contracts";
@@ -93,6 +93,43 @@ describe("CAMPING uniform max-quality renderer profile", () => {
   it("uses a valid default ratio when the browser reports a bad value", () => {
     expect(createCampingMaxQualityProfile(Number.NaN).pixelRatio).toBe(1);
     expect(createCampingMaxQualityProfile(0).pixelRatio).toBe(1);
+  });
+});
+
+describe("CAMPING render workload policies", () => {
+  it("caps rendered pixel density at 2x without selecting a different graphics tier", () => {
+    expect([1, 1.5, 2, 3, 4].map(resolveCampingEffectivePixelRatio)).toEqual([1, 1.5, 2, 2, 2]);
+    expect(resolveCampingEffectivePixelRatio(Number.NaN)).toBe(1);
+    expect(resolveCampingEffectivePixelRatio(0)).toBe(1);
+    expect(resolveCampingEffectivePixelRatio(-2)).toBe(1);
+  });
+
+  it("keeps plaster and fabric matte while retaining controlled wood reflections", () => {
+    expect(getCampingMaterialRenderPolicy("plaster")).toMatchObject({
+      envMapIntensity: 0.14,
+      roughnessFloor: 0.88,
+      metalnessCeiling: 0,
+      normalScale: 0.12,
+    });
+    expect(getCampingMaterialRenderPolicy("fabric")).toMatchObject({
+      envMapIntensity: 0.12,
+      roughnessFloor: 0.82,
+      metalnessCeiling: 0,
+    });
+    expect(getCampingMaterialRenderPolicy("wood")).toMatchObject({
+      envMapIntensity: 0.2,
+      roughnessFloor: 0.68,
+      metalnessCeiling: 0.05,
+    });
+    expect(getCampingMaterialRenderPolicy("screen").envMapIntensity).toBe(0.06);
+  });
+
+  it("avoids shadow work on large floor boards and decorative flat details", () => {
+    expect(getCampingShadowPolicy("studio.floor")).toEqual({ castShadow: false, receiveShadow: true });
+    expect(getCampingShadowPolicy("studio.parquet")).toEqual({ castShadow: false, receiveShadow: true });
+    expect(getCampingShadowPolicy("studio.imac-screen")).toEqual({ castShadow: false, receiveShadow: false });
+    expect(getCampingShadowPolicy("studio.syndicate-banner.fabric")).toEqual({ castShadow: true, receiveShadow: true });
+    expect(getCampingShadowPolicy("studio.production-desk")).toEqual({ castShadow: true, receiveShadow: true });
   });
 });
 
