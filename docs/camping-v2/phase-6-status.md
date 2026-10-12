@@ -71,7 +71,7 @@ Alterações incluídas na `main`:
 - Reduzir a altura visual do parquet e assentar as tábuas sobre o pavimento existente.
 - Aplicar acabamento mate preto ao chão fotográfico e escurecer o pano original.
 - Ampliar o selo oficial e reposicionar/reduzir o stand.
-- Reduzir a intensidade do relevo procedural do estuque e alterar o enquadramento inicial pós-808.
+- Reduzir a intensidade do relevo procedural e a escala do mapa de normais do estuque de 0,45 para 0,12; alterar o enquadramento inicial pós-808.
 - Actualizar o colisor de movimento para acompanhar a posição real do stand.
 - Adicionar testes de contrato de composição e um teste de folga lateral do colisor.
 
