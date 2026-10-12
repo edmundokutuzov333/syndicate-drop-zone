@@ -287,6 +287,56 @@ export function createCampingMaxQualityProfile(devicePixelRatio: number): Campin
   };
 }
 
+export function resolveCampingEffectivePixelRatio(devicePixelRatio: number): number {
+  if (!Number.isFinite(devicePixelRatio) || devicePixelRatio <= 0) return 1;
+  // Keep one consistent quality contract across devices while avoiding a
+  // quadratic fill-rate explosion on 3x/4x-density displays.
+  return Math.min(devicePixelRatio, 2);
+}
+
+export type CampingMaterialRenderPolicy = {
+  envMapIntensity: number;
+  roughnessFloor?: number;
+  metalnessCeiling?: number;
+  normalScale?: number;
+};
+
+export function getCampingMaterialRenderPolicy(materialName: string): CampingMaterialRenderPolicy {
+  const name = materialName.toLowerCase();
+  if (/screen|display|logo|seal|emissive|led|glass|paper|label/.test(name)) {
+    return { envMapIntensity: 0.06 };
+  }
+  if (/plaster|stucco|wall|paint|ceiling/.test(name)) {
+    return { envMapIntensity: 0.14, roughnessFloor: 0.88, metalnessCeiling: 0, normalScale: 0.12 };
+  }
+  if (/wood|timber|parquet|floor|door|oak|plank/.test(name)) {
+    return { envMapIntensity: 0.2, roughnessFloor: 0.68, metalnessCeiling: 0.05 };
+  }
+  if (/fabric|cloth|banner|curtain|textile/.test(name)) {
+    return { envMapIntensity: 0.12, roughnessFloor: 0.82, metalnessCeiling: 0 };
+  }
+  if (/leather|sofa|seat|upholstery/.test(name)) {
+    return { envMapIntensity: 0.17, roughnessFloor: 0.58, metalnessCeiling: 0.02 };
+  }
+  if (/metal|chrome|steel|iron|aluminium/.test(name)) {
+    return { envMapIntensity: 0.26, roughnessFloor: 0.3 };
+  }
+  return { envMapIntensity: 0.2 };
+}
+
+export type CampingShadowPolicy = { castShadow: boolean; receiveShadow: boolean };
+
+export function getCampingShadowPolicy(objectName: string): CampingShadowPolicy {
+  const name = objectName.toLowerCase();
+  const floorLike = /(^|[.\s_-])(floor|parquet)([.\s_-]|$)/.test(name);
+  const nonCaster = /screen|display|logo|seal|emissive|led|diffuser|softbox|label|mural-colours|mural-eyes|mural-pupils|hanger-hooks|ac-grille|audio-grille/.test(name);
+  const nonReceiver = /screen|display|logo|seal|emissive|led|diffuser|softbox|label|mural-colours|mural-eyes|mural-pupils|hanger-hooks|ac-grille|audio-grille|photo-backdrop/.test(name);
+  return {
+    castShadow: !floorLike && !nonCaster,
+    receiveShadow: !nonReceiver,
+  };
+}
+
 function createCampingRenderer(
   canvas: HTMLCanvasElement,
   profile: CampingRenderProfile,
@@ -302,7 +352,8 @@ function createCampingRenderer(
     preserveDrawingBuffer: false,
   });
 
-  renderer.setPixelRatio(profile.pixelRatio);
+  const effectivePixelRatio = resolveCampingEffectivePixelRatio(profile.pixelRatio);
+  renderer.setPixelRatio(effectivePixelRatio);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.13;
@@ -312,9 +363,11 @@ function createCampingRenderer(
 
   canvas.dataset.campingWebglVersion = String(renderer.capabilities.isWebGL2 ? 2 : 1);
   canvas.dataset.campingRendererProfile = "max-quality";
+  canvas.dataset.campingRenderPixelRatio = String(effectivePixelRatio);
+  canvas.dataset.campingShadowMapSize = String(profile.shadowMapSize);
   canvas.dataset.campingWebglStatus = "ready";
   delete canvas.dataset.campingWebglError;
-  return { renderer, profile };
+  return { renderer, profile: { ...profile, pixelRatio: effectivePixelRatio } };
 }
 
 function easeInOutCubic(value: number): number {
@@ -493,6 +546,10 @@ export class CampingStudioEngine {
   private disposed = false;
   private webglFailed = false;
   private collision = createStudioCollisionConfig();
+  private performanceWindowStart = 0;
+  private performanceFrameCount = 0;
+  private performanceCpuTotalMs = 0;
+  private performanceCpuMaxMs = 0;
   private readonly onWindowResize = () => this.resize();
   private readonly onDocumentVisibility = () => {
     this.lastFrameAt = performance.now();
@@ -993,6 +1050,7 @@ export class CampingStudioEngine {
       return;
     }
     this.animationFrame = window.requestAnimationFrame(this.tick);
+    const frameStartedAt = performance.now();
 
     this.advanceRoomDoorMotion(now);
     const delta = this.lastFrameAt > 0
@@ -1012,8 +1070,36 @@ export class CampingStudioEngine {
     this.updateHoverOutline();
     this.renderer.render(this.scene, this.camera);
     this.advanceTransientMessage(now);
+    this.publishRenderDiagnostics(now, performance.now() - frameStartedAt);
   };
 
+  private publishRenderDiagnostics(timestamp: number, frameCpuMs: number): void {
+    const canvas = this.canvas;
+    const renderer = this.renderer;
+    if (!canvas || !renderer) return;
+
+    if (this.performanceWindowStart <= 0) this.performanceWindowStart = timestamp;
+    this.performanceFrameCount += 1;
+    this.performanceCpuTotalMs += frameCpuMs;
+    this.performanceCpuMaxMs = Math.max(this.performanceCpuMaxMs, frameCpuMs);
+
+    const elapsed = timestamp - this.performanceWindowStart;
+    if (elapsed < 1000) return;
+
+    canvas.dataset.campingPerfFps = (this.performanceFrameCount * 1000 / elapsed).toFixed(1);
+    canvas.dataset.campingPerfCpuFrameMsAvg = (this.performanceCpuTotalMs / this.performanceFrameCount).toFixed(2);
+    canvas.dataset.campingPerfCpuFrameMsMax = this.performanceCpuMaxMs.toFixed(2);
+    canvas.dataset.campingPerfDrawCalls = String(renderer.info.render.calls);
+    canvas.dataset.campingPerfTriangles = String(renderer.info.render.triangles);
+    canvas.dataset.campingPerfGeometries = String(renderer.info.memory.geometries);
+    canvas.dataset.campingPerfTextures = String(renderer.info.memory.textures);
+    canvas.dataset.campingPerfSampledAt = String(Math.round(timestamp));
+
+    this.performanceWindowStart = timestamp;
+    this.performanceFrameCount = 0;
+    this.performanceCpuTotalMs = 0;
+    this.performanceCpuMaxMs = 0;
+  }
 
   private createStudioEnvironment(): void {
     if (!this.renderer) return;
@@ -1026,7 +1112,7 @@ export class CampingStudioEngine {
       this.reflectionTarget = generator.fromScene(room, 0.04);
       this.scene.environment = this.reflectionTarget.texture;
       // Low intensity preserves the warm practical lights and black levels from the reference.
-      this.scene.environmentIntensity = 0.32;
+      this.scene.environmentIntensity = 0.28;
     } catch {
       // Reflections are an enhancement only. The studio must still render on limited GPUs.
       this.reflectionTarget?.dispose();
@@ -1050,12 +1136,15 @@ export class CampingStudioEngine {
   }
 
   private createLighting(): void {
-    this.scene.add(new THREE.HemisphereLight(0xf4d4a5, 0x17100b, 1.7));
+    this.scene.add(new THREE.HemisphereLight(0xf4d4a5, 0x17100b, 1.45));
     const key = new THREE.DirectionalLight(0xffd4a0, 2.0);
     key.position.set(-4, 7, 3);
     key.castShadow = true;
     const shadowSize = 2048;
     key.shadow.mapSize.set(shadowSize, shadowSize);
+    key.shadow.bias = -0.00015;
+    key.shadow.normalBias = 0.035;
+    key.shadow.radius = 2;
     key.shadow.camera.near = 0.5;
     key.shadow.camera.far = 25;
     key.shadow.camera.left = -9;
@@ -1064,16 +1153,16 @@ export class CampingStudioEngine {
     key.shadow.camera.bottom = -8;
     this.scene.add(key);
 
-    const fill = new THREE.PointLight(0xff8b3d, 30, 14, 2);
+    const fill = new THREE.PointLight(0xff8b3d, 25, 14, 2);
     fill.position.set(-4.5, 2.5, 1);
     this.scene.add(fill);
-    const ceilingWarm = new THREE.PointLight(0xffbd73, 46, 11, 2);
+    const ceilingWarm = new THREE.PointLight(0xffbd73, 38, 11, 2);
     ceilingWarm.position.set(-0.4, 3.1, -1.7);
     this.scene.add(ceilingWarm);
-    const studioWarm = new THREE.PointLight(0xffb66b, 50, 9, 2);
+    const studioWarm = new THREE.PointLight(0xffb66b, 39, 9, 2);
     studioWarm.position.set(3.8, 2.8, -3.1);
     this.scene.add(studioWarm);
-    const redAccent = new THREE.PointLight(0x5c0809, 8, 4, 2);
+    const redAccent = new THREE.PointLight(0x5c0809, 6, 4, 2);
     redAccent.position.set(-0.8, 1.1, -4.2);
     this.scene.add(redAccent);
   }
@@ -1542,23 +1631,33 @@ export class CampingStudioEngine {
         root.traverse((object) => {
           const mesh = object as THREE.Mesh;
           if (mesh.isMesh) {
-            const shadowsEnabled = true;
-            mesh.castShadow = shadowsEnabled;
-            mesh.receiveShadow = shadowsEnabled;
+            const shadowPolicy = getCampingShadowPolicy(mesh.name);
+            mesh.castShadow = shadowPolicy.castShadow;
+            mesh.receiveShadow = shadowPolicy.receiveShadow;
             const materials = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : [];
             const maxAnisotropy = Math.min(
               this.renderer?.capabilities.getMaxAnisotropy() ?? 1,
-              16,
+              8,
             );
             for (const material of materials) {
+              const materialPolicy = getCampingMaterialRenderPolicy(material.name);
               if ("envMapIntensity" in material) {
-                (material as THREE.MeshStandardMaterial).envMapIntensity = 0.42;
+                (material as THREE.MeshStandardMaterial).envMapIntensity = materialPolicy.envMapIntensity;
               }
               const textured = material as THREE.MeshStandardMaterial;
+              if (typeof textured.roughness === "number" && materialPolicy.roughnessFloor !== undefined) {
+                textured.roughness = Math.max(textured.roughness, materialPolicy.roughnessFloor);
+              }
+              if (typeof textured.metalness === "number" && materialPolicy.metalnessCeiling !== undefined) {
+                textured.metalness = Math.min(textured.metalness, materialPolicy.metalnessCeiling);
+              }
+              if (textured.normalMap && materialPolicy.normalScale !== undefined) {
+                textured.normalScale.set(materialPolicy.normalScale, materialPolicy.normalScale);
+              }
               const detailKind = surfaceDetailKind(material.name);
               if (detailKind && !textured.normalMap && !textured.bumpMap) {
-                const resolution = 1024;
-                textured.bumpMap = createSurfaceDetailMap(detailKind, resolution as 256 | 512 | 1024);
+                const resolution = 512;
+                textured.bumpMap = createSurfaceDetailMap(detailKind, resolution);
                 textured.bumpScale = detailKind === "wood" ? 0.018 : detailKind === "fabric" ? 0.012 : detailKind === "leather" ? 0.008 : detailKind === "plaster" ? 0.0018 : 0.006;
                 if (detailKind === "wood") textured.bumpMap.repeat.set(1, 3);
                 else if (detailKind === "fabric") textured.bumpMap.repeat.set(3, 3);
