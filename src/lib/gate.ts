@@ -1,7 +1,7 @@
 export const GATE_SESSION_KEY = "sdt-open";
 
 export const GATE_BOOT =
-  'try{document.documentElement.dataset.gate=sessionStorage.getItem("sdt-open")==="1"?"open":"locked"}catch(e){document.documentElement.dataset.gate="locked"}';
+  'try{let gateBootOpen=sessionStorage.getItem("sdt-open")==="1";document.documentElement.dataset.gate=gateBootOpen?"open":"locked";if(gateBootOpen){document.documentElement.dataset.gateBoot="open"}else{delete document.documentElement.dataset.gateBoot}}catch(e){document.documentElement.dataset.gate="locked";delete document.documentElement.dataset.gateBoot}';
 
 export function isGateOpen(): boolean {
   if (typeof document === "undefined") return false;

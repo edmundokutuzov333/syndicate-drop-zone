@@ -4,6 +4,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* A persisted gate is hidden before paint while React hydrates the SSR-locked tree. */
+html[data-gate-boot="open"] [data-site-gate="locked"] {
+  display: none;
+}
+
 @theme inline {
   --radius-sm: 0px;
   --radius-md: 0px;

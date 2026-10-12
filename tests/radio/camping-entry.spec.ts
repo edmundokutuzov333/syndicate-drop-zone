@@ -97,6 +97,33 @@ async function openCamping(page: import("@playwright/test").Page) {
 }
 
 test.describe("CAMPING V2 / 808 access", () => {
+  test("restores an unlocked session after refresh without a React hydration mismatch", async ({ page }) => {
+    await page.route("**/rest/v1/**", async (route) => {
+      const pathname = new URL(route.request().url()).pathname;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: pathname.endsWith("/artists") ? JSON.stringify(PUBLISHED_ARTIST_FIXTURE) : "[]",
+      });
+    });
+
+    const hydrationErrors: string[] = [];
+    page.on("pageerror", (error) => {
+      if (/hydration failed|hydration mismatch/i.test(error.message)) {
+        hydrationErrors.push(error.message);
+      }
+    });
+
+    await page.goto("/camping");
+    await unlockSite(page);
+    await expect(page.locator("#site")).toBeVisible();
+
+    await page.reload();
+    await expect(page.locator("#site")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("button", { name: "OK", exact: true })).toHaveCount(0, { timeout: 10_000 });
+    expect(hydrationErrors).toEqual([]);
+  });
+
   test("keeps the studio entry available when optional Supabase catalogues fail", async ({ page }) => {
     await page.route("**/rest/v1/**", async (route) => {
       await route.abort("failed");

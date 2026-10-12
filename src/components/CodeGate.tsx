@@ -40,7 +40,7 @@ export function CodeGate({ onOpen }: { onOpen: () => void }) {
     return()=>window.removeEventListener("keydown",handle);
   },[accepted,value]);
   return (
-    <div className="grain scanlines fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-background p-4">
+    <div data-site-gate="locked" className="grain scanlines fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-background p-4">
       <img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute -left-24 -top-24 w-[28rem] rotate-12 opacity-10"/>
       <img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute -bottom-32 -right-24 w-[34rem] -rotate-6 opacity-[0.07]"/>
       <div className={"relative w-full max-w-sm border-2 border-ash bg-card p-5 shadow-[inset_0_2px_0_oklch(1_0_0/0.06),0_30px_60px_oklch(0_0_0/0.7)] transition-transform "+(error?"gate-error":"")}>

@@ -186,8 +186,15 @@ function RootComponent() {
       state.location.pathname.startsWith("/camera") ||
       state.location.pathname.startsWith("/camping"),
   });
-  const [open, setOpen] = useState(() => isGateOpen());
+  const [open, setOpen] = useState(false);
   const { site } = Route.useLoaderData();
+
+  // Keep the initial client render identical to SSR. GATE_BOOT marks a
+  // persisted session before paint, then this effect restores the open state
+  // after hydration without replacing the server gate markup mid-hydration.
+  useEffect(() => {
+    if (isGateOpen()) setOpen(true);
+  }, []);
 
   useEffect(() => {
     void frequency.prepare();
