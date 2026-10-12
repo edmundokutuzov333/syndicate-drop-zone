@@ -21,7 +21,7 @@ export const XOYENS_STUDIO_COLLIDERS: readonly RectCollider[] = [
   { id: "production-chair", minX: -3.05, maxX: -1.85, minZ: -2.58, maxZ: -1.34 },
   { id: "subwoofer", minX: -1.15, maxX: -0.55, minZ: -3.52, maxZ: -2.87 },
   { id: "sofa", minX: -6.95, maxX: -4.38, minZ: 0.98, maxZ: 2.02 },
-  { id: "clothing-rack", minX: 1.34, maxX: 4.76, minZ: -1.86, maxZ: -1.19 },
+  { id: "clothing-rack", minX: 1.05, maxX: 3.9, minZ: -1.86, maxZ: -1.19 },
   { id: "photography-backdrop", minX: 1.12, maxX: 6.76, minZ: -4.52, maxZ: -3.91 },
   { id: "audio-system", minX: 5.48, maxX: 6.24, minZ: -0.86, maxZ: -0.17 },
   { id: "air-conditioner-wall", minX: -0.9, maxX: 1.1, minZ: -4.18, maxZ: -3.96 },
