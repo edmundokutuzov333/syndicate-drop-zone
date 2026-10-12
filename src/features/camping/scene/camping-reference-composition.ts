@@ -167,6 +167,10 @@ export function applyCampingReferenceComposition(root: THREE.Object3D): Composit
         if (standard.color?.isColor) standard.color.setHex(CAMPING_REFERENCE_COMPOSITION.plasterColor);
         standard.roughness = Math.max(standard.roughness, 0.9);
         standard.metalness = 0;
+        // The source GLB's plaster normal map uses scale 0.45, which reads as
+        // chipped stone at this camera distance. Keep the same texture detail
+        // but reduce its amplitude to a subtle plaster micro-relief.
+        if (standard.normalScale?.isVector2) standard.normalScale.set(0.12, 0.12);
         if ("bumpScale" in standard) standard.bumpScale = 0.0018;
         standard.needsUpdate = true;
       }
