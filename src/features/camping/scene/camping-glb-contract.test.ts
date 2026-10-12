@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import {
@@ -8,7 +8,9 @@ import {
 } from "./camping-reference-composition";
 
 function readStudioGlb() {
-  const path = fileURLToPath(new URL("../../../../public/models/camping/xoyens-studio.glb", import.meta.url));
+  // Use the repository root rather than import.meta.url, which Vitest's jsdom
+  // transform may rewrite to an http: URL instead of a file: URL.
+  const path = resolve(process.cwd(), "public/models/camping/xoyens-studio.glb");
   const buffer = readFileSync(path);
 
   if (buffer.toString("ascii", 0, 4) !== "glTF") {
