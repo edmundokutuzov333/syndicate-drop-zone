@@ -34,6 +34,7 @@ import {
   type CampingRoomLayout,
 } from "./CampingRoomWorld";
 import { getRoomTransitionTarget } from "./camping-object-contracts";
+import { applyCampingReferenceComposition, CAMPING_REFERENCE_COMPOSITION } from "./camping-reference-composition";
 
 function fitTexturedPlaneToImage(mesh: THREE.Mesh, texture: THREE.Texture, maxWidth: number, maxHeight: number): void {
   const image = texture.image as { width?: number; height?: number } | undefined;
@@ -1382,9 +1383,9 @@ export class CampingStudioEngine {
     if (this.access.phase === "ENTERING_STUDIO" && previousPhase !== "ENTERING_STUDIO") {
       this.startTween(
         this.camera.position.clone(),
-        new THREE.Vector3(0.08, CAM_HEIGHT, 3.52),
+        new THREE.Vector3(...CAMPING_REFERENCE_COMPOSITION.entryPosition),
         this.currentLookTarget(),
-        new THREE.Vector3(0.12, 1.58, -0.4),
+        new THREE.Vector3(...CAMPING_REFERENCE_COMPOSITION.entryLookTarget),
         1650,
         () => this.dispatch({ type: "EXPLORE" }),
       );
@@ -1499,6 +1500,12 @@ export class CampingStudioEngine {
         const root = gltf.scene;
         root.name = "CAMPING / XOYENS STUDIO GLB";
         root.visible = this.phase !== "LOCKED" && this.phase !== "CODE_ENTRY" && this.phase !== "ACCESS_GRANTED";
+        const compositionReport = applyCampingReferenceComposition(root);
+        if (this.canvas) {
+          this.canvas.dataset.campingReferenceComposition = compositionReport.applied ? "applied" : "already-applied";
+          this.canvas.dataset.campingReferenceFixes = compositionReport.correctedNodes.join(",");
+          this.canvas.dataset.campingReferenceMissingNodes = compositionReport.missingNodes.join(",");
+        }
         this.prepareInnerDoorPivot(root);
         this.prepareArtistWallMounting(root);
         this.addSyndicateBanner(root);
@@ -1552,7 +1559,7 @@ export class CampingStudioEngine {
               if (detailKind && !textured.normalMap && !textured.bumpMap) {
                 const resolution = 1024;
                 textured.bumpMap = createSurfaceDetailMap(detailKind, resolution as 256 | 512 | 1024);
-                textured.bumpScale = detailKind === "wood" ? 0.018 : detailKind === "fabric" ? 0.012 : detailKind === "leather" ? 0.008 : 0.006;
+                textured.bumpScale = detailKind === "wood" ? 0.018 : detailKind === "fabric" ? 0.012 : detailKind === "leather" ? 0.008 : detailKind === "plaster" ? 0.0018 : 0.006;
                 if (detailKind === "wood") textured.bumpMap.repeat.set(1, 3);
                 else if (detailKind === "fabric") textured.bumpMap.repeat.set(3, 3);
                 else textured.bumpMap.repeat.set(2, 2);
@@ -1859,6 +1866,8 @@ export class CampingStudioEngine {
 
     const width = 5.25;
     const height = 2.78;
+    const sealWidth = 3.65;
+    const sealHeight = 2.3;
     const centerX = 3.95;
     const centerY = 1.82;
     const centerZ = -4.105;
@@ -1866,7 +1875,7 @@ export class CampingStudioEngine {
     const fabricSource = this.findStudioMaterial(root, "fabric");
     const fabric = fabricSource?.clone() ?? new THREE.MeshStandardMaterial({ color: 0x11100f, roughness: 0.96 });
     fabric.name = "CAMPING / black woven banner";
-    fabric.color.setHex(0x262523);
+    fabric.color.setHex(0x141414);
     fabric.roughness = 0.96;
     fabric.metalness = 0;
     fabric.side = THREE.DoubleSide;
@@ -1945,11 +1954,11 @@ export class CampingStudioEngine {
       }
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.anisotropy = Math.min(this.renderer?.capabilities.getMaxAnisotropy() ?? 1, 8);
-      if (sealPlaneRef.current) fitTexturedPlaneToImage(sealPlaneRef.current, texture, 3.0, 2.05);
+      if (sealPlaneRef.current) fitTexturedPlaneToImage(sealPlaneRef.current, texture, sealWidth, sealHeight);
       texture.needsUpdate = true;
     });
     const seal = new THREE.Mesh(
-      new THREE.PlaneGeometry(3.0, 2.05),
+      new THREE.PlaneGeometry(sealWidth, sealHeight),
       new THREE.MeshStandardMaterial({
         name: "CAMPING / official Sindicato banner print",
         map: sealTexture,
@@ -1968,7 +1977,7 @@ export class CampingStudioEngine {
     seal.position.set(centerX, centerY, centerZ + 0.072);
     seal.renderOrder = 4;
     sealPlaneRef.current = seal;
-    fitTexturedPlaneToImage(seal, sealTexture, 3.0, 2.05);
+    fitTexturedPlaneToImage(seal, sealTexture, sealWidth, sealHeight);
     root.add(seal);
   }
 
