@@ -52,7 +52,17 @@ async function openCamping(page: import("@playwright/test").Page) {
   });
   await page.goto("/camping");
   await expect(page.locator("main.camping-studio-route")).toBeVisible();
-  await expect(page.locator("canvas.camping-studio__canvas")).toBeVisible();
+  const canvas = page.locator("canvas.camping-studio__canvas");
+  await expect(canvas).toBeVisible();
+
+  // SSR can make the canvas visible before React's client layout effects mount
+  // the Three.js renderer and global keyboard handler. Wait for the renderer
+  // readiness marker or the accessible fallback before sending the 808 keys.
+  const fallback = page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]');
+  await expect.poll(async () => {
+    return (await canvas.getAttribute("data-camping-webgl-status")) === "ready" ||
+      await fallback.isVisible();
+  }, { timeout: 15_000 }).toBe(true);
 }
 
 test.describe("CAMPING V2 / 808 access", () => {
@@ -164,8 +174,7 @@ test.describe("CAMPING V2 / 808 access", () => {
     await expect(codeSlots).toHaveAttribute("aria-label", "Código introduzido: 80");
     await page.keyboard.press("8");
     await expect(page.locator(".camping-studio__transition")).toBeVisible({ timeout: 5_000 });
-    await expect(page.locator(".camping-studio__asset-state", {
-    })).toContainText("MODEL / READY", { timeout: 25_000 });
+    await expect(page.locator(".camping-studio__asset-state")).toContainText("MODEL / READY", { timeout: 25_000 });
     await expect(page.locator(".camping-studio__explore-state")).toContainText("EXPLORATION ACTIVE", { timeout: 20_000 });
     const canvas = page.locator("canvas.camping-studio__canvas");
     await expect(canvas).toHaveAttribute("data-camping-scene-status", "ready");
