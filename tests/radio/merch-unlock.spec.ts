@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { unlockSite } from "./site-gate";
 
 function wavBody(seconds = 12) {
   const sampleRate = 8000;
@@ -27,9 +28,6 @@ function wavBody(seconds = 12) {
 }
 
 test("Merch keeps products hidden until a listener plays a tape for ten seconds", async ({ page }) => {
-  await page.addInitScript(() => {
-    sessionStorage.setItem("sdt-open", "1");
-  });
 
   await page.route("**/rest/v1/**", async (route) => {
     await route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
@@ -46,6 +44,7 @@ test("Merch keeps products hidden until a listener plays a tape for ten seconds"
   await page.route(/\/audio\//, mockAudio);
 
   await page.goto("/merch");
+  await unlockSite(page);
   await expect(page.getByRole("heading", { name: "COFRE FECHADO" })).toBeVisible();
   await expect(page.getByText("HEAVYWEIGHT BOXY TEE", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "RESERVAR UNIDADE" })).toHaveCount(0);

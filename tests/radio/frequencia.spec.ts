@@ -11,6 +11,7 @@ const RADIO_SOURCES = [
 ];
 
 import { test, expect } from "@playwright/test";
+import { unlockSite } from "./site-gate";
 
 function wavBody(seconds = 1) {
   const sampleRate = 8000;
@@ -64,7 +65,6 @@ async function mockBackend(page: import("@playwright/test").Page) {
 
 async function openUnlocked(page: import("@playwright/test").Page) {
   await page.addInitScript((sources) => {
-    sessionStorage.setItem("sdt-open", "1");
     (window as Window & { __radioPlaySources?: string[] }).__radioPlaySources = [];
     const originalPlay = HTMLMediaElement.prototype.play;
     HTMLMediaElement.prototype.play = function () {
@@ -78,6 +78,7 @@ async function openUnlocked(page: import("@playwright/test").Page) {
   }, RADIO_SOURCES);
 
   await page.goto("/frequencia");
+  await unlockSite(page);
   await expect(page.getByRole("heading", { name: "FREQUÊNCIA 808" })).toBeVisible();
 }
 
@@ -122,9 +123,6 @@ test.describe("Frequência 808 browser smoke", () => {
 
 
   test("blocks legacy 30-second preview audio while radio is on air", async ({ page }) => {
-    await page.addInitScript(() => {
-      sessionStorage.setItem("sdt-open", "1");
-    });
     await page.route("**/rest/v1/**", async (route) => {
       await route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
     });
@@ -138,6 +136,7 @@ test.describe("Frequência 808 browser smoke", () => {
     });
 
     await page.goto("/frequencia");
+  await unlockSite(page);
     await expect(page.getByRole("heading", { name: "FREQUÊNCIA 808" })).toBeVisible();
     await expect.poll(async () => page.evaluate(() => navigator.mediaSession?.playbackState ?? "none")).toBe("playing");
 
@@ -161,9 +160,6 @@ test.describe("Frequência 808 browser smoke", () => {
   });
 
   test("keeps the radio alive with emergency static when a track fails", async ({ page }) => {
-    await page.addInitScript(() => {
-      sessionStorage.setItem("sdt-open", "1");
-    });
     await page.route("**/rest/v1/**", async (route) => {
       await route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
     });
@@ -172,6 +168,7 @@ test.describe("Frequência 808 browser smoke", () => {
     });
 
     await page.goto("/frequencia");
+  await unlockSite(page);
     await expect(page.getByRole("heading", { name: "FREQUÊNCIA 808" })).toBeVisible();
     await expect.poll(async () => await page.evaluate(() => navigator.mediaSession?.playbackState ?? "none"), { timeout: 15_000 }).toBe("playing");
     await expect(page.getByText("SINAL DE EMERGÊNCIA", { exact: true })).toBeVisible();

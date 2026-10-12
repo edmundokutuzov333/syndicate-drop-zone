@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { unlockSite } from "./site-gate";
 
 const ARTIST_PHOTO_URLS = [
   "/__l5e/assets-v1/3ca51b71-9b82-4727-9957-fd3763ba89e5/a01.jpg",
@@ -39,9 +40,6 @@ const PUBLISHED_ARTIST_FIXTURE = ARTIST_PHOTO_URLS.map((photo_url, index) => ({
 }));
 
 async function openCamping(page: import("@playwright/test").Page) {
-  await page.addInitScript(() => {
-    sessionStorage.setItem("sdt-open", "1");
-  });
   await page.route("**/rest/v1/**", async (route) => {
     const pathname = new URL(route.request().url()).pathname;
     await route.fulfill({
@@ -57,6 +55,7 @@ async function openCamping(page: import("@playwright/test").Page) {
   });
 
   await page.goto("/camping");
+  await unlockSite(page);
   await expect(page.locator("main.camping-studio-route")).toBeVisible();
   const canvas = page.locator("canvas.camping-studio__canvas");
   await expect(canvas).toBeVisible();
@@ -99,14 +98,12 @@ async function openCamping(page: import("@playwright/test").Page) {
 
 test.describe("CAMPING V2 / 808 access", () => {
   test("keeps the studio entry available when optional Supabase catalogues fail", async ({ page }) => {
-    await page.addInitScript(() => {
-      sessionStorage.setItem("sdt-open", "1");
-    });
     await page.route("**/rest/v1/**", async (route) => {
       await route.abort("failed");
     });
 
     await page.goto("/camping");
+    await unlockSite(page);
     await expect(page.locator("main.camping-studio-route")).toBeVisible();
     await expect(page.locator("canvas.camping-studio__canvas")).toBeVisible();
     await expect(
@@ -173,6 +170,7 @@ test.describe("CAMPING V2 / 808 access", () => {
   });
 
   test("accepts 808 and enters the loaded studio when WebGL is available", async ({ page }) => {
+    await page.setViewportSize({ width: 1774, height: 887 });
     await openCamping(page);
     if (await page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]').isVisible()) {
       test.skip(true, "O runtime Chromium deste job não disponibiliza WebGL.");

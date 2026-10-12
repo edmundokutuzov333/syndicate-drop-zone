@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { unlockSite } from "./site-gate";
 function createPhotoFixture(): Buffer {
   // A small valid SVG image avoids brittle hand-encoded PNG bytes in this browser test.
   return Buffer.from(
@@ -34,15 +35,11 @@ async function mockPublicBackend(page: Page) {
   });
 }
 
-async function unlock(page: Page) {
-  await page.addInitScript(() => { sessionStorage.setItem("sdt-open", "1"); });
-}
-
 test.describe("Cartão de Fã and public proposals", () => {
   test("creates a fan card with the required local photo and without contact or signature", async ({ page }) => {
-    await unlock(page);
     await mockPublicBackend(page);
     await page.goto("/filiar");
+    await unlockSite(page);
     await page.getByLabel("NOME OU APELIDO").fill("TESTE");
     await page.locator("#fan-photo").setInputFiles({
       name: "foto-teste.svg",
@@ -58,9 +55,9 @@ test.describe("Cartão de Fã and public proposals", () => {
   });
 
   test("submits sponsorship proposals through the backend RPC and confirms success", async ({ page }) => {
-    await unlock(page);
     await mockPublicBackend(page);
     await page.goto("/");
+    await unlockSite(page);
     await page.getByRole("button", { name: "Abrir proposta de parceria MASTER" }).click();
     const form = page.locator("#parcerias-form");
     await form.getByPlaceholder("Nome da marca / responsável").fill("Marca Teste");
