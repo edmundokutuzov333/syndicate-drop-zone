@@ -80,6 +80,13 @@ describe("CAMPING reference composition corrections", () => {
     const parquet = root.getObjectByName("studio.parquet")!;
     expect(parquet.scale.y).toBeCloseTo(CAMPING_REFERENCE_COMPOSITION.parquetScaleY);
     expect(parquet.position.y).toBeCloseTo(CAMPING_REFERENCE_COMPOSITION.parquetOffsetY);
+
+    const plaster = root.getObjectByName("studio.left-wall") as THREE.Mesh;
+    const plasterMaterial = plaster.material as THREE.MeshStandardMaterial;
+    expect(plasterMaterial.color.getHex()).toBe(CAMPING_REFERENCE_COMPOSITION.plasterColor);
+    expect(plasterMaterial.roughness).toBeGreaterThanOrEqual(0.9);
+    expect(plasterMaterial.normalScale.x).toBeCloseTo(0.12);
+    expect(plasterMaterial.normalScale.y).toBeCloseTo(0.12);
   });
 
   it("makes the photography surface matte black and shifts the rack away from the seal centre", () => {
