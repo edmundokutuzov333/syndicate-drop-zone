@@ -88,7 +88,9 @@ test.describe("CAMPING V2 / 808 access", () => {
     }
 
     await expect(page.getByRole("heading", { name: "808", exact: true })).toBeVisible();
-    await expect(page.locator(".camping-studio__room")).toHaveText("STUDIO XOYENS");
+    // The studio identity header is intentionally hidden until the visitor
+    // enters 808, keeping the pre-entry scene focused on the access panel.
+    await expect(page.locator(".camping-studio__header")).toHaveCount(0);
     await expect(page.locator(".camping-studio__access-panel")).toContainText("Código de acesso");
     await expect(page.locator(".camping-studio__access-panel")).not.toContainText("ENTRY PROTOCOL");
     await expect(page.locator(".camping-studio__access-panel")).not.toContainText("WASD / DRAG LOOK");
@@ -117,12 +119,15 @@ test.describe("CAMPING V2 / 808 access", () => {
       test.skip(true, "O runtime Chromium deste job não disponibiliza WebGL.");
     }
 
+    const codeSlots = page.locator(".camping-studio__code-slots");
     await page.getByRole("button", { name: "NAVEGAÇÃO GUIADA" }).focus();
     await page.keyboard.press("8");
+    await expect(codeSlots).toHaveAttribute("aria-label", "Código introduzido: 8");
     await page.keyboard.press("0");
+    await expect(codeSlots).toHaveAttribute("aria-label", "Código introduzido: 80");
     await page.keyboard.press("8");
-
-    await expect(page.locator(".camping-studio__status")).toContainText("EXPLORATION", { timeout: 30_000 });
+    await expect(page.locator(".camping-studio__transition")).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator(".camping-studio__explore-state")).toContainText("EXPLORATION ACTIVE", { timeout: 30_000 });
   });
 
   test("accepts 808 and enters the loaded studio when WebGL is available", async ({ page }) => {
@@ -151,12 +156,17 @@ test.describe("CAMPING V2 / 808 access", () => {
       }
     });
 
+    const codeSlots = page.locator(".camping-studio__code-slots");
     await page.locator("canvas.camping-studio__canvas").focus();
     await page.keyboard.press("8");
+    await expect(codeSlots).toHaveAttribute("aria-label", "Código introduzido: 8");
     await page.keyboard.press("0");
+    await expect(codeSlots).toHaveAttribute("aria-label", "Código introduzido: 80");
     await page.keyboard.press("8");
-    await expect(page.locator(".camping-studio__asset-state")).toContainText("MODEL / READY", { timeout: 25_000 });
-    await expect(page.locator(".camping-studio__status")).toContainText("EXPLORATION", { timeout: 20_000 });
+    await expect(page.locator(".camping-studio__transition")).toBeVisible({ timeout: 5_000 });
+    await expect(page.locator(".camping-studio__asset-state", {
+    })).toContainText("MODEL / READY", { timeout: 25_000 });
+    await expect(page.locator(".camping-studio__explore-state")).toContainText("EXPLORATION ACTIVE", { timeout: 20_000 });
     const canvas = page.locator("canvas.camping-studio__canvas");
     await expect(canvas).toHaveAttribute("data-camping-scene-status", "ready");
     await expect(canvas).toHaveAttribute("data-camping-scene-missing-nodes", "");
@@ -183,11 +193,15 @@ test.describe("CAMPING V2 / 808 access", () => {
     if (await page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]').isVisible()) {
       await page.getByRole("button", { name: "ABRIR REGISTOS PÚBLICOS" }).click();
     } else {
+      const codeSlots = page.locator(".camping-studio__code-slots");
       await page.locator("canvas.camping-studio__canvas").focus();
       await page.keyboard.press("8");
+      await expect(codeSlots).toHaveAttribute("aria-label", "Código introduzido: 8");
       await page.keyboard.press("0");
+      await expect(codeSlots).toHaveAttribute("aria-label", "Código introduzido: 80");
       await page.keyboard.press("8");
-        await expect(page.locator(".camping-studio__status")).toContainText("EXPLORATION", { timeout: 30_000 });
+      await expect(page.locator(".camping-studio__transition")).toBeVisible({ timeout: 5_000 });
+      await expect(page.locator(".camping-studio__explore-state")).toContainText("EXPLORATION ACTIVE", { timeout: 30_000 });
       await expect(page.getByRole("button", { name: "AVANÇAR" })).toBeVisible();
       await expect(page.getByRole("button", { name: "DIREITA" })).toBeVisible();
     }
