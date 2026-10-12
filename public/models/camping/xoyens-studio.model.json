@@ -696,7 +696,7 @@
     "Seventeen portrait slots remain empty until connected to the official roster; no artists are invented.",
     "Official logo and seal are referenced from existing managed assets.",
     "Single-panorama reconstruction is not survey-grade: hidden geometry and exact measurements need more references.",
-    "GLB is not yet mounted on /camping. First-person controller, collision, access 808 and runtime interactions belong to Phase 3 and later."
+    "The GLB is mounted and loaded on /camping. The 808 access, first-person controller, collision system and runtime object interactions are implemented; final visual/browser/device certification remains pending."
   ],
   "proceduralInteriorRooms": {
     "archive": {
@@ -825,7 +825,7 @@
     },
     "implementationCommit": "89d6525f925ec0544b072308866dd3453d377250",
     "publishedRuntimeCommit": "306c33f0d9804b7dca544cdcb43ff2e88921b7bb",
-    "status": "source-updated-publication-pending",
+    "status": "reference-composition-corrections-in-main; final-browser-certification-pending",
     "materials": {
       "reflections": "Three.js RoomEnvironment converted through PMREMGenerator",
       "sceneEnvironmentIntensity": {
@@ -833,11 +833,6 @@
         "other": 0.22
       },
       "anisotropicFiltering": "Up to 16x on high profile; up to 8x otherwise, capped by GPU capability",
-      "adaptiveShadowMap": {
-        "low": 512,
-        "balanced": 512,
-        "high": 2048
-      },
       "constraints": "Preserve the warm practical lights and keep reflections subtle to maintain black levels."
     },
     "interactionSafety": "The replaced hidden flat seal is excluded from raycast targets so the visible cloth banner is the unique photo-backdrop target.",
@@ -883,7 +878,38 @@
       "lowMaxDimension": 512,
       "source": "published artist photo_url",
       "strategy": "downsample on client before assigning the GPU texture; preserve frame aspect ratio with a centred crop"
+    },
+    "currentRendererProfile": {
+      "selection": "uniform max-quality profile in current main",
+      "pixelRatio": "native browser devicePixelRatio",
+      "antialias": true,
+      "shadowMapSize": 2048,
+      "powerPreference": "high-performance",
+      "certification": "real-device performance and visual validation pending"
+    },
+    "referenceCompositionCorrections": {
+      "source": "src/features/camping/scene/camping-reference-composition.ts",
+      "implementationCommits": [
+        "79d709f8fc7d60ffe1380b8cfe84fc0429562a48",
+        "ee47196cd76ad9add3915101f83ce0e2567c5a20",
+        "37ed8cb85033e824d0594bcdd096e7b1f46d9e0a",
+        "c81d13faf07800eabfd41a93447c4d502124f429",
+        "e61247d4109f41ecc2d55a1d8f2fc06aa34bd823",
+        "99ae33e51a4b5b19c7ade7aa49482b88af6a91b4",
+        "f093cd34d9753931c014e2c10bdbb2adc52ed71a"
+      ],
+      "changes": [
+        "Hide the obsolete flat ceiling panel while retaining the vaulted ceiling and curved arches.",
+        "Render the interior side of the vaulted ceiling.",
+        "Seat parquet boards on the floor slab with a lower vertical profile.",
+        "Use matte-black photography floor and backdrop materials.",
+        "Reduce procedural plaster relief intensity.",
+        "Increase the official seal size and move/narrow the clothing rack while updating its collider.",
+        "Adjust the initial post-808 camera pose while retaining first-person exploration.",
+        "Clone material assignments before local overrides to avoid changing unrelated meshes that share GLB materials."
+      ],
+      "status": "implemented-in-main; latest Vercel deployment and browser pixel comparison not yet confirmed"
     }
   },
-  "auditUpdatedAt": "2026-10-10"
+  "auditUpdatedAt": "2026-10-12"
 }
