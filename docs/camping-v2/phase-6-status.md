@@ -88,3 +88,19 @@ Não houve alterações de schema, migrações, dados de produção, RLS, Auth o
 - Browser: a URL de preview e a rota pública `/camping` não ficaram acessíveis à ferramenta de browser usada nesta execução. A revisão visual em pixels continua pendente.
 
 A Fase 6 permanece aberta até confirmar os testes automatizados no commit final, inspeccionar visualmente a cena com o código 808, validar as 17 fotografias e os assets oficiais, e confirmar que o deployment publicado contém o mesmo SHA da `main`.
+
+
+## Actualização de renderização e materiais · 2026-10-12
+
+A implementação do renderer foi refinada sem substituir o motor Three.js nem alterar rotas, autenticação, RLS, tabelas, rádio, Control Room ou contratos de backend.
+
+- O renderer mantém o perfil de qualidade único, antialiasing e sombras de 2048 px, mas limita a resolução interna efectiva a um pixel ratio máximo de 2. O limite reduz o custo de pixels por frame em ecrãs com DPR 3x/4x sem seleccionar perfis Low/Balanced por dispositivo.
+- A resposta do environment map é agora diferenciada por família de material. Estuque e tecido ficam mais mate, madeira mantém reflexos controlados, couro conserva um brilho moderado e ecrãs/logótipos recebem reflexão mínima. A configuração limita o metalness em materiais de madeira, tecido e estuque sem substituir os mapas PBR existentes.
+- Atribuição de sombras por objecto: pavimento deixa de projectar sombras sobre si próprio, elementos planos decorativos não recebem/cast shadows desnecessariamente, e mobiliário, paredes, tecto e banner mantêm as sombras relevantes. A luz direccional usa bias e normal bias explícitos para reduzir acne e melhorar contactos.
+- A textura procedural de relevo passa de 1024 para 512 px. A filtragem anisotrópica dos materiais do GLB fica limitada a 8x, mantendo filtragem mipmap. As cores âmbar foram preservadas, com redução moderada das fontes de preenchimento e reflexão global para evitar superfícies demasiado lavadas.
+- O canvas publica métricas observáveis a cada janela de aproximadamente um segundo: FPS da cadência do requestAnimationFrame, média e máximo de tempo CPU por frame, draw calls, triângulos, geometrias, texturas e pixel ratio efectivo. O tempo CPU não deve ser apresentado como tempo GPU; uma medição GPU exacta exige um profiler.
+- O teste Playwright da entrada CAMPING recolhe estas métricas e anexa um JSON ao resultado. A certificação de desempenho só pode ser fechada quando o workflow for executado e os valores do browser forem inspeccionados.
+
+Os testes existentes do perfil mantêm o contrato de qualidade único. Foram acrescentados testes determinísticos ao limite de pixel ratio, aos valores de materiais por família e às políticas de sombras. Não foram introduzidos dados sintéticos na produção nem feitas alterações à base de dados.
+
+**Validação pendente:** aguardar os resultados do CI e da publicação para o commit que contém as métricas do browser; rever o anexo JSON produzido pelo Playwright; confirmar visualmente o equilíbrio de luz e o aspecto PBR em /camping. Nenhum FPS, tempo de GPU ou resultado de dispositivo físico é declarado sem medição real.
