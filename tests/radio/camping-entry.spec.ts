@@ -252,7 +252,7 @@ test.describe("CAMPING V2 / 808 access", () => {
 
     // Capture actual browser runtime counters. CPU frame time is diagnostic only;
     // GPU frame time requires a profiler and is not inferred from these values.
-    await expect(canvas).toHaveAttribute("data-camping-perf-fps", /^\\d+(?:\\.\\d+)?$/, { timeout: 12_000 });
+    await expect(canvas).toHaveAttribute("data-camping-perf-fps", /^\d+(?:\.\d+)?$/, { timeout: 12_000 });
     const renderStats = await canvas.evaluate((element) => ({
       pixelRatio: element.getAttribute("data-camping-render-pixel-ratio"),
       fps: element.getAttribute("data-camping-perf-fps"),
