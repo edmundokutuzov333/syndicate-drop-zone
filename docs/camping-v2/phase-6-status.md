@@ -60,3 +60,31 @@ O projecto Lovable reporta `status=ready` e `latest_commit_sha=51a3b627`, com sc
 5. Activar leaked-password protection nas definições de Auth do Supabase antes da certificação de segurança completa.
 
 **Conclusão:** a optimização adaptativa e a suspensão de renderização em segundo plano foram implementadas e o commit de runtime foi publicado. A Fase 6 continua aberta até os testes automatizados, a validação visual cross-device, a sincronização de publicação e os gates de segurança terem evidência independente.
+
+
+## Actualização de execução · 2026-10-12
+
+Foi implementada uma primeira correcção concreta da composição com o helper `src/features/camping/scene/camping-reference-composition.ts`, integrado no carregamento do GLB. Esta intervenção preserva o motor, a rota `/camping`, o código 808, as portas, as interacções, o roster real de 17 artistas, o Control Room e os serviços actuais.
+
+Alterações incluídas na `main`:
+- Suprimir o painel horizontal plano de tecto e expor as faces interiores da abóbada.
+- Reduzir a altura visual do parquet e assentar as tábuas sobre o pavimento existente.
+- Aplicar acabamento mate preto ao chão fotográfico e escurecer o pano original.
+- Ampliar o selo oficial e reposicionar/reduzir o stand.
+- Reduzir a intensidade do relevo procedural do estuque e alterar o enquadramento inicial pós-808.
+- Actualizar o colisor de movimento para acompanhar a posição real do stand.
+- Adicionar testes de contrato de composição e um teste de folga lateral do colisor.
+
+Commits da intervenção: `79d709f8fc7d60ffe1380b8cfe84fc0429562a48`, `ee47196cd76ad9add3915101f83ce0e2567c5a20`, `37ed8cb85033e824d0594bcdd096e7b1f46d9e0a`, `c81d13faf07800eabfd41a93447c4d502124f429` e `e61247d4109f41ecc2d55a1d8f2fc06aa34bd823`.
+
+Não houve alterações de schema, migrações, dados de produção, RLS, Auth ou contratos de backend. A base de dados e o Control Room foram deixados intactos.
+
+### Estado após a alteração
+
+- GitHub `main`: contém a alteração de geometria runtime e os testes.
+- Lovable: sincronizado pelo menos até `c81d13f` na última consulta; é necessário confirmar a sincronização final de `e61247d`.
+- Vercel: o check foi observado como `pending`, com deployment de produção em `QUEUED/BUILDING`; ainda não há confirmação de estado `READY` para o HEAD mais recente.
+- CI GitHub Actions: o conector consultado não devolveu runs de push para o SHA verificado. Não declarar Vitest, lint, build ou Playwright aprovados sem os seus logs.
+- Browser: a URL de preview e a rota pública `/camping` não ficaram acessíveis à ferramenta de browser usada nesta execução. A revisão visual em pixels continua pendente.
+
+A Fase 6 permanece aberta até confirmar os testes automatizados no commit final, inspeccionar visualmente a cena com o código 808, validar as 17 fotografias e os assets oficiais, e confirmar que o deployment publicado contém o mesmo SHA da `main`.
