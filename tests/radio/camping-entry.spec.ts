@@ -50,19 +50,51 @@ async function openCamping(page: import("@playwright/test").Page) {
       body: pathname.endsWith("/artists") ? JSON.stringify(PUBLISHED_ARTIST_FIXTURE) : "[]",
     });
   });
+  const browserDiagnostics: string[] = [];
+  page.on("pageerror", (error) => browserDiagnostics.push("pageerror: " + error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") browserDiagnostics.push("console: " + message.text());
+  });
+
   await page.goto("/camping");
   await expect(page.locator("main.camping-studio-route")).toBeVisible();
   const canvas = page.locator("canvas.camping-studio__canvas");
   await expect(canvas).toBeVisible();
 
   // SSR can make the canvas visible before React's client layout effects mount
-  // the Three.js renderer and global keyboard handler. Wait for the renderer
-  // readiness marker or the accessible fallback before sending the 808 keys.
+  // the Three.js renderer and global keyboard handler. Wait for any explicit
+  // renderer outcome, not only "ready", so startup failures are diagnosed and
+  // the test can assert the accessible recovery UI rather than timing out.
   const fallback = page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]');
-  await expect.poll(async () => {
-    return (await canvas.getAttribute("data-camping-webgl-status")) === "ready" ||
-      await fallback.isVisible();
-  }, { timeout: 15_000 }).toBe(true);
+  try {
+    await expect.poll(async () => {
+      const status = await canvas.getAttribute("data-camping-webgl-status");
+      return Boolean(status) || await fallback.isVisible();
+    }, { timeout: 15_000 }).toBe(true);
+  } catch (error) {
+    const diagnostics = await page.evaluate(() => {
+      const canvasElement = document.querySelector("canvas.camping-studio__canvas");
+      return {
+        url: location.href,
+        gate: document.documentElement.dataset.gate ?? null,
+        rootReady: Boolean(document.querySelector("#site")),
+        canvasAttributes: canvasElement ? Array.from(canvasElement.attributes).map((attribute) => ({
+          name: attribute.name,
+          value: attribute.value,
+        })) : [],
+        fallbackVisible: Boolean(document.querySelector('.camping-studio__fallback[aria-label="Acesso alternativo"]')),
+        bodyText: (document.body.innerText || "").slice(0, 1200),
+      };
+    });
+    console.log("CAMPING STARTUP DIAGNOSTICS", JSON.stringify({ diagnostics, browserDiagnostics }));
+    await page.screenshot({ path: "test-results/camping-startup-diagnostic.png" }).catch(() => undefined);
+    throw error;
+  }
+
+  const status = await canvas.getAttribute("data-camping-webgl-status");
+  if (status && status !== "ready") {
+    await expect(fallback).toBeVisible();
+  }
 }
 
 test.describe("CAMPING V2 / 808 access", () => {
@@ -185,6 +217,8 @@ test.describe("CAMPING V2 / 808 access", () => {
     await expect(canvas).toHaveAttribute("data-camping-portraits-requested", "17");
     await expect(canvas).toHaveAttribute("data-camping-portraits-loaded", "17");
     await expect(canvas).toHaveAttribute("data-camping-portraits-complete", "true");
+    await page.screenshot({ path: "test-results/camping-reference-full-ui.png" });
+    await canvas.screenshot({ path: "test-results/camping-reference-canvas.png" });
     expect(glbResponses).toContain(200);
     expect(portraitResponses.size).toBe(17);
     expect([...portraitResponses.values()].every((status) => status === 200)).toBe(true);

@@ -84,3 +84,16 @@ jobs:
 
       - name: Radio browser smoke tests
         run: npm run test:e2e
+
+      - name: Upload CAMPING visual and failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: camping-visual-evidence-${{ github.sha }}
+          path: |
+            test-results/camping-reference-full-ui.png
+            test-results/camping-reference-canvas.png
+            test-results/camping-startup-diagnostic.png
+            test-results/**/error-context.md
+          if-no-files-found: ignore
+          retention-days: 3
