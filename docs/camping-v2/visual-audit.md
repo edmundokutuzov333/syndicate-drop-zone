@@ -115,7 +115,7 @@ Foi feita uma correcção concreta na `main`, sem substituir o GLB por uma image
 - O tecto abobadado e as nervuras passam a renderizar as faces interiores com materiais double-sided, evitando que as normais orientadas para fora criem zonas escuras vistas do interior.
 - O parquet mantém a disposição de madeira do GLB, mas o perfil vertical é reduzido e assenta no topo do pavimento, para eliminar a sensação de tábuas suspensas.
 - O chão e o pano da zona de fotografia recebem materiais muito escuros e mate. O selo original do Sindicato aumenta de 3,0 × 2,05 m para uma caixa máxima de 3,65 × 2,3 m, mantendo a proporção da imagem oficial.
-- O relevo procedural de estuque passa a ter intensidade mais baixa. O tom das paredes fica orientado para creme quente, sem adicionar novos assets ou substituir a textura original.
+- O relevo procedural de estuque passa a ter intensidade mais baixa, e o mapa de normais original do material `plaster` baixa de escala 0,45 para 0,12. O tom das paredes fica orientado para creme quente, sem adicionar novos assets ou substituir a textura original.
 - O stand é deslocado para a esquerda e reduzido horizontalmente para que a área central do selo fique mais legível. O colisor de movimento acompanha a nova largura e posição.
 - A primeira transição após o código 808 enquadra a sala um pouco mais atrás e com um ângulo ligeiramente mais elevado, mostrando melhor a abóbada sem eliminar a exploração em primeira pessoa.
 
