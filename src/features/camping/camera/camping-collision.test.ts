@@ -22,6 +22,8 @@ describe("Xoyens studio movement collision", () => {
   it("prevents crossing the sofa, rack and photo backdrop", () => {
     expect(canOccupyStudio({ x: -5.5, z: 1.5 }, cfg)).toBe(false);
     expect(canOccupyStudio({ x: 3.1, z: -1.5 }, cfg)).toBe(false);
+    // The rack moved left and narrowed; the outer-right aisle must now be walkable.
+    expect(canOccupyStudio({ x: 4.35, z: -1.5 }, cfg)).toBe(true);
     expect(canOccupyStudio({ x: 4, z: -4.1 }, cfg)).toBe(false);
   });
 
