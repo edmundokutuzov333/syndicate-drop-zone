@@ -43,12 +43,22 @@ function materialsOf(object: THREE.Object3D): THREE.Material[] {
       : [];
 }
 
+function isolateMaterials(object: THREE.Object3D): THREE.Material[] {
+  if (!(object instanceof THREE.Mesh)) return [];
+  if (Array.isArray(object.material)) {
+    object.material = object.material.map((material) => material.clone());
+  } else if (object.material) {
+    object.material = object.material.clone();
+  }
+  return materialsOf(object);
+}
+
 function tuneMaterial(
   object: THREE.Object3D | null,
   values: { color?: number; roughness?: number; metalness?: number; envMapIntensity?: number },
 ): boolean {
   if (!object) return false;
-  const materials = materialsOf(object);
+  const materials = isolateMaterials(object);
   if (!materials.length) return false;
 
   for (const material of materials) {
@@ -97,7 +107,7 @@ export function applyCampingReferenceComposition(root: THREE.Object3D): Composit
   for (const name of ["studio.vaulted-timber-ceiling", "studio.ceiling-arches"]) {
     const object = root.getObjectByName(name);
     if (!object) continue;
-    for (const material of materialsOf(object)) {
+    for (const material of isolateMaterials(object)) {
       material.side = THREE.DoubleSide;
       material.needsUpdate = true;
     }
@@ -138,7 +148,7 @@ export function applyCampingReferenceComposition(root: THREE.Object3D): Composit
       metalness: 0,
       envMapIntensity: 0.06,
     });
-    for (const material of materialsOf(photoBackdrop)) {
+    for (const material of isolateMaterials(photoBackdrop)) {
       material.side = THREE.DoubleSide;
       material.needsUpdate = true;
     }
@@ -151,7 +161,7 @@ export function applyCampingReferenceComposition(root: THREE.Object3D): Composit
   for (const name of ["studio.left-wall", "studio.right-wall", "studio.back-wall"]) {
     const wall = root.getObjectByName(name);
     if (!wall) continue;
-    for (const material of materialsOf(wall)) {
+    for (const material of isolateMaterials(wall)) {
       const standard = material as THREE.MeshStandardMaterial;
       if (standard.name.toLowerCase().includes("plaster")) {
         if (standard.color?.isColor) standard.color.setHex(CAMPING_REFERENCE_COMPOSITION.plasterColor);
