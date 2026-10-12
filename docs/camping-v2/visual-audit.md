@@ -105,3 +105,20 @@ A navegação guiada, os registos e os controlos mobile continuam disponíveis p
 5. Medir FPS, memória e carregamento em Chrome desktop, Safari/iPhone e Android. Nenhuma medição em dispositivo físico foi realizada.
 
 **Conclusão:** as faltas visuais identificadas foram tratadas no código, e o runtime agora aguarda pelas tentativas de carregar os retratos antes de abrir a experiência. A correspondência com a referência está melhorada, mas a certificação de hiper-realismo e a publicação integral continuam pendentes da inspecção interactiva e dos testes executados num browser real.
+
+
+## Correcção de composição runtime · 2026-10-12
+
+Foi feita uma correcção concreta na `main`, sem substituir o GLB por uma imagem e sem alterar tabelas ou contratos do Supabase. O modelo original continua a fornecer a geometria principal; os ajustes estão isolados em `src/features/camping/scene/camping-reference-composition.ts` e são aplicados uma única vez quando o GLB é carregado.
+
+- O painel plano `studio.ceiling-cross-beams`, que ocupava a zona inferior da abóbada e criava uma faixa horizontal visualmente pesada, fica oculto. As nervuras curvas existentes mantêm-se visíveis.
+- O tecto abobadado e as nervuras passam a renderizar as faces interiores com materiais double-sided, evitando que as normais orientadas para fora criem zonas escuras vistas do interior.
+- O parquet mantém a disposição de madeira do GLB, mas o perfil vertical é reduzido e assenta no topo do pavimento, para eliminar a sensação de tábuas suspensas.
+- O chão e o pano da zona de fotografia recebem materiais muito escuros e mate. O selo original do Sindicato aumenta de 3,0 × 2,05 m para uma caixa máxima de 3,65 × 2,3 m, mantendo a proporção da imagem oficial.
+- O relevo procedural de estuque passa a ter intensidade mais baixa. O tom das paredes fica orientado para creme quente, sem adicionar novos assets ou substituir a textura original.
+- O stand é deslocado para a esquerda e reduzido horizontalmente para que a área central do selo fique mais legível. O colisor de movimento acompanha a nova largura e posição.
+- A primeira transição após o código 808 enquadra a sala um pouco mais atrás e com um ângulo ligeiramente mais elevado, mostrando melhor a abóbada sem eliminar a exploração em primeira pessoa.
+
+A intervenção foi versionada em commits normais na `main`: `79d709f`, `ee47196`, `37ed8cb`, `c81d13f` e `e61247d`. Foram acrescentados testes de contrato para o perfil do parquet, a face interior do tecto, o fundo preto, a posição do stand e a idempotência dos ajustes; o teste de colisão verifica também a passagem livre à direita do stand.
+
+**Estado de validação:** a verificação automatizada do código e a inspeção visual em browser ainda não têm um resultado final confirmado neste registo. O deployment Vercel do commit mais recente estava em fila/construção durante a auditoria, e a URL de preview não ficou acessível à ferramenta de browser usada. A correcção está na `main`, mas não declaro equivalência visual completa até se inspeccionar a captura real da nova versão e concluir os testes de browser.
