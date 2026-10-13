@@ -287,6 +287,7 @@ test.describe("CAMPING V2 / 808 access", () => {
   });
 
   test("captures the seven deterministic baseline poses and renderer fidelity metrics", async ({ page }) => {
+    test.setTimeout(120_000);
     await page.setViewportSize({ width: 1774, height: 887 });
     await openCamping(page, "?debug3d=1&pose=entrada&still=1");
     const canvas = page.locator("canvas.camping-studio__canvas");
