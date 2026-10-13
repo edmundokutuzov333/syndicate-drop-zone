@@ -29,6 +29,7 @@ import { getLiveSiteConfig } from "@/lib/site-content";
 import { getDelegates } from "@/lib/membership";
 import { buildRouteSeo } from "@/lib/seo";
 import { frequency } from "@/lib/frequency";
+import { tape } from "@/lib/tape-engine";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   loader: async () => ({ site: await getLiveSiteConfig() }),
@@ -181,10 +182,13 @@ function LightModeToggle() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const isImmersiveSurface = useRouterState({
-    select: (state) =>
-      state.location.pathname.startsWith("/camera") ||
-      state.location.pathname.startsWith("/camping"),
+  const { isImmersiveSurface, isCameraSurface } = useRouterState({
+    select: (state) => ({
+      isImmersiveSurface:
+        state.location.pathname.startsWith("/camera") ||
+        state.location.pathname.startsWith("/camping"),
+      isCameraSurface: state.location.pathname.startsWith("/camera"),
+    }),
   });
   const [open, setOpen] = useState(false);
   const { site } = Route.useLoaderData();
@@ -201,9 +205,15 @@ function RootComponent() {
   }, []);
 
   useEffect(() => {
+    if (isCameraSurface) {
+      // The capture workspace must be silent, even if either radio source was playing.
+      frequency.stop();
+      tape.stop();
+      return;
+    }
     if (!open) return;
     void frequency.autoStart();
-  }, [open]);
+  }, [open, isCameraSurface]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -233,7 +243,7 @@ function RootComponent() {
             <DelegatesFooter />
           </footer>
         )}
-        <MiniPlayer />
+        {!isCameraSurface && <MiniPlayer />}
         <Toaster />
       </div>
     </QueryClientProvider>
