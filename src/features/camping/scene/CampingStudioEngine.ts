@@ -38,6 +38,10 @@ import { applyCampingReferenceComposition, CAMPING_REFERENCE_COMPOSITION } from 
 import { frequency } from "@/lib/frequency";
 import { DynamicResolution } from "../v3/dynamic-resolution";
 import { createDawScreen } from "../v3/screen-texture";
+import { renderEquirect, rgbaToDataUrl, createDifferenceImage } from "../v3/refmatch";
+import { referenceMatchScore, sectorStats, type Rgba } from "../v3/sector-stats";
+import { REFERENCE_SECTOR_STATS, REFERENCE_SOURCE_SHA256 } from "../v3/reference-sector-baseline";
+import type { CampingDebugMetrics, CampingDebugPoseId, CampingReferenceMatch } from "../v3/debug-api";
 
 function fitTexturedPlaneToImage(mesh: THREE.Mesh, texture: THREE.Texture, maxWidth: number, maxHeight: number): void {
   const image = texture.image as { width?: number; height?: number } | undefined;
@@ -508,6 +512,66 @@ function labelTexture(label: string): THREE.CanvasTexture {
   });
 }
 
+const CAMPING_DEBUG_POSES: Record<CampingDebugPoseId, { position: [number, number, number]; look: [number, number, number] }> = {
+  entrada: {
+    position: [...CAMPING_REFERENCE_COMPOSITION.entryPosition],
+    look: [...CAMPING_REFERENCE_COMPOSITION.entryLookTarget],
+  },
+  producao: { position: [0.12, CAM_HEIGHT, -2.05], look: [-2.25, 1.75, -3.72] },
+  foto: { position: [6.05, CAM_HEIGHT, 0.38], look: [3.95, 1.8, -4.18] },
+  esquerda: { position: [-5.7, CAM_HEIGHT, 0.45], look: [-3.2, 1.72, -2.7] },
+  direita: { position: [5.95, CAM_HEIGHT, 1.2], look: [6.45, 1.7, -2.0] },
+  tecto: { position: [0.1, CAM_HEIGHT, 2.9], look: [0.1, 4.2, -1.4] },
+  chao: { position: [0.1, CAM_HEIGHT, 2.9], look: [0.1, 0.03, -1.4] },
+};
+
+const CAMPING_TEXTURE_MATERIAL_KEYS = [
+  "map", "normalMap", "roughnessMap", "metalnessMap", "emissiveMap",
+  "bumpMap", "aoMap", "alphaMap", "envMap", "lightMap",
+] as const;
+
+function estimateCampingTextureBytes(scene: THREE.Scene): number {
+  const textures = new Set<THREE.Texture>();
+  scene.traverse((object) => {
+    const mesh = object as THREE.Mesh;
+    if (!mesh.isMesh) return;
+    const materials = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : [];
+    for (const material of materials) {
+      const values = material as unknown as Record<string, unknown>;
+      for (const key of CAMPING_TEXTURE_MATERIAL_KEYS) {
+        const value = values[key];
+        if (value instanceof THREE.Texture) textures.add(value);
+      }
+    }
+  });
+
+  let bytes = 0;
+  for (const texture of textures) {
+    const compressed = texture as THREE.CompressedTexture;
+    if (compressed.isCompressedTexture && Array.isArray(compressed.mipmaps) && compressed.mipmaps.length) {
+      bytes += compressed.mipmaps.reduce((sum, mip) => sum + (mip.data?.byteLength ?? 0), 0);
+      continue;
+    }
+    const image = (texture.image ?? texture.source?.data) as
+      | { width?: number; height?: number; data?: { byteLength?: number; length?: number } }
+      | undefined;
+    const width = image?.width ?? 0;
+    const height = image?.height ?? 0;
+    if (width <= 0 || height <= 0) {
+      bytes += image?.data?.byteLength ?? 0;
+      continue;
+    }
+    const channels = texture.format === THREE.RedFormat ? 1
+      : texture.format === THREE.RGFormat ? 2
+      : texture.format === THREE.RGBFormat ? 3 : 4;
+    const bytesPerChannel = texture.type === THREE.FloatType ? 4
+      : texture.type === THREE.HalfFloatType ? 2 : 1;
+    const mipFactor = texture.generateMipmaps ? 4 / 3 : 1;
+    bytes += width * height * channels * bytesPerChannel * mipFactor;
+  }
+  return bytes;
+}
+
 export class CampingStudioEngine {
   private readonly callbacks: EngineCallbacks;
   private canvas: HTMLCanvasElement | null = null;
@@ -518,6 +582,12 @@ export class CampingStudioEngine {
   private baseRenderPixelRatio = 1;
   private dawScreen: ReturnType<typeof createDawScreen> | null = null;
   private lastDawScreenDrawAt = 0;
+  private debugFrozen = false;
+  private debugRequestedPose: CampingDebugPoseId | null = null;
+  private debugAppliedPose: CampingDebugPoseId | null = null;
+  private debugReferenceImage: Rgba | null = null;
+  private debugReferenceDataUrl: string | null = null;
+  private performanceFps = 0;
   private artistDataPromise: ReturnType<typeof getLiveArtistsForSite> | null = null;
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(68, 1, 0.05, 70);
@@ -688,6 +758,11 @@ export class CampingStudioEngine {
 
   dispose(): void {
     this.disposed = true;
+    this.debugFrozen = false;
+    this.debugRequestedPose = null;
+    this.debugAppliedPose = null;
+    this.debugReferenceImage = null;
+    this.debugReferenceDataUrl = null;
     if (this.animationFrame) window.cancelAnimationFrame(this.animationFrame);
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
@@ -1061,18 +1136,138 @@ export class CampingStudioEngine {
     this.loadStudio();
   }
 
+  debugIsReady(): boolean {
+    return Boolean(
+      this.renderer &&
+      this.studioLoaded &&
+      this.phase === "EXPLORATION" &&
+      this.currentRoom === "studio" &&
+      !this.tween &&
+      !this.debugRequestedPose &&
+      (!new URLSearchParams(window.location.search).get("pose") ||
+        this.debugAppliedPose === new URLSearchParams(window.location.search).get("pose")),
+    );
+  }
+
+  debugRequestPose(id: CampingDebugPoseId | null): void {
+    if (!id || !(id in CAMPING_DEBUG_POSES)) return;
+    this.debugFrozen = false;
+    this.debugAppliedPose = null;
+    this.debugRequestedPose = id;
+    this.startFrameLoop();
+  }
+
+  debugFreeze(): void {
+    this.debugFrozen = true;
+    if (this.animationFrame) window.cancelAnimationFrame(this.animationFrame);
+    this.animationFrame = 0;
+    if (this.renderer) this.renderer.render(this.scene, this.camera);
+    if (this.canvas) this.canvas.dataset.campingDebugFrozen = "true";
+  }
+
+  debugMetrics(): CampingDebugMetrics | null {
+    const renderer = this.renderer;
+    if (!renderer || !this.canvas) return null;
+    return {
+      triangles: renderer.info.render.triangles,
+      drawCalls: renderer.info.render.calls,
+      textureMB: Number((estimateCampingTextureBytes(this.scene) / (1024 * 1024)).toFixed(2)),
+      geometries: renderer.info.memory.geometries,
+      textures: renderer.info.memory.textures,
+      fps: Number((this.performanceFps || Number(this.canvas.dataset.campingPerfFps) || 0).toFixed(1)),
+      pixelRatio: Number(renderer.getPixelRatio().toFixed(3)),
+      pose: this.debugAppliedPose,
+    };
+  }
+
+  debugSetPose(id: CampingDebugPoseId): boolean {
+    const applied = this.applyDebugPose(id, true);
+    if (applied && new URLSearchParams(window.location.search).get("still") === "1") this.debugFreeze();
+    return applied;
+  }
+
+  async debugSetReferenceImage(dataUrl: string): Promise<boolean> {
+    if (!dataUrl.startsWith("data:image/")) return false;
+    const image = new Image();
+    image.decoding = "async";
+    image.src = dataUrl;
+    try {
+      await image.decode();
+    } catch {
+      return false;
+    }
+    if (image.naturalWidth !== 1774 || image.naturalHeight !== 887) return false;
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) return false;
+    context.drawImage(image, 0, 0);
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    this.debugReferenceImage = { data: pixels.data, width: canvas.width, height: canvas.height };
+    this.debugReferenceDataUrl = dataUrl;
+    return true;
+  }
+
+  debugReferenceMatch(): CampingReferenceMatch {
+    if (!this.renderer || this.disposed) return { score: null, worst: [], error: "Renderer 3D indisponível." };
+    try {
+      const rendered = renderEquirect(this.renderer, this.scene, this.camera.position, 1774, 887, 1024);
+      const expected = this.debugReferenceImage ? sectorStats(this.debugReferenceImage) : REFERENCE_SECTOR_STATS;
+      const result = referenceMatchScore(expected, sectorStats(rendered));
+      const match: CampingReferenceMatch = {
+        score: result.score,
+        worst: result.worst,
+        renderedDataUrl: rgbaToDataUrl(rendered),
+        referenceSourceSha256: REFERENCE_SOURCE_SHA256,
+      };
+      if (this.debugReferenceImage && this.debugReferenceDataUrl) {
+        match.referenceDataUrl = this.debugReferenceDataUrl;
+        match.diffDataUrl = rgbaToDataUrl(createDifferenceImage(this.debugReferenceImage, rendered, 4));
+      }
+      return match;
+    } catch (error) {
+      return {
+        score: null,
+        worst: [],
+        error: error instanceof Error ? error.message : "Falha na captura de fidelidade.",
+      };
+    }
+  }
+
+  private applyDebugPose(id: CampingDebugPoseId, renderNow: boolean): boolean {
+    const pose = CAMPING_DEBUG_POSES[id];
+    if (!pose || !this.renderer || !this.studioLoaded || this.phase !== "EXPLORATION" || this.currentRoom !== "studio") return false;
+    this.keyState.clear();
+    this.virtualState.clear();
+    this.tween = null;
+    this.focusReturn = null;
+    this.roomTransitioning = false;
+    this.roomDoorMotion = null;
+    this.camera.position.set(...pose.position);
+    const direction = new THREE.Vector3(...pose.look).sub(this.camera.position).normalize();
+    this.yaw = Math.atan2(-direction.x, -direction.z);
+    this.pitch = Math.asin(THREE.MathUtils.clamp(direction.y, -1, 1));
+    this.camera.rotation.order = "YXZ";
+    this.camera.rotation.set(this.pitch, this.yaw, 0, "YXZ");
+    this.debugAppliedPose = id;
+    this.debugRequestedPose = null;
+    if (this.canvas) this.canvas.dataset.campingDebugPose = id;
+    if (renderNow) this.renderer.render(this.scene, this.camera);
+    return true;
+  }
+
   private startFrameLoop(): void {
-    if (this.disposed || this.webglFailed || !this.renderer || document.hidden || this.animationFrame) return;
+    if (this.disposed || this.webglFailed || this.debugFrozen || !this.renderer || document.hidden || this.animationFrame) return;
     this.animationFrame = window.requestAnimationFrame(this.tick);
   }
 
   private readonly tick = (now: number) => {
     this.animationFrame = 0;
-    if (this.disposed || this.webglFailed || !this.renderer || document.hidden) {
+    if (this.disposed || this.webglFailed || this.debugFrozen || !this.renderer || document.hidden) {
       this.lastFrameAt = now;
       return;
     }
-    this.animationFrame = window.requestAnimationFrame(this.tick);
     const frameStartedAt = performance.now();
 
     this.advanceRoomDoorMotion(now);
@@ -1085,6 +1280,9 @@ export class CampingStudioEngine {
     this.advanceAccessSequence(now);
     this.advanceDoor(now);
     this.advanceTween(now);
+    if (this.debugRequestedPose && this.phase === "EXPLORATION" && this.studioLoaded && this.currentRoom === "studio") {
+      this.applyDebugPose(this.debugRequestedPose, false);
+    }
     this.advanceMovement(delta);
     this.camera.position.y = CAM_HEIGHT;
     this.camera.rotation.order = "YXZ";
@@ -1096,6 +1294,7 @@ export class CampingStudioEngine {
     this.renderer.render(this.scene, this.camera);
     this.advanceTransientMessage(now);
     this.publishRenderDiagnostics(now, performance.now() - frameStartedAt);
+    if (!this.debugFrozen) this.animationFrame = window.requestAnimationFrame(this.tick);
   };
 
   private publishRenderDiagnostics(timestamp: number, frameCpuMs: number): void {
@@ -1111,7 +1310,8 @@ export class CampingStudioEngine {
     const elapsed = timestamp - this.performanceWindowStart;
     if (elapsed < 1000) return;
 
-    canvas.dataset.campingPerfFps = (this.performanceFrameCount * 1000 / elapsed).toFixed(1);
+    this.performanceFps = this.performanceFrameCount * 1000 / elapsed;
+    canvas.dataset.campingPerfFps = this.performanceFps.toFixed(1);
     canvas.dataset.campingPerfCpuFrameMsAvg = (this.performanceCpuTotalMs / this.performanceFrameCount).toFixed(2);
     canvas.dataset.campingPerfCpuFrameMsMax = this.performanceCpuMaxMs.toFixed(2);
     canvas.dataset.campingPerfDrawCalls = String(renderer.info.render.calls);
