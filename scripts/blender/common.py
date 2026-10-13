@@ -496,7 +496,7 @@ def _build_door(element, ctx, col):
     box(leaf.name + "_lintel", (width + 0.07, 0.035, 0.045),
         (x, height + 0.018, frame_z), steel, col, element=None, bevel=0.002, zone="shell")
     cylinder(leaf.name + "_lever", 0.012, 0.13, (x + width * 0.34, 1.02, z + (0.034 if is_main else -0.034)),
-             steel, col, vertices=12, rotation=(math.pi / 2, 0, 0), zone="shell")
+             steel, col, vertices=12, rotation=(0, math.pi / 2, 0), zone="shell")
     return leaf
 
 def _build_vault(element, ctx, col):

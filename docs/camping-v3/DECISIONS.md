@@ -92,3 +92,7 @@ A revisão pós-commit da Fase 04 corrigiu a orientação do vinil para ficar no
 
 ### D027 · Material helper and angle-based shading
 O helper PBR aceita mapas opcionais color/sRGB, normal/Non-Color, ORM/Non-Color (R=AO, G=roughness, B=metallic) e height/Non-Color. Falha explicitamente se uma textura pedida não existir. Os mapas oficiais/CC0 só entram com manifestos nas fases seguintes. Em Blender 4.x, o equivalente prático a Auto Smooth marca arestas sharp segundo o ângulo e mantém Weighted Normal, sem depender da propriedade antiga removida.
+
+
+### D028 · Ferragens e portabilidade do build
+O puxador das portas usa eixo horizontal para representar a alavanca, e os verificadores de sintaxe chamam explicitamente python3 para não depender da existência do alias python no runner Ubuntu. Isto reduz diferenças entre ambientes sem alterar as APIs públicas.

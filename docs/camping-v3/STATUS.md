@@ -80,3 +80,5 @@ Foi preparada uma correcção adicional à orientação das superfícies e à es
 
 ### PBR and shading helper follow-up
 The Blender common module now supports optional color/normal/ORM/height paths with color-space validation and named nodes, and includes Blender 4.x angle-based sharp-edge marking alongside Weighted Normal. No third-party textures have been added yet; the maps parameter is for the material asset phase. These Blender API paths remain unexecuted because the GitHub runner is not being allocated.
+
+A pipeline usa agora python3 explicitamente para compilar os módulos e orienta a alavanca da porta no eixo horizontal. O teste Blender continua por executar por falta de runner atribuível.
