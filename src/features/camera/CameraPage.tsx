@@ -258,7 +258,9 @@ export function CameraPage() {
         document.visibilityState === "visible" &&
         !captureEngine.isRecording
       ) {
-        void cameraManager.start();
+        void cameraManager.start().catch(() => {
+          // CameraManager state drives PermissionGate; avoid an unhandled permission rejection.
+        });
       }
     };
 
