@@ -240,6 +240,7 @@ test.describe("CAMPING V2 / 808 access", () => {
     await expect(canvas).toHaveAttribute("data-camping-artist-slots", "17");
     await expect(canvas).toHaveAttribute("data-camping-banner-status", "ready");
     await expect(canvas).toHaveAttribute("data-camping-xoyens-sign-status", "ready");
+    await expect(canvas).toHaveAttribute("data-camping-daw-screen-status", "ready");
     await expect(canvas).toHaveAttribute("data-camping-portraits-requested", "17");
     await expect(canvas).toHaveAttribute("data-camping-portraits-loaded", "17");
     await expect(canvas).toHaveAttribute("data-camping-portraits-complete", "true");
