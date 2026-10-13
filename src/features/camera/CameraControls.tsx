@@ -90,23 +90,31 @@ export function CameraControls({
         <span>{fps}</span>
       </div>
 
-      <div className="camera-mode-switch">
+      <div className="camera-mode-switch" role="group" aria-label="Modo de captura">
+        <span className="camera-mode-switch-kicker">MODO</span>
         <button
           type="button"
-          className={mode === "photo" ? "is-active" : ""}
+          className={mode === "photo" ? "is-active is-photo-selected" : ""}
           onClick={() => onModeChange("photo")}
           disabled={locked}
+          aria-label="Modo fotografia"
+          aria-pressed={mode === "photo"}
+          title="Mudar para fotografia"
         >
-          PHOTO
+          <span className="camera-mode-switch-icon camera-mode-photo-icon" aria-hidden="true">◉</span>
+          <span>FOTO</span>
         </button>
-        <span>|</span>
         <button
           type="button"
-          className={mode === "video" ? "is-active" : ""}
+          className={mode === "video" ? "is-active is-video-selected" : ""}
           onClick={() => onModeChange("video")}
           disabled={locked}
+          aria-label="Modo vídeo"
+          aria-pressed={mode === "video"}
+          title="Mudar para gravação de vídeo"
         >
-          VIDEO
+          <span className="camera-mode-switch-icon camera-mode-video-icon" aria-hidden="true">●</span>
+          <span>VÍDEO</span>
         </button>
       </div>
     </>
