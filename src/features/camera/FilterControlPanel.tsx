@@ -128,11 +128,8 @@ export function FilterControlPanel({
       latestY: event.clientY,
     };
     document.body.classList.add("camera-panel-dragging");
-    try {
-      event.currentTarget.setPointerCapture(event.pointerId);
-    } catch {
-      // Global pointer listeners still handle browsers without capture support.
-    }
+    // Global window listeners continue receiving pointer movement while the pointer
+    // is outside the floating panel, without relying on element pointer capture.
   };
 
   const floatingStyle = { left: position.x, top: position.y };
