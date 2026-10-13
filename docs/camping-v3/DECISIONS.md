@@ -88,3 +88,7 @@ O workflow gera art/xoyens-studio.blend, art/xoyens-studio.report.json e art/out
 
 ### D026 · Orientação e proporção do blockout
 A revisão pós-commit da Fase 04 corrigiu a orientação do vinil para ficar no plano XZ com espessura vertical, limitou a cadeira a aproximadamente 1,11 m de geometria visível (dentro do envelope de referência de 1,15 m), orientou ecrã/cones/teclas para a zona de utilização e espaçou os 17 quadros dentro da área útil da parede. Estes ajustes corrigem erros de geometria evidentes no blockout; não substituem o teste Blender headless, ainda bloqueado pela ausência de runner.
+
+
+### D027 · Material helper and angle-based shading
+O helper PBR aceita mapas opcionais color/sRGB, normal/Non-Color, ORM/Non-Color (R=AO, G=roughness, B=metallic) e height/Non-Color. Falha explicitamente se uma textura pedida não existir. Os mapas oficiais/CC0 só entram com manifestos nas fases seguintes. Em Blender 4.x, o equivalente prático a Auto Smooth marca arestas sharp segundo o ângulo e mantém Weighted Normal, sem depender da propriedade antiga removida.

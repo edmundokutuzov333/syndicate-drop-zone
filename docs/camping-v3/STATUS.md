@@ -77,3 +77,6 @@ A fonte editável .blend ainda não foi gerada nesta execução: o runner de Git
 
 ### Revisão geométrica pós-commit da Fase 04
 Foi preparada uma correcção adicional à orientação das superfícies e à escala/orientação de alguns props. Esta revisão não altera o contrato do backend, os IDs de produto, o número de artistas nem os budgets. A certificação continua dependente de o runner executar Blender e os gates da pipeline.
+
+### PBR and shading helper follow-up
+The Blender common module now supports optional color/normal/ORM/height paths with color-space validation and named nodes, and includes Blender 4.x angle-based sharp-edge marking alongside Weighted Normal. No third-party textures have been added yet; the maps parameter is for the material asset phase. These Blender API paths remain unexecuted because the GitHub runner is not being allocated.

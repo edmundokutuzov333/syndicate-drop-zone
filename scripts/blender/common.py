@@ -151,6 +151,145 @@ def material(name, colour=None, roughness=None, metallic=None, emission_strength
             bsdf.inputs["Emission Strength"].default_value = 1.4 if emission_strength is None else emission_strength
     return m
 
+
+def pbr_material(name, base=None, roughness=None, metallic=None, maps=None,
+                 emissive=None, emissive_strength=0.0):
+    """Principled PBR material with optional color, normal, ORM and height maps.
+
+    ORM follows glTF packing: red=AO, green=roughness, blue=metallic.
+    Color images use sRGB; data maps use Non-Color. Missing requested maps fail
+    with a path error instead of silently producing a different material.
+    """
+    import os
+
+    m = material(name, colour=base, roughness=roughness, metallic=metallic,
+                 emission_strength=emissive_strength)
+    nodes = m.node_tree.nodes
+    links = m.node_tree.links
+    bsdf = nodes.get("Principled BSDF")
+    if emissive is not None:
+        if "Emission Color" in bsdf.inputs:
+            bsdf.inputs["Emission Color"].default_value = emissive
+        if "Emission Strength" in bsdf.inputs:
+            bsdf.inputs["Emission Strength"].default_value = float(emissive_strength)
+
+    maps = maps or {}
+    # Re-running a material module removes only generated image/map nodes.
+    for node in list(nodes):
+        if node.get("sdtPbrNode", False):
+            nodes.remove(node)
+    if not maps:
+        return m
+
+    uv = nodes.new("ShaderNodeUVMap")
+    uv.name = "SDT_PBR_UVMap"
+    uv.uv_map = "UVMap"
+    uv["sdtPbrNode"] = True
+
+    def tex(slot, filepath, colour_space):
+        if not filepath:
+            return None
+        resolved = os.path.abspath(os.path.expanduser(str(filepath)))
+        if not os.path.isfile(resolved):
+            raise FileNotFoundError("PBR texture '" + slot + "' does not exist: " + resolved)
+        image = bpy.data.images.load(resolved, check_existing=True)
+        image.colorspace_settings.name = colour_space
+        node = nodes.new("ShaderNodeTexImage")
+        node.name = "SDT_PBR_" + slot
+        node.label = "SDT PBR " + slot
+        node.image = image
+        node["sdtPbrNode"] = True
+        links.new(uv.outputs["UV"], node.inputs["Vector"])
+        return node
+
+    color_node = tex("color", maps.get("color"), "sRGB")
+    orm_node = tex("orm", maps.get("orm"), "Non-Color")
+    normal_node = tex("normal", maps.get("normal"), "Non-Color")
+    height_node = tex("height", maps.get("height"), "Non-Color")
+
+    sep = None
+    if orm_node is not None:
+        sep = nodes.new("ShaderNodeSeparateColor")
+        sep.name = "SDT_PBR_ORM_Split"
+        sep.mode = "RGB"
+        sep["sdtPbrNode"] = True
+        links.new(orm_node.outputs["Color"], sep.inputs["Color"])
+        links.new(sep.outputs["Green"], bsdf.inputs["Roughness"])
+        links.new(sep.outputs["Blue"], bsdf.inputs["Metallic"])
+
+    def disconnect(target):
+        for link in list(links):
+            if link.to_socket == target:
+                links.remove(link)
+
+    if color_node is not None and sep is None:
+        disconnect(bsdf.inputs["Base Color"])
+        links.new(color_node.outputs["Color"], bsdf.inputs["Base Color"])
+    elif sep is not None:
+        # Blender has no glTF AO socket. Multiply the AO channel over base colour.
+        mix = nodes.new("ShaderNodeMixRGB")
+        mix.name = "SDT_PBR_AO_Multiply"
+        mix.blend_type = "MULTIPLY"
+        mix.inputs[0].default_value = 1.0
+        mix["sdtPbrNode"] = True
+        if color_node is not None:
+            links.new(color_node.outputs["Color"], mix.inputs[1])
+        else:
+            mix.inputs[1].default_value = base if base is not None else MATERIAL_COLOURS.get(name, ((0.20, 0.16, 0.12, 1), 0.72, 0.0))[0]
+        links.new(sep.outputs["Red"], mix.inputs[2])
+        disconnect(bsdf.inputs["Base Color"])
+        links.new(mix.outputs["Color"], bsdf.inputs["Base Color"])
+
+    normal_output = None
+    if normal_node is not None:
+        normal_map = nodes.new("ShaderNodeNormalMap")
+        normal_map.name = "SDT_PBR_NormalMap"
+        normal_map.inputs["Strength"].default_value = 1.0
+        normal_map["sdtPbrNode"] = True
+        links.new(normal_node.outputs["Color"], normal_map.inputs["Color"])
+        normal_output = normal_map.outputs["Normal"]
+
+    if height_node is not None:
+        bump = nodes.new("ShaderNodeBump")
+        bump.name = "SDT_PBR_HeightBump"
+        bump.inputs["Distance"].default_value = 0.025
+        bump.inputs["Strength"].default_value = 0.25
+        bump["sdtPbrNode"] = True
+        links.new(height_node.outputs["Color"], bump.inputs["Height"])
+        if normal_output is not None:
+            links.new(normal_output, bump.inputs["Normal"])
+        disconnect(bsdf.inputs["Normal"])
+        links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
+    elif normal_output is not None:
+        disconnect(bsdf.inputs["Normal"])
+        links.new(normal_output, bsdf.inputs["Normal"])
+
+    return m
+
+
+def apply_auto_smooth(mesh, angle_degrees=32.0):
+    """Blender 4.x equivalent of Auto Smooth: mark edges sharp by dihedral angle."""
+    import bmesh
+
+    bm = bmesh.new()
+    try:
+        bm.from_mesh(mesh)
+        threshold = math.radians(float(angle_degrees))
+        for face in bm.faces:
+            face.smooth = True
+        for edge in bm.edges:
+            if len(edge.link_faces) != 2:
+                edge.smooth = False
+                continue
+            try:
+                edge.smooth = edge.calc_face_angle(0.0) <= threshold
+            except ValueError:
+                edge.smooth = False
+        bm.to_mesh(mesh)
+    finally:
+        bm.free()
+    mesh.update()
+
 def material_library(bible):
     names = set()
     for element in bible.get("elements", []):
@@ -225,10 +364,9 @@ def finish_mesh(obj, material_names, element=None, collider="box", zone=None, lm
         m = material(name)
         if m.name not in [slot.name for slot in obj.data.materials if slot]:
             obj.data.materials.append(m)
-    for poly in obj.data.polygons:
-        poly.use_smooth = bool(smooth)
     _metric_uvs(obj.data)
     _smart_unwrap(obj)
+    apply_auto_smooth(obj.data)
     if bevel > 0:
         dims = obj.dimensions
         min_dim = min(float(dims.x), float(dims.y), float(dims.z))

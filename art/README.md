@@ -13,3 +13,6 @@ Run npm run 3d:blend from the repository root after installing the pinned toolch
 The CI workflow builds these outputs and uploads them as a 14-day artifact. Do not check in an LFS pointer unless its matching binary has actually been uploaded. In the current source commit, the binary output remains pending a successful Blender runner.
 
 Textures, bakes and generated GLBs are not hand-edited. Official Sindicato/Xoyens images must come from the existing official manifest; this phase deliberately creates no substitute logo, seal, garment print or artist portrait.
+
+
+The PBR material helper accepts optional color/sRGB, normal/Non-Color, ORM/Non-Color (R=AO, G=roughness, B=metallic), and height/Non-Color maps. Any requested missing file fails the build. Texture files and the approved brand decals will be introduced with provenance records in the material phase; this phase does not invent logos or seal artwork.

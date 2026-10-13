@@ -33,4 +33,5 @@ dist-ssr
 
 # CAMPING V3 generated intermediates (the verified .blend source is intentionally not ignored).
 art/xoyens-studio.report.json
-art/out/
+art/out/*
+!art/out/README.md

@@ -46,3 +46,8 @@ A fase continua Em validação até existir um runner real e uma execução comp
 ## Revisão geométrica da Fase 04
 
 A correcção de follow-up orienta o disco de vinil no plano horizontal, reduz a altura construída da cadeira para o envelope métrico, vira o ecrã e as faces das colunas para o interior do estúdio e mantém os 17 quadros numerados dentro da parede. A cena ainda não foi executada em Blender porque os jobs de CI continuam a falhar antes de receber runner; estes ajustes permanecem por confirmar através do artefacto real.
+
+
+## Material PBR e shading
+
+O helper comum inclui um caminho explícito para mapas color, normal, ORM e height. Cor usa sRGB; dados usam Non-Color. ORM segue R=AO, G=roughness, B=metallic. Um mapa pedido mas ausente interrompe o build. O shading usa arestas sharp por ângulo em Blender 4.x e Weighted Normal. Nesta fase não foram adicionados mapas de terceiros nem decal oficial novo.
