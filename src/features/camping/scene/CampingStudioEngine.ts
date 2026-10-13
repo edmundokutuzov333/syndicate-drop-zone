@@ -313,6 +313,11 @@ export function getCampingMaterialRenderPolicy(materialName: string): CampingMat
   if (/plaster|stucco|wall|paint|ceiling/.test(name)) {
     return { envMapIntensity: 0.14, roughnessFloor: 0.88, metalnessCeiling: 0, normalScale: 0.12 };
   }
+  // The photography sweep is vinyl/paper and must remain matte even though it
+  // is also a floor. Resolve that exception before the semi-polished studio parquet.
+  if (/photo[-_. ]?(floor|backdrop)|vinyl|seamless/.test(name)) {
+    return { envMapIntensity: 0.06, roughnessFloor: 0.92, roughnessTarget: 0.96, metalnessCeiling: 0 };
+  }
   // The scene kit specifies a semi-polished wood floor, not the high-roughness
   // response appropriate to timber walls and furniture. Preserve the authored
   // roughness map for local variation while bringing the scalar into this range.
@@ -1765,7 +1770,7 @@ export class CampingStudioEngine {
               8,
             );
             for (const material of materials) {
-              const materialPolicy = getCampingMaterialRenderPolicy(material.name);
+              const materialPolicy = getCampingMaterialRenderPolicy(mesh.name + " " + material.name);
               if ("envMapIntensity" in material) {
                 (material as THREE.MeshStandardMaterial).envMapIntensity = materialPolicy.envMapIntensity;
               }
