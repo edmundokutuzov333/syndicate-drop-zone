@@ -104,3 +104,22 @@ A implementação do renderer foi refinada sem substituir o motor Three.js nem a
 Os testes existentes do perfil mantêm o contrato de qualidade único. Foram acrescentados testes determinísticos ao limite de pixel ratio, aos valores de materiais por família e às políticas de sombras. Não foram introduzidos dados sintéticos na produção nem feitas alterações à base de dados.
 
 **Validação pendente:** aguardar os resultados do CI e da publicação para o commit que contém as métricas do browser; rever o anexo JSON produzido pelo Playwright; confirmar visualmente o equilíbrio de luz e o aspecto PBR em /camping. Nenhum FPS, tempo de GPU ou resultado de dispositivo físico é declarado sem medição real.
+
+
+## Integração do kit CAMPING V3 · 2026-10-13
+
+O kit foi auditado antes da integração. O seu scene bible declara 43 elementos, um orçamento de 215 400 polígonos contra um limite high de 260 000 e cobertura de todos os 24 sectores de azimute. O contrato copiado para docs/camping-v3/scene-bible.json foi verificado contra o esquema: 43 IDs únicos, intervalos angulares válidos, dimensões válidas, fontes de asset reconhecidas, sete contratos de interação legados presentes e nenhum erro estrutural.
+
+Integração aplicada à runtime existente:
+- Resolução dinâmica com histerese, baseada na cadência real dos frames. Só altera a escala do drawing buffer; não escolhe um perfil por tipo de dispositivo.
+- Ecrã DAW diegético aplicado ao mesh real studio.imac-screen. O título lê a faixa actual do singleton Frequência 808. O medidor é uma animação de interface, não uma falsa medição de amplitude do áudio.
+- Material de soalho tratado separadamente: rugosidade escalar de 0,48, reflexão de ambiente controlada e metalness máximo de 0,02, preservando o mapa de rugosidade original. Estuque e tecido continuam mate.
+- Helpers puros de equirectangular, fotometria, planeamento de lightmaps, impulso de sala e comparação sectorial, com testes Vitest dedicados.
+- Validador do scene bible integrado no package.json e no CI. O teste browser existente agora exige que o ecrã DAW seja inicializado juntamente com a cena, o logótipo e os 17 retratos.
+- Orçamentos e documentação do kit adicionados em docs/camping-v3/.
+
+Não foram instaladas dependências novas, não foram alteradas as rotas, o backend, o Control Room, a autenticação, as tabelas nem as políticas RLS.
+
+Limites de material fornecido pelo ZIP: não contém o .blend de origem, GLB high/mid/low, lightmaps KTX2 ou os ficheiros Basis. Por isso, não é seguro substituir o GLB de produção pelo pipeline Blender do kit. Também ficam desactivados o asset loader alternativo (aponta para ficheiros inexistentes), o pipeline postprocessing/N8AO (dependências ausentes), o walk controller BVH (substituiria colisões existentes), o selector de tier por hardware (contraria o requisito do projecto) e efeitos de cone/reflexo planar que ainda não foram calibrados em browser real.
+
+A validação lógica do scene bible foi repetida sobre o ficheiro na main: 43 elementos, 215 400 de orçamento, cobertura sectorial mínima 7 e máxima 13, zero erros estruturais. Os testes Vitest, lint, build, Playwright, a comparação visual por pixels e a matriz de FPS em equipamentos reais precisam de ser confirmados pelos resultados de CI/browser; não se declara essa certificação antecipadamente.
