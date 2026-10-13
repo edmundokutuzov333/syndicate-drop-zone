@@ -6,7 +6,7 @@ Referência: `docs/camping-v3/reference/reference-sectors.json`
 Hash da panorâmica original: `998f637c62fad46c1459a0c85c99db79f2f799951b9d2c4c38b659ad2e193813`  
 Regra de release: nenhuma fase fica concluída sem evidência reproduzível, testes e CI verde.
 
-Issues de execução: [#33 Fase 01](https://github.com/edmundokutuzov333/syndicate-drop-zone/issues/33) a [#56 Fase 22](https://github.com/edmundokutuzov333/syndicate-drop-zone/issues/56), uma issue por fase.
+Issues de execução: fases 01–17 em [#33–#49](https://github.com/edmundokutuzov333/syndicate-drop-zone/issues/33); fase 18 em [#50](https://github.com/edmundokutuzov333/syndicate-drop-zone/issues/50); fase 19 em [#51](https://github.com/edmundokutuzov333/syndicate-drop-zone/issues/51); fases 20–22 em [#54–#56](https://github.com/edmundokutuzov333/syndicate-drop-zone/issues/54). Os duplicados #52 e #53 foram fechados.
 
 | Fase | Entrega | Estado | Gate de conclusão |
 |---:|---|---|---|
