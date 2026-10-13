@@ -35,6 +35,9 @@ import {
 } from "./CampingRoomWorld";
 import { getRoomTransitionTarget } from "./camping-object-contracts";
 import { applyCampingReferenceComposition, CAMPING_REFERENCE_COMPOSITION } from "./camping-reference-composition";
+import { frequency } from "@/lib/frequency";
+import { DynamicResolution } from "../v3/dynamic-resolution";
+import { createDawScreen } from "../v3/screen-texture";
 
 function fitTexturedPlaneToImage(mesh: THREE.Mesh, texture: THREE.Texture, maxWidth: number, maxHeight: number): void {
   const image = texture.image as { width?: number; height?: number } | undefined;
@@ -499,6 +502,10 @@ export class CampingStudioEngine {
   private renderer: THREE.WebGLRenderer | null = null;
   private renderProfile: CampingRenderProfile | null = null;
   private reflectionTarget: THREE.WebGLRenderTarget | null = null;
+  private readonly dynamicResolution = new DynamicResolution(1);
+  private baseRenderPixelRatio = 1;
+  private dawScreen: ReturnType<typeof createDawScreen> | null = null;
+  private lastDawScreenDrawAt = 0;
   private artistDataPromise: ReturnType<typeof getLiveArtistsForSite> | null = null;
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(68, 1, 0.05, 70);
@@ -623,6 +630,8 @@ export class CampingStudioEngine {
       const initialized = createCampingRenderer(canvas, profile);
       this.renderer = initialized.renderer;
       this.renderProfile = initialized.profile;
+      this.baseRenderPixelRatio = initialized.profile.pixelRatio;
+      this.canvas.dataset.campingRenderResolutionScale = "1";
       this.createStudioEnvironment();
       this.createLighting();
       this.createEntrySet();
@@ -718,6 +727,8 @@ export class CampingStudioEngine {
     this.renderer?.dispose();
     this.renderer = null;
     this.scene.clear();
+    this.dawScreen = null;
+    this.lastDawScreenDrawAt = 0;
     this.studioRoot = null;
     this.roomRoots.clear();
     this.roomLayout = null;
@@ -1057,6 +1068,7 @@ export class CampingStudioEngine {
       ? Math.min(0.05, Math.max(0, (now - this.lastFrameAt) / 1000))
       : 0.016;
     this.lastFrameAt = now;
+    this.updateDynamicResolution(delta * 1000);
 
     this.advanceAccessSequence(now);
     this.advanceDoor(now);
@@ -1068,6 +1080,7 @@ export class CampingStudioEngine {
       this.camera.rotation.set(this.pitch, this.yaw, 0, "YXZ");
     }
     this.updateHoverOutline();
+    this.updateDawScreen(now, delta);
     this.renderer.render(this.scene, this.camera);
     this.advanceTransientMessage(now);
     this.publishRenderDiagnostics(now, performance.now() - frameStartedAt);
@@ -1099,6 +1112,110 @@ export class CampingStudioEngine {
     this.performanceFrameCount = 0;
     this.performanceCpuTotalMs = 0;
     this.performanceCpuMaxMs = 0;
+  }
+
+  private updateDynamicResolution(frameMs: number): void {
+    const renderer = this.renderer;
+    if (!renderer || !this.canvas || !this.dynamicResolution.update(frameMs)) return;
+
+    const ratio = Math.min(
+      this.baseRenderPixelRatio,
+      Math.max(0.5, this.baseRenderPixelRatio * this.dynamicResolution.scale),
+    );
+    renderer.setPixelRatio(ratio);
+    this.resize();
+    this.canvas.dataset.campingRenderPixelRatio = ratio.toFixed(3);
+    this.canvas.dataset.campingRenderResolutionScale = this.dynamicResolution.scale.toFixed(2);
+  }
+
+  private updateDawScreen(timestamp: number, delta: number): void {
+    if (!this.dawScreen || timestamp - this.lastDawScreenDrawAt < 80) return;
+    const state = frequency.getState();
+    const title = state.current
+      ? state.current.title + " / " + state.current.artist
+      : state.phase === "static"
+        ? "FREQUÊNCIA 808 / SINAL"
+        : "FREQUÊNCIA 808";
+    // The moving meter is a playback indicator. It is not presented as an audio-amplitude measurement.
+    const level = state.playing
+      ? 0.24 + 0.2 * (0.5 + 0.5 * Math.sin(timestamp * 0.004))
+      : 0.035;
+    const elapsed = this.lastDawScreenDrawAt > 0
+      ? Math.min(0.25, (timestamp - this.lastDawScreenDrawAt) / 1000)
+      : delta;
+    this.dawScreen.draw(level, title, elapsed);
+    this.lastDawScreenDrawAt = timestamp;
+  }
+
+  private addDawScreen(root: THREE.Group): void {
+    const screen = root.getObjectByName("studio.imac-screen");
+    if (!screen) {
+      if (this.canvas) this.canvas.dataset.campingDawScreenStatus = "missing";
+      return;
+    }
+
+    const meshes: THREE.Mesh[] = [];
+    screen.traverse((object) => {
+      if ((object as THREE.Mesh).isMesh) meshes.push(object as THREE.Mesh);
+    });
+    if (!meshes.length) {
+      if (this.canvas) this.canvas.dataset.campingDawScreenStatus = "missing-geometry";
+      return;
+    }
+
+    const daw = createDawScreen(1024, 576);
+    daw.texture.anisotropy = Math.min(this.renderer?.capabilities.getMaxAnisotropy() ?? 1, 8);
+
+    let replaced = 0;
+    for (const mesh of meshes) {
+      const current = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      const next = current.map((material) => {
+        if (material instanceof THREE.MeshStandardMaterial) {
+          const display = material.clone();
+          // Do not retain other meshes' source textures on the cloned screen material.
+          display.map = daw.texture;
+          display.emissiveMap = daw.texture;
+          display.normalMap = null;
+          display.roughnessMap = null;
+          display.metalnessMap = null;
+          display.bumpMap = null;
+          display.aoMap = null;
+          display.alphaMap = null;
+          display.color.setHex(0xffffff);
+          display.emissive.setHex(0x253547);
+          display.emissiveIntensity = 0.18;
+          display.roughness = 0.42;
+          display.metalness = 0;
+          display.name = "CAMPING / live DAW screen";
+          display.needsUpdate = true;
+          replaced += 1;
+          return display;
+        }
+        if (material instanceof THREE.MeshBasicMaterial) {
+          const display = material.clone();
+          display.map = daw.texture;
+          display.color.setHex(0xffffff);
+          display.name = "CAMPING / live DAW screen";
+          display.needsUpdate = true;
+          replaced += 1;
+          return display;
+        }
+        return material;
+      });
+      mesh.material = Array.isArray(mesh.material) ? next : next[0]!;
+    }
+
+    if (!replaced) {
+      daw.dispose();
+      if (this.canvas) this.canvas.dataset.campingDawScreenStatus = "unsupported-material";
+      return;
+    }
+
+    const state = frequency.getState();
+    daw.draw(state.playing ? 0.3 : 0.035,
+      state.current ? state.current.title + " / " + state.current.artist : "FREQUÊNCIA 808", 0);
+    this.dawScreen = daw;
+    if (this.canvas) this.canvas.dataset.campingDawScreenStatus = "ready";
   }
 
   private createStudioEnvironment(): void {
@@ -1599,6 +1716,7 @@ export class CampingStudioEngine {
         this.prepareArtistWallMounting(root);
         this.addSyndicateBanner(root);
         this.addXoyensBacklitSign(root);
+        this.addDawScreen(root);
 
         // Non-sensitive diagnostics let browser tests verify the real loaded scene,
         // not infer scene quality from the GLB request alone.
