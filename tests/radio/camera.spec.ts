@@ -47,7 +47,18 @@ test("camera requests media access, renders live frames, downloads photos and pl
         if (constraints.video && audit.denyCameraRequests) {
           return Promise.reject(new DOMException("Permission denied", "NotAllowedError"));
         }
-        return originalGetUserMedia(constraints);
+        const testConstraints: MediaStreamConstraints = constraints.video && typeof constraints.video === "object"
+          ? {
+              ...constraints,
+              video: {
+                ...constraints.video,
+                width: { ideal: 640, max: 640 },
+                height: { ideal: 480, max: 480 },
+                frameRate: { ideal: 30, max: 30 },
+              },
+            }
+          : constraints;
+        return originalGetUserMedia(testConstraints);
       };
     });
 
@@ -243,6 +254,23 @@ test("camera mode switch is clear and the filter panel moves freely to all viewp
     });
     await context.addInitScript(() => {
       sessionStorage.setItem("sdt-open", "1");
+      const mediaDevices = navigator.mediaDevices;
+      if (!mediaDevices?.getUserMedia) return;
+      const originalGetUserMedia = mediaDevices.getUserMedia.bind(mediaDevices);
+      mediaDevices.getUserMedia = (constraints: MediaStreamConstraints) => {
+        const testConstraints: MediaStreamConstraints = constraints.video && typeof constraints.video === "object"
+          ? {
+              ...constraints,
+              video: {
+                ...constraints.video,
+                width: { ideal: 640, max: 640 },
+                height: { ideal: 480, max: 480 },
+                frameRate: { ideal: 30, max: 30 },
+              },
+            }
+          : constraints;
+        return originalGetUserMedia(testConstraints);
+      };
     });
 
     const page = await context.newPage();
