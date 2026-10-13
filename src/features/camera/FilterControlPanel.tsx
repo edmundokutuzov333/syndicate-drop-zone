@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { FilterDefinition } from "@/lib/camera/types";
 
@@ -12,87 +13,238 @@ type FilterControlPanelProps = {
   locked?: boolean;
 };
 
+type DragState = {
+  pointerX: number;
+  pointerY: number;
+  originX: number;
+  originY: number;
+  latestX: number;
+  latestY: number;
+};
+
 function formatParameter(value: number, step: number): string {
-  const decimalPlaces = step < 1
-    ? Math.min(3, step.toString().split(".")[1]?.length ?? 0)
-    : 0;
+  const decimalPlaces =
+    step < 1 ? Math.min(3, step.toString().split(".")[1]?.length ?? 0) : 0;
   return value.toFixed(decimalPlaces);
 }
 
-export function FilterControlPanel({ filter, values, onChange, onReset, waveAmount, onWaveAmountChange, locked = false }: FilterControlPanelProps) {
+export function FilterControlPanel({
+  filter,
+  values,
+  onChange,
+  onReset,
+  waveAmount,
+  onWaveAmountChange,
+  locked = false,
+}: FilterControlPanelProps) {
   const controls = filter.controls ?? [];
   const [minimized, setMinimized] = useState(false);
   const [position, setPosition] = useState({ x: 24, y: 82 });
-  const drag = useRef<{ px: number; py: number; x: number; y: number } | null>(null);
+  const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+  const drag = useRef<DragState | null>(null);
+  const moveFrame = useRef<number | null>(null);
   const panelRef = useRef<HTMLElement>(null);
-  const stopDrag = useCallback(() => { drag.current = null; document.body.classList.remove("camera-panel-dragging"); }, []);
+
+  // Render identically during SSR, then move the floating window to the document
+  // layer so camera-stage overflow cannot clip it at the edges of the viewport.
+  useEffect(() => {
+    setPortalTarget(document.body);
+  }, []);
+
+  const applyPointerPosition = useCallback((state: DragState) => {
+    const rect = panelRef.current?.getBoundingClientRect();
+    const width = rect?.width ?? 300;
+    const height = rect?.height ?? 80;
+    const maxX = Math.max(8, window.innerWidth - width - 8);
+    const maxY = Math.max(8, window.innerHeight - height - 8);
+    const nextX = state.originX + state.latestX - state.pointerX;
+    const nextY = state.originY + state.latestY - state.pointerY;
+
+    setPosition({
+      x: Math.min(maxX, Math.max(8, nextX)),
+      y: Math.min(maxY, Math.max(8, nextY)),
+    });
+  }, []);
+
+  const stopDrag = useCallback(() => {
+    const state = drag.current;
+    if (moveFrame.current !== null) {
+      window.cancelAnimationFrame(moveFrame.current);
+      moveFrame.current = null;
+    }
+    if (state) applyPointerPosition(state);
+    drag.current = null;
+    document.body.classList.remove("camera-panel-dragging");
+  }, [applyPointerPosition]);
+
   useEffect(() => {
     const move = (event: PointerEvent) => {
-      if (!drag.current) return;
-      const d = drag.current;
-      const rect = panelRef.current?.getBoundingClientRect();
-      const width = rect?.width ?? 300;
-      const height = rect?.height ?? 80;
-      setPosition({ x: Math.max(8, Math.min(window.innerWidth - width - 8, d.x + event.clientX - d.px)), y: Math.max(8, Math.min(window.innerHeight - height - 8, d.y + event.clientY - d.py)) });
+      const state = drag.current;
+      if (!state) return;
+      state.latestX = event.clientX;
+      state.latestY = event.clientY;
+
+      // Coalesce pointer events to one React update per animation frame.
+      if (moveFrame.current !== null) return;
+      moveFrame.current = window.requestAnimationFrame(() => {
+        moveFrame.current = null;
+        const latest = drag.current;
+        if (latest) applyPointerPosition(latest);
+      });
     };
-    window.addEventListener("pointermove", move);
+
+    window.addEventListener("pointermove", move, { passive: true });
     window.addEventListener("pointerup", stopDrag);
     window.addEventListener("pointercancel", stopDrag);
-    return () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", stopDrag); window.removeEventListener("pointercancel", stopDrag); document.body.classList.remove("camera-panel-dragging"); };
-  }, [stopDrag]);
+
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", stopDrag);
+      window.removeEventListener("pointercancel", stopDrag);
+      if (moveFrame.current !== null) {
+        window.cancelAnimationFrame(moveFrame.current);
+        moveFrame.current = null;
+      }
+      document.body.classList.remove("camera-panel-dragging");
+    };
+  }, [applyPointerPosition, stopDrag]);
+
   const beginDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if ((event.target as HTMLElement).closest("button")) return;
+    const target = event.target;
+    if (
+      target instanceof HTMLElement &&
+      target.closest("button, input, select, a")
+    ) {
+      return;
+    }
+
     event.preventDefault();
-    drag.current = { px: event.clientX, py: event.clientY, x: position.x, y: position.y };
+    drag.current = {
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      originX: position.x,
+      originY: position.y,
+      latestX: event.clientX,
+      latestY: event.clientY,
+    };
     document.body.classList.add("camera-panel-dragging");
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Global pointer listeners still handle browsers without capture support.
+    }
   };
-  if (controls.length === 0) return null;
+
   const floatingStyle = { left: position.x, top: position.y };
-  if (minimized) return <button type="button" className="camera-filter-panel-restore" style={floatingStyle} aria-label={"Reabrir painel de ajustes do filtro " + filter.label} title="Reabrir ajustes do filtro" onClick={() => setMinimized(false)}><span aria-hidden="true">ƒx</span><small>FILTERS</small></button>;
-  return (
-    <section ref={panelRef} className="camera-filter-tuning is-floating" style={floatingStyle} aria-label={`Controlos do filtro ${filter.label}`} aria-describedby="camera-filter-tuning-status">
+  const panelContent = controls.length === 0 ? null : minimized ? (
+    <button
+      type="button"
+      className="camera-filter-panel-restore"
+      style={floatingStyle}
+      aria-label={"Reabrir painel de ajustes do filtro " + filter.label}
+      title="Reabrir ajustes do filtro"
+      onClick={() => setMinimized(false)}
+    >
+      <span aria-hidden="true">ƒx</span>
+      <small>FILTERS</small>
+    </button>
+  ) : (
+    <section
+      ref={panelRef}
+      className="camera-filter-tuning is-floating"
+      style={floatingStyle}
+      aria-label={`Controlos do filtro ${filter.label}`}
+      aria-describedby="camera-filter-tuning-status"
+    >
       <header className="camera-filter-tuning-head">
-        <div className="camera-filter-tuning-drag-handle" onPointerDown={beginDrag} title="Arrastar para mover o painel">
-          <span className="camera-filter-drag-grip" aria-hidden="true">⠿</span>
+        <div
+          className="camera-filter-tuning-drag-handle"
+          onPointerDown={beginDrag}
+          title="Arrastar para qualquer canto do ecrã"
+          aria-label="Mover painel de filtros"
+        >
+          <span className="camera-filter-drag-grip" aria-hidden="true">
+            ⠿
+          </span>
           <div className="camera-filter-tuning-heading">
-          <span className="camera-filter-tuning-kicker">FILTER TUNING // {filter.index}</span>
-          <strong>{filter.label}</strong>
-        </div>
-        <div className="camera-filter-tuning-actions">
-          <span id="camera-filter-tuning-status" className="camera-filter-tuning-live"><i aria-hidden="true" />LIVE</span>
-          <button type="button" className="camera-filter-tuning-reset" onClick={onReset} disabled={locked}>RESET</button>
-          <button type="button" className="camera-filter-tuning-window-action" aria-label="Minimizar painel de ajustes" title="Minimizar painel" onClick={() => setMinimized(true)}>−</button>
-        </div>
+            <span className="camera-filter-tuning-kicker">
+              FILTER TUNING // {filter.index}
+            </span>
+            <strong>{filter.label}</strong>
+          </div>
+          <div className="camera-filter-tuning-actions">
+            <span
+              id="camera-filter-tuning-status"
+              className="camera-filter-tuning-live"
+            >
+              <i aria-hidden="true" />
+              LIVE
+            </span>
+            <button
+              type="button"
+              className="camera-filter-tuning-reset"
+              onClick={onReset}
+              disabled={locked}
+            >
+              RESET
+            </button>
+            <button
+              type="button"
+              className="camera-filter-tuning-window-action"
+              aria-label="Minimizar painel de ajustes"
+              title="Minimizar painel"
+              onClick={() => setMinimized(true)}
+            >
+              −
+            </button>
+          </div>
         </div>
       </header>
+
       <div className="camera-filter-tuning-grid">
         {controls.map((control) => (
           <label className="camera-filter-tuning-control" key={control.uniform}>
             <span className="camera-filter-tuning-value">
               <span>{control.label}</span>
-              <output>{formatParameter(values[control.uniform] ?? control.defaultValue, control.step)}</output>
+              <output>
+                {formatParameter(
+                  values[control.uniform] ?? control.defaultValue,
+                  control.step,
+                )}
+              </output>
             </span>
-            <input type="range" min={control.min} max={control.max} step={control.step}
+            <input
+              type="range"
+              min={control.min}
+              max={control.max}
+              step={control.step}
               value={values[control.uniform] ?? control.defaultValue}
               aria-label={`${filter.label} — ${control.label}`}
-              onChange={(event) => onChange(control.uniform, Number(event.currentTarget.value))}
+              onChange={(event) =>
+                onChange(control.uniform, Number(event.currentTarget.value))
+              }
               disabled={locked}
             />
           </label>
         ))}
       </div>
+
       <div className="camera-wave-control">
         <label className="camera-wave-toggle">
           <input
             type="checkbox"
             checked={waveAmount > 0}
-            onChange={(event) => onWaveAmountChange(event.currentTarget.checked ? 0.28 : 0)}
+            onChange={(event) =>
+              onWaveAmountChange(event.currentTarget.checked ? 0.28 : 0)
+            }
             disabled={locked}
           />
           <span className="camera-wave-switch" aria-hidden="true" />
           <span className="camera-wave-copy">
             <strong>SIGNAL WAVE</strong>
-            <small>{waveAmount > 0 ? "OPTIONAL FX // ON" : "OPTIONAL FX // OFF"}</small>
+            <small>
+              {waveAmount > 0 ? "OPTIONAL FX // ON" : "OPTIONAL FX // OFF"}
+            </small>
           </span>
         </label>
         {waveAmount > 0 && (
@@ -105,7 +257,9 @@ export function FilterControlPanel({ filter, values, onChange, onReset, waveAmou
               max={0.45}
               step={0.01}
               value={waveAmount}
-              onChange={(event) => onWaveAmountChange(Number(event.currentTarget.value))}
+              onChange={(event) =>
+                onWaveAmountChange(Number(event.currentTarget.value))
+              }
               disabled={locked}
               aria-label="Intensidade da onda de sinal"
             />
@@ -114,4 +268,7 @@ export function FilterControlPanel({ filter, values, onChange, onReset, waveAmou
       </div>
     </section>
   );
+
+  if (!panelContent) return null;
+  return portalTarget ? createPortal(panelContent, portalTarget) : panelContent;
 }
