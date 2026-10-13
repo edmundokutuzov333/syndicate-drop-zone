@@ -1,0 +1,37 @@
+name: Runner Assignment Diagnostic
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/runner-diagnostic.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: runner-assignment-diagnostic-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  hosted-runner-matrix:
+    name: "Runner probe: ${{ matrix.runner }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04, ubuntu-22.04]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 3
+    steps:
+      - name: Report runner assignment
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo "RUNNER_ASSIGNED=true"
+          echo "RUNNER_IMAGE=${ImageOS:-unknown}"
+          echo "RUNNER_VERSION=${RUNNER_TOOL_CACHE:-unknown}"
+          echo "KERNEL=$(uname -a)"
+          echo "NODE=$(node --version)"
+          echo "PYTHON=$(python3 --version)"
+          date -u +"UTC=%Y-%m-%dT%H:%M:%SZ"
