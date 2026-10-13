@@ -182,13 +182,13 @@ function LightModeToggle() {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const { isImmersiveSurface, isCameraSurface } = useRouterState({
-    select: (state) => ({
-      isImmersiveSurface:
-        state.location.pathname.startsWith("/camera") ||
-        state.location.pathname.startsWith("/camping"),
-      isCameraSurface: state.location.pathname.startsWith("/camera"),
-    }),
+  const isImmersiveSurface = useRouterState({
+    select: (state) =>
+      state.location.pathname.startsWith("/camera") ||
+      state.location.pathname.startsWith("/camping"),
+  });
+  const isCameraSurface = useRouterState({
+    select: (state) => state.location.pathname.startsWith("/camera"),
   });
   const [open, setOpen] = useState(false);
   const { site } = Route.useLoaderData();
