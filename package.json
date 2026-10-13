@@ -15,7 +15,8 @@
     "test:e2e": "playwright test",
     "validate:camping-scene": "node scripts/validate-scene-bible.mjs docs/camping-v3/scene-bible.json",
     "test:camping-v3": "vitest run src/features/camping/v3/v3.test.ts",
-    "audit:camping-glb": "node scripts/check-3d-budgets.mjs public/models/camping/xoyens-studio.glb high"
+    "audit:camping-glb": "node scripts/check-3d-budgets.mjs public/models/camping/xoyens-studio.glb high",
+    "check:camping-baseline": "node scripts/check-3d-baseline.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"
