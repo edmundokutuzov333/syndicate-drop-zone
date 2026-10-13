@@ -1459,7 +1459,7 @@ html[data-safelight] .halftone-overlay {
 
 .camera-filter-tuning.is-floating {
   max-width: calc(100vw - 16px);
-  will-change: left, top;
+  will-change: transform;
   overscroll-behavior: contain;
 }
 .camera-filter-tuning-drag-handle { min-height: 38px; }
