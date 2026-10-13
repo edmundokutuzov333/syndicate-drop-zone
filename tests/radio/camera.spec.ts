@@ -73,8 +73,8 @@ test("camera requests media access, renders live frames, downloads photos and pl
       const audit = (window as Window & {
         __cameraPermissionAudit?: { requests: Array<{ video: boolean; audio: boolean }> };
       }).__cameraPermissionAudit;
-      return audit?.requests.some((request) => request.video) ?? false;
-    }), { timeout: 20_000 }).toBe(true);
+      return audit?.requests.filter((request) => request.video).length ?? 0;
+    }), { timeout: 20_000 }).toBeGreaterThanOrEqual(2);
 
     const liveVideo = page.locator("video.camera-native-video");
     await expect(liveVideo).toBeAttached({ timeout: 20_000 });
