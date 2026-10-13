@@ -1,0 +1,6 @@
+# Treat generated 3D and bake outputs as binary in Git diffs.
+*.glb -diff
+*.ktx2 -diff
+*.exr -diff
+*.blend -diff
+# Git LFS remains an explicit decision for large art sources and bakes.

@@ -22,6 +22,12 @@ jobs:
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Prepare Three.js Basis runtime assets
+        run: npm run 3d:basis
+
+      - name: CAMPING 3D dependency contract
+        run: node scripts/check-3d-toolchain.mjs --packages-only
+
 
       - name: Native FFmpeg encoder smoke test
         run: node scripts/test-fan-video-encoder.mjs

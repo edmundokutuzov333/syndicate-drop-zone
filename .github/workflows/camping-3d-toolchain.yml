@@ -1,0 +1,60 @@
+name: CAMPING 3D Toolchain
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "package.json"
+      - "bun.lock"
+      - "scripts/build-3d.mjs"
+      - "scripts/env.sh"
+      - "scripts/install-3d-toolchain.sh"
+      - "scripts/copy-basis-transcoder.mjs"
+      - "scripts/check-3d-toolchain.mjs"
+      - ".github/workflows/camping-3d-toolchain.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-toolchain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Cache system 3D tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/tools/blender
+            ~/tools/ktx
+          key: camping-3d-tools-linux-x64-blender-4.5.14-ktx-4.4.2
+
+      - name: Install JavaScript dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+
+      - name: Generate Basis runtime assets from Three.js
+        run: npm run 3d:basis
+
+      - name: Install pinned Blender and KTX-Software
+        run: npm run 3d:toolchain:install
+
+      - name: Verify Node and system toolchain
+        run: npm run 3d:toolchain:check
+
+      - name: Verify Blender headless and Cycles
+        run: blender -b -E CYCLES --python-expr "import bpy; print(bpy.app.version_string); print(bpy.context.preferences.addons['cycles'].preferences.get_devices())"
+
+      - name: Verify GLB build CLI help
+        run: node scripts/build-3d.mjs --help
+
+      - name: Validate the current Scene Bible
+        run: npm run 3d:validate

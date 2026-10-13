@@ -11,7 +11,7 @@ Issues de execução: fases 01–17 em [#33–#49](https://github.com/edmundokut
 | Fase | Entrega | Estado | Gate de conclusão |
 |---:|---|---|---|
 | 01 | Linha de base, instrumentação e harness de fidelidade | Em validação | baseline executado, API debug, 7 poses, 21 capturas aprovadas, CI verde |
-| 02 | Toolchain e dependências | Pendente | Blender, KTX, glTF Transform e CI verificados |
+| 02 | Toolchain e dependências | Em validação | dependências, Blender, KTX, Basis, build CLI, lockfile e CI confirmados por execução |
 | 03 | Scene Bible e plano métrico | Pendente | inventário validado, escala humana e sala fechada |
 | 04 | Fonte da verdade em Blender | Pendente | ficheiro .blend e build reproduzível por CLI |
 | 05 | Biblioteca de materiais PBR CC0 2K | Pendente | manifestos e licenças verificados |
@@ -50,3 +50,9 @@ As execuções GitHub Actions mais recentes falharam antes de expor passos de jo
 - Não remover IDs de interacção existentes nem alterar a origem dos 17 retratos.
 - Não fechar issues sem resultados e links para evidência.
 - Não afirmar medições de browser, FPS ou fidelidade que não tenham sido efectivamente recolhidas.
+
+## Estado real da Fase 02
+
+A configuração da toolchain foi adicionada à main: dependências JavaScript com versões fixas, comandos 3D, geração de Basis durante dev/build, instalador Linux x86_64 para Blender/KTX e um workflow de verificação isolado. O ficheiro docs/camping-v3/phase-02/README.md regista as versões e comandos de validação.
+
+A instalação efectiva dos binários, a sincronização do bun.lock, a execução do CLI de build e o CI continuam como gates pendentes até que os comandos sejam executados num runner funcional. A existência dos scripts ou do workflow não é considerada prova de execução. Não activar pós-processamento, BVH ou novo renderer nesta fase.

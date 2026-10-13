@@ -16,7 +16,16 @@
     "validate:camping-scene": "node scripts/validate-scene-bible.mjs docs/camping-v3/scene-bible.json",
     "test:camping-v3": "vitest run src/features/camping/v3/v3.test.ts",
     "audit:camping-glb": "node scripts/check-3d-budgets.mjs public/models/camping/xoyens-studio.glb high",
-    "check:camping-baseline": "node scripts/check-3d-baseline.mjs"
+    "check:camping-baseline": "node scripts/check-3d-baseline.mjs",
+    "predev": "node scripts/copy-basis-transcoder.mjs",
+    "prebuild": "node scripts/copy-basis-transcoder.mjs",
+    "3d:validate": "node scripts/validate-scene-bible.mjs",
+    "3d:budget": "node scripts/check-3d-budgets.mjs",
+    "3d:build": "node scripts/build-3d.mjs",
+    "3d:bake": "bash scripts/bake-3d.sh",
+    "3d:basis": "node scripts/copy-basis-transcoder.mjs",
+    "3d:toolchain:install": "bash scripts/install-3d-toolchain.sh",
+    "3d:toolchain:check": "node scripts/check-3d-toolchain.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"
@@ -80,7 +89,11 @@
     "tw-animate-css": "^1.3.4",
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^6.0.2",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "detect-gpu": "5.0.70",
+    "n8ao": "2.0.1",
+    "postprocessing": "6.39.5",
+    "three-mesh-bvh": "0.9.16"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
@@ -106,7 +119,14 @@
     "typescript-eslint": "^8.56.1",
     "vite": "8.1.5",
     "vitest": "^4.1.10",
-    "@playwright/test": "1.64.0"
+    "@playwright/test": "1.64.0",
+    "@gltf-transform/cli": "4.5.1",
+    "@gltf-transform/core": "4.5.1",
+    "@gltf-transform/extensions": "4.5.1",
+    "@gltf-transform/functions": "4.5.1",
+    "ktx-parse": "2.0.0",
+    "meshoptimizer": "1.3.0",
+    "sharp": "0.35.4"
   },
   "trustedDependencies": [
     "ffmpeg-static"
