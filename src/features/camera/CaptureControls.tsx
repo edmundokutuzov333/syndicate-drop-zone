@@ -72,7 +72,7 @@ export function CaptureControls({
 
       <button
         type="button"
-        className={"camera-shutter " + (recording ? "is-recording" : "")}
+        className={"camera-shutter " + (recording ? "is-recording" : mode === "video" ? "is-video-mode" : "is-photo-mode")}
         disabled={busy}
         onClick={onCapture}
         aria-label={
@@ -83,8 +83,9 @@ export function CaptureControls({
               : "Iniciar gravação"
         }
       >
-        <span className="camera-shutter-outer" />
-        <span className="camera-shutter-inner" />
+        <span className="camera-shutter-outer" aria-hidden="true" />
+        <span className="camera-shutter-inner" aria-hidden="true" />
+        <span className="camera-shutter-label">{recording ? "STOP" : mode === "photo" ? "TAKE PHOTO" : "REC VIDEO"}</span>
       </button>
     </div>
   );
