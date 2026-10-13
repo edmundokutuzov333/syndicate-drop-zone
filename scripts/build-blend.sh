@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
-BLEND_OUT="\${1:-art/xoyens-studio.blend}"
-RAW_OUT="\${2:-art/out/xoyens-studio.raw.glb}"
-BLENDER_BIN="\${BLENDER_BIN:-blender}"
+BLEND_OUT="${1:-art/xoyens-studio.blend}"
+RAW_OUT="${2:-art/out/xoyens-studio.raw.glb}"
+BLENDER_BIN="${BLENDER_BIN:-blender}"
 
 command -v "$BLENDER_BIN" >/dev/null 2>&1 || {
   echo "Blender não encontrado. Execute npm run 3d:toolchain:install primeiro." >&2

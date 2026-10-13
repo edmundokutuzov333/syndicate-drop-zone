@@ -16,3 +16,8 @@ Textures, bakes and generated GLBs are not hand-edited. Official Sindicato/Xoyen
 
 
 The PBR material helper accepts optional color/sRGB, normal/Non-Color, ORM/Non-Color (R=AO, G=roughness, B=metallic), and height/Non-Color maps. Any requested missing file fails the build. Texture files and the approved brand decals will be introduced with provenance records in the material phase; this phase does not invent logos or seal artwork.
+
+
+## Headless GitHub Actions build
+
+Use `.github/workflows/build-3d.yml` for the authoritative CI build. It executes the pinned Linux toolchain, saves full command logs and uploads the `.blend`, JSON report, raw GLB, environment information and SHA-256 checksums as a 30-day workflow artifact. The `.blend` is not automatically committed; promote it to Git LFS only after inspection of the real successful build artifact.

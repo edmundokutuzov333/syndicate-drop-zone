@@ -51,3 +51,8 @@ A correcção de follow-up orienta o disco de vinil no plano horizontal, reduz a
 ## Material PBR e shading
 
 O helper comum inclui um caminho explícito para mapas color, normal, ORM e height. Cor usa sRGB; dados usam Non-Color. ORM segue R=AO, G=roughness, B=metallic. Um mapa pedido mas ausente interrompe o build. O shading usa arestas sharp por ângulo em Blender 4.x e Weighted Normal. Nesta fase não foram adicionados mapas de terceiros nem decal oficial novo.
+
+
+## Workflow GitHub Actions
+
+O workflow `.github/workflows/build-3d.yml` corre em pushes à `main` ou manualmente. Usa Ubuntu 24.04 x86_64, Node 22, Python 3.11 e o instalador verificado de Blender 4.5.14/KTX-Software 4.4.2. Corre `npm run 3d:validate`, `npm run 3d:blend` e `npm run 3d:blend:validate`, depois exige os três outputs, valida o report JSON e regista SHA-256. Os logs completos e os artefactos são publicados durante 30 dias; numa falha, publica logs e outputs parciais. Git LFS é instalado/activado no checkout e o atributo de `art/xoyens-studio.blend` é verificado, mas nenhum binário é commitado automaticamente.

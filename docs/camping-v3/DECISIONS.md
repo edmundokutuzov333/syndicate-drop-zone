@@ -96,3 +96,7 @@ O helper PBR aceita mapas opcionais color/sRGB, normal/Non-Color, ORM/Non-Color 
 
 ### D028 · Ferragens e portabilidade do build
 O puxador das portas usa eixo horizontal para representar a alavanca, e os verificadores de sintaxe chamam explicitamente python3 para não depender da existência do alias python no runner Ubuntu. Isto reduz diferenças entre ambientes sem alterar as APIs públicas.
+
+
+### D029 · Workflow de build Blender headless
+O workflow canónico para a fonte Blender é `.github/workflows/build-3d.yml`. Corre em `ubuntu-24.04` (Linux x86_64), configura Node 22/Python 3.11, valida/activa Git LFS local, instala a toolchain fixa, executa os quatro comandos exigidos pela Fase 04 e guarda logs completos e artefactos. O antigo workflow CAMPING 3D Toolchain fica manual para evitar executar dois downloads/builds pesados no mesmo push. Não há commit automático do `.blend`: o artefacto de CI tem de ser validado primeiro e a promoção via LFS é uma acção separada.

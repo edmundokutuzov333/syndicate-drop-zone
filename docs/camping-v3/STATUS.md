@@ -82,3 +82,8 @@ Foi preparada uma correcção adicional à orientação das superfícies e à es
 The Blender common module now supports optional color/normal/ORM/height paths with color-space validation and named nodes, and includes Blender 4.x angle-based sharp-edge marking alongside Weighted Normal. No third-party textures have been added yet; the maps parameter is for the material asset phase. These Blender API paths remain unexecuted because the GitHub runner is not being allocated.
 
 A pipeline usa agora python3 explicitamente para compilar os módulos e orienta a alavanca da porta no eixo horizontal. O teste Blender continua por executar por falta de runner atribuível.
+
+
+## Workflow de execução real da Fase 04
+
+Foi adicionado `.github/workflows/build-3d.yml`, com `workflow_dispatch` e `push` em `main`, runner Linux x86_64, Node 22, Python 3.11, instalação de Blender 4.5.14/KTX-Software 4.4.2, Git LFS, validação da Scene Bible e construção/validação do `.blend`. Cada comando escreve logs em `logs/`; os artefactos e checksums são carregados por 30 dias. O workflow só valida a fase se os três ficheiros existirem e os comandos concluírem com sucesso. A primeira execução após o commit é o gate de confirmação.

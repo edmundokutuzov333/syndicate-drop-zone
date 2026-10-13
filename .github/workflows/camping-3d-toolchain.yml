@@ -2,24 +2,6 @@ name: CAMPING 3D Toolchain
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "package.json"
-      - "bun.lock"
-      - "scripts/build-3d.mjs"
-      - "scripts/env.sh"
-      - "scripts/install-3d-toolchain.sh"
-      - "scripts/copy-basis-transcoder.mjs"
-      - "scripts/check-3d-toolchain.mjs"
-      - "scripts/blender/**"
-      - "scripts/build-blend.sh"
-      - "scripts/verify-glb-contract.mjs"
-      - "docs/camping-v3/scene-bible.json"
-      - ".github/workflows/camping-3d-toolchain.yml"
-
-permissions:
-  contents: read
 
 jobs:
   verify-toolchain:

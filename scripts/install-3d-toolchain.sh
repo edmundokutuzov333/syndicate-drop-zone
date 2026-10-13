@@ -33,7 +33,7 @@ blender_ok() {
 }
 
 BLENDER_BIN="$BLENDER_ROOT/blender-$BLENDER_VERSION-linux-x64/blender"
-if ! blender_ok && [[ ! -x "$BLENDER_BIN" ]]; then
+if [[ ! -x "$BLENDER_BIN" ]]; then
   TMP_DIR="$(mktemp -d)"
   trap 'rm -rf "$TMP_DIR"' EXIT
   echo "A transferir Blender $BLENDER_VERSION..."
