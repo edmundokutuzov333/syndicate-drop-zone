@@ -132,7 +132,7 @@ export function FilterControlPanel({
     // is outside the floating panel, without relying on element pointer capture.
   };
 
-  const floatingStyle = { left: position.x, top: position.y };
+  const floatingStyle = { left: 0, top: 0, transform: `translate3d(${position.x}px, ${position.y}px, 0)` };
   const panelContent = controls.length === 0 ? null : minimized ? (
     <button
       type="button"
