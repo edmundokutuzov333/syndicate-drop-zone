@@ -45,3 +45,21 @@ O repositório contém bun.lock, mas o CI existente instala com npm install --le
 
 ### D014 · Limites de activação
 Blender, KTX e glTF Transform ficam preparados para o pipeline de assets. postprocessing, n8ao e three-mesh-bvh estão apenas declarados e verificados como dependências; não foram ligados ao renderer, colisões ou navegação nesta fase. Real-ESRGAN fica adiado até existir uma tarefa real de upscale de placeholders na fase de props, nunca para substituir assets de marca oficiais. A fase permanece em validação até existirem resultados reais.
+
+
+## 2026-10-13 · Fase 03
+
+### D015 · Planta útil e origem métrica
+A planta-alvo usa dimensões interiores livres de 7,60 × 5,60 m, origem no centro do chão, +Y vertical, chão acabado em y=0 e +Z a apontar para a parede de entrada. As faces interiores ficam em x=±3,80 m e z=±2,80 m. As paredes têm 0,14 m de espessura; o envelope exterior alvo é 7,88 × 5,88 m. A abóbada tem arranque a 2,85 m e coroa a 3,45 m, com flecha de 0,60 m.
+
+### D016 · Enclosure e portas
+A planta declara quatro paredes: back, front, left e right. Os dois vãos são explícitos e cada um tem uma folha fechada no plano. A parede negra é uma sobreposição de acabamento sobre uma parede estrutural contínua, não uma abertura. O rodapé percorre os quatro lados (26,4 m). O soalho tem a superfície superior em y=0.
+
+### D017 · Âncoras de escala e composição
+As âncoras humanas verificáveis são: porta 2,04 m, tampo da secretária 0,75 m, monitor de 27 polegadas 0,62 × 0,37 m, cadeira 1,15 m, cabideiro 1,70 m e tripé de luz 2,00 m. A câmara de calibração começa em (0, 1,45, 0), orientada para -Z. As coordenadas do metricPlan são alvos de composição para A/B, não uma declaração de levantamento fotogramétrico; os sectores angulares da referência continuam preservados.
+
+### D018 · Detalhes de montagem e orçamento
+Foram acrescentados elementos para tomadas, interruptor, cabos de alimentação/áudio, parafusos e anilhas, etiquetas técnicas, ferragens das quatro gaiolas, vincos do papel fotográfico, palas do LED, rodízios e cabo da fita LED da estante. Estes detalhes não adicionam fontes de luz. Orçamento total actual: 221 710 triângulos estimados, inferior ao limite high de 260 000. Nenhum asset de terceiros novo foi adicionado e os activos oficiais permanecem nos manifestos existentes.
+
+### D019 · Desvio do runtime legado
+O ficheiro public/models/camping/xoyens-studio.model.json ainda descreve bounds publicados de 14,2 × 9,2 m, parede 3,2 m e coroa 4,35 m; as colisões usam aproximadamente x=±6,55 e z=-4,18…4,08. Não alterar estes valores nesta fase, porque descrevem o runtime legado existente. A casca/GLB e colisões devem convergir para o plano 7,6 × 5,6 m nas fases de Blender/modelação/runtime, com testes de navegação, porta, colisões e regressão visual. Esta diferença não pode ser escondida ou declarada como já resolvida.

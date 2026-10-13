@@ -12,7 +12,7 @@ Issues de execução: fases 01–17 em [#33–#49](https://github.com/edmundokut
 |---:|---|---|---|
 | 01 | Linha de base, instrumentação e harness de fidelidade | Em validação | baseline executado, API debug, 7 poses, 21 capturas aprovadas, CI verde |
 | 02 | Toolchain e dependências | Em validação | dependências, Blender, KTX, Basis, build CLI, lockfile e CI confirmados por execução |
-| 03 | Scene Bible e plano métrico | Pendente | inventário validado, escala humana e sala fechada |
+| 03 | Scene Bible e plano métrico | Em validação | 54 elementos, escala humana, 4 paredes/2 portas, orçamento ≤260000 e 72 células sector/elev validados; CI ainda pendente |
 | 04 | Fonte da verdade em Blender | Pendente | ficheiro .blend e build reproduzível por CLI |
 | 05 | Biblioteca de materiais PBR CC0 2K | Pendente | manifestos e licenças verificados |
 | 06 | Casca arquitectónica fechada | Pendente | paredes, abóbada, portas, AC e condutas |
@@ -56,3 +56,14 @@ As execuções GitHub Actions mais recentes falharam antes de expor passos de jo
 A configuração da toolchain foi adicionada à main: dependências JavaScript com versões fixas, comandos 3D, geração de Basis durante dev/build, instalador Linux x86_64 para Blender/KTX e um workflow de verificação isolado. O ficheiro docs/camping-v3/phase-02/README.md regista as versões e comandos de validação.
 
 A instalação efectiva dos binários, a sincronização do bun.lock, a execução do CLI de build e o CI continuam como gates pendentes até que os comandos sejam executados num runner funcional. A existência dos scripts ou do workflow não é considerada prova de execução. Não activar pós-processamento, BVH ou novo renderer nesta fase.
+
+
+## Estado real da Fase 03
+
+O Scene Bible passou de 43 para 54 elementos com fonte, materiais, dimensões e orçamento individual. O orçamento planeado é 221 710 triângulos face ao limite high de 260 000; as sete fontes de luz do seed foram mantidas. O novo metricPlan define uma planta útil de 7,60 × 5,60 m, chão acabado em y=0, paredes de 2,85 m, chave da abóbada a 3,45 m, quatro paredes fechadas e dois vãos com folhas de porta.
+
+O plano inclui 40 âncoras de posição, regras de montagem para superfícies e detalhes, câmara de calibração (0, 1,45, 0), âncoras humanas de escala, os sete IDs de interacção e 17 slots de artistas vindos do backend. Foram descritos cabos, tomadas, interruptores, uniões das gaiolas, parafusos, etiquetas, vincos do papel, palas do painel LED e rodízios. O validador verifica também as 24 fatias azimutais × 3 bandas de elevação.
+
+**Divergência preservada:** o GLB publicado continua com envelope documentado de 14,2 × 9,2 m e as colisões continuam com os limites legacy. O plano 7,6 × 5,6 m é o alvo de reconstrução, não uma afirmação falsa sobre o asset actualmente publicado. O runtime/GLB não foi alterado nesta fase; a migração será feita no pipeline de modelo e nas fases de casca/runtime.
+
+O verificador local sobre o candidato da Fase 03 devolveu 54 elementos, 221 710 triângulos orçamentados, 7 luzes, 24/24 sectores, 72/72 células sector/elev, 40 âncoras e 15 regras de montagem. O aviso sobre o envelope legacy é intencional. A Fase 03 continua em validação até haver CI real e preview verificado.
