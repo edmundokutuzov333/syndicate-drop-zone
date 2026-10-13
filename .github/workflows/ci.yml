@@ -99,6 +99,7 @@ jobs:
           path: |
             test-results/camping-reference-full-ui.png
             test-results/camping-reference-canvas.png
+            test-results/camping-v3-baseline/**
             test-results/camping-startup-diagnostic.png
             test-results/camping-renderer-diagnostics.json
             test-results/**/error-context.md
