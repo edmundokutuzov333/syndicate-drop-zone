@@ -1137,6 +1137,10 @@ export class CampingStudioEngine {
   }
 
   debugIsReady(): boolean {
+    const requested = new URLSearchParams(window.location.search).get("pose");
+    const knownPose = requested && Object.prototype.hasOwnProperty.call(CAMPING_DEBUG_POSES, requested)
+      ? requested as CampingDebugPoseId
+      : null;
     return Boolean(
       this.renderer &&
       this.studioLoaded &&
@@ -1144,8 +1148,7 @@ export class CampingStudioEngine {
       this.currentRoom === "studio" &&
       !this.tween &&
       !this.debugRequestedPose &&
-      (!new URLSearchParams(window.location.search).get("pose") ||
-        this.debugAppliedPose === new URLSearchParams(window.location.search).get("pose")),
+      (!knownPose || this.debugAppliedPose === knownPose),
     );
   }
 
@@ -1281,7 +1284,11 @@ export class CampingStudioEngine {
     this.advanceDoor(now);
     this.advanceTween(now);
     if (this.debugRequestedPose && this.phase === "EXPLORATION" && this.studioLoaded && this.currentRoom === "studio") {
-      this.applyDebugPose(this.debugRequestedPose, false);
+      const applied = this.applyDebugPose(this.debugRequestedPose, false);
+      if (applied && new URLSearchParams(window.location.search).get("still") === "1") {
+        this.debugFrozen = true;
+        if (this.canvas) this.canvas.dataset.campingDebugFrozen = "true";
+      }
     }
     this.advanceMovement(delta);
     this.camera.position.y = CAM_HEIGHT;
@@ -3005,5 +3012,6 @@ export class CampingStudioEngine {
     this.renderer.setSize(width, height, false);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
+    if (this.debugFrozen) this.renderer.render(this.scene, this.camera);
   }
 }
