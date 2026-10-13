@@ -40,7 +40,7 @@ const PUBLISHED_ARTIST_FIXTURE = ARTIST_PHOTO_URLS.map((photo_url, index) => ({
   status: "published",
 }));
 
-async function openCamping(page: import("@playwright/test").Page) {
+async function openCamping(page: import("@playwright/test").Page, query = "") {
   await page.route("**/rest/v1/**", async (route) => {
     const pathname = new URL(route.request().url()).pathname;
     await route.fulfill({
@@ -55,7 +55,7 @@ async function openCamping(page: import("@playwright/test").Page) {
     if (message.type() === "error") browserDiagnostics.push("console: " + message.text());
   });
 
-  await page.goto("/camping");
+  await page.goto("/camping" + query);
   await unlockSite(page);
   await expect(page.locator("main.camping-studio-route")).toBeVisible();
   const canvas = page.locator("canvas.camping-studio__canvas");
@@ -279,6 +279,74 @@ test.describe("CAMPING V2 / 808 access", () => {
     expect(Number(renderStats.textures)).toBeGreaterThan(0);
     expect(Number(renderStats.fps)).toBeGreaterThan(0);
     expect(Number(renderStats.cpuFrameMsAvg)).toBeGreaterThan(0);
+  });
+
+  test("does not expose the 3D diagnostic API without the explicit debug flag", async ({ page }) => {
+    await openCamping(page);
+    expect(await page.evaluate(() => typeof window.__SDT3D__)).toBe("undefined");
+  });
+
+  test("captures the seven deterministic baseline poses and renderer fidelity metrics", async ({ page }) => {
+    await page.setViewportSize({ width: 1774, height: 887 });
+    await openCamping(page, "?debug3d=1&pose=entrada&still=1");
+    const canvas = page.locator("canvas.camping-studio__canvas");
+    if (await page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]').isVisible()) {
+      throw new Error("Fase 01 requires WebGL in the Playwright runner to capture deterministic CAMPING poses.");
+    }
+
+    const codeSlots = page.locator(".camping-studio__code-slots");
+    await canvas.focus();
+    await page.keyboard.press("8");
+    await expect(codeSlots).toHaveAttribute("aria-label", "Código introduzido: 8");
+    await page.keyboard.press("0");
+    await expect(codeSlots).toHaveAttribute("aria-label", "Código introduzido: 80");
+    await page.keyboard.press("8");
+    await expect(page.locator(".camping-studio__explore-state")).toContainText("EXPLORATION ACTIVE", { timeout: 30_000 });
+    await expect.poll(() => page.evaluate(() => window.__SDT3D__?.ready ?? false), { timeout: 30_000 }).toBe(true);
+
+    const api = await page.evaluate(() => {
+      const debug = window.__SDT3D__;
+      if (!debug) return null;
+      debug.freeze();
+      return { metrics: debug.metrics(), initialPose: debug.metrics()?.pose };
+    });
+    expect(api).not.toBeNull();
+    expect(api?.metrics).not.toBeNull();
+    expect(api?.metrics?.triangles).toBeGreaterThan(0);
+    expect(api?.metrics?.drawCalls).toBeGreaterThan(0);
+    expect(api?.metrics?.geometries).toBeGreaterThan(0);
+    expect(api?.metrics?.textures).toBeGreaterThan(0);
+
+    const poses = ["entrada", "producao", "foto", "esquerda", "direita", "tecto", "chao"] as const;
+    mkdirSync("test-results/camping-v3-baseline", { recursive: true });
+    const captureMetrics: Record<string, unknown> = {};
+    for (const pose of poses) {
+      const applied = await page.evaluate((id) => window.__SDT3D__?.setPose(id) ?? false, pose);
+      expect(applied, "pose should apply only after 808 unlock and GLB readiness: " + pose).toBe(true);
+      await expect(canvas).toHaveAttribute("data-camping-debug-pose", pose);
+      await expect(canvas).toHaveAttribute("data-camping-debug-frozen", "true");
+      const metrics = await page.evaluate(() => window.__SDT3D__?.metrics() ?? null);
+      expect(metrics).not.toBeNull();
+      captureMetrics[pose] = metrics;
+      const screenshotPath = "test-results/camping-v3-baseline/pose-" + pose + ".png";
+      await canvas.screenshot({ path: screenshotPath, animations: "disabled" });
+      await test.info().attach("camping-v3-baseline-" + pose, { path: screenshotPath, contentType: "image/png" });
+    }
+
+    const referenceMatch = await page.evaluate(() => window.__SDT3D__?.referenceMatch() ?? null);
+    expect(referenceMatch).not.toBeNull();
+    expect(typeof referenceMatch?.score).toBe("number");
+    expect(referenceMatch?.worst).toHaveLength(5);
+    const report = JSON.stringify({
+      shaReference: referenceMatch?.referenceSourceSha256,
+      viewport: { width: 1774, height: 887 },
+      poses: captureMetrics,
+      referenceMatchScore: referenceMatch?.score,
+      worstSectors: referenceMatch?.worst,
+      note: "Baseline screenshots are evidence artifacts. They are not approved visual goldens until reviewed against the original PNG.",
+    }, null, 2);
+    writeFileSync("test-results/camping-v3-baseline/metrics.json", report, "utf8");
+    await test.info().attach("camping-v3-baseline-metrics.json", { body: Buffer.from(report), contentType: "application/json" });
   });
 
   test("keeps navigation and records usable at a mobile viewport", async ({ page }) => {
