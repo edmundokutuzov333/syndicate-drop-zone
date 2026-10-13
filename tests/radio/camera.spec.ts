@@ -1,5 +1,4 @@
 import { chromium, expect, test } from "@playwright/test";
-import { stat } from "node:fs/promises";
 import sharp from "sharp";
 
 test("camera requests media access, renders live frames, downloads photos and plays recordings", async () => {
@@ -143,13 +142,23 @@ test("camera requests media access, renders live frames, downloads photos and pl
       return image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
     }), { timeout: 15_000 }).toBe(true);
 
-    const photoDownloadPromise = page.waitForEvent("download");
-    await preview.getByRole("link", { name: "DOWNLOAD" }).click();
-    const photoDownload = await photoDownloadPromise;
-    expect(photoDownload.suggestedFilename()).toMatch(/\.(jpg|png)$/i);
-    const photoPath = await photoDownload.path();
-    expect(photoPath).toBeTruthy();
-    expect((await stat(photoPath!)).size).toBeGreaterThan(1_000);
+    const photoDownloadLink = preview.getByRole("link", { name: "DOWNLOAD" });
+    await expect(photoDownloadLink).toHaveAttribute("download", /\.(jpg|png)$/i);
+    const photoPayload = await photoDownloadLink.evaluate(async (node) => {
+      const link = node as HTMLAnchorElement;
+      const response = await fetch(link.href);
+      const blob = await response.blob();
+      return {
+        filename: link.download,
+        size: blob.size,
+        mimeType: blob.type,
+        ok: response.ok,
+      };
+    });
+    expect(photoPayload.ok).toBe(true);
+    expect(photoPayload.filename).toMatch(/\.(jpg|png)$/i);
+    expect(photoPayload.mimeType).toMatch(/^image\/(jpeg|png)$/i);
+    expect(photoPayload.size).toBeGreaterThan(1_000);
 
     await preview.getByRole("button", { name: "NEW CAPTURE" }).click();
     await expect(preview).toBeHidden();
@@ -186,13 +195,23 @@ test("camera requests media access, renders live frames, downloads photos and pl
     const playbackAfter = await recordedVideo.evaluate((node) => (node as HTMLVideoElement).currentTime);
     expect(playbackAfter).toBeGreaterThan(playbackStartedAt);
 
-    const videoDownloadPromise = page.waitForEvent("download");
-    await preview.getByRole("link", { name: "DOWNLOAD" }).click();
-    const videoDownload = await videoDownloadPromise;
-    expect(videoDownload.suggestedFilename()).toMatch(/\.(webm|mp4|mov|mkv)$/i);
-    const videoPath = await videoDownload.path();
-    expect(videoPath).toBeTruthy();
-    expect((await stat(videoPath!)).size).toBeGreaterThan(1_000);
+    const videoDownloadLink = preview.getByRole("link", { name: "DOWNLOAD" });
+    await expect(videoDownloadLink).toHaveAttribute("download", /\.(webm|mp4|mov|mkv)$/i);
+    const videoPayload = await videoDownloadLink.evaluate(async (node) => {
+      const link = node as HTMLAnchorElement;
+      const response = await fetch(link.href);
+      const blob = await response.blob();
+      return {
+        filename: link.download,
+        size: blob.size,
+        mimeType: blob.type,
+        ok: response.ok,
+      };
+    });
+    expect(videoPayload.ok).toBe(true);
+    expect(videoPayload.filename).toMatch(/\.(webm|mp4|mov|mkv)$/i);
+    expect(videoPayload.mimeType).toMatch(/^video\//i);
+    expect(videoPayload.size).toBeGreaterThan(1_000);
 
     expect(pageErrors, "The camera flow should not produce uncaught browser errors").toEqual([]);
     await context.close();
