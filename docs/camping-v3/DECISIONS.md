@@ -20,8 +20,11 @@ A especificação original regista 13.366 triângulos, 150 primitivas, 26 materi
 ### D006 · Sem mudança de renderer nesta fase
 A Fase 01 mede o renderer de produção actual. Não instala pós-processamento, não troca o motor de colisões, não activa tiers novos e não altera backend, rotas ou políticas RLS. Essas mudanças pertencem às fases correspondentes.
 
-### D007 · Estado de execução
+### D007 · Gate reproduzível de baseline
+Foi adicionado `scripts/check-3d-baseline.mjs` e o comando `npm run check:camping-baseline`. O gate executa `scripts/check-3d-budgets.mjs` e passa apenas se encontrar exactamente as quatro falhas históricas previstas: dimensão mínima de textura, UV1, KTX2/Basis e Meshopt. Não altera o modelo nem os budgets. O CI executa este gate depois da validação do Scene Bible.
+
+### D008 · Estado de execução
 A última série de workflows em `main` terminou com falha e sem passos de execução expostos pela API de jobs. O estado é inconclusivo quanto à causa. A validação local de comandos e o browser ainda têm de ser executados num ambiente com dependências e Chromium disponíveis.
 
-### D008 · Histórico e publicação
+### D009 · Histórico e publicação
 Todo o trabalho permanece em `main`; não fazer force-push, rebase, amend ou squash de commits publicados. Antes de qualquer alteração estrutural, voltar a ler rotas, motor 3D, contratos de objectos, Control Room e configuração CI.
