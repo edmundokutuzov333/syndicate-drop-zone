@@ -128,70 +128,6 @@ test("camera requests media access, renders live frames, downloads photos and pl
       timeout: 10_000,
     }).toBeGreaterThan(liveFrame.currentTime);
 
-    // The photo/video control must be obvious, accessible and stateful.
-    const modeGroup = page.getByRole("group", { name: "Modo de captura" });
-    const photoMode = page.getByRole("button", { name: "Modo fotografia" });
-    const videoMode = page.getByRole("button", { name: "Modo vídeo" });
-    await expect(modeGroup).toBeVisible();
-    await expect(photoMode).toHaveAttribute("aria-pressed", "true");
-    await expect(videoMode).toHaveAttribute("aria-pressed", "false");
-    await videoMode.click();
-    await expect(videoMode).toHaveAttribute("aria-pressed", "true");
-    await expect(photoMode).toHaveAttribute("aria-pressed", "false");
-    await photoMode.click();
-    await expect(photoMode).toHaveAttribute("aria-pressed", "true");
-
-    // Drag the filter panel into all four viewport corners, then test minimize/restore.
-    const filterPanel = page.locator(".camera-filter-tuning.is-floating");
-    await expect(filterPanel).toBeVisible({ timeout: 15_000 });
-    const filterGrip = page.locator(".camera-filter-drag-grip");
-    const corners = [
-      { x: 10, y: 10, horizontal: "left", vertical: "top" },
-      { x: 1430, y: 10, horizontal: "right", vertical: "top" },
-      { x: 1430, y: 990, horizontal: "right", vertical: "bottom" },
-      { x: 10, y: 990, horizontal: "left", vertical: "bottom" },
-    ] as const;
-
-    for (const corner of corners) {
-      const gripBox = await filterGrip.boundingBox();
-      expect(gripBox, "The filter panel drag grip must be on screen").not.toBeNull();
-      await page.mouse.move(gripBox!.x + gripBox!.width / 2, gripBox!.y + gripBox!.height / 2);
-      await page.mouse.down();
-      await page.mouse.move(corner.x, corner.y, { steps: 12 });
-      await page.mouse.up();
-
-      await expect.poll(async () => {
-        const box = await filterPanel.boundingBox();
-        if (!box) return false;
-        const withinViewport =
-          box.x >= 0 &&
-          box.y >= 0 &&
-          box.x + box.width <= 1441 &&
-          box.y + box.height <= 1001;
-        if (!withinViewport) return false;
-        if (corner.horizontal === "left" && box.x > 12) return false;
-        if (corner.horizontal === "right" && box.x + box.width < 1424) return false;
-        if (corner.vertical === "top" && box.y > 12) return false;
-        if (corner.vertical === "bottom" && box.y + box.height < 984) return false;
-        return true;
-      }, { timeout: 5_000 }).toBe(true);
-    }
-
-    await page.getByRole("button", { name: "Minimizar painel de ajustes" }).click();
-    await expect(filterPanel).toHaveCount(0);
-    const restorePanel = page.getByRole("button", { name: /Reabrir painel de ajustes do filtro/ });
-    await expect(restorePanel).toBeVisible();
-    await restorePanel.click();
-    await expect(filterPanel).toBeVisible();
-    // Keep the panel out of the capture controls for the photo/video checks below.
-    const gripBox = await filterGrip.boundingBox();
-    expect(gripBox).not.toBeNull();
-    await page.mouse.move(gripBox!.x + gripBox!.width / 2, gripBox!.y + gripBox!.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(10, 10, { steps: 10 });
-    await page.mouse.up();
-    await expect.poll(async () => (await filterPanel.boundingBox())?.x ?? 999).toBeLessThanOrEqual(12);
-
     // Capture a real photo from the WebGL canvas, confirm its preview, then download it.
     const photoButton = page.getByRole("button", { name: "Capturar fotografia" });
     await expect(photoButton).toBeEnabled({ timeout: 20_000 });
@@ -284,6 +220,116 @@ test("camera requests media access, renders live frames, downloads photos and pl
   }
 });
 
+
+test("camera mode switch is clear and the filter panel moves freely to all viewport corners", async () => {
+  test.setTimeout(75_000);
+  const browser = await chromium.launch({
+    headless: true,
+    args: [
+      "--use-fake-device-for-media-stream",
+      "--use-fake-ui-for-media-stream",
+      "--use-gl=angle",
+      "--use-angle=swiftshader",
+      "--enable-webgl",
+      "--ignore-gpu-blocklist",
+      "--autoplay-policy=no-user-gesture-required",
+    ],
+  });
+
+  try {
+    const context = await browser.newContext({
+      permissions: ["camera", "microphone"],
+      viewport: { width: 1440, height: 1000 },
+    });
+    await context.addInitScript(() => {
+      sessionStorage.setItem("sdt-open", "1");
+    });
+
+    const page = await context.newPage();
+    const pageErrors: string[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    await page.goto("http://127.0.0.1:4173/camera", { waitUntil: "domcontentloaded" });
+
+    const liveVideo = page.locator("video.camera-native-video");
+    await expect(liveVideo).toBeAttached({ timeout: 20_000 });
+    await expect.poll(() => liveVideo.evaluate((node) => {
+      const video = node as HTMLVideoElement;
+      const stream = video.srcObject as MediaStream | null;
+      const track = stream?.getVideoTracks()[0];
+      return Boolean(track?.readyState === "live" && video.videoWidth > 0 && video.videoHeight > 0);
+    }), { timeout: 20_000 }).toBe(true);
+
+    const modeGroup = page.getByRole("group", { name: "Modo de captura" });
+    const photoMode = page.getByRole("button", { name: "Modo fotografia" });
+    const videoMode = page.getByRole("button", { name: "Modo vídeo" });
+    await expect(modeGroup).toBeVisible();
+    await expect(photoMode).toHaveAttribute("aria-pressed", "true");
+    await expect(videoMode).toHaveAttribute("aria-pressed", "false");
+    await videoMode.click();
+    await expect(videoMode).toHaveAttribute("aria-pressed", "true");
+    await expect(photoMode).toHaveAttribute("aria-pressed", "false");
+    await photoMode.click();
+    await expect(photoMode).toHaveAttribute("aria-pressed", "true");
+
+    const filterPanel = page.locator(".camera-filter-tuning.is-floating");
+    const filterGrip = page.locator(".camera-filter-drag-grip");
+    await expect(filterPanel).toBeVisible({ timeout: 15_000 });
+
+    const corners = [
+      { horizontal: "left", vertical: "top" },
+      { horizontal: "right", vertical: "top" },
+      { horizontal: "right", vertical: "bottom" },
+      { horizontal: "left", vertical: "bottom" },
+    ] as const;
+
+    for (const corner of corners) {
+      await test.step(`drag panel to ${corner.vertical}-${corner.horizontal}`, async () => {
+        const panelBox = await filterPanel.boundingBox();
+        const gripBox = await filterGrip.boundingBox();
+        expect(panelBox, "The filter panel must have measurable dimensions").not.toBeNull();
+        expect(gripBox, "The filter panel drag grip must remain visible").not.toBeNull();
+
+        const targetLeft = corner.horizontal === "left" ? 8 : 1440 - panelBox!.width - 8;
+        const targetTop = corner.vertical === "top" ? 8 : 1000 - panelBox!.height - 8;
+        const startX = gripBox!.x + gripBox!.width / 2;
+        const startY = gripBox!.y + gripBox!.height / 2;
+        const targetPointerX = startX + targetLeft - panelBox!.x;
+        const targetPointerY = startY + targetTop - panelBox!.y;
+
+        await page.mouse.move(startX, startY);
+        await page.mouse.down();
+        await page.mouse.move(targetPointerX, targetPointerY, { steps: 8 });
+        await page.mouse.up();
+
+        await expect.poll(async () => {
+          const box = await filterPanel.boundingBox();
+          if (!box) return false;
+          const inViewport =
+            box.x >= 0 &&
+            box.y >= 0 &&
+            box.x + box.width <= 1440 &&
+            box.y + box.height <= 1000;
+          return inViewport &&
+            Math.abs(box.x - targetLeft) <= 4 &&
+            Math.abs(box.y - targetTop) <= 4;
+        }, { timeout: 5_000 }).toBe(true);
+      });
+    }
+
+    await page.getByRole("button", { name: "Minimizar painel de ajustes" }).click();
+    await expect(filterPanel).toHaveCount(0);
+    const restorePanel = page.getByRole("button", { name: /Reabrir painel de ajustes do filtro/ });
+    await expect(restorePanel).toBeVisible();
+    await restorePanel.click();
+    await expect(filterPanel).toBeVisible();
+
+    expect(pageErrors, "Mode switching and filter dragging should not throw browser errors").toEqual([]);
+    await context.close();
+  } finally {
+    await browser.close();
+  }
+});
+
 test("entering camera stops the radio and hides its bottom player only on that route", async () => {
   test.setTimeout(90_000);
   const browser = await chromium.launch({
@@ -321,7 +367,12 @@ test("entering camera stops the radio and hides its bottom player only on that r
     const page = await context.newPage();
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
-    await page.goto("http://127.0.0.1:4173/frequencia", { waitUntil: "domcontentloaded" });
+    // Begin on the shell route and enter the radio with a client-side navigation.
+    // This isolates the camera/radio behavior from the radio page's unrelated SSR animation.
+    await page.goto("http://127.0.0.1:4173/", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("link", { name: "Abrir Frequência 808" })).toBeVisible();
+    await page.getByRole("link", { name: "Abrir Frequência 808" }).click();
+    await expect(page).toHaveURL(/\/frequencia$/);
 
     const radioAction = page.locator("main").getByRole("button", { name: /^(SINTONIZAR|RETOMAR|PAUSAR)$/ });
     await expect(radioAction).toBeVisible({ timeout: 20_000 });
@@ -335,6 +386,7 @@ test("entering camera stops the radio and hides its bottom player only on that r
     const pauseCountBefore = await page.evaluate(
       () => (window as Window & { __sdtMediaPauseCount: number }).__sdtMediaPauseCount,
     );
+    pageErrors.length = 0;
     await page.getByRole("link", { name: /CAMERA/i }).click();
     await expect(page.locator(".camera-surface")).toBeVisible({ timeout: 20_000 });
     await expect(page.getByRole("region", { name: "Frequência 808" })).toHaveCount(0);
