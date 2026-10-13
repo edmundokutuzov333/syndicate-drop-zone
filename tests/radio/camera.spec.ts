@@ -51,7 +51,7 @@ test("camera requests media access, renders live frames, downloads photos and pl
     const pageErrors: string[] = [];
     page.on("pageerror", (error) => pageErrors.push(error.message));
 
-    await page.goto("/camera", { waitUntil: "domcontentloaded" });
+    await page.goto("http://127.0.0.1:4173/camera", { waitUntil: "domcontentloaded" });
     await expect(page.locator(".camera-surface")).toBeVisible({ timeout: 20_000 });
 
     // Confirm the application actually requests camera access and receives a live video track.
