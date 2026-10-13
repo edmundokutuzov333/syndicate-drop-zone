@@ -84,3 +84,7 @@ Os proxies COL_* ficam na colecção COL_colliders, com renderização/visibilid
 
 ### D025 · Artefacto binário e evidência
 O workflow gera art/xoyens-studio.blend, art/xoyens-studio.report.json e art/out/xoyens-studio.raw.glb e carrega-os como artefactos de CI por 14 dias. Os padrões art/**/*.blend e art/bake/**/*.exr usam Git LFS. A Fase 04 continua aberta até haver um runner real, build/validação bem-sucedidos e decisão explícita de commit do .blend verificado; não criar um ponteiro LFS sem o objecto binário correspondente.
+
+
+### D026 · Orientação e proporção do blockout
+A revisão pós-commit da Fase 04 corrigiu a orientação do vinil para ficar no plano XZ com espessura vertical, limitou a cadeira a aproximadamente 1,11 m de geometria visível (dentro do envelope de referência de 1,15 m), orientou ecrã/cones/teclas para a zona de utilização e espaçou os 17 quadros dentro da área útil da parede. Estes ajustes corrigem erros de geometria evidentes no blockout; não substituem o teste Blender headless, ainda bloqueado pela ausência de runner.

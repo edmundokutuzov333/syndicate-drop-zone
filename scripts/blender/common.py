@@ -499,8 +499,10 @@ def _build_artist_wall(element, ctx, col):
     board["interactionId"] = "studio.artists-wall"
     # Seventeen blank, numbered frames are deliberate: portraits are always loaded from the backend.
     width, height = 0.13, 0.19
-    start_x = -3.62
-    gap = (3.0 - 17 * width) / 16
+    board_left = -2.25 - 1.5
+    edge_margin = 0.05
+    start_x = board_left + edge_margin + width / 2
+    gap = (3.0 - 2 * edge_margin - 17 * width) / 16
     for index in range(17):
         slot_id = "studio.artist-slot-" + str(index + 1).zfill(3)
         x = start_x + index * (width + gap)
@@ -569,8 +571,10 @@ def build_element(element, ctx, col=None):
         bpy.ops.mesh.primitive_cylinder_add(vertices=64, radius=1, depth=dims[1], location=center)
         root = bpy.context.object
         root.name = _new_object_name(element)
-        root.scale = (dims[0] / 2, 1, dims[2] / 2)
+        root.scale = (dims[0] / 2, dims[2] / 2, 1)
         bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+        root.rotation_euler = (math.pi / 2, 0, 0)
+        bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
         for current in list(root.users_collection):
             current.objects.unlink(root)
         col.objects.link(root)
@@ -590,10 +594,10 @@ def build_element(element, ctx, col=None):
         root = element_box(element, ctx, col=col, dimensions=(dims[0], dims[1], 0.055),
                            location=(x, y, z), material_names=["plastic_black"], bevel=0.003)
         box(root.name + "_screen", (dims[0] - 0.035, dims[1] - 0.035, 0.006),
-            (x, y, z + 0.031), "screen_emissive", col, zone="production", bevel=0)
-        box(root.name + "_stand", (0.09, 0.18, 0.06), (x, y - dims[1] / 2 - 0.09, z - 0.015),
+            (x, y, z - 0.031), "screen_emissive", col, zone="production", bevel=0)
+        box(root.name + "_stand", (0.09, 0.18, 0.06), (x, y - dims[1] / 2 - 0.09, z + 0.015),
             "steel_black", col, zone="production", bevel=0.002)
-        box(root.name + "_base", (0.23, 0.018, 0.14), (x, y - dims[1] / 2 - 0.17, z),
+        box(root.name + "_base", (0.23, 0.018, 0.14), (x, y - dims[1] / 2 - 0.17, z + 0.02),
             "steel_black", col, zone="production", bevel=0.002)
     elif eid == "prod.monitors_pair":
         rule = ctx["assemblies"].get(eid, {})
@@ -608,22 +612,22 @@ def build_element(element, ctx, col=None):
                 speaker = box(_new_object_name(element, "speaker_" + str(idx + 1)),
                     (0.25, 0.38, 0.28), tuple(point), "plastic_black", col, zone="production", bevel=0.004)
             x, y, z = point
-            cylinder(speaker.name + "_woofer", 0.075, 0.012, (x, y - 0.035, z + 0.146),
-                     "speaker_cone_black", col, vertices=24, rotation=(math.pi / 2, 0, 0), zone="production")
-            cylinder(speaker.name + "_tweeter", 0.027, 0.012, (x, y + 0.105, z + 0.146),
-                     "steel_black", col, vertices=20, rotation=(math.pi / 2, 0, 0), zone="production")
+            cylinder(speaker.name + "_woofer", 0.075, 0.012, (x, y - 0.035, z - 0.146),
+                     "speaker_cone_black", col, vertices=24, rotation=(0, 0, 0), zone="production")
+            cylinder(speaker.name + "_tweeter", 0.027, 0.012, (x, y + 0.105, z - 0.146),
+                     "steel_black", col, vertices=20, rotation=(0, 0, 0), zone="production")
         ctx["built"].add(eid)
     elif eid == "prod.chair_leather":
         x, _, z = center
-        root = element_box(element, ctx, col=col, dimensions=(0.64, 0.16, 0.62),
-                           location=(x, 0.52, z), material_names=["leather_black_quilted"], bevel=0.035)
-        box(root.name + "_back", (0.62, 0.76, 0.16), (x, 0.96, z - 0.23),
+        root = element_box(element, ctx, col=col, dimensions=(0.64, 0.14, 0.62),
+                           location=(x, 0.47, z), material_names=["leather_black_quilted"], bevel=0.035)
+        box(root.name + "_back", (0.62, 0.55, 0.16), (x, 0.77, z - 0.23),
             "leather_black_quilted", col, zone="production", bevel=0.035)
-        box(root.name + "_headrest", (0.42, 0.24, 0.16), (x, 1.38, z - 0.23),
-            "leather_black_quilted", col, zone="production", bevel=0.03)
+        box(root.name + "_headrest", (0.42, 0.15, 0.16), (x, 1.035, z - 0.23),
+            "leather_black_quilted", col, zone="production", bevel=0.025)
         for side in (-1, 1):
-            box(root.name + "_arm_" + str(side), (0.09, 0.08, 0.42),
-                (x + side * 0.34, 0.67, z - 0.02), "plastic_black", col, zone="production", bevel=0.015)
+            box(root.name + "_arm_" + str(side), (0.09, 0.07, 0.42),
+                (x + side * 0.34, 0.58, z - 0.02), "plastic_black", col, zone="production", bevel=0.015)
             cylinder_between(root.name + "_spoke_" + str(side), (x, 0.13, z), (x + side * 0.27, 0.09, z),
                              0.018, "steel_black", col)
         cylinder(root.name + "_column", 0.04, 0.34, (x, 0.3, z), "steel_black", col, vertices=16, zone="production")
@@ -756,7 +760,7 @@ def build_element(element, ctx, col=None):
             for i in range(12):
                 bx = x - dims[0] / 2 + 0.06 + i * (dims[0] - 0.12) / 12
                 box(root.name + "_white_key_" + str(i), ((dims[0]-0.12)/12, 0.012, 0.18),
-                    (bx, y + 0.043, z + dims[2] / 2 + 0.01), "key_ivory", col, zone="production", bevel=0)
+                    (bx, y + 0.043, z - dims[2] / 2 - 0.01), "key_ivory", col, zone="production", bevel=0)
         elif eid == "photo.backdrop_seal":
             # Blank decal carrier only. The official seal image is linked in the material phase; no logo is recreated here.
             root["officialAssetPending"] = "print_official_seal"

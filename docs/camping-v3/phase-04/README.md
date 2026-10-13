@@ -41,3 +41,8 @@ Esta fase estabelece um blockout geométrico em Blender e o pipeline de fonte de
 O workflow CAMPING 3D Toolchain compila a sintaxe Python, executa o build, valida .blend, exporta o GLB cru, verifica extras/UVs e carrega os artefactos por 14 dias. O relatório guardado em art/xoyens-studio.report.json inclui versão do Blender, tamanho, tempo, objectos, vértices, polígonos e triângulos estimados.
 
 A fase continua Em validação até existir um runner real e uma execução completa. Um commit de scripts ou o sucesso do deploy Vercel não substitui a prova de que o .blend foi gerado, validado e respeita o limite de 200 MiB. O .blend verificado deve ser guardado através de Git LFS; não criar um ponteiro LFS sem o objecto correspondente.
+
+
+## Revisão geométrica da Fase 04
+
+A correcção de follow-up orienta o disco de vinil no plano horizontal, reduz a altura construída da cadeira para o envelope métrico, vira o ecrã e as faces das colunas para o interior do estúdio e mantém os 17 quadros numerados dentro da parede. A cena ainda não foi executada em Blender porque os jobs de CI continuam a falhar antes de receber runner; estes ajustes permanecem por confirmar através do artefacto real.
