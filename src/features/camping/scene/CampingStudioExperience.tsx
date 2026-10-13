@@ -4,6 +4,7 @@ import type { CampingRoomId } from "./CampingRoomWorld";
 import { initialCampingAccessState } from "../interactions/access-machine";
 import sindicatoSelo from "@/assets/brand/sindicato-selo.png.asset.json";
 import { CampingStudioEngine } from "./CampingStudioEngine";
+import type { CampingDebugApi, CampingDebugPoseId, CampingReferenceMatch } from "../v3/debug-api";
 import { CampingObjectInterface } from "./CampingObjectInterface";
 import "./camping-object-interface.css";
 import "./camping-studio.css";
@@ -77,6 +78,15 @@ export function CampingStudioExperience({
   const [rendererAttempt, setRendererAttempt] = useState(0);
   const [guidedOpen, setGuidedOpen] = useState(false);
   const [currentRoom, setCurrentRoom] = useState<CampingRoomId>("studio");
+  const [debugMatch, setDebugMatch] = useState<CampingReferenceMatch | null>(null);
+  const [debugReferenceUrl, setDebugReferenceUrl] = useState<string | null>(null);
+  const [debugReferenceMessage, setDebugReferenceMessage] = useState<string>("A pontuação usa a referência privada de 72 sectores.");
+  const [debugOverlayMode, setDebugOverlayMode] = useState<"side-by-side" | "blend" | "diff">("side-by-side");
+  const [debugBlend, setDebugBlend] = useState(50);
+  const debugReferenceInput = useRef<HTMLInputElement>(null);
+  const debugQuery = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const debugEnabled = debugQuery?.get("debug3d") === "1";
+  const debugOverlayEnabled = debugEnabled && debugQuery?.get("refmatch") === "1";
 
   useEffect(() => {
     guidedRef.current = guidedOpen;
@@ -158,8 +168,33 @@ export function CampingStudioExperience({
       },
     });
     engineRef.current = engine;
+    let debugApi: CampingDebugApi | null = null;
     try {
       engine.mount(canvas);
+      if (new URLSearchParams(window.location.search).get("debug3d") === "1") {
+        const query = new URLSearchParams(window.location.search);
+        const requestedPose = query.get("pose");
+        const allowedPoses = new Set<CampingDebugPoseId>(["entrada", "producao", "foto", "esquerda", "direita", "tecto", "chao"]);
+        debugApi = {
+          get ready() { return engine.debugIsReady(); },
+          freeze: () => engine.debugFreeze(),
+          metrics: () => engine.debugMetrics(),
+          setPose: (id) => engine.debugSetPose(id),
+          referenceMatch: () => engine.debugReferenceMatch(),
+          setReferenceImage: (dataUrl) => engine.debugSetReferenceImage(dataUrl),
+        };
+        window.__SDT3D__ = debugApi;
+        engine.debugRequestPose(requestedPose && allowedPoses.has(requestedPose as CampingDebugPoseId)
+          ? requestedPose as CampingDebugPoseId
+          : null);
+        // Explicit debug query is a local QA tool. The normal /camping experience
+        // keeps its visible 808 keypad and does not expose this API by default.
+        if (canvas.dataset.campingWebglStatus === "ready") {
+          engine.pressAccessibleKey("8");
+          engine.pressAccessibleKey("0");
+          engine.pressAccessibleKey("8");
+        }
+      }
       const queuedKeys = pendingAccessKeysRef.current.splice(0);
       for (const key of queuedKeys) engine.pressAccessibleKey(key);
     } catch (error) {
@@ -183,6 +218,7 @@ export function CampingStudioExperience({
     }
     return () => {
       pendingAccessKeysRef.current = [];
+      if (debugApi && window.__SDT3D__ === debugApi) delete window.__SDT3D__;
       try {
         engine.dispose();
       } finally {
@@ -214,6 +250,48 @@ export function CampingStudioExperience({
     engineRef.current?.setVirtualMovement(direction, active);
   };
 
+  const refreshReferenceMatch = () => {
+    const api = window.__SDT3D__;
+    if (!api?.ready) {
+      setDebugReferenceMessage("A aguardar a câmara, o modelo e a pose determinística.");
+      return;
+    }
+    const result = api.referenceMatch();
+    setDebugMatch(result);
+    setDebugReferenceMessage(result.error ?? (
+      result.score === null
+        ? "A captura de referência não devolveu pontuação."
+        : "Comparação concluída usando " + (result.referenceDataUrl ? "a imagem carregada" : "a referência privada por sectores") + "."
+    ));
+  };
+
+  const loadReferenceImage = async (file: File | undefined) => {
+    if (!file) return;
+    if (!/^image\/(png|jpeg|webp)$/.test(file.type)) {
+      setDebugReferenceMessage("Formato não suportado. Escolha PNG, JPEG ou WebP.");
+      return;
+    }
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Falha ao ler imagem."));
+      reader.onerror = () => reject(new Error("Falha ao ler imagem."));
+      reader.readAsDataURL(file);
+    }).catch((error: unknown) => {
+      setDebugReferenceMessage(error instanceof Error ? error.message : "Falha ao ler imagem.");
+      return "";
+    });
+    if (!dataUrl) return;
+    const api = window.__SDT3D__;
+    if (!api || !(await api.setReferenceImage(dataUrl))) {
+      setDebugReferenceMessage("A imagem deve ter exactamente 1774×887 px para corresponder à referência original.");
+      return;
+    }
+    setDebugReferenceUrl(dataUrl);
+    setDebugReferenceMessage("Referência original carregada apenas nesta sessão de QA.");
+    const result = api.referenceMatch();
+    setDebugMatch(result);
+  };
+
   return (
     <section
       className="camping-studio"
@@ -226,6 +304,83 @@ export function CampingStudioExperience({
         aria-label="Estúdio 3D. Arraste para olhar à volta e clique nos objectos identificados."
         tabIndex={0}
       />
+
+      {debugOverlayEnabled && (
+        <aside className="camping-refmatch" aria-label="Comparação da referência CAMPING">
+          <header className="camping-refmatch__header">
+            <div>
+              <p className="camping-studio__micro-label">QA / REFERENCE MATCH</p>
+              <h2>Fidelidade à referência</h2>
+            </div>
+            <button type="button" onClick={() => setDebugMatch(null)} aria-label="Fechar resultado da comparação">×</button>
+          </header>
+          <div className="camping-refmatch__actions">
+            <button type="button" onClick={() => debugReferenceInput.current?.click()}>CARREGAR PANORÂMICA</button>
+            <button type="button" onClick={refreshReferenceMatch}>CAPTURAR 3D / COMPARAR</button>
+            <input
+              ref={debugReferenceInput}
+              className="camping-refmatch__file"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              aria-label="Carregar panorâmica de referência"
+              onChange={(event) => void loadReferenceImage(event.currentTarget.files?.[0])}
+            />
+          </div>
+          <p className="camping-refmatch__note">{debugReferenceMessage}</p>
+          {debugMatch && (
+            <>
+              <div className="camping-refmatch__score">
+                <span>referenceMatchScore</span>
+                <strong>{debugMatch.score === null ? "N/D" : debugMatch.score.toFixed(1) + "/100"}</strong>
+              </div>
+              <div className="camping-refmatch__modes" role="group" aria-label="Modo de comparação">
+                <button type="button" aria-pressed={debugOverlayMode === "side-by-side"} onClick={() => setDebugOverlayMode("side-by-side")}>A/B</button>
+                <button type="button" aria-pressed={debugOverlayMode === "blend"} onClick={() => setDebugOverlayMode("blend")}>MISTURA</button>
+                <button type="button" aria-pressed={debugOverlayMode === "diff"} onClick={() => setDebugOverlayMode("diff")}>DIFERENÇA ×4</button>
+              </div>
+              {debugOverlayMode === "blend" && debugReferenceUrl && (
+                <label className="camping-refmatch__blend">
+                  <span>Mistura A/B: {debugBlend}%</span>
+                  <input type="range" min="0" max="100" value={debugBlend} onChange={(event) => setDebugBlend(Number(event.currentTarget.value))} />
+                </label>
+              )}
+              {debugOverlayMode === "side-by-side" ? (
+                <div className="camping-refmatch__images">
+                  <figure>
+                    {debugReferenceUrl ? <img src={debugReferenceUrl} alt="Panorâmica original" /> : <div className="camping-refmatch__missing">Carregue a imagem original para ver o lado A.</div>}
+                    <figcaption>REFERÊNCIA</figcaption>
+                  </figure>
+                  <figure>
+                    {debugMatch.renderedDataUrl && <img src={debugMatch.renderedDataUrl} alt="Panorâmica 3D capturada" />}
+                    <figcaption>RENDER 3D</figcaption>
+                  </figure>
+                </div>
+              ) : debugOverlayMode === "blend" ? (
+                <div className="camping-refmatch__blend-view">
+                  {debugReferenceUrl && <img src={debugReferenceUrl} alt="Referência para mistura" />}
+                  {debugReferenceUrl && debugMatch.renderedDataUrl && (
+                    <img className="camping-refmatch__blend-top" style={{ opacity: debugBlend / 100 }} src={debugMatch.renderedDataUrl} alt="Render 3D sobre a referência" />
+                  )}
+                  {!debugReferenceUrl && <p>Carregue a panorâmica original para activar a mistura.</p>}
+                </div>
+              ) : (
+                <div className="camping-refmatch__diff-view">
+                  {debugMatch.diffDataUrl
+                    ? <img src={debugMatch.diffDataUrl} alt="Diferença absoluta ×4 entre referência e render 3D" />
+                    : <p>Carregue a panorâmica original para calcular a diferença absoluta ×4.</p>}
+                </div>
+              )}
+              <div className="camping-refmatch__worst">
+                <strong>5 sectores com maior diferença</strong>
+                {debugMatch.worst.length ? debugMatch.worst.map((row) => (
+                  <span key={row.az + ":" + row.el}>{row.az.toFixed(0)}° / {row.el.toFixed(0)}° · ΔE {row.dE.toFixed(2)}</span>
+                )) : <span>Sem dados de comparação.</span>}
+              </div>
+            </>
+          )}
+          <p className="camping-refmatch__source">Fonte privada de calibração: {debugMatch?.referenceSourceSha256 ?? "hash integrado no manifesto"}</p>
+        </aside>
+      )}
 
       <div className="camping-studio__vignette" aria-hidden="true" />
       <div className="camping-studio__grain" aria-hidden="true" />
