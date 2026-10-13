@@ -8,7 +8,7 @@ This directory records the supplied Studio 3D kit as a compatibility layer on to
 - A live CanvasTexture now replaces the visual content of the existing studio.imac-screen mesh. Its track title is read from the existing frequency singleton. The movement on screen is an interface animation, not a claim that the browser measured live audio amplitude.
 - Dynamic resolution uses frame interval feedback and hysteresis. It changes only render resolution scale, not the selected quality profile, device tier, input controls, shadows or materials. This keeps the project's single-profile behaviour while providing a measured response to sustained frame pressure.
 - The supplied 43-element scene bible and performance targets are checked by npm run validate:camping-scene.
-- The no-dependency GLB audit is available as npm run audit:camping-glb. It is deliberately not a CI gate yet because the current published GLB predates the KTX2, UV1 lightmap and Meshopt requirements in this kit.
+- The no-dependency GLB audit is available as npm run audit:camping-glb. It is deliberately not a CI gate yet because the current published GLB has not been baked, exported and verified against the KTX2, UV1 lightmap and Meshopt requirements in this kit.
 - The deterministic geometry, photometry, lightmap budget, impulse response and panorama comparison helpers have unit tests in v3.test.ts.
 - PBR policies now distinguish the semi-polished parquet from wood furniture, keep plaster/fabric matte and reduce reflections on screens and official print.
 
