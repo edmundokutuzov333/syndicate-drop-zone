@@ -1,5 +1,6 @@
 import { chromium, expect, test } from "@playwright/test";
 import { stat } from "node:fs/promises";
+import sharp from "sharp";
 
 test("camera requests media access, renders live frames, downloads photos and plays recordings", async () => {
   const browser = await chromium.launch({
@@ -31,7 +32,7 @@ test("camera requests media access, renders live frames, downloads photos and pl
       const mediaDevices = navigator.mediaDevices;
       if (!mediaDevices?.getUserMedia) return;
 
-      const audit = { requests: [] as Array<{ video: boolean; audio: boolean }>, denyNextCameraRequest: true };
+      const audit = { requests: [] as Array<{ video: boolean; audio: boolean }>, denyCameraRequests: true };
       Object.defineProperty(window, "__cameraPermissionAudit", {
         configurable: false,
         value: audit,
@@ -43,8 +44,7 @@ test("camera requests media access, renders live frames, downloads photos and pl
           video: Boolean(constraints.video),
           audio: Boolean(constraints.audio),
         });
-        if (constraints.video && audit.denyNextCameraRequest) {
-          audit.denyNextCameraRequest = false;
+        if (constraints.video && audit.denyCameraRequests) {
           return Promise.reject(new DOMException("Permission denied", "NotAllowedError"));
         }
         return originalGetUserMedia(constraints);
@@ -60,6 +60,12 @@ test("camera requests media access, renders live frames, downloads photos and pl
 
     // The first request is denied to validate the permission error state and retry action.
     await expect(page.getByText("PERMISSION BLOCKED", { exact: true })).toBeVisible({ timeout: 20_000 });
+    await page.evaluate(() => {
+      const audit = (window as Window & {
+        __cameraPermissionAudit?: { denyCameraRequests: boolean };
+      }).__cameraPermissionAudit;
+      if (audit) audit.denyCameraRequests = false;
+    });
     await page.getByRole("button", { name: "ALLOW", exact: true }).click();
 
     // Confirm the retry requests camera access again and receives a live video track.
@@ -97,7 +103,25 @@ test("camera requests media access, renders live frames, downloads photos and pl
     expect(liveFrame.width).toBeGreaterThan(0);
     expect(liveFrame.height).toBeGreaterThan(0);
     expect(liveFrame.trackState).toBe("live");
-    await expect(page.locator("canvas.camera-canvas")).toBeVisible();
+    const cameraCanvas = page.locator("canvas.camera-canvas");
+    await expect(cameraCanvas).toBeVisible();
+    const renderedFrame = await cameraCanvas.screenshot();
+    const framePixels = await sharp(renderedFrame)
+      .resize(32, 32)
+      .removeAlpha()
+      .raw()
+      .toBuffer();
+    const uniqueColors = new Set<string>();
+    let totalLuminance = 0;
+    for (let index = 0; index < framePixels.length; index += 3) {
+      const red = framePixels[index];
+      const green = framePixels[index + 1];
+      const blue = framePixels[index + 2];
+      uniqueColors.add(`${red},${green},${blue}`);
+      totalLuminance += 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+    }
+    expect(uniqueColors.size, "The rendered camera canvas should contain real image detail").toBeGreaterThan(8);
+    expect(totalLuminance / (framePixels.length / 3), "The rendered camera canvas should not be blank or black").toBeGreaterThan(5);
 
     // A live source must advance, rather than merely leaving a video element attached.
     await expect.poll(() => liveVideo.evaluate((node) => (node as HTMLVideoElement).currentTime), {
