@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "glb": {
+    "high": { "maxTriangles": 300000, "maxMaterials": 64, "maxPrimitives": 260, "maxTransferMB": 16, "minHeroTexturePx": 1024, "maxTexturePx": 2048, "requireUv1": true, "requireKtx2": true, "requireMeshopt": true, "requireTangentsOrNormalMaps": true },
+    "mid":  { "maxTriangles": 140000, "maxMaterials": 40, "maxPrimitives": 160, "maxTransferMB": 9,  "minHeroTexturePx": 512,  "maxTexturePx": 1024, "requireUv1": true, "requireKtx2": true, "requireMeshopt": true, "requireTangentsOrNormalMaps": true },
+    "low":  { "maxTriangles": 70000,  "maxMaterials": 28, "maxPrimitives": 100, "maxTransferMB": 5,  "minHeroTexturePx": 256,  "maxTexturePx": 512, "requireUv1": true, "requireKtx2": true, "requireMeshopt": true, "requireTangentsOrNormalMaps": false }
+  },
+  "runtime": { "fpsDesktopMin": 58, "fpsMidMobileMin": 30, "firstInteractiveMs": 4500, "heapMBMax": 420, "textureGpuMBMax": { "high": 320, "mid": 160, "low": 80 } }
+}
