@@ -121,11 +121,17 @@ describe("CAMPING render workload policies", () => {
       roughnessFloor: 0.68,
       metalnessCeiling: 0.05,
     });
-    expect(getCampingMaterialRenderPolicy("floor")).toMatchObject({
+    expect(getCampingMaterialRenderPolicy("studio.floor wood")).toMatchObject({
       envMapIntensity: 0.28,
       roughnessFloor: 0.35,
       roughnessTarget: 0.48,
       metalnessCeiling: 0.02,
+    });
+    expect(getCampingMaterialRenderPolicy("studio.photo-floor vinyl")).toMatchObject({
+      envMapIntensity: 0.06,
+      roughnessFloor: 0.92,
+      roughnessTarget: 0.96,
+      metalnessCeiling: 0,
     });
     expect(getCampingMaterialRenderPolicy("screen").envMapIntensity).toBe(0.06);
   });
