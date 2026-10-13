@@ -43,7 +43,11 @@ test("camera requests media access, renders live frames, downloads photos and pl
           video: Boolean(constraints.video),
           audio: Boolean(constraints.audio),
         });
-        if (constraints.video && audit.denyNextCameraRequest) {\n          audit.denyNextCameraRequest = false;\n          return Promise.reject(new DOMException("Permission denied", "NotAllowedError"));\n        }\n        return originalGetUserMedia(constraints);
+        if (constraints.video && audit.denyNextCameraRequest) {
+          audit.denyNextCameraRequest = false;
+          return Promise.reject(new DOMException("Permission denied", "NotAllowedError"));
+        }
+        return originalGetUserMedia(constraints);
       };
     });
 
@@ -54,7 +58,11 @@ test("camera requests media access, renders live frames, downloads photos and pl
     await page.goto("http://127.0.0.1:4173/camera", { waitUntil: "domcontentloaded" });
     await expect(page.locator(".camera-surface")).toBeVisible({ timeout: 20_000 });
 
-    // Confirm the application actually requests camera access and receives a live video track.
+    // The first request is denied to validate the permission error state and retry action.
+    await expect(page.getByText("PERMISSION BLOCKED", { exact: true })).toBeVisible({ timeout: 20_000 });
+    await page.getByRole("button", { name: "ALLOW", exact: true }).click();
+
+    // Confirm the retry requests camera access again and receives a live video track.
     await expect.poll(async () => page.evaluate(() => {
       const audit = (window as Window & {
         __cameraPermissionAudit?: { requests: Array<{ video: boolean; audio: boolean }> };
