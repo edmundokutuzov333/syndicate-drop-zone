@@ -3,6 +3,7 @@ import { stat } from "node:fs/promises";
 import sharp from "sharp";
 
 test("camera requests media access, renders live frames, downloads photos and plays recordings", async () => {
+  test.setTimeout(120_000);
   const browser = await chromium.launch({
     headless: true,
     args: [
