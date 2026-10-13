@@ -300,6 +300,7 @@ export function resolveCampingEffectivePixelRatio(devicePixelRatio: number): num
 export type CampingMaterialRenderPolicy = {
   envMapIntensity: number;
   roughnessFloor?: number;
+  roughnessTarget?: number;
   metalnessCeiling?: number;
   normalScale?: number;
 };
@@ -312,7 +313,13 @@ export function getCampingMaterialRenderPolicy(materialName: string): CampingMat
   if (/plaster|stucco|wall|paint|ceiling/.test(name)) {
     return { envMapIntensity: 0.14, roughnessFloor: 0.88, metalnessCeiling: 0, normalScale: 0.12 };
   }
-  if (/wood|timber|parquet|floor|door|oak|plank/.test(name)) {
+  // The scene kit specifies a semi-polished wood floor, not the high-roughness
+  // response appropriate to timber walls and furniture. Preserve the authored
+  // roughness map for local variation while bringing the scalar into this range.
+  if (/floor|parquet/.test(name)) {
+    return { envMapIntensity: 0.28, roughnessFloor: 0.35, roughnessTarget: 0.48, metalnessCeiling: 0.02 };
+  }
+  if (/wood|timber|door|oak|plank/.test(name)) {
     return { envMapIntensity: 0.2, roughnessFloor: 0.68, metalnessCeiling: 0.05 };
   }
   if (/fabric|cloth|banner|curtain|textile/.test(name)) {
@@ -1765,6 +1772,9 @@ export class CampingStudioEngine {
               const textured = material as THREE.MeshStandardMaterial;
               if (typeof textured.roughness === "number" && materialPolicy.roughnessFloor !== undefined) {
                 textured.roughness = Math.max(textured.roughness, materialPolicy.roughnessFloor);
+              }
+              if (typeof textured.roughness === "number" && materialPolicy.roughnessTarget !== undefined) {
+                textured.roughness = materialPolicy.roughnessTarget;
               }
               if (typeof textured.metalness === "number" && materialPolicy.metalnessCeiling !== undefined) {
                 textured.metalness = Math.min(textured.metalness, materialPolicy.metalnessCeiling);
