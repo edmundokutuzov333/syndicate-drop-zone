@@ -6,6 +6,8 @@ Referência: `docs/camping-v3/reference/reference-sectors.json`
 Hash da panorâmica original: `998f637c62fad46c1459a0c85c99db79f2f799951b9d2c4c38b659ad2e193813`  
 Regra de release: nenhuma fase fica concluída sem evidência reproduzível, testes e CI verde.
 
+Issues de execução: [#33 Fase 01](https://github.com/edmundokutuzov333/syndicate-drop-zone/issues/33) a [#56 Fase 22](https://github.com/edmundokutuzov333/syndicate-drop-zone/issues/56), uma issue por fase.
+
 | Fase | Entrega | Estado | Gate de conclusão |
 |---:|---|---|---|
 | 01 | Linha de base, instrumentação e harness de fidelidade | Em validação | baseline executado, API debug, 7 poses, 21 capturas aprovadas, CI verde |
