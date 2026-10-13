@@ -31,7 +31,7 @@ test("camera requests media access, renders live frames, downloads photos and pl
       const mediaDevices = navigator.mediaDevices;
       if (!mediaDevices?.getUserMedia) return;
 
-      const audit = { requests: [] as Array<{ video: boolean; audio: boolean }> };
+      const audit = { requests: [] as Array<{ video: boolean; audio: boolean }>, denyNextCameraRequest: true };
       Object.defineProperty(window, "__cameraPermissionAudit", {
         configurable: false,
         value: audit,
@@ -43,7 +43,7 @@ test("camera requests media access, renders live frames, downloads photos and pl
           video: Boolean(constraints.video),
           audio: Boolean(constraints.audio),
         });
-        return originalGetUserMedia(constraints);
+        if (constraints.video && audit.denyNextCameraRequest) {\n          audit.denyNextCameraRequest = false;\n          return Promise.reject(new DOMException("Permission denied", "NotAllowedError"));\n        }\n        return originalGetUserMedia(constraints);
       };
     });
 
