@@ -13,7 +13,7 @@ Issues de execução: fases 01–17 em [#33–#49](https://github.com/edmundokut
 | 01 | Linha de base, instrumentação e harness de fidelidade | Em validação | baseline executado, API debug, 7 poses, 21 capturas aprovadas, CI verde |
 | 02 | Toolchain e dependências | Em validação | dependências, Blender, KTX, Basis, build CLI, lockfile e CI confirmados por execução |
 | 03 | Scene Bible e plano métrico | Em validação | 54 elementos, escala humana, 4 paredes/2 portas, orçamento ≤260000 e 72 células sector/elev validados; CI ainda pendente |
-| 04 | Fonte da verdade em Blender | Pendente | ficheiro .blend e build reproduzível por CLI |
+| 04 | Fonte da verdade em Blender | Em validação | pipeline CLI, colecções, extras, UVs e proxies de colisão implementados; ficheiro .blend e CI ainda por executar |
 | 05 | Biblioteca de materiais PBR CC0 2K | Pendente | manifestos e licenças verificados |
 | 06 | Casca arquitectónica fechada | Pendente | paredes, abóbada, portas, AC e condutas |
 | 07 | Superfícies-herói | Pendente | soalho, vinil e bambu com densidade de texel definida |
@@ -67,3 +67,10 @@ O plano inclui 40 âncoras de posição, regras de montagem para superfícies e 
 **Divergência preservada:** o GLB publicado continua com envelope documentado de 14,2 × 9,2 m e as colisões continuam com os limites legacy. O plano 7,6 × 5,6 m é o alvo de reconstrução, não uma afirmação falsa sobre o asset actualmente publicado. O runtime/GLB não foi alterado nesta fase; a migração será feita no pipeline de modelo e nas fases de casca/runtime.
 
 O verificador local sobre o candidato da Fase 03 devolveu 54 elementos, 221 710 triângulos orçamentados, 7 luzes, 24/24 sectores, 72/72 células sector/elev, 40 âncoras e 15 regras de montagem. O aviso sobre o envelope legacy é intencional. A Fase 03 continua em validação até haver CI real e preview verificado.
+
+
+## Estado real da Fase 04
+
+A arquitectura Blender é agora definida por scripts versionados em scripts/blender/: common.py, build_all.py, builders de casca/superfícies/produção/fotografia/lados/props, luzes, colliders, validação do .blend e exportação GLB. O comando npm run 3d:blend reconstrói a cena desde o zero a partir de docs/camping-v3/scene-bible.json, valida o contrato, exporta GLB cru e verifica extras e UVs. O workflow CAMPING 3D Toolchain foi ampliado para compilar a sintaxe Python, executar o build e carregar os artefactos.
+
+A fonte editável .blend ainda não foi gerada nesta execução: o runner de GitHub Actions tem falhado antes de ser atribuído (runner_id=0, steps=[]), e Blender não está disponível no ambiente local. Não há um binário .blend commitado nem se criou um ponteiro LFS sem objecto correspondente. O resultado permanece em validação até o workflow produzir e validar o artefacto; depois deve ser guardado com Git LFS se o ficheiro ficar abaixo de 200 MiB.

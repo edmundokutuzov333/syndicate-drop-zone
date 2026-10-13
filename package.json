@@ -25,7 +25,9 @@
     "3d:bake": "bash scripts/bake-3d.sh",
     "3d:basis": "node scripts/copy-basis-transcoder.mjs",
     "3d:toolchain:install": "bash scripts/install-3d-toolchain.sh",
-    "3d:toolchain:check": "node scripts/check-3d-toolchain.mjs"
+    "3d:toolchain:check": "node scripts/check-3d-toolchain.mjs",
+    "3d:blend": "bash scripts/build-blend.sh",
+    "3d:blend:validate": "blender -b art/xoyens-studio.blend -P scripts/blender/validate_blend.py -- docs/camping-v3/scene-bible.json"
   },
   "overrides": {
     "rolldown": "1.2.1"

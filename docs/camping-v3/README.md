@@ -29,3 +29,8 @@ Planar reflections, volumetric cones, dust particles and spatialized room audio 
 5. Run the actual desktop and mobile screenshot/runtime tests, with all 17 real portraits and brand assets loading.
 
 No database/schema changes are required by this visual integration.
+
+
+## Fonte Blender (Fase 04)
+
+A construção reproduzível da cena executa npm run 3d:blend. O Scene Bible é a entrada métrica; o .blend é a fonte editável e o GLB cru é gerado apenas para validar nomes, extras, materiais e os dois canais UV. O workflow CAMPING 3D Toolchain publica o .blend, relatório JSON e GLB como artefactos de 14 dias. Não marcar a fase concluída enquanto o runner não executar todos os gates.

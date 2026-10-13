@@ -30,3 +30,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# CAMPING V3 generated intermediates (the verified .blend source is intentionally not ignored).
+art/xoyens-studio.report.json
+art/out/

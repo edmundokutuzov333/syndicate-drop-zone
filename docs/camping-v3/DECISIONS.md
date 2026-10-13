@@ -63,3 +63,24 @@ Foram acrescentados elementos para tomadas, interruptor, cabos de alimentação/
 
 ### D019 · Desvio do runtime legado
 O ficheiro public/models/camping/xoyens-studio.model.json ainda descreve bounds publicados de 14,2 × 9,2 m, parede 3,2 m e coroa 4,35 m; as colisões usam aproximadamente x=±6,55 e z=-4,18…4,08. Não alterar estes valores nesta fase, porque descrevem o runtime legado existente. A casca/GLB e colisões devem convergir para o plano 7,6 × 5,6 m nas fases de Blender/modelação/runtime, com testes de navegação, porta, colisões e regressão visual. Esta diferença não pode ser escondida ou declarada como já resolvida.
+
+
+## 2026-10-13 · Fase 04
+
+### D020 · Blender é a fonte da verdade
+A origem editável da geometria passa a ser scripts/blender/*.py + docs/camping-v3/scene-bible.json, com saída para art/xoyens-studio.blend. O GLB é apenas um artefacto de exportação e nunca é editado manualmente. O orquestrador lê o Scene Bible, reinicia a cena, executa os módulos por ordem e recusa gravar se o contrato falhar ou se o build exceder 600 segundos/200 MiB.
+
+### D021 · Colecções, nomes e extras
+A cena mantém COL_shell, COL_production, COL_photo, COL_left, COL_right, COL_props e COL_colliders. A geometria visível usa nomes SDT_<zona>_<objecto>; a geometria de colisão usa COL_<nome> e não entra no GLB visível. Cada malha recebe material, UVMap métrico, UV_Lightmap independente, escala aplicada, bevel de 1–3 mm quando visível e Weighted Normal. Os extras incluem elementId/source/buildModule e os campos zone, collider e lmGroup; interactionId só aparece em contratos reais do Scene Bible.
+
+### D022 · IDs e artistas
+Os sete IDs existentes de interacção são preservados. A parede de artistas tem exactamente 17 slots numerados com interactionId studio.artist-slot-001…017, sem retratos inventados. O conteúdo fotográfico vem do backend; os quadros ficam vazios até o runtime os ligar aos dados publicados.
+
+### D023 · Identidade de marca e assets em falta
+Não foi criado nenhum logótipo, selo ou estampa de substituição. As superfícies para print_official_seal e print_official_xoyens são apenas portadoras neutras, marcadas como pendentes de aplicação do manifesto oficial durante as fases de materiais e props. A imagem de referência fornecida não é copiada para public/ nem utilizada para inventar retratos.
+
+### D024 · Colisões e exportação
+Os proxies COL_* ficam na colecção COL_colliders, com renderização/visibilidade ocultas e UVs/materiais válidos para o ficheiro de origem. O exportador GLB exclui essa colecção de geometria visível, mantendo os extras das malhas interactivas. O verificador Node exige os IDs, 17 slots, material e TEXCOORD_0/TEXCOORD_1.
+
+### D025 · Artefacto binário e evidência
+O workflow gera art/xoyens-studio.blend, art/xoyens-studio.report.json e art/out/xoyens-studio.raw.glb e carrega-os como artefactos de CI por 14 dias. Os padrões art/**/*.blend e art/bake/**/*.exr usam Git LFS. A Fase 04 continua aberta até haver um runner real, build/validação bem-sucedidos e decisão explícita de commit do .blend verificado; não criar um ponteiro LFS sem o objecto binário correspondente.

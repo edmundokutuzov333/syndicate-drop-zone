@@ -4,3 +4,7 @@
 *.exr -diff
 *.blend -diff
 # Git LFS remains an explicit decision for large art sources and bakes.
+
+# Editable Blender source and baked archives use Git LFS when committed.
+art/**/*.blend filter=lfs diff=lfs merge=lfs -text
+art/bake/**/*.exr filter=lfs diff=lfs merge=lfs -text

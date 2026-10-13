@@ -12,6 +12,10 @@ on:
       - "scripts/install-3d-toolchain.sh"
       - "scripts/copy-basis-transcoder.mjs"
       - "scripts/check-3d-toolchain.mjs"
+      - "scripts/blender/**"
+      - "scripts/build-blend.sh"
+      - "scripts/verify-glb-contract.mjs"
+      - "docs/camping-v3/scene-bible.json"
       - ".github/workflows/camping-3d-toolchain.yml"
 
 permissions:
@@ -52,6 +56,23 @@ jobs:
 
       - name: Verify Blender headless and Cycles
         run: blender -b -E CYCLES --python-expr "import bpy; print(bpy.app.version_string); print(bpy.context.preferences.addons['cycles'].preferences.get_devices())"
+
+      - name: Syntax-check the Blender Python pipeline
+        run: python -m py_compile scripts/blender/*.py
+
+      - name: Rebuild Blender source and export the raw GLB
+        run: npm run 3d:blend
+
+      - name: Upload reproducible Blender source, report and raw GLB
+        uses: actions/upload-artifact@v4
+        with:
+          name: camping-v3-phase-04-${{ github.sha }}
+          path: |
+            art/xoyens-studio.blend
+            art/xoyens-studio.report.json
+            art/out/xoyens-studio.raw.glb
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Verify GLB build CLI help
         run: node scripts/build-3d.mjs --help
