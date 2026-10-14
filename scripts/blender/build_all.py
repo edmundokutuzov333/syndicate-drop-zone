@@ -55,7 +55,7 @@ def main():
         raise RuntimeError("Blend output exceeds 200 MiB: " + str(size_bytes))
     elapsed = time.monotonic() - started
     mesh_objects = [obj for obj in bpy.context.scene.objects if obj.type == "MESH"]
-object_count = len(bpy.context.scene.objects)
+    object_count = len(bpy.context.scene.objects)
     vertex_count = sum(len(obj.data.vertices) for obj in mesh_objects)
     triangle_count = sum(sum(max(1, len(poly.vertices) - 2) for poly in obj.data.polygons) for obj in mesh_objects)
     collection_names = sorted(ctx["collections"].keys())
