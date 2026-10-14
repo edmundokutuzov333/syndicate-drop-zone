@@ -74,8 +74,9 @@ export function verifyCampingFrontendPublication(root = process.cwd()): void {
   const bytes = readFileSync(modelPath);
   const metadata = JSON.parse(readFileSync(metadataPath, "utf8"));
   if (bytes.length > MAX_BYTES) throw new Error("frontend GLB exceeds the 16 MiB transfer budget");
-  if (metadata.version !== 3 || metadata.phase !== 7 || metadata.surfacePhase !== 7 || metadata.status !== "blender-v3-published") {
-    throw new Error("metadata is stale: expected version=3, phase=7, surfacePhase=7, status=blender-v3-published");
+  if (metadata.version !== 3 || metadata.phase !== 8 || metadata.productionPhase !== 8 ||
+      metadata.surfacePhase !== 7 || metadata.status !== "blender-v3-published") {
+    throw new Error("metadata is stale: expected version=3, phase=8, productionPhase=8, surfacePhase=7, status=blender-v3-published");
   }
   if (metadata.model !== "/models/camping/xoyens-studio.glb") {
     throw new Error("metadata does not point to the canonical /camping asset URL");
@@ -105,6 +106,15 @@ export function verifyCampingFrontendPublication(root = process.cwd()): void {
   }
 
   const nodes = gltf.nodes ?? [];
+  const materialNames = new Set<string>((gltf.materials ?? []).map((material: { name?: unknown }) => material.name)
+    .filter((name: unknown): name is string => typeof name === "string"));
+  for (const materialName of ["ceramic_red", "glass_mirror", "led_warm_emissive"]) {
+    if (!materialNames.has(materialName)) throw new Error("optimized GLB is missing Phase 08 material " + materialName);
+  }
+  if (!nodes.some((node: { name?: unknown; mesh?: unknown }) =>
+    node.name === "SDT_production_monitor_daw_screen" && Number.isInteger(node.mesh))) {
+    throw new Error("optimized GLB is missing the Phase 08 live DAW screen mesh");
+  }
   const interactions = new Set<string>(
     nodes.map((node: { extras?: { interactionId?: unknown } }) => node.extras?.interactionId)
       .filter((id: unknown): id is string => typeof id === "string"),
@@ -125,6 +135,19 @@ export function verifyCampingFrontendPublication(root = process.cwd()): void {
   const missingSlots = requiredSlots.filter((name) => !slotContracts.has(name));
   if (missingSlots.length) throw new Error("optimized GLB is missing artist slot contracts: " + missingSlots.join(", "));
   if (slotContracts.has("studio.artist-slot-018")) throw new Error("unexpected artist slot 018 is present");
+
+  const productionZone = metadata.geometry?.productionZone;
+  if (metadata.productionPhase !== 8 ||
+      productionZone?.sourceStatus !== "source-validated" ||
+      productionZone?.requiredElements !== 19 ||
+      productionZone?.chairUpholsteryTrianglesSource < 14000 ||
+      productionZone?.chairUpholsteryTrianglesSource > 18000 ||
+      productionZone?.midiWhiteKeys !== 36 || productionZone?.midiBlackKeys !== 25 ||
+      productionZone?.acousticFabricPanels !== 3 || productionZone?.acousticFoamTiles !== 30 ||
+      productionZone?.pendants !== 4 || productionZone?.edisonBulbs !== 4 ||
+      !(productionZone?.trianglesAddedFromPhase7 > 0)) {
+    throw new Error("metadata does not certify Phase 08 production geometry");
+  }
 
   const findPhaseNode = (elementId: string, namePattern: RegExp) =>
     nodes.find((node: { name?: unknown; mesh?: unknown; extras?: Record<string, unknown> }) =>
@@ -198,8 +221,11 @@ export function verifyCampingFrontendPublication(root = process.cwd()): void {
       triangles: actual.triangles,
       materials: actual.materials,
       artistSlots: 17,
+      phase: 8,
+      productionPhase: 8,
       surfacePhase: 7,
       heroSurfaces: metadata.geometry.heroSurfaces,
+      productionZone,
       extensions: [...extensions].filter((extension) => REQUIRED_EXTENSIONS.includes(extension)),
     }),
   );

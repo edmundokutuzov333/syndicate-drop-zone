@@ -20,7 +20,7 @@ REQUIRED_PROD_IDS = (
     "prod.equipment_labels", "prod.pendant_cage_details",
 )
 CHAIR_UPHOLSTERY = re.compile(
-    r"^SDT_production_chair_leather_(seat_cushion|back_cushion|headrest|arm_pad_[12])$"
+    r"^SDT_production_chair_leather_(seat_cushion|back_cushion|headrest|arm_pad__?[12])$"
 )
 
 

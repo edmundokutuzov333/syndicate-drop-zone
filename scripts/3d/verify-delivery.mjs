@@ -95,6 +95,12 @@ export function glbContract(j, bible) {
       Math.abs(Number(paperCurveNode?.extras?.phase7CycloramaRadiusM) - 0.35) <= 0.0001 &&
       paperCurveNode?.extras?.phase7PaperContinuousToFloor === true,
     paperWallNode && paperCurveNode ? "wall + curve connected contract" : "missing wall or curve");
+  const phase8Materials = new Set((j.materials ?? []).map((material) => material.name).filter(Boolean));
+  for (const materialName of ["ceramic_red", "glass_mirror", "led_warm_emissive"]) check("Phase 08 material " + materialName, phase8Materials.has(materialName));
+  check("Phase 08 live DAW screen node", nodes.some((node) => node.name === "SDT_production_monitor_daw_screen" && Number.isInteger(node.mesh)));
+  for (const interactionId of ["studio.production-desk", "studio.imac", "studio.audio-system"]) {
+    check("Phase 08 interaction " + interactionId, extras.some((extra) => extra.interactionId === interactionId) || names.has(interactionId));
+  }
   return out;
 }
 
@@ -142,7 +148,7 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
     add("frontend canonical GLB included in manifest", manifestPaths.has("public/models/camping/xoyens-studio.glb"));
     add("frontend model metadata included in manifest", manifestPaths.has("public/models/camping/xoyens-studio.model.json"));
     add("PBR material manifest included in delivery", manifestPaths.has("art/textures/materials.manifest.json"));
-    add("PBR material manifest included in delivery", manifestPaths.has("art/textures/materials.manifest.json"));
+    add("Phase 08 production report included in delivery", manifestPaths.has("art/xoyens-studio.phase08.report.json"));
     for (const file of manifest.files ?? []) {
       const path = join(dir, file.path);
       if (!existsSync(path)) {
@@ -193,6 +199,20 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
     add("Phase 07 Blender acceptance report", false, "missing art/xoyens-studio.phase07.report.json");
   }
 
+  const productionReportPath = join(dir, "art/xoyens-studio.phase08.report.json");
+  if (existsSync(productionReportPath)) {
+    try {
+      const phase8 = JSON.parse(readFileSync(productionReportPath, "utf8"));
+      const zone = phase8.productionZone ?? {};
+      add("Phase 08 source production report", phase8.version === 1 && phase8.phase === 8 && phase8.status === "source-validated" &&
+        zone.requiredElements === 19 && zone.midiWhiteKeys === 36 && zone.midiBlackKeys === 25 &&
+        zone.acousticFabricPanels === 3 && zone.acousticFoamTiles === 30 && zone.pendants === 4 && zone.edisonBulbs === 4 &&
+        zone.chairUpholsteryTrianglesSource >= 14000 && zone.chairUpholsteryTrianglesSource <= 18000,
+        JSON.stringify({ phase: phase8.phase, status: phase8.status, chairTriangles: zone.chairUpholsteryTrianglesSource,
+          midi: [zone.midiWhiteKeys, zone.midiBlackKeys], panels: zone.acousticFabricPanels, foam: zone.acousticFoamTiles, pendants: zone.pendants }));
+    } catch (error) { add("Phase 08 source production report", false, error instanceof Error ? error.message : String(error)); }
+  } else add("Phase 08 source production report", false, "missing art/xoyens-studio.phase08.report.json");
+
   const reportPath = join(dir, "art/xoyens-studio.report.json");
   let report = null;
   if (existsSync(reportPath)) {
@@ -241,9 +261,9 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
         add("frontend metadata SHA-256 matches model", metadata.geometry && metadata.geometry.sha256 === digest, digest);
         add("frontend metadata points at canonical URL", metadata.model === "/models/camping/xoyens-studio.glb");
         add(
-          "frontend metadata certifies Blender V3 Phase 07 surfaces",
-          metadata.version === 3 && metadata.phase === 7 && metadata.surfacePhase === 7 && metadata.status === "blender-v3-published",
-          JSON.stringify({ version: metadata.version, phase: metadata.phase, surfacePhase: metadata.surfacePhase, status: metadata.status }),
+          "frontend metadata certifies Blender V3 Phase 08 production and Phase 07 surfaces",
+          metadata.version === 3 && metadata.phase === 8 && metadata.productionPhase === 8 && metadata.surfacePhase === 7 && metadata.status === "blender-v3-published",
+          JSON.stringify({ version: metadata.version, phase: metadata.phase, productionPhase: metadata.productionPhase, surfacePhase: metadata.surfacePhase, status: metadata.status }),
         );
         add("frontend metadata byte count matches model", metadata.geometry?.bytes === statSync(frontendGlb).size);
         add("frontend delivery SHA-256 matches model", metadata.frontendDelivery?.sha256 === digest, metadata.frontendDelivery?.sha256 ?? "missing");
@@ -264,6 +284,15 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
         );
         add("frontend metadata materials match GLB", metadata.geometry?.materials === (frontendJson.materials ?? []).length);
         add("frontend metadata images match GLB", metadata.geometry?.embeddedImages === (frontendJson.images ?? []).length);
+        const productionZone = metadata.geometry?.productionZone;
+        add("frontend metadata certifies Phase 08 production geometry", productionZone?.requiredElements === 19 &&
+          productionZone?.chairUpholsteryTrianglesSource >= 14000 && productionZone?.chairUpholsteryTrianglesSource <= 18000 &&
+          productionZone?.midiWhiteKeys === 36 && productionZone?.midiBlackKeys === 25 && productionZone?.acousticFabricPanels === 3 &&
+          productionZone?.acousticFoamTiles === 30 && productionZone?.pendants === 4 && productionZone?.edisonBulbs === 4 &&
+          productionZone?.trianglesAddedFromPhase7 > 0,
+          JSON.stringify({ requiredElements: productionZone?.requiredElements, chairTriangles: productionZone?.chairUpholsteryTrianglesSource,
+            triangleDelta: productionZone?.trianglesAddedFromPhase7 }));
+        add("frontend metadata phase 08 report attached", productionZone?.sourceStatus === "source-validated");
       } else {
         add("frontend model metadata present", false, "missing file");
       }

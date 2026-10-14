@@ -164,3 +164,14 @@ A implementação está concentrada no módulo já existente `scripts/blender/bu
 - `scripts/blender/validate_surfaces.py`, `scripts/verify-glb-contract.mjs`, `scripts/3d/verify-delivery.mjs`, o guard do Vite, o verificador de produção e o teste Playwright exigem os contratos da Fase 07. O workflow passa a tratar os dois relatórios da fase como ficheiros obrigatórios e publica-os com o modelo certificado.
 
 **Gate de fecho:** esta entrada não certifica ainda a fase. Só muda para CERTIFICADA depois de a execução Blender em `main` produzir os relatórios reais, os três tiers passarem os budgets sem os reduzir, o manifesto do GLB público corresponder a SHA-256/tamanho e o deployment Vercel servir o mesmo artefacto. A comparação visual e os FPS continuam a ser evidência, não presumidos.
+
+
+## 2026-10-14: Fase 07 certificada e publicada
+
+O artefacto público da Fase 07 foi promovido para a main, e o deployment correspondente ficou READY. Esse GLB e o respectivo SHA-256 constituem a linha de base da Fase 08. Esta certificação não antecipa os gates da fase seguinte.
+
+## 2026-10-14: Fase 08, zona de produção (em validação)
+
+scripts/blender/phase08_production.py substitui os proxies de produção por geometria modelada: mesa L com retorno, ecrã DAW emissivo com nome de nó preservado, colunas com cone/surround/dust-cap/tweeter/bass-reflex, subwoofer, teclado de 61 teclas, cadeira executiva de alta densidade, painéis e espuma acústica, tábuas recuperadas com LED superior/inferior, quatro pendentes, espelho, interface/caneca e cabos/ferragens. scripts/blender/validate_production.py certifica os 19 elementos prod.*, as três interacções, os materiais cerâmico/espelho/LED, 36 teclas brancas + 25 pretas, cadeira com 14k–18k triângulos, três painéis e quatro lâmpadas.
+
+A promoção exige o relatório real da Fase 08, o nó SDT_production_monitor_daw_screen, materiais realmente ligados a malhas, preservação de studio.production-desk, studio.imac e studio.audio-system, e incremento de triângulos face à Fase 07. O manifesto mantém surfacePhase: 7 e passa a declarar phase: 8 + productionPhase: 8. A fase permanece aberta até os três tiers, os testes frontend, o score de fidelidade do sector 100°–170° e os bytes servidos por produção terem evidência de execução.

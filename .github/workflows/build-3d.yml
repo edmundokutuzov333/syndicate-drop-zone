@@ -104,6 +104,34 @@ jobs:
                   raise SystemExit("Phase 06 capture SHA-256 mismatch: " + name)
           print("PHASE 06 CAPTURES VERIFIED", json.dumps(manifest, sort_keys=True))
           PY
+      - name: Render and verify Phase 08 production evidence
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          [ ! -f scripts/3d/env.sh ] || source scripts/3d/env.sh
+          BLENDER_BIN="${BLENDER_BIN:-$(command -v blender)}"
+          test -s art/xoyens-studio.phase08.report.json
+          LIBGL_ALWAYS_SOFTWARE=1 "$BLENDER_BIN" -b art/xoyens-studio.blend --python-exit-code 1 -P scripts/blender/capture_phase08.py -- art/_delivery/phase-08
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          root = Path("art/_delivery/phase-08")
+          manifest = json.loads((root / "capture-manifest.json").read_text())
+          required = {"production-overview.png", "production-detail.png"}
+          if set(manifest.get("views", {})) != required:
+              raise SystemExit("Phase 08 evidence manifest must contain overview and detail views")
+          for name in sorted(required):
+              path = root / name
+              if not path.is_file() or path.stat().st_size < 10000:
+                  raise SystemExit("Phase 08 evidence missing or too small: " + str(path))
+              if hashlib.sha256(path.read_bytes()).hexdigest() != manifest["views"][name]["sha256"]:
+                  raise SystemExit("Phase 08 capture SHA-256 mismatch: " + name)
+          print("PHASE 08 CAPTURES VERIFIED", json.dumps(manifest, sort_keys=True))
+          PY
+          node scripts/3d/pack-delivery.mjs --manifest-only
+          node scripts/3d/verify-delivery.mjs . docs/camping-v3/scene-bible.json --check-exit-codes
       - name: Write evidence summary
         if: always()
         shell: bash
@@ -133,6 +161,7 @@ jobs:
             art/out/xoyens-studio.colliders.glb
             art/out/phase07-surfaces.json
             art/xoyens-studio.phase07.report.json
+            art/xoyens-studio.phase08.report.json
             art/textures/materials/**
             art/textures/materials.manifest.json
 
@@ -207,6 +236,10 @@ jobs:
           test -s /tmp/fase04-delivery/out/xoyens-studio.colliders.glb
           test -s /tmp/fase04-delivery/out/phase07-surfaces.json
           test -s /tmp/fase04-delivery/xoyens-studio.phase07.report.json
+          test -s /tmp/fase04-delivery/xoyens-studio.phase08.report.json
+          test -s /tmp/fase04-delivery/_delivery/phase-08/production-overview.png
+          test -s /tmp/fase04-delivery/_delivery/phase-08/production-detail.png
+          test -s /tmp/fase04-delivery/_delivery/phase-08/capture-manifest.json
           test -s /tmp/fase04-delivery/textures/materials.manifest.json
           test -s /tmp/camping-frontend-model/xoyens-studio.glb
           test -s /tmp/camping-frontend-model/xoyens-studio.model.json
@@ -226,9 +259,14 @@ jobs:
           cp /tmp/fase04-delivery/out/xoyens-studio.colliders.glb art/out/xoyens-studio.colliders.glb
           cp /tmp/fase04-delivery/out/phase07-surfaces.json art/out/phase07-surfaces.json
           cp /tmp/fase04-delivery/xoyens-studio.phase07.report.json art/xoyens-studio.phase07.report.json
-          mkdir -p docs/camping-v3/phase-07
+          cp /tmp/fase04-delivery/xoyens-studio.phase08.report.json art/xoyens-studio.phase08.report.json
+          mkdir -p docs/camping-v3/phase-07 docs/camping-v3/phase-08
           cp /tmp/fase04-delivery/xoyens-studio.phase07.report.json docs/camping-v3/phase-07/surface-validation.json
           cp /tmp/fase04-delivery/out/phase07-surfaces.json docs/camping-v3/phase-07/surface-source.json
+          cp /tmp/fase04-delivery/xoyens-studio.phase08.report.json docs/camping-v3/phase-08/production-validation.json
+          cp /tmp/fase04-delivery/_delivery/phase-08/production-overview.png docs/camping-v3/phase-08/production-overview.png
+          cp /tmp/fase04-delivery/_delivery/phase-08/production-detail.png docs/camping-v3/phase-08/production-detail.png
+          cp /tmp/fase04-delivery/_delivery/phase-08/capture-manifest.json docs/camping-v3/phase-08/capture-manifest.json
           mkdir -p art/textures/materials
           cp -a /tmp/fase04-delivery/textures/materials/. art/textures/materials/
           cp /tmp/fase04-delivery/textures/materials.manifest.json art/textures/materials.manifest.json
@@ -253,6 +291,8 @@ jobs:
           git add docs/camping-v3/phase-06/ceiling.png docs/camping-v3/phase-06/main-door.png docs/camping-v3/phase-06/capture-manifest.json
           git add public/models/camping/xoyens-studio.glb public/models/camping/xoyens-studio.model.json
           git add docs/camping-v3/phase-07/surface-validation.json docs/camping-v3/phase-07/surface-source.json
+          git add art/xoyens-studio.phase08.report.json docs/camping-v3/phase-08/production-validation.json
+          git add docs/camping-v3/phase-08/production-overview.png docs/camping-v3/phase-08/production-detail.png docs/camping-v3/phase-08/capture-manifest.json
 
           # Inspect the pointer generated by Git LFS itself and bind it to the binary hash/size.
           POINTER="$(git show :art/xoyens-studio.blend)"

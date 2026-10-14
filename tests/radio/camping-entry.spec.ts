@@ -384,10 +384,18 @@ test("serves a certified optimized Blender V3 model on the canonical CAMPING URL
   const metadata = await metadataResponse.json();
 
   expect(metadata.version).toBe(3);
-  expect(metadata.phase).toBe(7);
+  expect(metadata.phase).toBe(8);
+  expect(metadata.productionPhase).toBe(8);
   expect(metadata.surfacePhase).toBe(7);
   expect(metadata.status).toBe("blender-v3-published");
   expect(metadata.model).toBe("/models/camping/xoyens-studio.glb");
+  expect(metadata.geometry?.productionZone?.sourceStatus).toBe("source-validated");
+  expect(metadata.geometry?.productionZone?.requiredElements).toBe(19);
+  expect(metadata.geometry?.productionZone?.chairUpholsteryTrianglesSource).toBeGreaterThanOrEqual(14_000);
+  expect(metadata.geometry?.productionZone?.chairUpholsteryTrianglesSource).toBeLessThanOrEqual(18_000);
+  expect(metadata.geometry?.productionZone?.midiWhiteKeys).toBe(36);
+  expect(metadata.geometry?.productionZone?.midiBlackKeys).toBe(25);
+  expect(metadata.geometry?.productionZone?.trianglesAddedFromPhase7).toBeGreaterThan(0);
 
   const modelResponse = await page.request.get(metadata.model, {
     headers: { "cache-control": "no-cache" },
@@ -429,6 +437,12 @@ test("serves a certified optimized Blender V3 model on the canonical CAMPING URL
   ]));
 
   const nodes = gltf?.nodes ?? [];
+  const phase8MaterialNames = new Set((gltf?.materials ?? []).map((material: { name?: string }) => material.name));
+  for (const name of ["ceramic_red", "glass_mirror", "led_warm_emissive"]) {
+    expect(phase8MaterialNames.has(name), "Phase 08 material must be used in the served GLB: " + name).toBe(true);
+  }
+  expect(nodes.some((node: { name?: unknown; mesh?: unknown }) =>
+    node.name === "SDT_production_monitor_daw_screen" && Number.isInteger(node.mesh))).toBe(true);
   const interactionIds = new Set(
     nodes.map((node: { extras?: { interactionId?: unknown } }) => node.extras?.interactionId)
       .filter((id: unknown): id is string => typeof id === "string"),

@@ -122,6 +122,66 @@ const phase7Surfaces = {
   cycloramaContinuousToFloor: paperCurveNode.extras.phase7PaperContinuousToFloor,
 };
 
+
+const productionReportPath = resolve("art/xoyens-studio.phase08.report.json");
+if (!existsSync(productionReportPath)) throw new Error("Refusing promotion: Phase 08 production report is missing");
+const phase8Report = JSON.parse(readFileSync(productionReportPath, "utf8"));
+const production = phase8Report.productionZone || {};
+if (phase8Report.version !== 1 || phase8Report.phase !== 8 || phase8Report.status !== "source-validated") {
+  throw new Error("Refusing promotion: Phase 08 source report is not certified");
+}
+for (const [field, expected] of Object.entries({
+  requiredElements: 19, midiWhiteKeys: 36, midiBlackKeys: 25,
+  acousticFabricPanels: 3, acousticFoamTiles: 30, pendants: 4, edisonBulbs: 4,
+})) {
+  if (production[field] !== expected) throw new Error("Refusing promotion: Phase 08 " + field + " expected " + expected + ", got " + production[field]);
+}
+if (!Number.isInteger(production.chairUpholsteryTrianglesSource) ||
+    production.chairUpholsteryTrianglesSource < 14000 || production.chairUpholsteryTrianglesSource > 18000) {
+  throw new Error("Refusing promotion: chair upholstery must contain 14k–18k source triangles");
+}
+const productionScreen = nodes.find((node) => node.name === "SDT_production_monitor_daw_screen" && Number.isInteger(node.mesh));
+if (!productionScreen) throw new Error("Refusing promotion: live 16:9 DAW screen mesh is missing");
+for (const id of ["studio.production-desk", "studio.imac", "studio.audio-system"]) {
+  if (!interactions.has(id)) throw new Error("Refusing promotion: Phase 08 interaction missing: " + id);
+}
+const phase8MaterialNames = new Set((gltf.materials || []).map((material) => material.name).filter(Boolean));
+const requiredPhase8Materials = ["ceramic_red", "glass_mirror", "led_warm_emissive"];
+const missingPhase8Materials = requiredPhase8Materials.filter((name) => !phase8MaterialNames.has(name));
+if (missingPhase8Materials.length) {
+  throw new Error("Refusing promotion: Phase 08 materials are not linked: " + missingPhase8Materials.join(", "));
+}
+const previousPhase7 = existsSync(metadataPath) ? JSON.parse(readFileSync(metadataPath, "utf8")) : {};
+const baselineTriangles = Number(previousPhase7.geometry?.triangles || 0);
+const phase8Triangles = countTriangles(gltf);
+if (baselineTriangles > 0 && phase8Triangles <= baselineTriangles) {
+  throw new Error("Refusing promotion: high-tier GLB does not add any geometry over Phase 07 (" +
+    phase8Triangles + " <= " + baselineTriangles + " triangles)");
+}
+const phase8Production = {
+  sourceStatus: phase8Report.status,
+  requiredElements: production.requiredElements,
+  taggedProductionObjects: production.taggedProductionObjects,
+  chairUpholsteryTrianglesSource: production.chairUpholsteryTrianglesSource,
+  midiWhiteKeys: production.midiWhiteKeys,
+  midiBlackKeys: production.midiBlackKeys,
+  acousticFabricPanels: production.acousticFabricPanels,
+  acousticFoamTiles: production.acousticFoamTiles,
+  reclaimedWallBoards: production.reclaimedWallBoards,
+  upperLed: production.upperLed,
+  lowerLed: production.lowerLed,
+  pendants: production.pendants,
+  edisonBulbs: production.edisonBulbs,
+  cableSegments: production.cableSegments,
+  cableMaximumY: production.cableMaximumY,
+  requiredPbrMaterialsLinked: requiredPhase8Materials,
+  requiredInteractionsPreserved: ["studio.production-desk", "studio.imac", "studio.audio-system"],
+  productionScreenNode: productionScreen.name,
+  baselineTriangles,
+  publishedTriangles: phase8Triangles,
+  trianglesAddedFromPhase7: baselineTriangles > 0 ? phase8Triangles - baselineTriangles : null,
+};
+
 mkdirSync(dirname(target), { recursive: true });
 copyFileSync(source, target);
 const published = readFileSync(target);
@@ -142,7 +202,8 @@ const materials = gltf.materials || [];
 const updated = {
   ...previous,
   version: 3,
-  phase: 7,
+  phase: 8,
+  productionPhase: 8,
   surfacePhase: 7,
   status: "blender-v3-published",
   model: "/models/camping/xoyens-studio.glb",
@@ -167,6 +228,7 @@ const updated = {
     extensionsUsed: Array.from(extensions).sort(),
     officialBrandImages: previous.geometry && previous.geometry.officialBrandImages || [],
     heroSurfaces: phase7Surfaces,
+    productionZone: phase8Production,
   },
   objects: modelNodes,
   frontendDelivery: {
@@ -191,5 +253,6 @@ console.log(JSON.stringify({
   meshes: updated.geometry.meshes, primitives: updated.geometry.primitives,
   triangles: updated.geometry.triangles, materials: materials.length,
   images: updated.geometry.embeddedImages, extensions: Array.from(extensions).sort(),
-  interactions: interactions.size, sourceCommit: updated.sourceCommit,
+  interactions: interactions.size, phase: updated.phase, productionPhase: updated.productionPhase,
+  productionZone: phase8Production, sourceCommit: updated.sourceCommit,
 }, null, 2));

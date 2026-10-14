@@ -5,6 +5,7 @@ const BASE_URL = process.env.CAMPING_PRODUCTION_URL || "https://syndicate-drop-z
 const MODEL_PATH = "/models/camping/xoyens-studio.glb";
 const METADATA_PATH = "/models/camping/xoyens-studio.model.json";
 const REQUIRED_EXTENSIONS = ["KHR_texture_basisu", "EXT_meshopt_compression"];
+const REQUIRED_PHASE08_MATERIALS = ["ceramic_red", "glass_mirror", "led_warm_emissive"];
 const REQUIRED_INTERACTIONS = [
   "studio.imac",
   "studio.artists-wall",
@@ -36,6 +37,19 @@ function parseGlb(bytes) {
   }
   if (offset !== bytes.length || gltf?.asset?.version !== "2.0") throw new Error("GLB is not a valid glTF 2.0 container");
   return gltf;
+}
+
+function countTriangles(gltf) {
+  const accessors = gltf.accessors ?? [];
+  let total = 0;
+  for (const mesh of gltf.meshes ?? []) for (const primitive of mesh.primitives ?? []) {
+    const accessor = accessors[primitive.indices === undefined ? primitive.attributes?.POSITION : primitive.indices];
+    if (!accessor) continue;
+    const count = accessor.count ?? 0;
+    const mode = primitive.mode === undefined ? 4 : primitive.mode;
+    total += mode === 4 ? Math.floor(count / 3) : mode === 5 || mode === 6 ? Math.max(0, count - 2) : 0;
+  }
+  return total;
 }
 
 async function verifyPublishedAsset(metadata) {
@@ -120,11 +134,31 @@ async function verifyPublishedAsset(metadata) {
     throw new Error("served model manifest does not certify the Phase 07 hero surfaces");
   }
 
+  const materials = gltf.materials ?? [];
+  const materialNames = new Set(materials.map((material) => material.name).filter(Boolean));
+  const missingPhase08Materials = REQUIRED_PHASE08_MATERIALS.filter((name) => !materialNames.has(name));
+  if (missingPhase08Materials.length) throw new Error("served GLB is missing Phase 08 assigned materials: " + missingPhase08Materials.join(", "));
+  const productionScreen = (gltf.nodes ?? []).find(node => node.name === "SDT_production_monitor_daw_screen" && Number.isInteger(node.mesh));
+  if (!productionScreen) throw new Error("served GLB is missing the live monitor DAW screen mesh");
+  const productionZone = metadata.geometry?.productionZone;
+  if (metadata.phase !== 8 || metadata.productionPhase !== 8 ||
+      productionZone?.sourceStatus !== "source-validated" ||
+      productionZone?.requiredElements !== 19 ||
+      productionZone?.chairUpholsteryTrianglesSource < 14000 ||
+      productionZone?.chairUpholsteryTrianglesSource > 18000 ||
+      productionZone?.midiWhiteKeys !== 36 || productionZone?.midiBlackKeys !== 25 ||
+      productionZone?.acousticFabricPanels !== 3 || productionZone?.acousticFoamTiles !== 30 ||
+      productionZone?.pendants !== 4 || productionZone?.edisonBulbs !== 4 ||
+      !(productionZone?.trianglesAddedFromPhase7 > 0)) {
+    throw new Error("served model metadata does not certify the complete Phase 08 production zone");
+  }
+
   const primitives = (gltf.meshes ?? []).reduce((sum, mesh) => sum + (mesh.primitives ?? []).length, 0);
   const actual = {
     meshes: (gltf.meshes ?? []).length,
     primitives,
-    materials: (gltf.materials ?? []).length,
+    triangles: countTriangles(gltf),
+    materials: materials.length,
     embeddedImages: (gltf.images ?? []).length,
   };
   for (const [key, count] of Object.entries(actual)) {
@@ -138,7 +172,9 @@ async function verifyPublishedAsset(metadata) {
     version: metadata.version,
     phase: metadata.phase,
     surfacePhase: metadata.surfacePhase,
+    productionPhase: metadata.productionPhase,
     heroSurfaces: surfaces,
+    productionZone,
     sourceCommit: metadata.sourceCommit,
     ...actual,
     artistSlots: 17,
@@ -156,8 +192,10 @@ while (Date.now() < deadline) {
 
     // Do not request the model URL while the public manifest still declares a
     // legacy phase. This avoids treating the old GLB as a valid candidate.
-    if (metadata.version !== 3 || metadata.phase !== 7 || metadata.surfacePhase !== 7 || metadata.status !== "blender-v3-published") {
-      lastError = "public metadata still declares version=" + metadata.version + ", phase=" + metadata.phase + ", surfacePhase=" + metadata.surfacePhase + ", status=" + metadata.status;
+    if (metadata.version !== 3 || metadata.phase !== 8 || metadata.productionPhase !== 8 ||
+        metadata.surfacePhase !== 7 || metadata.status !== "blender-v3-published") {
+      lastError = "public metadata is not Phase 08 certified: version=" + metadata.version + ", phase=" + metadata.phase +
+        ", productionPhase=" + metadata.productionPhase + ", surfacePhase=" + metadata.surfacePhase + ", status=" + metadata.status;
     } else {
       const result = await verifyPublishedAsset(metadata);
       console.log("CAMPING PRODUCTION MODEL CERTIFIED", JSON.stringify(result, null, 2));

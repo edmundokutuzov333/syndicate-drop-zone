@@ -88,6 +88,16 @@ if (!paperWallNode || !paperCurveNode ||
     paperCurveNode.extras?.phase7PaperContinuousToFloor !== true) {
   throw new Error("Phase 07 continuous black-paper cyclorama contract missing");
 }
+const phase8Materials = new Set((json.materials ?? []).map((material) => material.name).filter(Boolean));
+for (const materialName of ["ceramic_red", "glass_mirror", "led_warm_emissive"]) {
+  if (!phase8Materials.has(materialName)) throw new Error("Phase 08 material is not linked to GLB geometry: " + materialName);
+}
+if (!nodes.some((node) => node.name === "SDT_production_monitor_daw_screen" && Number.isInteger(node.mesh))) {
+  throw new Error("Phase 08 live DAW screen mesh is missing from the GLB");
+}
+for (const interactionId of ["studio.production-desk", "studio.imac", "studio.audio-system"]) {
+  if (!seen.has(interactionId)) throw new Error("Phase 08 production interaction is missing: " + interactionId);
+}
 let primitives = 0, missingMaterial = 0, missingUv0 = 0, missingUv1 = 0;
 for (const mesh of json.meshes ?? []) for (const primitive of mesh.primitives ?? []) {
   primitives++;
