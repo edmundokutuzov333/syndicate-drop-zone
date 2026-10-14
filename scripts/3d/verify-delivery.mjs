@@ -145,8 +145,8 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
   add("manifest present", Boolean(manifest));
   const currentPhase = Number(phase);
   if (!Number.isInteger(currentPhase) || currentPhase < 1 || currentPhase > 22) throw new Error("CAMPING phase must be an integer between 1 and 22");
-  add("manifest phase matches requested phase", Boolean(manifest) && Number(manifest.phase ?? currentPhase) === currentPhase,
-    String(manifest?.phase ?? "unspecified") + " / expected " + currentPhase);
+  add("manifest phase matches requested phase", Boolean(manifest) && Number(manifest.phase) === currentPhase,
+    String(manifest?.phase ?? "missing") + " / expected " + currentPhase);
 
   if (manifest) {
     add("all required files in manifest", (manifest.missing ?? []).length === 0, (manifest.missing ?? []).join(", "));
