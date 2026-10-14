@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  CAMPING_PHASE: "8"
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -109,7 +111,7 @@ jobs:
         env:
           CAMPING_PRODUCTION_URL: https://syndicate-drop-zone.vercel.app
           CAMPING_PRODUCTION_VERIFY_TIMEOUT_MS: "300000"
-          CAMPING_EXPECTED_MODEL_PHASE: "8"
+          CAMPING_EXPECTED_MODEL_PHASE: "${{ env.CAMPING_PHASE }}"
         run: node scripts/verify-deployed-camping-model.mjs
 
       - name: Upload CAMPING visual and failure evidence
