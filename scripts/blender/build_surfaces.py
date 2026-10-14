@@ -433,7 +433,7 @@ def _build_cyclorama(bible, ctx, element):
             for loop_index in poly.loop_indices:
                 co = mesh.vertices[mesh.loops[loop_index].vertex_index].co
                 if label == "curve":
-                    angle = math.atan2(co.y - CYCLO_R_M, co.x - (wall_x + CYCLO_R_M))
+                    angle = math.atan2(co.y - (curve_floor_y + CYCLO_R_M), co.x - (wall_x + CYCLO_R_M))
                     arc_length = max(0.0, min(CYCLO_R_M * math.pi / 2.0,
                         (angle - math.pi) * CYCLO_R_M))
                     uv.data[loop_index].uv = (arc_length / BAMBOO_TILE_M, (co.z - z_min) / BAMBOO_TILE_M)
