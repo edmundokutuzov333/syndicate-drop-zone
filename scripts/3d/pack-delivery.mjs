@@ -4,7 +4,7 @@ import { createReadStream,existsSync,mkdirSync,readdirSync,statSync,writeFileSyn
 import { execFileSync } from "node:child_process";
 import { join,relative } from "node:path";
 import { pathToFileURL } from "node:url";
-export const REQUIRED=["art/xoyens-studio.blend","art/xoyens-studio.report.json","art/out/xoyens-studio.raw.glb"];
+export const REQUIRED=["art/xoyens-studio.blend","art/xoyens-studio.report.json","art/out/xoyens-studio.raw.glb","art/out/xoyens-studio.colliders.glb"];
 export const sha256=(file)=>new Promise((resolve,reject)=>{const h=createHash("sha256");createReadStream(file).on("data",(chunk)=>h.update(chunk)).on("end",()=>resolve(h.digest("hex"))).on("error",reject);});
 const walk=(dir)=>existsSync(dir)?readdirSync(dir,{withFileTypes:true}).flatMap((e)=>e.isDirectory()?walk(join(dir,e.name)):[join(dir,e.name)]):[];
 const git=(args)=>{try{return execFileSync("git",args,{encoding:"utf8"}).trim();}catch{return "unknown";}};

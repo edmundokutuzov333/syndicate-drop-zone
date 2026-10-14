@@ -13,12 +13,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/checkout@v7
         with:
-          node-version: 22
+          lfs: false
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
 
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
@@ -102,9 +104,9 @@ jobs:
 
       - name: Upload CAMPING visual and failure evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
-          name: camping-visual-evidence-${{ github.sha }}
+          name: camping-visual-evidence-\${{ github.sha }}
           path: |
             test-results/camping-reference-full-ui.png
             test-results/camping-reference-canvas.png

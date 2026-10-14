@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { classify } from "../ci/read-run-annotations.mjs";
-import { blendKind, glbContract } from "./verify-delivery.mjs";
+import { blendKind, colliderGlbContract, glbContract } from "./verify-delivery.mjs";
 
 test("annotation classifier identifies known causes only from annotation text", () => {
   assert.equal(classify(["The job was not started because recent account payments have failed"]).cause, "BILLING_BLOCK");
@@ -17,7 +17,7 @@ test("runner_id 0 without annotation remains unknown", () => {
 
 test("blend detector distinguishes native magic and an LFS pointer", () => {
   assert.equal(blendKind(Buffer.from("BLENDER-v400")), "blend");
-  assert.equal(blendKind(Buffer.from("version https://git-lfs.github.com/spec/v1\noid sha256:fake\nsize 100\n")), "LFS-POINTER-FALSO");
+  assert.equal(blendKind(Buffer.from("version https://git-lfs.github.com/spec/v1\\noid sha256:fake\\nsize 100\\n")), "LFS-POINTER-FALSO");
   assert.equal(blendKind(Buffer.from("not a blend file")), "unknown");
 });
 
@@ -40,4 +40,22 @@ test("GLB contract checks interactions, unique 17 slots, materials and UVs", () 
   const extraSlot = structuredClone(glb);
   extraSlot.nodes.push({ name: "slot-018", extras: { interactionId: "studio.artist-slot-018" } });
   assert.ok(glbContract(extraSlot, bible).some((check) => check.name.includes("17 artist slots") && !check.pass));
+});
+
+test("collider GLB contains only COL_* mesh nodes with extras.collider", () => {
+  const colliders = {
+    nodes: [
+      { name: "COL_wall_left", mesh: 0, extras: { collider: "box" } },
+      { name: "COL_desk", mesh: 1, extras: { collider: "box" } },
+    ],
+    meshes: [
+      { primitives: [{ material: 0, attributes: { TEXCOORD_0: 0, TEXCOORD_1: 1 } }] },
+      { primitives: [{ material: 0, attributes: { TEXCOORD_0: 0, TEXCOORD_1: 1 } }] },
+    ],
+  };
+  assert.ok(colliderGlbContract(colliders, 2).every((check) => check.pass));
+  const missingExtras = structuredClone(colliders);
+  delete missingExtras.nodes[0].extras.collider;
+  assert.ok(colliderGlbContract(missingExtras, 2).some((check) => check.name.includes("extras.collider") && !check.pass));
+  assert.ok(colliderGlbContract(colliders, 3).some((check) => check.name.includes("match Blender report") && !check.pass));
 });

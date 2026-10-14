@@ -1,5 +1,7 @@
 name: Runner smoke test
 on:
+  schedule:
+    - cron: "23 6 * * 1"
   workflow_dispatch:
   push:
     branches: [main]
@@ -13,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-24.04, ubuntu-22.04]
-    runs-on: ${{ matrix.os }}
+    runs-on: \${{ matrix.os }}
     timeout-minutes: 5
     steps:
       - name: Prove runner allocation
@@ -21,8 +23,8 @@ jobs:
         run: |
           set -euxo pipefail
           echo "RUNNER_ASSIGNED=true"
-          echo "RUNNER_IMAGE=${ImageOS:-unknown}"
-          echo "RUNNER_VERSION=${RUNNER_TOOL_CACHE:-unknown}"
+          echo "RUNNER_IMAGE=\${ImageOS:-unknown}"
+          echo "RUNNER_VERSION=\${RUNNER_TOOL_CACHE:-unknown}"
           echo "KERNEL=$(uname -a)"
           echo "NODE=$(node --version)"
           echo "PYTHON=$(python3 --version)"
