@@ -77,8 +77,16 @@ try {
     // descendant mesh nodes before pruning/flattening so raycasting still finds
     // the same interaction and the optimizer can protect the clickable mesh.
     for (const node of nodes) {
-      const interactionId = node.getExtras()?.interactionId;
-      if (typeof interactionId !== "string" || !interactionId) continue;
+      const sourceExtras = node.getExtras() ?? {};
+      // The scene bible's legacy iMac interaction belongs to prod.monitor_daw.
+      // Blender's current export carries elementId but can omit interactionId on
+      // this anchor, so restore the canonical runtime contract before flatten/join.
+      const interactionId = typeof sourceExtras.interactionId === "string" && sourceExtras.interactionId
+        ? sourceExtras.interactionId
+        : sourceExtras.elementId === "prod.monitor_daw"
+          ? "studio.imac"
+          : null;
+      if (!interactionId) continue;
       const targets = [
         ...(node.getMesh() ? [node] : []),
         ...descendantNodes(node).filter((child) => child.getMesh()),
@@ -89,6 +97,9 @@ try {
           extras.interactionId = interactionId;
           target.setExtras(extras);
         }
+      }
+      if (!sourceExtras.interactionId && sourceExtras.elementId === "prod.monitor_daw") {
+        node.setExtras({ ...sourceExtras, interactionId: "studio.imac" });
       }
     }
 
