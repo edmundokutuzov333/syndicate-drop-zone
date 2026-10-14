@@ -1,0 +1,37 @@
+{
+  "observedAt": "2026-10-14T06:40:00Z",
+  "repository": "edmundokutuzov333/syndicate-drop-zone",
+  "classification": "UNKNOWN",
+  "summary": "Jobs recentes falharam antes da atribuição de runner. Os metadados de jobs não contêm o motivo exacto.",
+  "runs": [
+    {
+      "runId": 38378115395,
+      "jobId": 115231891106,
+      "workflow": "Build CAMPING 3D (Blender headless)",
+      "runnerId": 0,
+      "runnerName": "",
+      "steps": 0,
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "runId": 38423793670,
+      "jobId": 115387875010,
+      "workflow": "Camera Production CI",
+      "runnerId": 0,
+      "runnerName": "",
+      "steps": 0,
+      "status": "completed",
+      "conclusion": "failure"
+    }
+  ],
+  "annotationRead": {
+    "attempted": true,
+    "endpointPattern": "GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations",
+    "outcome": "The GitHub connector refused this endpoint before returning annotations. No annotation text was available.",
+    "tokenAvailableInExecutionEnvironment": false
+  },
+  "interpretation": "Evidence establishes runner assignment failure, not its root cause. Billing, Actions policy, quota, and platform incident remain unconfirmed possibilities.",
+  "nextAction": "Read the exact Annotations text in the GitHub Actions UI or run node scripts/ci/read-run-annotations.mjs edmundokutuzov333/syndicate-drop-zone 38378115395 with an authorised GITHUB_TOKEN.",
+  "certification": "OPEN"
+}

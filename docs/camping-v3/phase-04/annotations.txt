@@ -1,0 +1,13 @@
+Fase 04-R · leitura de anotações
+Observado em: 2026-10-14T06:40:00Z
+Classificação: UNKNOWN
+
+Runs verificados:
+- 38378115395 / job 115231891106: runner_id=0, runner_name vazio, steps=[], failure.
+- 38423793670 / job 115387875010: runner_id=0, runner_name vazio, steps=[], failure.
+
+A consulta dos metadados confirma que os jobs não chegaram a iniciar. A consulta ao endpoint de anotações não foi autorizada pela integração disponível e não há GITHUB_TOKEN no ambiente de execução. Não foi obtido qualquer texto exacto de Annotations. Portanto, NÃO há base suficiente para classificar a causa como billing, política, quota ou incidente.
+
+Próximo passo obrigatório: abrir o run no GitHub UI e copiar o texto exacto da secção Annotations, ou executar scripts/ci/read-run-annotations.mjs com um GITHUB_TOKEN autorizado.
+
+A Fase 04 permanece aberta. Nenhum artefacto Blender foi criado ou certificado por este diagnóstico.

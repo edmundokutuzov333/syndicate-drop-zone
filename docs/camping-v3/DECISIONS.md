@@ -100,3 +100,9 @@ O puxador das portas usa eixo horizontal para representar a alavanca, e os verif
 
 ### D029 · Workflow de build Blender headless
 O workflow canónico para a fonte Blender é `.github/workflows/build-3d.yml`. Corre em `ubuntu-24.04` (Linux x86_64), configura Node 22/Python 3.11, valida/activa Git LFS local, instala a toolchain fixa, executa os quatro comandos exigidos pela Fase 04 e guarda logs completos e artefactos. O antigo workflow CAMPING 3D Toolchain fica manual para evitar executar dois downloads/builds pesados no mesmo push. Não há commit automático do `.blend`: o artefacto de CI tem de ser validado primeiro e a promoção via LFS é uma acção separada.
+
+
+## 2026-10-14 · Recuperação da Fase 04-R
+
+### D030 · Diagnóstico de runners permanece UNKNOWN até ler a anotação
+As consultas de jobs confirmam a assinatura `runner_id=0`, `runner_name=""` e `steps=[]` nas execuções 38378115395 (job 115231891106) e 38423793670 (job 115387875010). A API de jobs, por si só, confirma que nenhum passo foi iniciado, mas não distingue bloqueio de billing, política, quota ou falha de provisionamento. A tentativa de consultar as anotações pela integração GitHub disponível foi recusada pelo acesso ao endpoint; o ambiente de execução também não tem `GITHUB_TOKEN`. Por isso a classificação registada é `UNKNOWN`, não `BILLING_BLOCK`. O passo obrigatório seguinte é recolher o texto real de Annotations no GitHub UI ou executar `scripts/ci/read-run-annotations.mjs` com um token autorizado. A Fase 04 mantém-se aberta.
