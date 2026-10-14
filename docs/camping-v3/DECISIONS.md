@@ -115,3 +115,18 @@ Os metadados de jobs confirmam runner_id=0, nome de runner vazio e steps=[] em r
 
 ### D032 · Uma entrada de build, cinco rotas de execução
 Local, Docker, Codespaces, GitLab e GitHub Actions invocam scripts/3d/local-build.sh. Esta entrada regista logs e códigos de saída, reabre o .blend numa segunda invocação Blender, empacota apenas ficheiros realmente gerados e chama o verificador estrito. A certificação depende do verificador terminar com código zero; a existência dos scripts ou dos workflows não é prova de build.
+
+
+## 2026-10-14 · Certificação real da Fase 04
+
+### D033 · Runner atribuído e build Blender executado
+A execução [Build CAMPING 3D - Fase 04 #38527906358](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38527906358), sobre o commit de build `e40d013526e23162782c9ab0404228226022b6bd`, recebeu runner real e passou o workflow. Foi instalada a distribuição oficial Blender 4.5.14 LTS com SHA-256 verificado. A pipeline partilhada construiu `art/xoyens-studio.blend`, reabriu-o numa segunda invocação, exportou `art/out/xoyens-studio.raw.glb`, validou a Scene Bible e passou o verificador de entrega. Esta decisão supersede os estados de pré-execução registados em D030–D032; a causa exacta das falhas históricas de atribuição ainda permanece UNKNOWN por falta do texto original de Annotations.
+
+### D034 · Correcções de causa-raiz encontradas por execução
+A primeira execução com runner revelou um `IndentationError` em `scripts/blender/build_all.py`; foi corrigida a indentação de `object_count` no commit `4efa8ddfac9b120620e02748a67beff315d3028f`. A execução seguinte revelou que `_build_vault()` passava um objecto Material onde `finish_mesh()` espera o nome do material; foi corrigido para `rib_mat.name` no commit `c258de8953e628b884c850e76a9f9323c4002d9c`. Não foram relaxados budgets nem os contratos do validador.
+
+### D035 · Promoção da fonte Blender exclusivamente por Git LFS real
+Após uma segunda verificação de entrega descarregada do próprio artifact do job bem-sucedido, o workflow adicionou `art/xoyens-studio.blend` usando o filtro Git LFS real e fez push normal para `main`, no commit `ec362ec04665085dd2ce8ff6b5a13306b0727bd1`. O passo verificou o pointer gerado pelo filtro contra SHA-256 `cfbffce61ed393a427b0f167847f05ba6dc1fa04df7fff64700def48909bbb58` e tamanho `8248183`, executou `git lfs ls-files --long --size`, `git lfs fsck --objects HEAD` e confirmou que o SHA da referência remota `main` correspondia ao commit publicado. Nenhum pointer foi escrito manualmente.
+
+### D036 · Resultado do contrato da entrega
+Blender 4.5.14 LTS reportou 54 elementos Scene Bible, 378 objectos, 371 malhas, 37 046 vértices, 62 864 triângulos estimados e as sete colecções exigidas. O GLB final tem 359 nós/malhas/primitivas, 38 materiais, todos os sete IDs de interacção, slots 001–017 sem 018, material e UV0 em todas as primitivas e UV1 em 359/359. O verificador final terminou com `Fase 04 certificável`; os códigos de saída exigidos foram `validate=0`, `blend=0`, `blend-check=0` e `verify=0`. Os hashes, manifesto e execução integral estão em `docs/camping-v3/phase-04/certification-2026-10-14.md`.
