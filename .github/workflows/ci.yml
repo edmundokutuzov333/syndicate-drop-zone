@@ -105,6 +105,12 @@ jobs:
       - name: Radio browser smoke tests
         run: npm run test:e2e
 
+      - name: Verify the actual production CAMPING model served by Vercel
+        env:
+          CAMPING_PRODUCTION_URL: https://syndicate-drop-zone.vercel.app
+          CAMPING_PRODUCTION_VERIFY_TIMEOUT_MS: "300000"
+        run: node scripts/verify-deployed-camping-model.mjs
+
       - name: Upload CAMPING visual and failure evidence
         if: always()
         uses: actions/upload-artifact@v7
