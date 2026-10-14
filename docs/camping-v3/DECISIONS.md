@@ -150,3 +150,17 @@ A métrica das bordas é um gate automatizado, não substitui a inspecção visu
 ## 2026-10-14 · Fase 06: contrato da casca arquitectónica
 
 A fonte continua a ser o Scene Bible e o módulo existente `scripts/blender/build_shell.py`. A abóbada usa superfícies interior/exterior e tampas de fecho. A validação da fonte reaberta conta arestas non-manifold dos componentes de fronteira, aplica o intervalo de 18.000–25.000 triângulos à casca e testa 3.000 raios determinísticos a partir de três posições interiores. Portas, AC e PVC são geometrias modeladas e recebem UVMap/UV_Lightmap pelo helper de acabamento. Não foram alterados IDs de interacção, slots de artistas, módulos de produção/fotografia/lados ou budgets.
+
+
+
+## 2026-10-14 · Fase 07: superfícies-herói (em validação)
+
+A implementação está concentrada no módulo já existente `scripts/blender/build_surfaces.py`, executado pelo pipeline determinístico `scripts/blender/build_all.py`. Não altera rotas, Control Room, contratos Supabase, IDs de interacção ou os 17 slots de artistas.
+
+- O soalho passa a ser uma única malha de render com tábuas físicas desconectadas, 190 mm nominal de largura, comprimentos limitados a 0,90–2,20 m, junta desencontrada entre fiadas e chanfro de 0,8 mm. Cada tábua recebe variação tonal determinística em `COLOR_0`; a textura PBR original mantém o mapa baseColor, e `UVMap`/ `UV_Lightmap` permanecem separados.
+- O varrimento de vinil é circular, raio de 2,30 m, espessura de 1,2 mm e borda levantada de 4 mm. A origem do centro continua a vir do Scene Bible.
+- `photo.paper_folds` é construída como uma parede vertical e uma curva tangencial de 350 mm, em vez do proxy dimensional sem continuidade. A geometria da parede/curva pertence ao módulo de superfícies, não é duplicada pelo módulo de props.
+- A abóbada existente mantém a geometria de costelas da Fase 06; apenas a escala do `UVMap` do bambu é reparametrizada para uma repetição física de 1,20 m. `UV_Lightmap` não é substituído.
+- `scripts/blender/validate_surfaces.py`, `scripts/verify-glb-contract.mjs`, `scripts/3d/verify-delivery.mjs`, o guard do Vite, o verificador de produção e o teste Playwright exigem os contratos da Fase 07. O workflow passa a tratar os dois relatórios da fase como ficheiros obrigatórios e publica-os com o modelo certificado.
+
+**Gate de fecho:** esta entrada não certifica ainda a fase. Só muda para CERTIFICADA depois de a execução Blender em `main` produzir os relatórios reais, os três tiers passarem os budgets sem os reduzir, o manifesto do GLB público corresponder a SHA-256/tamanho e o deployment Vercel servir o mesmo artefacto. A comparação visual e os FPS continuam a ser evidência, não presumidos.
