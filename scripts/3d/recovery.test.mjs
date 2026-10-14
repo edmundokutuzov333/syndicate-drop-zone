@@ -21,15 +21,40 @@ test("blend detector distinguishes native magic and an LFS pointer", () => {
   assert.equal(blendKind(Buffer.from("not a blend file")), "unknown");
 });
 
-test("GLB contract checks interactions, unique 17 slots, materials and UVs", () => {
-  const nodes = [{ name: "SDT_door", extras: { interactionId: "studio.inner-door", zone: "shell", lmGroup: "shell" } }];
+test("GLB contract checks Phase 07 surfaces, interactions, unique 17 slots, materials and UVs", () => {
+  const nodes = [
+    { name: "SDT_door", extras: { interactionId: "studio.inner-door", zone: "shell", lmGroup: "shell" } },
+    { name: "SDT_shell_floor_wood_hero", mesh: 0, extras: {
+      elementId: "floor.wood", zone: "shell", lmGroup: "shell", surfacePhase: 7,
+      phase7BoardCount: 116, phase7BoardWidthTargetM: 0.19,
+    } },
+    { name: "SDT_photo_vinyl_sweep_hero", mesh: 1, extras: {
+      elementId: "floor.vinyl_sweep", zone: "photo", lmGroup: "photo", surfacePhase: 7,
+      phase7VinylRadiusM: 2.3, phase7VinylThicknessM: 0.0012, phase7VinylEdgeLiftM: 0.004,
+    } },
+    { name: "SDT_shell_vault_ceiling", mesh: 2, extras: {
+      elementId: "arch.vault_ceiling", zone: "shell", lmGroup: "shell", surfacePhase: 7,
+      phase7BambooTileMeters: 1.2,
+    } },
+    { name: "SDT_photo_paper_cyclorama_wall", extras: {
+      elementId: "photo.paper_folds", zone: "photo", lmGroup: "photo", surfacePhase: 7,
+    } },
+    { name: "SDT_photo_paper_cyclorama_curve", extras: {
+      elementId: "photo.paper_folds", zone: "photo", lmGroup: "photo", surfacePhase: 7,
+      phase7CycloramaRadiusM: 0.35, phase7PaperContinuousToFloor: true,
+    } },
+  ];
   for (let number = 1; number <= 17; number += 1) {
     const id = String(number).padStart(3, "0");
     nodes.push({ name: "slot-" + id, extras: { interactionId: "studio.artist-slot-" + id } });
   }
   const glb = {
     nodes,
-    meshes: [{ primitives: [{ material: 0, attributes: { TEXCOORD_0: 0, TEXCOORD_1: 1 } }] }],
+    meshes: [
+      { primitives: [{ material: 0, attributes: { COLOR_0: 2, TEXCOORD_0: 0, TEXCOORD_1: 1 } }] },
+      { primitives: [{ material: 0, attributes: { TEXCOORD_0: 0, TEXCOORD_1: 1 } }] },
+      { primitives: [{ material: 0, attributes: { TEXCOORD_0: 0, TEXCOORD_1: 1 } }] },
+    ],
     materials: Array.from({ length: 10 }, (_, index) => ({ name: "material-" + index })),
   };
   const bible = { elements: [{ interactionId: "studio.inner-door" }] };
