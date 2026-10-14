@@ -1,18 +1,42 @@
-# Diagnóstico da atribuição de runners da Fase 04
+# Recuperação de atribuição de runners da Fase 04
 
-Este workflow é deliberadamente mínimo e não instala dependências nem executa código da aplicação. Testa três imagens GitHub-hosted independentes: ubuntu-latest, ubuntu-24.04 e ubuntu-22.04.
+## Sintoma observado
 
-## Interpretação
+O Runner smoke test é deliberadamente mínimo: não faz checkout nem instala dependências. Nas execuções disponíveis, tanto ubuntu-24.04 como ubuntu-22.04 falharam em aproximadamente 3–4 segundos com runner_id=0, nome de runner vazio e steps=[]. O workflow Build CAMPING 3D e a Camera Production CI exibem a mesma assinatura.
 
-- Se um job chegar ao step "Report runner assignment", o runner foi atribuído. Nesse caso, a falha original pode estar relacionada com a imagem Ubuntu escolhida, e o pipeline 3D pode ser direccionado para a imagem que passou, mantendo o step do build.
-- Se os três jobs falharem com `runner_id=0`, `runner_name` vazio e `steps=[]`, o workflow não executou nem o comando `echo`. Isto aponta para dispatch/provisionamento do GitHub Actions, configuração/política de conta, quota/concurrency ou incidente do serviço, não para Blender nem para o YAML do build.
-- Se um job ficar `queued` mais do que cinco minutos, guardar o run ID e verificar o estado actual em https://www.githubstatus.com/.
-- Não criar ou registar runners self-hosted sem uma máquina controlada pelo proprietário e um token de registo válido. Não desligar protecções de `main`.
+Isto demonstra que os jobs não chegaram a começar. Não é suficiente para concluir que a causa é billing, política, quota, concurrency, provisionamento ou incidente do serviço. As anotações exactas do run são o próximo dado obrigatório. A integração GitHub actual recusou o endpoint de Annotations, pelo que a causa está registada como UNKNOWN.
 
-## Contorno quando hosted runners estão indisponíveis
+## Passo seguinte obrigatório
 
-1. Usar uma máquina Linux x86_64 já administrada pelo proprietário do repositório, adicionar um self-hosted runner a Settings → Actions → Runners e usar os labels reais atribuídos pelo GitHub.
-2. Não adicionar `runs-on: self-hosted` antes de existir pelo menos um runner online com os labels correspondentes, caso contrário os jobs ficam à espera.
-3. Alternativamente, executar `npm run 3d:blend` localmente num equipamento com Blender 4.5.14, KTX-Software 4.4.2, Node 22 e dependências instaladas. Guardar stdout/stderr e os três artefactos. Validar antes de criar qualquer commit binário.
+1. Abrir um run falhado no GitHub Actions e copiar o texto integral de Annotations.
+2. Em alternativa, num ambiente com token autorizado para ler Actions e checks, executar:
+   GITHUB_TOKEN=<token autorizado> node scripts/ci/read-run-annotations.mjs edmundokutuzov333/syndicate-drop-zone 38525746588 --json
+3. Guardar o resultado em docs/camping-v3/phase-04/annotations.json e annotations.txt.
+4. Resolver a causa descrita pela anotação. Se o diagnóstico continuar UNKNOWN, abrir um ticket no GitHub Support com os IDs dos runs e a ausência de runner.
+5. Voltar a correr Runner smoke test. Só quando passar, executar Build CAMPING 3D.
 
-A prova de um runner mínimo não conclui a Fase 04. Ainda é necessário `npm run 3d:blend`, validar o contrato GLB e verificar o artefacto `.blend` real.
+## Possíveis famílias de causa
+
+- BILLING_BLOCK: pagamentos falhados ou limite de utilização de Actions. Só classificar assim se a anotação o indicar.
+- ACTIONS_DISABLED ou POLICY_BLOCK: Actions desactivadas ou uma política herdada impede o workflow.
+- NO_MATCHING_RUNNER: labels de runner não disponíveis ou runner offline.
+- QUOTA: utilização ou minutos excedidos.
+- UNKNOWN: anotação indisponível ou texto sem correspondência. Não inferir.
+
+## Rotas independentes do GitHub-hosted runner
+
+A) Máquina do proprietário: executar bash scripts/3d/local-build.sh em Mac/Linux com Node 22, Python, Blender 4.5.14 e rede. A instalação de Blender verifica o SHA-256 oficial.
+
+B) Docker: executar bash scripts/3d/docker-run.sh. Usa Linux amd64, incluindo emulação em Apple Silicon.
+
+C) Codespaces: abrir o repositório na main, deixar o devcontainer instalar a toolchain e executar bash scripts/3d/local-build.sh.
+
+D) GitLab CI: espelhar o repositório e usar o pipeline definido em .gitlab-ci.yml. A mesma entrada de build gera logs e artefactos.
+
+E) Repositório público isolado de build: só após verificar as permissões e garantir que não são copiados segredos, dados de utilizador ou código privado desnecessário. Executar o smoke test antes do build.
+
+Todas as rotas chamam scripts/3d/local-build.sh. A primeira rota que produzir uma entrega real válida é suficiente; as restantes não devem produzir artefactos redundantes.
+
+## Certificação
+
+A Fase 04 permanece aberta até que uma entrega real satisfaça o verificador com a mensagem Fase 04 certificável e código zero. A entrega tem de incluir o .blend real, relatório com campos exigidos, GLB conforme Scene Bible, manifesto/checksums, logs e códigos de saída. Não criar ponteiros LFS ou artefactos sintéticos no repositório.

@@ -2,15 +2,22 @@
 
 ## Comando reproduzível
 
-A partir da raiz do repositório, com Blender 4.2 ou superior instalado:
+A partir da raiz do repositório, o pipeline partilhado começa com:
+
+    bash scripts/3d/local-build.sh
+
+O script regista ambiente, logs e código de saída por passo, procura ou instala Blender 4.5.14 através do checksum SHA-256 oficial, executa a validação Scene Bible, constrói o ficheiro .blend, reabre-o num segundo processo Blender, valida a cena guardada, exporta o GLB e verifica o contrato. No fim, tenta empacotar a evidência mesmo quando um passo falha.
+
+A entrada normal do projecto continua disponível:
 
     npm run 3d:blend
 
-O comando executa três passos: reconstrói a cena do zero com scripts/blender/build_all.py, valida o ficheiro salvo com validate_blend.py, e exporta art/out/xoyens-studio.raw.glb com export_glb.py. Por fim, scripts/verify-glb-contract.mjs verifica os extras de interação, os 17 slots, os materiais e os atributos TEXCOORD_0/TEXCOORD_1.
+Para validar isoladamente uma cena já gravada:
 
-Comando directo de reconstrução:
+    npm run 3d:blend:validate
 
-    blender -b -P scripts/blender/build_all.py -- docs/camping-v3/scene-bible.json art/xoyens-studio.blend
+As chamadas que executam Python no Blender usam --python-exit-code 1 para que uma excepção Python não produza um falso código de saída zero. A invocação de reabertura não usa factory startup, porque precisa carregar o .blend guardado.
+
 
 ## Arquitectura implementada
 
@@ -38,9 +45,11 @@ Esta fase estabelece um blockout geométrico em Blender e o pipeline de fonte de
 
 ## Evidência e estado
 
-O workflow CAMPING 3D Toolchain compila a sintaxe Python, executa o build, valida .blend, exporta o GLB cru, verifica extras/UVs e carrega os artefactos por 14 dias. O relatório guardado em art/xoyens-studio.report.json inclui versão do Blender, tamanho, tempo, objectos, vértices, polígonos e triângulos estimados.
+O workflow Runner smoke test verifica se os runners hosted são atribuídos em ubuntu-24.04 e ubuntu-22.04 sem checkout ou instalação. O workflow Build CAMPING 3D chama o mesmo scripts/3d/local-build.sh usado nas rotas locais, Docker, Codespaces e GitLab.
 
-A fase continua Em validação até existir um runner real e uma execução completa. Um commit de scripts ou o sucesso do deploy Vercel não substitui a prova de que o .blend foi gerado, validado e respeita o limite de 200 MiB. O .blend verificado deve ser guardado através de Git LFS; não criar um ponteiro LFS sem o objecto correspondente.
+Os runs recentes do smoke test e do build terminam antes do primeiro step com runner_id=0 e steps=[]. Isto comprova uma falha de atribuição anterior à execução, mas não distingue billing, política, quota ou provisionamento. A integração GitHub usada não disponibilizou o conteúdo de Annotations. A classificação permanece UNKNOWN em annotations.json e annotations.txt até obter o texto exacto no GitHub UI ou executar scripts/ci/read-run-annotations.mjs com token autorizado.
+
+A fase continua Em validação. A presença de código, workflow ou sucesso de deploy não substitui a prova de que um Blender real gerou e reabriu o .blend, exportou o GLB e passou os contratos. Nenhum .blend ou GLB fictício foi guardado. O binário verificado só pode ser promovido através de Git LFS real após a certificação.
 
 
 ## Revisão geométrica da Fase 04

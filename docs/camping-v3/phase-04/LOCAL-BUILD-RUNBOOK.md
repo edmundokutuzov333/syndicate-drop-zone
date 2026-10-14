@@ -1,15 +1,24 @@
 # Execução local alternativa da Fase 04
 
-O runner GitHub-hosted tem falhado antes do primeiro step (`runner_id=0`, `steps=[]`). Se o diagnóstico mínimo falhar em todas as imagens, não se trata de um erro do comando do Blender.
+O runner do GitHub tem falhado antes do primeiro step. A causa exacta permanece UNKNOWN até ser recolhido o texto original de Annotations. Não se deve alterar Blender ou o código para resolver uma falha que ainda não chegou a executar os steps.
 
-Num computador Linux x86_64 controlado pelo proprietário:
-1. Fazer checkout de `main`.
-2. Instalar Node 22 e executar `npm install --legacy-peer-deps --no-audit --no-fund`.
-3. Executar `npm run 3d:toolchain:install`, que fixa Blender 4.5.14 e KTX-Software 4.4.2 e valida os digests.
-4. Executar `python3 -m py_compile scripts/blender/*.py`.
-5. Executar `npm run 3d:validate`.
-6. Executar `npm run 3d:blend`.
-7. Verificar `art/xoyens-studio.blend`, `art/xoyens-studio.report.json`, `art/out/xoyens-studio.raw.glb`, extras glTF, UV0/UV1, materiais e os 17 slots.
-8. Se o `.blend` estiver abaixo de 200 MiB, enviar o objecto binário através de Git LFS real. Não criar manualmente um ponteiro LFS.
+## Pré-voo
 
-Não fechar a issue #36 até haver logs do build e hashes/tamanhos dos artefactos.
+Na raiz do repositório, usar Node.js 22, Python 3, Git e acesso de rede a download.blender.org. O Git LFS é necessário para promover o binário após certificação, não para os testes unitários do verificador.
+
+Executar o mesmo fluxo usado pelas rotas de build:
+
+    node scripts/3d/doctor.mjs
+    bash scripts/3d/install-blender.sh
+    source scripts/3d/env.sh
+    bash scripts/3d/local-build.sh
+
+O script local instala as dependências do projecto, compila os scripts Python, valida a Scene Bible, corre npm run 3d:blend, reabre e valida a cena, corre npm run 3d:blend:validate, tenta gerar o relatório e o GLB, e empacota os logs e códigos de saída mesmo quando falha.
+
+## Entrega
+
+No fim, procura art/_delivery/phase04-delivery-*.zip ou a alternativa tar.gz, com o sidecar .sha256. Se o build falhar, anexa a entrega e os logs de art/_delivery/logs em vez de descartar a evidência.
+
+Não declares a fase certificada só porque o script foi executado. O gate é node scripts/3d/verify-delivery.mjs sobre a entrega produzida, com o resultado Fase 04 certificável e código zero, incluindo os códigos validate=0, blend=0, blend-check=0 e verify=0.
+
+Não commits um .blend criado à mão, ponteiro LFS, GLB sintético ou relatório fabricado. Só o binário produzido por uma execução real e confirmado por SHA-256 pode ser promovido através de Git LFS.
