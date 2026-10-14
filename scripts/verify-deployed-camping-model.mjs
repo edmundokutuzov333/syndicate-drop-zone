@@ -75,7 +75,7 @@ async function verifyPublishedAsset(metadata) {
   const slotContracts = new Set((gltf.nodes ?? []).flatMap((node) => [
     node.name,
     node.extras?.interactionId,
-  ]).filter((value) => typeof value === "string" && /^studio\\.artist-slot-\\d{3}$/.test(value)));
+  ]).filter((value) => typeof value === "string" && /^studio\.artist-slot-\d{3}$/.test(value)));
   const requiredSlots = Array.from({ length: 17 }, (_, index) => "studio.artist-slot-" + String(index + 1).padStart(3, "0"));
   const missingSlots = requiredSlots.filter((name) => !slotContracts.has(name));
   if (missingSlots.length) throw new Error("served GLB is missing artist slot contracts: " + missingSlots.join(", "));

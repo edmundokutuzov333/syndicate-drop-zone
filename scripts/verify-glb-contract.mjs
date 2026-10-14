@@ -41,7 +41,7 @@ if (missing.length) {
 // IDs to runtime object names before portrait mounting, so validate both encodings.
 const slotIds = new Set(nodes.flatMap(node => [node.name, node.extras?.interactionId])
   .filter(value => typeof value === "string")
-  .map(value => value.match(/^studio\\.artist-slot-(\\d{3})$/)?.[1])
+  .map(value => /^studio\.artist-slot-(\d{3})$/.exec(value)?.[1])
   .filter(Boolean));
 const expectedSlots = Array.from({ length: 17 }, (_, index) => "studio.artist-slot-" + String(index + 1).padStart(3, "0"));
 const missingSlots = expectedSlots.filter(name => !slotIds.has(name.slice(-3)));
