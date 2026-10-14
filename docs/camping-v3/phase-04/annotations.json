@@ -1,5 +1,5 @@
 {
-  "observedAt": "2026-10-14T06:40:00Z",
+  "observedAt": "2026-10-14T07:04:00Z",
   "repository": "edmundokutuzov333/syndicate-drop-zone",
   "classification": "UNKNOWN",
   "summary": "Jobs recentes falharam antes da atribuição de runner. Os metadados de jobs não contêm o motivo exacto.",
@@ -23,6 +23,46 @@
       "steps": 0,
       "status": "completed",
       "conclusion": "failure"
+    },
+    {
+      "runId": 38525746588,
+      "jobId": 115725652932,
+      "workflow": "Runner smoke test / ubuntu-24.04",
+      "runnerId": 0,
+      "runnerName": "",
+      "steps": 0,
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "runId": 38525746588,
+      "jobId": 115725653309,
+      "workflow": "Runner smoke test / ubuntu-22.04",
+      "runnerId": 0,
+      "runnerName": "",
+      "steps": 0,
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "runId": 38525929465,
+      "jobId": 115726141876,
+      "workflow": "Camera Production CI",
+      "runnerId": 0,
+      "runnerName": "",
+      "steps": 0,
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "runId": 38525393516,
+      "jobId": 115724441631,
+      "workflow": "Build CAMPING 3D - Fase 04",
+      "runnerId": 0,
+      "runnerName": "",
+      "steps": 0,
+      "status": "completed",
+      "conclusion": "failure"
     }
   ],
   "annotationRead": {
@@ -31,7 +71,7 @@
     "outcome": "The GitHub connector refused this endpoint before returning annotations. No annotation text was available.",
     "tokenAvailableInExecutionEnvironment": false
   },
-  "interpretation": "Evidence establishes runner assignment failure, not its root cause. Billing, Actions policy, quota, and platform incident remain unconfirmed possibilities.",
+  "interpretation": "Repeated failures before the first step are confirmed across both runner images in the minimal smoke test and in the CI/Blender jobs. Exact cause still unknown because original annotations remain unavailable. Billing, Actions policy, quota and provisioning are unconfirmed possibilities.",
   "nextAction": "Read the exact Annotations text in the GitHub Actions UI or run node scripts/ci/read-run-annotations.mjs edmundokutuzov333/syndicate-drop-zone 38378115395 with an authorised GITHUB_TOKEN.",
   "certification": "OPEN"
 }

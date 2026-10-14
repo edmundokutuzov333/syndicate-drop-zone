@@ -11,3 +11,14 @@ A consulta dos metadados confirma que os jobs não chegaram a iniciar. A consult
 Próximo passo obrigatório: abrir o run no GitHub UI e copiar o texto exacto da secção Annotations, ou executar scripts/ci/read-run-annotations.mjs com um GITHUB_TOKEN autorizado.
 
 A Fase 04 permanece aberta. Nenhum artefacto Blender foi criado ou certificado por este diagnóstico.
+
+
+SUPPLEMENTAL RUN EVIDENCE · 2026-10-14T07:04:00Z
+
+Runner smoke test second attempt:
+- run 38525746588 / job 115725652932 (ubuntu-24.04): failure in about 3 seconds, runner_id=0, runner name empty, steps=0.
+- run 38525746588 / job 115725653309 (ubuntu-22.04): failure in about 4 seconds, runner_id=0, runner name empty, steps=0.
+- Camera Production CI run 38525929465 / job 115726141876: failure in about 3 seconds, runner_id=0, steps=0.
+- Build CAMPING 3D run 38525393516 / job 115724441631: failure in about 3 seconds, runner_id=0, steps=0.
+
+The GitHub connector still refuses the check-run annotations endpoint. This is stronger evidence of a pre-step runner allocation failure but does not identify whether the cause is billing, policy, quota or provisioning. Classification remains UNKNOWN until the exact original annotation is captured.
