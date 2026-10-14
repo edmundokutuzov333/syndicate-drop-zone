@@ -73,5 +73,50 @@
   },
   "interpretation": "Repeated failures before the first step are confirmed across both runner images in the minimal smoke test and in the CI/Blender jobs. Exact cause still unknown because original annotations remain unavailable. Billing, Actions policy, quota and provisioning are unconfirmed possibilities.",
   "nextAction": "Read the exact Annotations text in the GitHub Actions UI or run node scripts/ci/read-run-annotations.mjs edmundokutuzov333/syndicate-drop-zone 38378115395 with an authorised GITHUB_TOKEN.",
-  "certification": "OPEN"
+  "certification": "OPEN",
+  "localKitValidation": {
+    "executedAt": "2026-10-14",
+    "inputArchive": "kit-fase04-recovery.zip",
+    "inputArchiveSha256": "a1241da939e93fc3baf95cc9b53ebbb8e3c2b854998a4344a6df92679ddadaef",
+    "checks": [
+      {
+        "name": "node --check on all supplied .mjs files",
+        "result": "PASS",
+        "count": 4
+      },
+      {
+        "name": "bash -n on all supplied .sh files",
+        "result": "PASS",
+        "count": 3
+      },
+      {
+        "name": "devcontainer JSON parse",
+        "result": "PASS"
+      },
+      {
+        "name": "GitHub Actions and GitLab workflow YAML parse",
+        "result": "PASS",
+        "count": 3
+      },
+      {
+        "name": "scripts/3d/recovery.test.mjs on supplied kit sources",
+        "result": "PASS",
+        "tests": 4,
+        "passed": 4,
+        "failed": 0
+      },
+      {
+        "name": "extra direct classifier, blend magic and GLB contract assertions",
+        "result": "PASS",
+        "details": "classifier categories including UNKNOWN; native Blender magic vs LFS pointer; GLB positive contract; negative UV1 and slot-018 cases"
+      },
+      {
+        "name": "doctor.mjs --json",
+        "result": "BLOCKED",
+        "exitCode": 1,
+        "details": "Blender 4.5.14 missing; download.blender.org unreachable in execution environment; Node 22, Python 3 and Git present; disk 32.0 GB"
+      }
+    ],
+    "scope": "These checks validate the supplied recovery kit's syntax, configuration and synthetic unit-contract cases only. They do not constitute a Blender build or delivery certification."
+  }
 }

@@ -22,3 +22,20 @@ Runner smoke test second attempt:
 - Build CAMPING 3D run 38525393516 / job 115724441631: failure in about 3 seconds, runner_id=0, steps=0.
 
 The GitHub connector still refuses the check-run annotations endpoint. This is stronger evidence of a pre-step runner allocation failure but does not identify whether the cause is billing, policy, quota or provisioning. Classification remains UNKNOWN until the exact original annotation is captured.
+
+
+## Testes locais do kit · 2026-10-14
+
+Arquivo de entrada: kit-fase04-recovery.zip  
+SHA-256 do ZIP de entrada: a1241da939e93fc3baf95cc9b53ebbb8e3c2b854998a4344a6df92679ddadaef
+
+Resultados:
+- PASS: node --check nos 4 ficheiros .mjs fornecidos.
+- PASS: bash -n nos 3 scripts shell fornecidos.
+- PASS: JSON do devcontainer.
+- PASS: parse dos 3 workflows YAML (build GitHub, smoke GitHub, GitLab).
+- PASS: node --test scripts/3d/recovery.test.mjs: 4 testes, 4 passaram, 0 falharam.
+- PASS: assertivas adicionais do classificador de causa, identificador mágico Blender vs ponteiro LFS, contrato GLB positivo e negativos de UV1/slot 018.
+- BLOCKED: doctor.mjs --json saiu com código 1 porque Blender 4.5.14 não está instalado e download.blender.org está inacessível deste ambiente. Node 22, Python 3, Git e 32 GB de disco foram detectados.
+
+Limite: estes resultados validam sintaxe/configuração/testes unitários do kit fornecido. Não representam execução de Blender, não produziram .blend, GLB ou relatório e não certificam a Fase 04.

@@ -96,3 +96,7 @@ Foi versionado o kit de recuperação multi-rota: instalação e diagnóstico de
 Causa-raiz do bloqueio de runners: UNKNOWN. Os metadados confirmam runner_id=0 e steps=[], mas o texto exacto das anotações não ficou disponível através da integração usada. A evidência está em docs/camping-v3/phase-04/annotations.json e annotations.txt. Não atribuir a falha a billing ou política sem a anotação original.
 
 A Fase 04 continua Em validação. Esta alteração não inclui uma execução real de Blender, não cria ficheiros .blend/GLB sintéticos, e não certifica a fase. O gate continua a ser a execução real do build, reabertura do .blend, validação do GLB, checksums e códigos de saída exigidos.
+
+
+### Testes locais do kit de recuperação · 2026-10-14
+Foram executados e passaram a verificação de sintaxe Node dos quatro ficheiros .mjs do kit fornecido, bash -n dos três scripts .sh, parse JSON do devcontainer, parse YAML dos três workflows e quatro testes unitários do classificador/contrato GLB. O doctor reportou Blender 4.5.14 ausente e sem acesso de rede ao servidor de downloads. Esta evidência está registada em docs/camping-v3/phase-04/annotations.json e annotations.txt. A validação não executou Blender e não gera certificação da cena.
