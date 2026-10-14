@@ -384,7 +384,8 @@ test("serves a certified optimized Blender V3 model on the canonical CAMPING URL
   const metadata = await metadataResponse.json();
 
   expect(metadata.version).toBe(3);
-  expect(metadata.phase).toBe(6);
+  expect(metadata.phase).toBe(7);
+  expect(metadata.surfacePhase).toBe(7);
   expect(metadata.status).toBe("blender-v3-published");
   expect(metadata.model).toBe("/models/camping/xoyens-studio.glb");
 
@@ -454,6 +455,44 @@ test("serves a certified optimized Blender V3 model on the canonical CAMPING URL
   const requiredSlots = Array.from({ length: 17 }, (_, index) => "studio.artist-slot-" + String(index + 1).padStart(3, "0"));
   expect(requiredSlots.filter((name) => !slotContracts.has(name))).toEqual([]);
   expect(slotContracts.has("studio.artist-slot-018")).toBe(false);
+
+  const findPhaseNode = (elementId: string, namePattern: RegExp) =>
+    nodes.find((node: { name?: unknown; mesh?: unknown; extras?: Record<string, unknown> }) =>
+      node.extras?.elementId === elementId && node.extras?.surfacePhase === 7) ??
+    nodes.find((node: { name?: unknown; mesh?: unknown; extras?: Record<string, unknown> }) =>
+      namePattern.test(String(node.name ?? "")) && node.extras?.surfacePhase === 7);
+  const floorNode = findPhaseNode("floor.wood", /floor_wood_hero/i);
+  const vinylNode = findPhaseNode("floor.vinyl_sweep", /vinyl_sweep_hero/i);
+  const bambooNode = findPhaseNode("arch.vault_ceiling", /vault_ceiling/i);
+  const paperWallNode = nodes.find((node: { name?: unknown; extras?: Record<string, unknown> }) =>
+    /paper_cyclorama_wall/i.test(String(node.name ?? "")) && node.extras?.surfacePhase === 7);
+  const paperCurveNode = nodes.find((node: { name?: unknown; extras?: Record<string, unknown> }) =>
+    /paper_cyclorama_curve/i.test(String(node.name ?? "")) && node.extras?.surfacePhase === 7);
+  expect(floorNode, "served GLB must include the Phase 07 walnut plank mesh").toBeTruthy();
+  expect(floorNode?.extras?.phase7BoardCount).toBeGreaterThanOrEqual(100);
+  const floorPrimitives = gltf?.meshes?.[Number(floorNode?.mesh)]?.primitives ?? [];
+  expect(floorPrimitives.length).toBeGreaterThan(0);
+  for (const primitive of floorPrimitives) {
+    expect(primitive.attributes?.COLOR_0, "physical plank tone variation must reach glTF COLOR_0").toBeDefined();
+    expect(primitive.attributes?.TEXCOORD_0).toBeDefined();
+    expect(primitive.attributes?.TEXCOORD_1).toBeDefined();
+  }
+  expect(vinylNode).toBeTruthy();
+  expect(Number(vinylNode?.extras?.phase7VinylRadiusM)).toBeCloseTo(2.3, 3);
+  expect(Number(vinylNode?.extras?.phase7VinylThicknessM)).toBeCloseTo(0.0012, 4);
+  expect(Number(vinylNode?.extras?.phase7VinylEdgeLiftM)).toBeCloseTo(0.004, 4);
+  expect(bambooNode).toBeTruthy();
+  expect(Number(bambooNode?.extras?.phase7BambooTileMeters)).toBeCloseTo(1.2, 4);
+  expect(paperWallNode).toBeTruthy();
+  expect(paperCurveNode).toBeTruthy();
+  expect(Number(paperCurveNode?.extras?.phase7CycloramaRadiusM)).toBeCloseTo(0.35, 4);
+  expect(paperCurveNode?.extras?.phase7PaperContinuousToFloor).toBe(true);
+  expect(metadata.geometry?.heroSurfaces?.floorBoards).toBe(floorNode?.extras?.phase7BoardCount);
+  expect(metadata.geometry?.heroSurfaces?.floorHasColor0).toBe(true);
+  expect(metadata.geometry?.heroSurfaces?.floorHasUv0Uv1).toBe(true);
+  expect(metadata.geometry?.heroSurfaces?.vinylRadiusM).toBeCloseTo(2.3, 3);
+  expect(metadata.geometry?.heroSurfaces?.bambooTileMeters).toBeCloseTo(1.2, 4);
+  expect(metadata.geometry?.heroSurfaces?.cycloramaRadiusM).toBeCloseTo(0.35, 4);
   expect(metadata.geometry?.meshes).toBe(gltf?.meshes?.length);
   expect(metadata.geometry?.primitives).toBe(
     (gltf?.meshes ?? []).reduce((count: number, mesh: { primitives?: unknown[] }) => count + (mesh.primitives?.length ?? 0), 0),
