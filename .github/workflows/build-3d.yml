@@ -1,163 +1,78 @@
-name: Build CAMPING 3D (Blender headless)
-
+name: Build CAMPING 3D - Fase 04
 on:
   workflow_dispatch:
   push:
     branches: [main]
-
+    paths:
+      - "scripts/blender/**"
+      - "scripts/3d/**"
+      - "scripts/build-blend.sh"
+      - "scripts/install-3d-toolchain.sh"
+      - "scripts/verify-glb-contract.mjs"
+      - "docs/camping-v3/scene-bible.json"
+      - "package.json"
+      - "docker/blender-ci/Dockerfile"
+      - ".github/workflows/build-3d.yml"
+concurrency:
+  group: build-3d-${{ github.ref }}
+  cancel-in-progress: false
 permissions:
   contents: read
-
-concurrency:
-  group: camping-3d-build-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   build:
-    name: Build and validate Blender source
+    name: Build, reopen and certify Blender delivery
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 45
     steps:
-      - name: Checkout main with Git LFS support
+      - name: Checkout main with LFS
         uses: actions/checkout@v4
         with:
           lfs: true
-
-      - name: Setup Node.js 22
+      - name: Setup Node 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-
-      - name: Prepare full logs
+          python-version: "3.11"
+      - name: Install system libraries
         shell: bash
-        run: mkdir -p logs
-
-      - name: Cache pinned Blender and KTX tools
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/tools/blender
-            ~/tools/ktx
-          key: camping-3d-linux-x64-blender-4.5.14-ktx-4.4.2
-
-      - name: Activate and verify Git LFS configuration
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends zip xz-utils git-lfs libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 libxkbcommon0 libsm6 libice6 libx11-6 libxext6 libgomp1
+      - name: Syntax and recovery tests without Blender
         shell: bash
         run: |
           set -euo pipefail
-          if ! command -v git-lfs >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install --yes git-lfs
-          fi
-          git lfs version 2>&1 | tee logs/01-git-lfs.log
-          git lfs install --local 2>&1 | tee -a logs/01-git-lfs.log
-          git check-attr filter -- art/xoyens-studio.blend | tee -a logs/01-git-lfs.log
-          grep -q 'filter: lfs' logs/01-git-lfs.log
-
-      - name: Install project dependencies
+          find scripts -name '*.mjs' -type f -print0 | while IFS= read -r -d '' file; do node --check "$file"; done
+          find scripts -name '*.sh' -type f -print0 | while IFS= read -r -d '' file; do bash -n "$file"; done
+          python3 -m py_compile scripts/blender/*.py
+          node --test scripts/3d/recovery.test.mjs
+      - name: Shared route build, reopen, validate and package
         shell: bash
-        run: npm install --legacy-peer-deps --no-audit --no-fund 2>&1 | tee logs/02-npm-install.log
-
-      - name: Install pinned Blender 4.5.14 and KTX-Software 4.4.2
-        shell: bash
-        run: npm run 3d:toolchain:install 2>&1 | tee logs/03-toolchain-install.log
-
-      - name: Generate Basis runtime assets
-        shell: bash
-        run: npm run 3d:basis 2>&1 | tee logs/04-basis.log
-
-      - name: Verify Node and system toolchain
-        shell: bash
-        run: npm run 3d:toolchain:check 2>&1 | tee logs/05-toolchain-check.log
-
-      - name: Capture environment and tool versions
-        shell: bash
-        run: |
-          set -euo pipefail
-          {
-            echo '=== COMMIT ==='; git rev-parse HEAD
-            echo '=== PLATFORM ==='; uname -a
-            echo '=== NODE ==='; node --version
-            echo '=== NPM ==='; npm --version
-            echo '=== PYTHON ==='; python3 --version
-            echo '=== BLENDER ==='; blender --version
-            echo '=== KTX ==='; ktx --version
-            echo '=== TOKTX ==='; toktx --version
-            echo '=== GIT LFS ==='; git lfs version
-            echo '=== LFS ATTRIBUTE ==='; git check-attr filter -- art/xoyens-studio.blend
-          } 2>&1 | tee environment.txt
-
-      - name: Compile Blender Python modules
-        shell: bash
-        run: python3 -m py_compile scripts/blender/*.py 2>&1 | tee logs/06-python-compile.log
-
-      - name: Validate Scene Bible and performance contracts
-        shell: bash
-        run: npm run 3d:validate 2>&1 | tee logs/07-scene-bible-validation.log
-
-      - name: Rebuild editable Blender source and export raw GLB
-        shell: bash
-        run: npm run 3d:blend 2>&1 | tee logs/08-blender-build-export.log
-
-      - name: Reopen and validate the saved .blend
-        shell: bash
-        run: npm run 3d:blend:validate 2>&1 | tee logs/09-blend-validation.log
-
-      - name: Verify output files and record checksums
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -s art/xoyens-studio.blend
-          test -s art/xoyens-studio.report.json
-          test -s art/out/xoyens-studio.raw.glb
-          node -e 'JSON.parse(require("node:fs").readFileSync("art/xoyens-studio.report.json", "utf8")); console.log("build report JSON OK")' 2>&1 | tee logs/10-output-integrity.log
-          sha256sum art/xoyens-studio.blend art/xoyens-studio.report.json art/out/xoyens-studio.raw.glb | tee artifact-checksums.txt
-          ls -lh art/xoyens-studio.blend art/xoyens-studio.report.json art/out/xoyens-studio.raw.glb | tee -a logs/10-output-integrity.log
-
-      - name: Upload validated build artefacts and complete logs
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: camping-v3-blender-${{ github.sha }}
-          path: |
-            art/xoyens-studio.blend
-            art/xoyens-studio.report.json
-            art/out/xoyens-studio.raw.glb
-            environment.txt
-            artifact-checksums.txt
-            logs/**
-          if-no-files-found: error
-          retention-days: 30
-
-      - name: Upload failure logs and partial outputs
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: camping-v3-blender-failure-${{ github.sha }}
-          path: |
-            logs/**
-            environment.txt
-            artifact-checksums.txt
-            art/xoyens-studio.blend
-            art/xoyens-studio.report.json
-            art/out/xoyens-studio.raw.glb
-          if-no-files-found: warn
-          retention-days: 30
-
-      - name: Write job summary
+        run: bash scripts/3d/local-build.sh
+      - name: Write evidence summary
         if: always()
         shell: bash
         run: |
           {
-            echo '## CAMPING V3 Blender build'
-            echo
-            echo "Commit: `$(git rev-parse HEAD)`"
-            echo
-            echo 'Logs are uploaded as a build artifact when a runner reaches the steps.'
-            echo
-            echo 'Expected validated outputs: `.blend`, report JSON and raw GLB.'
+            echo "CAMPING V3 Fase 04"
+            echo "Commit: $(git rev-parse HEAD)"
+            echo "Exit codes:"
+            cat art/_delivery/exit-codes.txt 2>/dev/null || echo "not created"
+            echo "Delivery SHA-256:"
+            find art/_delivery -maxdepth 1 -name 'phase04-delivery-*.sha256' -type f -exec cat {} \; 2>/dev/null || true
           } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload outputs and evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fase04-entrega-${{ github.sha }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            art/_delivery/**
+            art/xoyens-studio.blend
+            art/xoyens-studio.report.json
+            art/out/xoyens-studio.raw.glb
