@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { invertDirectXGreenChannel, outputRelativePath, packOrmChannels, PROFILES, REQUIRED_MAPS } from "../fetch-cc0-materials.mjs";
 import { isLfsPointer, pngDimensions, renderLicenseRows } from "../validate-pbr-materials.mjs";
 
@@ -35,4 +36,10 @@ test("material manifest paths target final directory, not transient staging", ()
     outputRelativePath("/repo/art/textures/materials.staging/T_wood_BC.png"),
     "art/textures/materials/T_wood_BC.png",
   );
+});
+
+test("Blender build imports bpy globally without shadowing it inside main", async () => {
+  const source = await readFile(new URL("../blender/build_all.py", import.meta.url), "utf8");
+  assert.match(source, /^import bpy$/m);
+  assert.doesNotMatch(source, /^\s+bpy\s*=\s*__import__\(["']bpy["']\)/m);
 });

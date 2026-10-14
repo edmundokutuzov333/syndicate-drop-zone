@@ -59,7 +59,6 @@ def main():
         except (OSError, RuntimeError):
             pass
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    bpy = __import__("bpy")
     bpy.ops.wm.save_as_mainfile(filepath=str(output_path))
     size_bytes = output_path.stat().st_size
     if size_bytes >= 200 * 1024 * 1024:
