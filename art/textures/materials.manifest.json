@@ -1,0 +1,3510 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-14T09:03:29.366Z",
+  "provider": "Poly Haven",
+  "apiBase": "https://api.polyhaven.com",
+  "poweredBy": "Powered by Poly Haven",
+  "defaultLicense": "CC0 1.0",
+  "mapResolution": 2048,
+  "outputFormat": "PNG",
+  "normalConvention": "OpenGL; DirectX green channel inverted when nor_dx is the only available 2K normal",
+  "ormConvention": {
+    "R": "AO",
+    "G": "roughness",
+    "B": "metallic"
+  },
+  "generatedBy": "scripts/fetch-cc0-materials.mjs",
+  "materials": [
+    {
+      "material": "floor_walnut_semi_gloss",
+      "target": {
+        "name": "floor_walnut_semi_gloss",
+        "preferredAssetIds": [
+          "dark_wooden_planks",
+          "dark_wood",
+          "wood_planks"
+        ],
+        "search": "dark walnut wood floor planks",
+        "tags": [
+          "walnut",
+          "wood",
+          "floor",
+          "planks"
+        ],
+        "baseColorSRGB": [
+          62,
+          30,
+          16
+        ],
+        "roughness": 0.45,
+        "metallic": 0,
+        "normalStrength": 1,
+        "coatWeight": 0.15,
+        "coatRoughness": 0.35
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "dark_wooden_planks",
+        "name": "Dark Wooden Planks",
+        "url": "https://polyhaven.com/a/dark_wooden_planks",
+        "apiUrl": "https://api.polyhaven.com/files/dark_wooden_planks",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Amal Kumar"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_floor_walnut_semi_gloss_BC.png",
+          "bytes": 4653187,
+          "sha256": "07144315d486c8207f2aa014a8958791e338edea90ef14785306c36869efd98b",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_wooden_planks/dark_wooden_planks_diff_2k.png",
+          "sourceMd5": "387e4120b11459cef0d7289ca85e93e4",
+          "outputName": "T_floor_walnut_semi_gloss_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_floor_walnut_semi_gloss_N.png",
+          "bytes": 6814602,
+          "sha256": "5e2d7a8887bb523595499d92673cecd64963ed634ebd60a557f716a6f56a8b31",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_wooden_planks/dark_wooden_planks_nor_gl_2k.png",
+          "sourceMd5": "941aff227335a411e2aab6ff5c589f86",
+          "outputName": "T_floor_walnut_semi_gloss_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_floor_walnut_semi_gloss_ORM.png",
+          "bytes": 5089645,
+          "sha256": "7302a41c01777a8d5f9679fdc574784aef08be3f638f147aaefc7d86df5abc67",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/dark_wooden_planks",
+          "sourceMd5": null,
+          "outputName": "T_floor_walnut_semi_gloss_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_floor_walnut_semi_gloss_H.png",
+          "bytes": 583967,
+          "sha256": "db57809b3e989d993c15951582b61588847e7274ec9633866ccd97138be39ee3",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_wooden_planks/dark_wooden_planks_disp_2k.png",
+          "sourceMd5": "0aae63358da3ade7146a2b94e35e767d",
+          "outputName": "T_floor_walnut_semi_gloss_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            62,
+            30,
+            16
+          ],
+          "sourceMeanSRGB": [
+            82.89,
+            73.61,
+            62.5
+          ],
+          "outputMeanSRGB": [
+            62.04,
+            29.99,
+            16
+          ],
+          "appliedScale": [
+            0.75,
+            0.41,
+            0.26
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 114.75,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_wooden_planks/dark_wooden_planks_diff_2k.png",
+          "md5": "387e4120b11459cef0d7289ca85e93e4",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_wooden_planks/dark_wooden_planks_nor_gl_2k.png",
+          "md5": "941aff227335a411e2aab6ff5c589f86",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_wooden_planks/dark_wooden_planks_ao_2k.png",
+          "md5": "48be7b9144c97c247ab651935739a7fa",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_wooden_planks/dark_wooden_planks_rough_2k.png",
+          "md5": "b08c38142c75759e97e4a829e3b12e30",
+          "resolution": "2k"
+        },
+        "Metallic": null,
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_wooden_planks/dark_wooden_planks_disp_2k.png",
+          "md5": "0aae63358da3ade7146a2b94e35e767d",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 1.76,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:01:49.399Z"
+    },
+    {
+      "material": "bamboo_weave",
+      "target": {
+        "name": "bamboo_weave",
+        "preferredAssetIds": [
+          "bamboo_wall_02",
+          "bamboo_wall_03",
+          "bamboo_wall"
+        ],
+        "search": "bamboo woven weave rattan cane",
+        "tags": [
+          "bamboo",
+          "woven",
+          "weave",
+          "rattan",
+          "cane"
+        ],
+        "baseColorSRGB": [
+          125,
+          75,
+          28
+        ],
+        "roughness": 0.72,
+        "metallic": 0,
+        "normalStrength": 1.2
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "bamboo_wall_02",
+        "name": "Bamboo Wall 02",
+        "url": "https://polyhaven.com/a/bamboo_wall_02",
+        "apiUrl": "https://api.polyhaven.com/files/bamboo_wall_02",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Amal Kumar"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_bamboo_weave_BC.png",
+          "bytes": 6305944,
+          "sha256": "3f4d22802f3d33c719792d2c972b8975be297950d45aed95ca7fda89ee33dcfe",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bamboo_wall_02/bamboo_wall_02_diff_2k.png",
+          "sourceMd5": "3769ebb134c8f0bfa8b846850d53828a",
+          "outputName": "T_bamboo_weave_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_bamboo_weave_N.png",
+          "bytes": 10168812,
+          "sha256": "075795805c1bed1cdce34b55f2529da52f4288344290ba126793cd75af03defd",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bamboo_wall_02/bamboo_wall_02_nor_gl_2k.png",
+          "sourceMd5": "0a20722f94db494c04b5ce938ad0b738",
+          "outputName": "T_bamboo_weave_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_bamboo_weave_ORM.png",
+          "bytes": 7540690,
+          "sha256": "3e8d9bed3102264782da737f81a135f4571297622fc21367c744c7dfaf28b564",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/bamboo_wall_02",
+          "sourceMd5": null,
+          "outputName": "T_bamboo_weave_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_bamboo_weave_H.png",
+          "bytes": 1374473,
+          "sha256": "3d6399f8d2ff3ebd513d6b2fe4f320bcd60f12d66ccf6607cf308df8be3ad856",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bamboo_wall_02/bamboo_wall_02_disp_2k.png",
+          "sourceMd5": "370154aec2bc3e964bb398d6916b402f",
+          "outputName": "T_bamboo_weave_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            125,
+            75,
+            28
+          ],
+          "sourceMeanSRGB": [
+            146.68,
+            121.23,
+            91.89
+          ],
+          "outputMeanSRGB": [
+            124.99,
+            75,
+            28.01
+          ],
+          "appliedScale": [
+            0.85,
+            0.62,
+            0.3
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 183.6,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bamboo_wall_02/bamboo_wall_02_diff_2k.png",
+          "md5": "3769ebb134c8f0bfa8b846850d53828a",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bamboo_wall_02/bamboo_wall_02_nor_gl_2k.png",
+          "md5": "0a20722f94db494c04b5ce938ad0b738",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bamboo_wall_02/bamboo_wall_02_ao_2k.png",
+          "md5": "8e26c0a17db80b39aaa5dcc38d550938",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bamboo_wall_02/bamboo_wall_02_rough_2k.png",
+          "md5": "b598bd259eb4981bddcec6d04a9312fa",
+          "resolution": "2k"
+        },
+        "Metallic": null,
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bamboo_wall_02/bamboo_wall_02_disp_2k.png",
+          "md5": "370154aec2bc3e964bb398d6916b402f",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 4.02,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:01:52.421Z"
+    },
+    {
+      "material": "plaster_stucco_cream",
+      "target": {
+        "name": "plaster_stucco_cream",
+        "preferredAssetIds": [
+          "white_stucco",
+          "plastered_wall_05",
+          "painted_plaster_wall"
+        ],
+        "search": "rough beige plaster stucco wall",
+        "tags": [
+          "plaster",
+          "stucco",
+          "rough",
+          "wall"
+        ],
+        "baseColorSRGB": [
+          205,
+          178,
+          142
+        ],
+        "roughness": 0.92,
+        "metallic": 0,
+        "normalStrength": 1.6
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "white_stucco",
+        "name": "White Stucco",
+        "url": "https://polyhaven.com/a/white_stucco",
+        "apiUrl": "https://api.polyhaven.com/files/white_stucco",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Amal Kumar"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_plaster_stucco_cream_BC.png",
+          "bytes": 4563160,
+          "sha256": "fae2f928eb35219328450d3e913a591dc9aa3b5e8127443459ae12f091b65f0a",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/white_stucco/white_stucco_diff_2k.png",
+          "sourceMd5": "0b4f7710595002c8e872054c1d4263af",
+          "outputName": "T_plaster_stucco_cream_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_plaster_stucco_cream_N.png",
+          "bytes": 8649055,
+          "sha256": "463897690bf39e87166963601b65c90bfa3b1733ad7b9f7269819f3b1d5b0f5b",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/white_stucco/white_stucco_nor_gl_2k.png",
+          "sourceMd5": "dc400bce80d20eb54bd71809767c7fe4",
+          "outputName": "T_plaster_stucco_cream_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_plaster_stucco_cream_ORM.png",
+          "bytes": 3887290,
+          "sha256": "c4952754062b36cf0d918546cb8d069b357d506eca0996811e19c1f4326502a8",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/white_stucco",
+          "sourceMd5": null,
+          "outputName": "T_plaster_stucco_cream_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_plaster_stucco_cream_H.png",
+          "bytes": 2530770,
+          "sha256": "d577f8757451e27ef758d981430c7ffa9757a5c29332eae2476631fe924aa978",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/white_stucco/white_stucco_disp_2k.png",
+          "sourceMd5": "34184fe384382e73cc733ef2f5a45a25",
+          "outputName": "T_plaster_stucco_cream_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            205,
+            178,
+            142
+          ],
+          "sourceMeanSRGB": [
+            214.72,
+            211.32,
+            208.46
+          ],
+          "outputMeanSRGB": [
+            204.82,
+            177.99,
+            141.97
+          ],
+          "appliedScale": [
+            0.95,
+            0.84,
+            0.68
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 234.60000000000002,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/white_stucco/white_stucco_diff_2k.png",
+          "md5": "0b4f7710595002c8e872054c1d4263af",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/white_stucco/white_stucco_nor_gl_2k.png",
+          "md5": "dc400bce80d20eb54bd71809767c7fe4",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/white_stucco/white_stucco_ao_2k.png",
+          "md5": "dcc2113d975a2f07bd99a8d4b96449ff",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/white_stucco/white_stucco_rough_2k.png",
+          "md5": "af21878a6ef02457e4dd923700491ef0",
+          "resolution": "2k"
+        },
+        "Metallic": null,
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/white_stucco/white_stucco_disp_2k.png",
+          "md5": "34184fe384382e73cc733ef2f5a45a25",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 0.01,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:01:56.223Z"
+    },
+    {
+      "material": "paint_black_matte",
+      "target": {
+        "name": "paint_black_matte",
+        "preferredAssetIds": [
+          "painted_plaster_wall",
+          "plastered_wall_05",
+          "concrete_wall_003"
+        ],
+        "search": "black matte painted wall plaster",
+        "tags": [
+          "black",
+          "paint",
+          "matte",
+          "wall"
+        ],
+        "baseColorSRGB": [
+          8,
+          8,
+          9
+        ],
+        "roughness": 0.85,
+        "metallic": 0,
+        "normalStrength": 0.8
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "painted_plaster_wall",
+        "name": "Painted Plaster Wall",
+        "url": "https://polyhaven.com/a/painted_plaster_wall",
+        "apiUrl": "https://api.polyhaven.com/files/painted_plaster_wall",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Amal Kumar"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_paint_black_matte_BC.png",
+          "bytes": 2196350,
+          "sha256": "7a52b0c23791377855b50be5bb6eceda4b66a765e7793f31d6ae48f934bbcaf4",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/painted_plaster_wall/painted_plaster_wall_diff_2k.png",
+          "sourceMd5": "a59f31e4461b4e9385e88030e32280d9",
+          "outputName": "T_paint_black_matte_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_paint_black_matte_N.png",
+          "bytes": 8945008,
+          "sha256": "fb30dcf56d9a951a1e99240e3f5e0299da536ea113ec878d75aa3eb1e0de3b6e",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/painted_plaster_wall/painted_plaster_wall_nor_gl_2k.png",
+          "sourceMd5": "2eba0da17c1d194537c1231cb412e310",
+          "outputName": "T_paint_black_matte_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_paint_black_matte_ORM.png",
+          "bytes": 4960704,
+          "sha256": "1ce62b7be56216531a5808a757453a9ef8c8744ae2c113b5b0a0e355ecf89a48",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/painted_plaster_wall",
+          "sourceMd5": null,
+          "outputName": "T_paint_black_matte_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_paint_black_matte_H.png",
+          "bytes": 2072822,
+          "sha256": "3c4399d1c947724b98c1235f100d2930c470cad39e5e86657a04a1df81c21e69",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/painted_plaster_wall/painted_plaster_wall_disp_2k.png",
+          "sourceMd5": "3826b298ae896a8ff22e8cf5964e35cf",
+          "outputName": "T_paint_black_matte_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            8,
+            8,
+            9
+          ],
+          "sourceMeanSRGB": [
+            169.38,
+            163.2,
+            160.16
+          ],
+          "outputMeanSRGB": [
+            13.55,
+            13.07,
+            12.82
+          ],
+          "appliedScale": [
+            0.08,
+            0.08,
+            0.08
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 216.75,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/painted_plaster_wall/painted_plaster_wall_diff_2k.png",
+          "md5": "a59f31e4461b4e9385e88030e32280d9",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/painted_plaster_wall/painted_plaster_wall_nor_gl_2k.png",
+          "md5": "2eba0da17c1d194537c1231cb412e310",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/painted_plaster_wall/painted_plaster_wall_ao_2k.png",
+          "md5": "98453c95cc082ab6685559b6b6d52f95",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/painted_plaster_wall/painted_plaster_wall_rough_2k.png",
+          "md5": "ca7f611c7ccbc7604fab09c698a4d329",
+          "resolution": "2k"
+        },
+        "Metallic": null,
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/painted_plaster_wall/painted_plaster_wall_disp_2k.png",
+          "md5": "3826b298ae896a8ff22e8cf5964e35cf",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 0.11,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:02:05.312Z"
+    },
+    {
+      "material": "leather_black_quilted",
+      "target": {
+        "name": "leather_black_quilted",
+        "preferredAssetIds": [
+          "brown_leather",
+          "leather_red_03",
+          "fabric_leather_01"
+        ],
+        "search": "black quilted leather upholstery",
+        "tags": [
+          "black",
+          "leather",
+          "quilted",
+          "upholstery"
+        ],
+        "baseColorSRGB": [
+          12,
+          12,
+          13
+        ],
+        "roughness": 0.44,
+        "metallic": 0,
+        "normalStrength": 0.8,
+        "coatWeight": 0.25,
+        "coatRoughness": 0.4
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "brown_leather",
+        "name": "Brown Leather",
+        "url": "https://polyhaven.com/a/brown_leather",
+        "apiUrl": "https://api.polyhaven.com/files/brown_leather",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Rob Tuytel"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_leather_black_quilted_BC.png",
+          "bytes": 5325152,
+          "sha256": "c245a990aa2de174646c9780b4d3d618e23025fd70e3b3a6007d626ab762f8ac",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/brown_leather/brown_leather_albedo_2k.png",
+          "sourceMd5": "73575f35a81a1243a4cd0b941e47a7cd",
+          "outputName": "T_leather_black_quilted_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_leather_black_quilted_N.png",
+          "bytes": 9427127,
+          "sha256": "18267d693cc8a35c304d6172ec3b9113d324238ee95b716904192a033721889d",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/brown_leather/brown_leather_nor_gl_2k.png",
+          "sourceMd5": "79e5a78506947a412d2b739a4bec34b4",
+          "outputName": "T_leather_black_quilted_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_leather_black_quilted_ORM.png",
+          "bytes": 8843472,
+          "sha256": "092fda14005e6a944778710014289382c36001c563747ae0ca048d39305fa784",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/brown_leather",
+          "sourceMd5": null,
+          "outputName": "T_leather_black_quilted_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_leather_black_quilted_H.png",
+          "bytes": 3406302,
+          "sha256": "e454cf9600794ac5c8b5e397d45052a1d20ec5cc8526681e15c5904f07dff64b",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/brown_leather/brown_leather_disp_2k.png",
+          "sourceMd5": "13b4f3f8551d0726c846b90ae273f081",
+          "outputName": "T_leather_black_quilted_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            12,
+            12,
+            13
+          ],
+          "sourceMeanSRGB": [
+            81,
+            45.3,
+            15.78
+          ],
+          "outputMeanSRGB": [
+            12,
+            12.01,
+            12.99
+          ],
+          "appliedScale": [
+            0.15,
+            0.26,
+            0.82
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 112.2,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/brown_leather/brown_leather_albedo_2k.png",
+          "md5": "73575f35a81a1243a4cd0b941e47a7cd",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/brown_leather/brown_leather_nor_gl_2k.png",
+          "md5": "79e5a78506947a412d2b739a4bec34b4",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/brown_leather/brown_leather_ao_2k.png",
+          "md5": "ad1de0cd052858413aa1e1db9d172a66",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/brown_leather/brown_leather_rough_2k.png",
+          "md5": "6d95a0d3d528efb41567e1708fa0911a",
+          "resolution": "2k"
+        },
+        "Metallic": null,
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/brown_leather/brown_leather_disp_2k.png",
+          "md5": "13b4f3f8551d0726c846b90ae273f081",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 0.44,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:02:08.360Z"
+    },
+    {
+      "material": "leather_black_tufted",
+      "target": {
+        "name": "leather_black_tufted",
+        "preferredAssetIds": [
+          "fabric_leather_01",
+          "fabric_leather_02",
+          "brown_leather"
+        ],
+        "search": "black leather upholstery textured",
+        "tags": [
+          "black",
+          "leather",
+          "upholstery",
+          "textured"
+        ],
+        "baseColorSRGB": [
+          12,
+          12,
+          13
+        ],
+        "roughness": 0.46,
+        "metallic": 0,
+        "normalStrength": 0.75,
+        "coatWeight": 0.2,
+        "coatRoughness": 0.42
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "fabric_leather_01",
+        "name": "Fabric Leather 01",
+        "url": "https://polyhaven.com/a/fabric_leather_01",
+        "apiUrl": "https://api.polyhaven.com/files/fabric_leather_01",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Rob Tuytel"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_leather_black_tufted_BC.png",
+          "bytes": 3742491,
+          "sha256": "03ba6a22796e53acdc8b7eb67d530aa6437b992c12d7b000d346367d38d600aa",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/fabric_leather_01/fabric_leather_01_diff_2k.png",
+          "sourceMd5": "db449befeccd9a9d253e42214e02e25d",
+          "outputName": "T_leather_black_tufted_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_leather_black_tufted_N.png",
+          "bytes": 8010352,
+          "sha256": "77193e5046c30f18c3bc9fc6cde2144968ab1d71c358e0b6aacdf027dd5a619d",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/fabric_leather_01/fabric_leather_01_nor_gl_2k.png",
+          "sourceMd5": "5fa326e4afdda028382507f7e9710af1",
+          "outputName": "T_leather_black_tufted_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_leather_black_tufted_ORM.png",
+          "bytes": 8227939,
+          "sha256": "c036cb24bc0873e638d638380c5ee5ae13dc0e645477945a49baff80ebbce0c2",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/fabric_leather_01",
+          "sourceMd5": null,
+          "outputName": "T_leather_black_tufted_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_leather_black_tufted_H.png",
+          "bytes": 1577221,
+          "sha256": "064d0ac7c220a555ec563d7e9281fad89daf20404ef57628ff0a286c6cb5d043",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/fabric_leather_01/fabric_leather_01_disp_2k.png",
+          "sourceMd5": "bbb403d143680f80ce06c46975a0f7dc",
+          "outputName": "T_leather_black_tufted_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            12,
+            12,
+            13
+          ],
+          "sourceMeanSRGB": [
+            125.8,
+            84.2,
+            59.57
+          ],
+          "outputMeanSRGB": [
+            11.98,
+            12.03,
+            13
+          ],
+          "appliedScale": [
+            0.1,
+            0.14,
+            0.22
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 117.30000000000001,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/fabric_leather_01/fabric_leather_01_diff_2k.png",
+          "md5": "db449befeccd9a9d253e42214e02e25d",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/fabric_leather_01/fabric_leather_01_nor_gl_2k.png",
+          "md5": "5fa326e4afdda028382507f7e9710af1",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "rough_ao/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/fabric_leather_01/fabric_leather_01_rough_ao_2k.png",
+          "md5": "64393db8669aa4aa38a37d4e13182ebe",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/fabric_leather_01/fabric_leather_01_rough_2k.png",
+          "md5": "44f62d5e8c86e1a7d166cdd14f66c54f",
+          "resolution": "2k"
+        },
+        "Metallic": null,
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/fabric_leather_01/fabric_leather_01_disp_2k.png",
+          "md5": "bbb403d143680f80ce06c46975a0f7dc",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 0.3,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:02:12.133Z"
+    },
+    {
+      "material": "fabric_black_acoustic",
+      "target": {
+        "name": "fabric_black_acoustic",
+        "preferredAssetIds": [
+          "rough_linen",
+          "hessian_380",
+          "book_pattern"
+        ],
+        "search": "black acoustic fabric textile cloth",
+        "tags": [
+          "black",
+          "acoustic",
+          "fabric",
+          "textile",
+          "cloth"
+        ],
+        "baseColorSRGB": [
+          7,
+          7,
+          8
+        ],
+        "roughness": 0.95,
+        "metallic": 0,
+        "normalStrength": 1,
+        "sheenWeight": 1,
+        "sheenRoughness": 0.8
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "rough_linen",
+        "name": "Rough Linen",
+        "url": "https://polyhaven.com/a/rough_linen",
+        "apiUrl": "https://api.polyhaven.com/files/rough_linen",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "colormass",
+          "Rico Cilliers"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_fabric_black_acoustic_BC.png",
+          "bytes": 2498130,
+          "sha256": "c9e5f077db9e66dfae120d51b8d091de8e3feebc2899784492fd856c9d240315",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rough_linen/rough_linen_diff_2k.png",
+          "sourceMd5": "3545211c4b7a868187055232e7311bc0",
+          "outputName": "T_fabric_black_acoustic_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_fabric_black_acoustic_N.png",
+          "bytes": 8973436,
+          "sha256": "6414645903829888f05fef8ce84906a3ca917bed98113f22e208fd364fb2793c",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rough_linen/rough_linen_nor_gl_2k.png",
+          "sourceMd5": "c790b11f591f898dbec1d75733159fb3",
+          "outputName": "T_fabric_black_acoustic_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_fabric_black_acoustic_ORM.png",
+          "bytes": 9848553,
+          "sha256": "0842084183115af95157c84c53f2847d15a6ba78707b4583371d8453903efdeb",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/rough_linen",
+          "sourceMd5": null,
+          "outputName": "T_fabric_black_acoustic_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_fabric_black_acoustic_H.png",
+          "bytes": 3539416,
+          "sha256": "af7198016afa1d21180c840569b7cce3fe4b5d95ec97f0da3c14cdfe68b496d2",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rough_linen/rough_linen_disp_2k.png",
+          "sourceMd5": "b4d0a842264f27328c232134f7a0d6e3",
+          "outputName": "T_fabric_black_acoustic_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            7,
+            7,
+            8
+          ],
+          "sourceMeanSRGB": [
+            145.14,
+            171.18,
+            205.64
+          ],
+          "outputMeanSRGB": [
+            11.61,
+            13.69,
+            16.45
+          ],
+          "appliedScale": [
+            0.08,
+            0.08,
+            0.08
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 242.25,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rough_linen/rough_linen_diff_2k.png",
+          "md5": "3545211c4b7a868187055232e7311bc0",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rough_linen/rough_linen_nor_gl_2k.png",
+          "md5": "c790b11f591f898dbec1d75733159fb3",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rough_linen/rough_linen_ao_2k.png",
+          "md5": "49d076f798a5eaf49c69e23990f6a800",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rough_linen/rough_linen_rough_2k.png",
+          "md5": "995eab4d5b920571255da3c4b143f2aa",
+          "resolution": "2k"
+        },
+        "Metallic": {
+          "path": "Metal/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rough_linen/rough_linen_metal_2k.png",
+          "md5": "3de77f5281ee4dc98cdb59db38ae7052",
+          "resolution": "2k"
+        },
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rough_linen/rough_linen_disp_2k.png",
+          "md5": "b4d0a842264f27328c232134f7a0d6e3",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 0.11,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:02:16.198Z"
+    },
+    {
+      "material": "foam_black_grid",
+      "target": {
+        "name": "foam_black_grid",
+        "preferredAssetIds": [
+          "polystyrene",
+          "rubber_tiles",
+          "asphalt_03"
+        ],
+        "search": "black acoustic foam pyramid grid",
+        "tags": [
+          "black",
+          "acoustic",
+          "foam",
+          "grid",
+          "pyramid"
+        ],
+        "baseColorSRGB": [
+          5,
+          5,
+          5
+        ],
+        "roughness": 0.98,
+        "metallic": 0,
+        "normalStrength": 1
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "polystyrene",
+        "name": "Polystyrene",
+        "url": "https://polyhaven.com/a/polystyrene",
+        "apiUrl": "https://api.polyhaven.com/files/polystyrene",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Dario Barresi",
+          "Dimitrios Savva"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_foam_black_grid_BC.png",
+          "bytes": 1333793,
+          "sha256": "61433baaa006b79cb89fe7c57525c35054a49fbfdc7b312010aa6c131312e441",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/polystyrene/polystyrene_diff_2k.png",
+          "sourceMd5": "1bd297baaa5b91eb84afe858ab7dcf9d",
+          "outputName": "T_foam_black_grid_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_foam_black_grid_N.png",
+          "bytes": 9226336,
+          "sha256": "743f0fcefe5be346494e40e89336c5d0efe7d3789ea42b7c54791c6faae27f53",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/polystyrene/polystyrene_nor_gl_2k.png",
+          "sourceMd5": "794cbebf99467cacc0907563bd593a60",
+          "outputName": "T_foam_black_grid_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_foam_black_grid_ORM.png",
+          "bytes": 5893719,
+          "sha256": "845d83b760814e4b883dece8dcd5e45a6a974692a281799670248cb2662864fc",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/polystyrene",
+          "sourceMd5": null,
+          "outputName": "T_foam_black_grid_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_foam_black_grid_H.png",
+          "bytes": 1744263,
+          "sha256": "3168f9acc61045848b04da199f203f5b854d5669d92e3ad4bd87f9e49d266440",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/polystyrene/polystyrene_disp_2k.png",
+          "sourceMd5": "42bb95c2b3affc5712c232f26f1e4fad",
+          "outputName": "T_foam_black_grid_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            5,
+            5,
+            5
+          ],
+          "sourceMeanSRGB": [
+            219.72,
+            222.44,
+            222.03
+          ],
+          "outputMeanSRGB": [
+            17.57,
+            17.87,
+            17.83
+          ],
+          "appliedScale": [
+            0.08,
+            0.08,
+            0.08
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 249.9,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/polystyrene/polystyrene_diff_2k.png",
+          "md5": "1bd297baaa5b91eb84afe858ab7dcf9d",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/polystyrene/polystyrene_nor_gl_2k.png",
+          "md5": "794cbebf99467cacc0907563bd593a60",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/polystyrene/polystyrene_ao_2k.png",
+          "md5": "5404ff75c07a33a51a110df007a59241",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/polystyrene/polystyrene_rough_2k.png",
+          "md5": "17eef6155ad31b5efa054a81db59fa55",
+          "resolution": "2k"
+        },
+        "Metallic": null,
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/polystyrene/polystyrene_disp_2k.png",
+          "md5": "42bb95c2b3affc5712c232f26f1e4fad",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 0.08,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:02:24.708Z"
+    },
+    {
+      "material": "steel_brushed",
+      "target": {
+        "name": "steel_brushed",
+        "preferredAssetIds": [
+          "blue_metal_plate",
+          "metal_plate_02",
+          "metal_plate"
+        ],
+        "search": "brushed stainless steel metal",
+        "tags": [
+          "brushed",
+          "steel",
+          "metal",
+          "stainless"
+        ],
+        "baseColorSRGB": [
+          170,
+          170,
+          175
+        ],
+        "roughness": 0.35,
+        "metallic": 1,
+        "normalStrength": 0.65
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "blue_metal_plate",
+        "name": "Blue Metal Plate",
+        "url": "https://polyhaven.com/a/blue_metal_plate",
+        "apiUrl": "https://api.polyhaven.com/files/blue_metal_plate",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Rob Tuytel"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_steel_brushed_BC.png",
+          "bytes": 4727633,
+          "sha256": "42fdec98d5918a668580b1980f2cf5b6d7a35625eaf6847c51760c39011cbedf",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/blue_metal_plate/blue_metal_plate_diff_2k.png",
+          "sourceMd5": "f50253b5163620f04d2dc0c532b3fdbb",
+          "outputName": "T_steel_brushed_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_steel_brushed_N.png",
+          "bytes": 2758477,
+          "sha256": "80a22a71531445256a0231d08f14dac262b0aa113d3f709149c9f1512193443e",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/blue_metal_plate/blue_metal_plate_nor_gl_2k.png",
+          "sourceMd5": "575215af128c0f58a661694c13ee1458",
+          "outputName": "T_steel_brushed_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_steel_brushed_ORM.png",
+          "bytes": 2716666,
+          "sha256": "0380f72164935af234b0911a4a307297f95f219c5410618fe03d32f47a0b837f",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/blue_metal_plate",
+          "sourceMd5": null,
+          "outputName": "T_steel_brushed_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_steel_brushed_H.png",
+          "bytes": 82773,
+          "sha256": "66cbfb646e0b247ad8dc110401b4efacab5e00c2566c7559156062d2d9248268",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/blue_metal_plate/blue_metal_plate_disp_2k.png",
+          "sourceMd5": "5136e71d09563ff352e851c1898f975c",
+          "outputName": "T_steel_brushed_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            170,
+            170,
+            175
+          ],
+          "sourceMeanSRGB": [
+            40.64,
+            62.09,
+            76.19
+          ],
+          "outputMeanSRGB": [
+            101.82,
+            155.46,
+            174.98
+          ],
+          "appliedScale": [
+            2.5,
+            2.5,
+            2.3
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 89.25,
+            "metallic": 255
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/blue_metal_plate/blue_metal_plate_diff_2k.png",
+          "md5": "f50253b5163620f04d2dc0c532b3fdbb",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/blue_metal_plate/blue_metal_plate_nor_gl_2k.png",
+          "md5": "575215af128c0f58a661694c13ee1458",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/blue_metal_plate/blue_metal_plate_ao_2k.png",
+          "md5": "b4a412fa8f8675d9fd8b08c7da374f54",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/blue_metal_plate/blue_metal_plate_rough_2k.png",
+          "md5": "049232d29f052db65d905f5a0e64768c",
+          "resolution": "2k"
+        },
+        "Metallic": null,
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/blue_metal_plate/blue_metal_plate_disp_2k.png",
+          "md5": "5136e71d09563ff352e851c1898f975c",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 4.06,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:02:27.243Z"
+    },
+    {
+      "material": "steel_black",
+      "target": {
+        "name": "steel_black",
+        "preferredAssetIds": [
+          "metal_plate_02",
+          "box_profile_metal_sheet",
+          "metal_plate"
+        ],
+        "search": "black powder coated metal steel",
+        "tags": [
+          "black",
+          "powder",
+          "coated",
+          "metal",
+          "steel"
+        ],
+        "baseColorSRGB": [
+          10,
+          10,
+          10
+        ],
+        "roughness": 0.5,
+        "metallic": 0.12,
+        "normalStrength": 0.7
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "metal_plate_02",
+        "name": "Metal Plate 02",
+        "url": "https://polyhaven.com/a/metal_plate_02",
+        "apiUrl": "https://api.polyhaven.com/files/metal_plate_02",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Rob Tuytel"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_steel_black_BC.png",
+          "bytes": 2482953,
+          "sha256": "e43c0f8c89eddd34a0c63c08afc022e6d496f4b714dc4afe0df3026a28a39b06",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/metal_plate_02/metal_plate_02_diff_2k.png",
+          "sourceMd5": "12f46ea5d0e0a1adf664cd52a7ada612",
+          "outputName": "T_steel_black_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_steel_black_N.png",
+          "bytes": 1461724,
+          "sha256": "12bfc220f8f11011a17fca744c756a96dc28e0f4e972a16a09d47ec988d9873b",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/metal_plate_02/metal_plate_02_nor_gl_2k.png",
+          "sourceMd5": "c210604ae29c0d1e016fe845b8eec939",
+          "outputName": "T_steel_black_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_steel_black_ORM.png",
+          "bytes": 8617859,
+          "sha256": "743c6043f165080ca437735001878a377bff88841548998316f11fc7d2bd76bf",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/metal_plate_02",
+          "sourceMd5": null,
+          "outputName": "T_steel_black_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_steel_black_H.png",
+          "bytes": 977255,
+          "sha256": "16d24d1834b56dbca3bb5d9636b69fafcfb0ce702788aca516eb416988fff292",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/metal_plate_02/metal_plate_02_disp_2k.png",
+          "sourceMd5": "d0e9e01613ce1ab7fac2fd2b7f017dba",
+          "outputName": "T_steel_black_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            10,
+            10,
+            10
+          ],
+          "sourceMeanSRGB": [
+            84.3,
+            72.42,
+            61.2
+          ],
+          "outputMeanSRGB": [
+            9.99,
+            10,
+            9.96
+          ],
+          "appliedScale": [
+            0.12,
+            0.14,
+            0.16
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 127.5,
+            "metallic": 30.599999999999998
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/metal_plate_02/metal_plate_02_diff_2k.png",
+          "md5": "12f46ea5d0e0a1adf664cd52a7ada612",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/metal_plate_02/metal_plate_02_nor_gl_2k.png",
+          "md5": "c210604ae29c0d1e016fe845b8eec939",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/metal_plate_02/metal_plate_02_ao_2k.png",
+          "md5": "432eee04582700ffb86effc15b597f7c",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/metal_plate_02/metal_plate_02_rough_2k.png",
+          "md5": "941add2865ec88cb88ed430ee951fd15",
+          "resolution": "2k"
+        },
+        "Metallic": {
+          "path": "Metal/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/metal_plate_02/metal_plate_02_metal_2k.png",
+          "md5": "b822b0a5bc0d621512ddf7d3834a3bef",
+          "resolution": "2k"
+        },
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/metal_plate_02/metal_plate_02_disp_2k.png",
+          "md5": "d0e9e01613ce1ab7fac2fd2b7f017dba",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 0.58,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:02:32.586Z"
+    },
+    {
+      "material": "cotton_black",
+      "target": {
+        "name": "cotton_black",
+        "preferredAssetIds": [
+          "cotton_jersey",
+          "denmin_fabric_02",
+          "fabric_pattern_05"
+        ],
+        "search": "black cotton jersey fabric textile",
+        "tags": [
+          "black",
+          "cotton",
+          "jersey",
+          "fabric",
+          "textile"
+        ],
+        "baseColorSRGB": [
+          14,
+          14,
+          15
+        ],
+        "roughness": 0.92,
+        "metallic": 0,
+        "normalStrength": 0.9,
+        "sheenWeight": 0.5,
+        "sheenRoughness": 0.85
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "cotton_jersey",
+        "name": "Cotton Jersey",
+        "url": "https://polyhaven.com/a/cotton_jersey",
+        "apiUrl": "https://api.polyhaven.com/files/cotton_jersey",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "colormass",
+          "Rico Cilliers"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_cotton_black_BC.png",
+          "bytes": 1788321,
+          "sha256": "d29da3dae3acd0bc177ca13a1d5fb8591ac829f45a1255db7c7647cd67b28113",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/cotton_jersey/cotton_jersey_diff_2k.png",
+          "sourceMd5": "c423d3614901685c3eb9a73b5b1e6a71",
+          "outputName": "T_cotton_black_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_cotton_black_N.png",
+          "bytes": 8142365,
+          "sha256": "958805a3be30cbe0d0e806af2c6732e10a352bd6f831c2113b881a51b6257449",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/cotton_jersey/cotton_jersey_nor_gl_2k.png",
+          "sourceMd5": "ca8a966851d8e258fd18e16207dda50f",
+          "outputName": "T_cotton_black_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_cotton_black_ORM.png",
+          "bytes": 7913624,
+          "sha256": "c1421386471f66d5d084485495b1d77716544f8d26d310433d6844b5a56b4219",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/cotton_jersey",
+          "sourceMd5": null,
+          "outputName": "T_cotton_black_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_cotton_black_H.png",
+          "bytes": 3488143,
+          "sha256": "f749f00a4370807f754c98f1cfad31ea8c118c93feb3c851bcd7bf1ad8938868",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/cotton_jersey/cotton_jersey_disp_2k.png",
+          "sourceMd5": "f8eed820e1b6ec1f312bfd57ac417424",
+          "outputName": "T_cotton_black_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            14,
+            14,
+            15
+          ],
+          "sourceMeanSRGB": [
+            194.25,
+            170.43,
+            156.8
+          ],
+          "outputMeanSRGB": [
+            15.55,
+            14,
+            14.98
+          ],
+          "appliedScale": [
+            0.08,
+            0.08,
+            0.1
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 234.60000000000002,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/cotton_jersey/cotton_jersey_diff_2k.png",
+          "md5": "c423d3614901685c3eb9a73b5b1e6a71",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/cotton_jersey/cotton_jersey_nor_gl_2k.png",
+          "md5": "ca8a966851d8e258fd18e16207dda50f",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/cotton_jersey/cotton_jersey_ao_2k.png",
+          "md5": "31bedeb763fd7d7a43a48e1aa0cf2387",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/cotton_jersey/cotton_jersey_rough_2k.png",
+          "md5": "b37edf4a4c140c53689883d15875fba9",
+          "resolution": "2k"
+        },
+        "Metallic": {
+          "path": "Metal/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/cotton_jersey/cotton_jersey_metal_2k.png",
+          "md5": "eb2544c74695f21830ad665756d76b62",
+          "resolution": "2k"
+        },
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/cotton_jersey/cotton_jersey_disp_2k.png",
+          "md5": "f8eed820e1b6ec1f312bfd57ac417424",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 0,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:02:37.701Z"
+    },
+    {
+      "material": "paper_black_seamless",
+      "target": {
+        "name": "paper_black_seamless",
+        "preferredAssetIds": [
+          "concrete_wall_003",
+          "decrepit_wallpaper",
+          "painted_plaster_wall"
+        ],
+        "search": "black seamless photo backdrop paper",
+        "tags": [
+          "black",
+          "seamless",
+          "backdrop",
+          "paper"
+        ],
+        "baseColorSRGB": [
+          18,
+          16,
+          15
+        ],
+        "roughness": 0.85,
+        "metallic": 0,
+        "normalStrength": 0.3
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "concrete_wall_003",
+        "name": "Concrete Wall 003",
+        "url": "https://polyhaven.com/a/concrete_wall_003",
+        "apiUrl": "https://api.polyhaven.com/files/concrete_wall_003",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Dimitrios Savva",
+          "Rico Cilliers"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_paper_black_seamless_BC.png",
+          "bytes": 3181591,
+          "sha256": "8c0dc6ba6c268520648735e1a38b1bbd4e5d4e8c041977672b014a337d966029",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/concrete_wall_003/concrete_wall_003_diff_2k.png",
+          "sourceMd5": "365737df1f0aad2087fa38cd35ad7644",
+          "outputName": "T_paper_black_seamless_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_paper_black_seamless_N.png",
+          "bytes": 9011491,
+          "sha256": "d107a662e439e2b6ecb7bb2fbee1877dfd2536eaebcac64a573766935f12f2fa",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/concrete_wall_003/concrete_wall_003_nor_gl_2k.png",
+          "sourceMd5": "5900a0dbc2fdf290995000c579fbb88d",
+          "outputName": "T_paper_black_seamless_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_paper_black_seamless_ORM.png",
+          "bytes": 6902425,
+          "sha256": "d3a4ae0d23b42e4b87185ec9e9be3fcc60bfde5c3fae75e3b3f7bbc977320ae4",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/concrete_wall_003",
+          "sourceMd5": null,
+          "outputName": "T_paper_black_seamless_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_paper_black_seamless_H.png",
+          "bytes": 1079043,
+          "sha256": "79bf5fa8a4319b33dd3adfee06741e34a169873cac99a84d89de2c819fb7fb39",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/concrete_wall_003/concrete_wall_003_disp_2k.png",
+          "sourceMd5": "12d77739d2cbd9dd9ec72510d8f01d9c",
+          "outputName": "T_paper_black_seamless_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            18,
+            16,
+            15
+          ],
+          "sourceMeanSRGB": [
+            202.56,
+            185.17,
+            160.36
+          ],
+          "outputMeanSRGB": [
+            18,
+            16,
+            14.99
+          ],
+          "appliedScale": [
+            0.09,
+            0.09,
+            0.09
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 216.75,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/concrete_wall_003/concrete_wall_003_diff_2k.png",
+          "md5": "365737df1f0aad2087fa38cd35ad7644",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/concrete_wall_003/concrete_wall_003_nor_gl_2k.png",
+          "md5": "5900a0dbc2fdf290995000c579fbb88d",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/concrete_wall_003/concrete_wall_003_ao_2k.png",
+          "md5": "d25b5d5838c330cce3811343c6a7f272",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/concrete_wall_003/concrete_wall_003_rough_2k.png",
+          "md5": "1dbd71d8dfb8dbd75f0ee187911e00a5",
+          "resolution": "2k"
+        },
+        "Metallic": null,
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/concrete_wall_003/concrete_wall_003_disp_2k.png",
+          "md5": "12d77739d2cbd9dd9ec72510d8f01d9c",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 0.77,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:02:45.704Z"
+    },
+    {
+      "material": "paper_matte",
+      "target": {
+        "name": "paper_matte",
+        "preferredAssetIds": [
+          "decrepit_wallpaper",
+          "book_pattern",
+          "paper_black"
+        ],
+        "search": "kraft matte paper fibrous",
+        "tags": [
+          "kraft",
+          "paper",
+          "matte",
+          "fibrous"
+        ],
+        "baseColorSRGB": [
+          96,
+          75,
+          54
+        ],
+        "roughness": 0.85,
+        "metallic": 0,
+        "normalStrength": 0.55
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "decrepit_wallpaper",
+        "name": "Decrepit Wallpaper",
+        "url": "https://polyhaven.com/a/decrepit_wallpaper",
+        "apiUrl": "https://api.polyhaven.com/files/decrepit_wallpaper",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Rob Tuytel"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_paper_matte_BC.png",
+          "bytes": 6941335,
+          "sha256": "0f98dfa7e1d64ad866fca6394db2cf7dd77456e3f60097528715559aed9a2f0b",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/decrepit_wallpaper/decrepit_wallpaper_diff_2k.png",
+          "sourceMd5": "bb6f2a93e2f8ab578bcd35b02f1d285e",
+          "outputName": "T_paper_matte_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_paper_matte_N.png",
+          "bytes": 6675349,
+          "sha256": "993faa0c5e38d6d9b98a756e3c051c5435929329590af0bfd728e99302e77dc4",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/decrepit_wallpaper/decrepit_wallpaper_nor_gl_2k.png",
+          "sourceMd5": "3834a263d4aab4adf413ee4074991a46",
+          "outputName": "T_paper_matte_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_paper_matte_ORM.png",
+          "bytes": 4603284,
+          "sha256": "d1482a898fd3b2232ee402c327e0dd1391d843d0d5a2eb034c948ff27a7d3291",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/decrepit_wallpaper",
+          "sourceMd5": null,
+          "outputName": "T_paper_matte_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_paper_matte_H.png",
+          "bytes": 645614,
+          "sha256": "32a6a8d463ebb7dc75867f5a80d27aa0f6f58f1d39688553dd2192e52ee529e7",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/decrepit_wallpaper/decrepit_wallpaper_disp_2k.png",
+          "sourceMd5": "a22d6712db59f57f6d81e7d5c66c76cb",
+          "outputName": "T_paper_matte_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            96,
+            75,
+            54
+          ],
+          "sourceMeanSRGB": [
+            118.87,
+            106.75,
+            93.69
+          ],
+          "outputMeanSRGB": [
+            96.01,
+            74.98,
+            54
+          ],
+          "appliedScale": [
+            0.81,
+            0.7,
+            0.58
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 216.75,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/decrepit_wallpaper/decrepit_wallpaper_diff_2k.png",
+          "md5": "bb6f2a93e2f8ab578bcd35b02f1d285e",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/decrepit_wallpaper/decrepit_wallpaper_nor_gl_2k.png",
+          "md5": "3834a263d4aab4adf413ee4074991a46",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/decrepit_wallpaper/decrepit_wallpaper_ao_2k.png",
+          "md5": "19bba0d1b9b335383e5b9ac066a8be26",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/decrepit_wallpaper/decrepit_wallpaper_rough_2k.png",
+          "md5": "15948052aa2aac3578d88202e4d3035a",
+          "resolution": "2k"
+        },
+        "Metallic": null,
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/decrepit_wallpaper/decrepit_wallpaper_disp_2k.png",
+          "md5": "a22d6712db59f57f6d81e7d5c66c76cb",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 2.24,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:02:51.247Z"
+    },
+    {
+      "material": "wood_reclaimed_planks",
+      "target": {
+        "name": "wood_reclaimed_planks",
+        "preferredAssetIds": [
+          "weathered_planks",
+          "old_planks_02",
+          "wood_planks"
+        ],
+        "search": "reclaimed weathered wood planks",
+        "tags": [
+          "reclaimed",
+          "weathered",
+          "wood",
+          "planks"
+        ],
+        "baseColorSRGB": [
+          96,
+          58,
+          30
+        ],
+        "roughness": 0.65,
+        "metallic": 0,
+        "normalStrength": 1.3
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "weathered_planks",
+        "name": "Weathered Planks",
+        "url": "https://polyhaven.com/a/weathered_planks",
+        "apiUrl": "https://api.polyhaven.com/files/weathered_planks",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Dario Barresi",
+          "Dimitrios Savva"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_wood_reclaimed_planks_BC.png",
+          "bytes": 6493648,
+          "sha256": "8a3c1bb761aa3539ea66d7a791fea1e87f38071c790f29c0d002d2789e338dd3",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/weathered_planks/weathered_planks_diff_2k.png",
+          "sourceMd5": "be9a6262d4a3b4e1f355979e2a8af375",
+          "outputName": "T_wood_reclaimed_planks_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_wood_reclaimed_planks_N.png",
+          "bytes": 8027456,
+          "sha256": "e9c3f94298b97072a018c24c9a5b15d76166d0a872ff4fcce3c2c3fb8fe795be",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/weathered_planks/weathered_planks_nor_gl_2k.png",
+          "sourceMd5": "5b4ae946415acdc63c523311a1dbe2a4",
+          "outputName": "T_wood_reclaimed_planks_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_wood_reclaimed_planks_ORM.png",
+          "bytes": 5072874,
+          "sha256": "50844e62379da5e6ac2853af49d4282e18aa0adc17b11c6c393b2b8969b53c5c",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/weathered_planks",
+          "sourceMd5": null,
+          "outputName": "T_wood_reclaimed_planks_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_wood_reclaimed_planks_H.png",
+          "bytes": 931934,
+          "sha256": "234fb74ef909f2f8558f7ec0d0596e1b53ffed1c8517bf240bdd270b6b05a430",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/weathered_planks/weathered_planks_disp_2k.png",
+          "sourceMd5": "2a1b7b1b0f3ee550ae83ed2d6478a5b0",
+          "outputName": "T_wood_reclaimed_planks_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            96,
+            58,
+            30
+          ],
+          "sourceMeanSRGB": [
+            79.66,
+            67.18,
+            58.43
+          ],
+          "outputMeanSRGB": [
+            96,
+            58,
+            29.95
+          ],
+          "appliedScale": [
+            1.21,
+            0.86,
+            0.51
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 165.75,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/weathered_planks/weathered_planks_diff_2k.png",
+          "md5": "be9a6262d4a3b4e1f355979e2a8af375",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/weathered_planks/weathered_planks_nor_gl_2k.png",
+          "md5": "5b4ae946415acdc63c523311a1dbe2a4",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/weathered_planks/weathered_planks_ao_2k.png",
+          "md5": "d07467a1750687dd01ad14ab0f10861b",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/weathered_planks/weathered_planks_rough_2k.png",
+          "md5": "04c8adce4576d21c426333ad9640a0e2",
+          "resolution": "2k"
+        },
+        "Metallic": null,
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/weathered_planks/weathered_planks_disp_2k.png",
+          "md5": "2a1b7b1b0f3ee550ae83ed2d6478a5b0",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 4.55,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:02:54.078Z"
+    },
+    {
+      "material": "wood_reclaimed_top",
+      "target": {
+        "name": "wood_reclaimed_top",
+        "preferredAssetIds": [
+          "wood_planks",
+          "wooden_planks",
+          "weathered_planks"
+        ],
+        "search": "reclaimed wood timber board tabletop",
+        "tags": [
+          "reclaimed",
+          "wood",
+          "timber",
+          "board"
+        ],
+        "baseColorSRGB": [
+          96,
+          58,
+          30
+        ],
+        "roughness": 0.55,
+        "metallic": 0,
+        "normalStrength": 1.1
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "wood_planks",
+        "name": "Wood Planks",
+        "url": "https://polyhaven.com/a/wood_planks",
+        "apiUrl": "https://api.polyhaven.com/files/wood_planks",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Amal Kumar"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_wood_reclaimed_top_BC.png",
+          "bytes": 5539018,
+          "sha256": "8a9a402322b720adf87766454194f66f8b83fa988fe8cf73c000bc0f0e8e39a8",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/wood_planks/wood_planks_diff_2k.png",
+          "sourceMd5": "71c35fd74e5adb92819f9a1b5a97806f",
+          "outputName": "T_wood_reclaimed_top_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_wood_reclaimed_top_N.png",
+          "bytes": 6929032,
+          "sha256": "fe45b70913281778a6d4d12a9efada9d7b71f2351ef4bb642fb735df5a2ce6ce",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/wood_planks/wood_planks_nor_gl_2k.png",
+          "sourceMd5": "4ab4d4467eed17ab3770a316cfd8210a",
+          "outputName": "T_wood_reclaimed_top_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_wood_reclaimed_top_ORM.png",
+          "bytes": 3488696,
+          "sha256": "9f038cefef3dec7cf0594c085117a67ff78c9433eaad7ea45d81d181a5c3516d",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/wood_planks",
+          "sourceMd5": null,
+          "outputName": "T_wood_reclaimed_top_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_wood_reclaimed_top_H.png",
+          "bytes": 819517,
+          "sha256": "1061e3ac9ac24447586f5d8ab217569babeef9dcbb281b8c3cc617d13dad3dec",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/wood_planks/wood_planks_disp_2k.png",
+          "sourceMd5": "be34616bdd1c45522cdd0ac03f4fc8d2",
+          "outputName": "T_wood_reclaimed_top_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            96,
+            58,
+            30
+          ],
+          "sourceMeanSRGB": [
+            115.55,
+            89.44,
+            61.15
+          ],
+          "outputMeanSRGB": [
+            96.03,
+            57.99,
+            29.9
+          ],
+          "appliedScale": [
+            0.83,
+            0.65,
+            0.49
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 140.25,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/wood_planks/wood_planks_diff_2k.png",
+          "md5": "71c35fd74e5adb92819f9a1b5a97806f",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/wood_planks/wood_planks_nor_gl_2k.png",
+          "md5": "4ab4d4467eed17ab3770a316cfd8210a",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/wood_planks/wood_planks_ao_2k.png",
+          "md5": "9231783b13d47509487b0f0a3b669600",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/wood_planks/wood_planks_rough_2k.png",
+          "md5": "cb9df45cdf0ac0bb4f5ca1666cd99ebf",
+          "resolution": "2k"
+        },
+        "Metallic": null,
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/wood_planks/wood_planks_disp_2k.png",
+          "md5": "be34616bdd1c45522cdd0ac03f4fc8d2",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 4.35,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:02:59.529Z"
+    },
+    {
+      "material": "vinyl_black_matte",
+      "target": {
+        "name": "vinyl_black_matte",
+        "preferredAssetIds": [
+          "rubber_tiles",
+          "old_linoleum_flooring_01",
+          "linoleum_brown"
+        ],
+        "search": "black rubber vinyl flooring",
+        "tags": [
+          "black",
+          "rubber",
+          "vinyl",
+          "flooring"
+        ],
+        "baseColorSRGB": [
+          10,
+          10,
+          11
+        ],
+        "roughness": 0.7,
+        "metallic": 0,
+        "normalStrength": 0.65
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "rubber_tiles",
+        "name": "Rubber Tiles",
+        "url": "https://polyhaven.com/a/rubber_tiles",
+        "apiUrl": "https://api.polyhaven.com/files/rubber_tiles",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Amal Kumar"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_vinyl_black_matte_BC.png",
+          "bytes": 1871196,
+          "sha256": "231d760d40462eac5e79b3face5acb860de26ad9a87b66dbbf12b82d95455aba",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rubber_tiles/rubber_tiles_diff_2k.png",
+          "sourceMd5": "40bc2c794925577f8493a7d59e047ab2",
+          "outputName": "T_vinyl_black_matte_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_vinyl_black_matte_N.png",
+          "bytes": 6332804,
+          "sha256": "51903e7294dcdd447415a5481fcd7643c04165caadabc619f8e455b92383eb9e",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rubber_tiles/rubber_tiles_nor_gl_2k.png",
+          "sourceMd5": "b658088d38ad6fd71fc99630a6ce4557",
+          "outputName": "T_vinyl_black_matte_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_vinyl_black_matte_ORM.png",
+          "bytes": 5431593,
+          "sha256": "7f692ab4ba7c080cd39842dadd2d65a88dab301c761abe7234cdfa04d97095a9",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/rubber_tiles",
+          "sourceMd5": null,
+          "outputName": "T_vinyl_black_matte_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_vinyl_black_matte_H.png",
+          "bytes": 634211,
+          "sha256": "7bef81e84c8892f0c44739b6a44946194da4a2249e5cf3546d1aa7c69466edc0",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rubber_tiles/rubber_tiles_disp_2k.png",
+          "sourceMd5": "3dc83c0dff4e3d88b66d9ea3c573404f",
+          "outputName": "T_vinyl_black_matte_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            10,
+            10,
+            11
+          ],
+          "sourceMeanSRGB": [
+            31.67,
+            32.48,
+            35.67
+          ],
+          "outputMeanSRGB": [
+            9.9,
+            10.02,
+            10.9
+          ],
+          "appliedScale": [
+            0.32,
+            0.31,
+            0.31
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 178.5,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rubber_tiles/rubber_tiles_diff_2k.png",
+          "md5": "40bc2c794925577f8493a7d59e047ab2",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rubber_tiles/rubber_tiles_nor_gl_2k.png",
+          "md5": "b658088d38ad6fd71fc99630a6ce4557",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rubber_tiles/rubber_tiles_ao_2k.png",
+          "md5": "1c72c0f3c3621fde30927624920c9b24",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rubber_tiles/rubber_tiles_rough_2k.png",
+          "md5": "67b7cccdd7faff1bdb8c5311863ea886",
+          "resolution": "2k"
+        },
+        "Metallic": null,
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/rubber_tiles/rubber_tiles_disp_2k.png",
+          "md5": "3dc83c0dff4e3d88b66d9ea3c573404f",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 0.43,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:03:08.470Z"
+    },
+    {
+      "material": "canvas_print_mural",
+      "target": {
+        "name": "canvas_print_mural",
+        "preferredAssetIds": [
+          "hessian_380",
+          "rough_linen",
+          "fabric_pattern_05"
+        ],
+        "search": "canvas fabric woven material",
+        "tags": [
+          "canvas",
+          "fabric",
+          "woven",
+          "textile"
+        ],
+        "baseColorSRGB": [
+          120,
+          70,
+          55
+        ],
+        "roughness": 0.8,
+        "metallic": 0,
+        "normalStrength": 0.6
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "hessian_380",
+        "name": "Hessian 380",
+        "url": "https://polyhaven.com/a/hessian_380",
+        "apiUrl": "https://api.polyhaven.com/files/hessian_380",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "colormass",
+          "Rico Cilliers"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_canvas_print_mural_BC.png",
+          "bytes": 7922964,
+          "sha256": "0bde69179abe8d98ce1fb1a3ceb2f75ef9d52594257446a76e956caccb2cb4aa",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hessian_380/hessian_380_diff_2k.png",
+          "sourceMd5": "cbcdf63cc27a45e6211ef323461e41bc",
+          "outputName": "T_canvas_print_mural_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_canvas_print_mural_N.png",
+          "bytes": 10083019,
+          "sha256": "4e6b74c5ddb975435e62efd974bf4ef4e350b9ddb2cfdc49c571cf7ed6db3331",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hessian_380/hessian_380_nor_gl_2k.png",
+          "sourceMd5": "6ab7c157dcea0c7e6982947869415d1f",
+          "outputName": "T_canvas_print_mural_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_canvas_print_mural_ORM.png",
+          "bytes": 11384068,
+          "sha256": "6ddf51a9ee7f35d47667ffd81a7f465556e2cafd4594e3b8b8f454f4845a6709",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/hessian_380",
+          "sourceMd5": null,
+          "outputName": "T_canvas_print_mural_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_canvas_print_mural_H.png",
+          "bytes": 3752170,
+          "sha256": "171a5646bb78882ac472b4c79da3fe9ea579a7681bc9282ca6e09a7ad5444ac9",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hessian_380/hessian_380_disp_2k.png",
+          "sourceMd5": "3f706ee67f3bb45601fd344d49b865c3",
+          "outputName": "T_canvas_print_mural_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            120,
+            70,
+            55
+          ],
+          "sourceMeanSRGB": [
+            175.87,
+            144.14,
+            106.58
+          ],
+          "outputMeanSRGB": [
+            120.01,
+            70,
+            55
+          ],
+          "appliedScale": [
+            0.68,
+            0.49,
+            0.52
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 204,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hessian_380/hessian_380_diff_2k.png",
+          "md5": "cbcdf63cc27a45e6211ef323461e41bc",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hessian_380/hessian_380_nor_gl_2k.png",
+          "md5": "6ab7c157dcea0c7e6982947869415d1f",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hessian_380/hessian_380_ao_2k.png",
+          "md5": "f5a426efa230e9a8968f1fbf7007035d",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hessian_380/hessian_380_rough_2k.png",
+          "md5": "f434047e1f700694e245c9c47439dfa2",
+          "resolution": "2k"
+        },
+        "Metallic": {
+          "path": "Metal/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hessian_380/hessian_380_metal_2k.png",
+          "md5": "3bd557bca1e30d1fe2eb7af1c24585a8",
+          "resolution": "2k"
+        },
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/hessian_380/hessian_380_disp_2k.png",
+          "md5": "3f706ee67f3bb45601fd344d49b865c3",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 0.92,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:03:11.253Z"
+    },
+    {
+      "material": "fabric_black_flag",
+      "target": {
+        "name": "fabric_black_flag",
+        "preferredAssetIds": [
+          "book_pattern",
+          "fabric_pattern_05",
+          "denmin_fabric_02"
+        ],
+        "search": "black woven flag fabric cloth",
+        "tags": [
+          "black",
+          "woven",
+          "flag",
+          "fabric",
+          "cloth"
+        ],
+        "baseColorSRGB": [
+          9,
+          9,
+          10
+        ],
+        "roughness": 0.9,
+        "metallic": 0,
+        "normalStrength": 0.7
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "denmin_fabric_02",
+        "name": "Denim Fabric 02",
+        "url": "https://polyhaven.com/a/denmin_fabric_02",
+        "apiUrl": "https://api.polyhaven.com/files/denmin_fabric_02",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Rob Tuytel"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_fabric_black_flag_BC.png",
+          "bytes": 5172239,
+          "sha256": "d037d3863554b637a3b4777fca579db20dd196410bc628ecf8272387bdf002d7",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/denmin_fabric_02/denmin_fabric_02_diff_2k.png",
+          "sourceMd5": "de9aed61e248efb6eaa4ee20739f0c0c",
+          "outputName": "T_fabric_black_flag_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_fabric_black_flag_N.png",
+          "bytes": 9338778,
+          "sha256": "4f741845f3181bed0c7badfdb66513eef74a1564f5ad700cf3ba8fdaa9523e6e",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/denmin_fabric_02/denmin_fabric_02_nor_gl_2k.png",
+          "sourceMd5": "4bd687500b31e1c4a704733b470a3566",
+          "outputName": "T_fabric_black_flag_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_fabric_black_flag_ORM.png",
+          "bytes": 8631982,
+          "sha256": "ff0e1a8842432b604e3b8a876edef238a6f124ba2b1151b6e5d10b259b3b8596",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/denmin_fabric_02",
+          "sourceMd5": null,
+          "outputName": "T_fabric_black_flag_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_fabric_black_flag_H.png",
+          "bytes": 3678472,
+          "sha256": "6cce89a74466dc2b921a5ca5c281ea5ca829ff2d6ad3c808e57dec5c54ef0632",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/denmin_fabric_02/denmin_fabric_02_disp_2k.png",
+          "sourceMd5": "72a9ef2264cff92dee850547d929e99e",
+          "outputName": "T_fabric_black_flag_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            9,
+            9,
+            10
+          ],
+          "sourceMeanSRGB": [
+            45.55,
+            78.42,
+            94.24
+          ],
+          "outputMeanSRGB": [
+            9,
+            9,
+            10
+          ],
+          "appliedScale": [
+            0.2,
+            0.11,
+            0.11
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 229.5,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/denmin_fabric_02/denmin_fabric_02_diff_2k.png",
+          "md5": "de9aed61e248efb6eaa4ee20739f0c0c",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/denmin_fabric_02/denmin_fabric_02_nor_gl_2k.png",
+          "md5": "4bd687500b31e1c4a704733b470a3566",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/denmin_fabric_02/denmin_fabric_02_ao_2k.png",
+          "md5": "0550e86df4325c45ed0248854ba8a5ee",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/denmin_fabric_02/denmin_fabric_02_rough_2k.png",
+          "md5": "9e8f7bd1df1173cc9ea4f54a89ef5f51",
+          "resolution": "2k"
+        },
+        "Metallic": null,
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/denmin_fabric_02/denmin_fabric_02_disp_2k.png",
+          "md5": "72a9ef2264cff92dee850547d929e99e",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 0.83,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:03:15.013Z"
+    },
+    {
+      "material": "wood_dark_stained",
+      "target": {
+        "name": "wood_dark_stained",
+        "preferredAssetIds": [
+          "dark_planks",
+          "weathered_planks",
+          "wood_planks"
+        ],
+        "search": "dark stained walnut wood boards",
+        "tags": [
+          "dark",
+          "stained",
+          "walnut",
+          "wood",
+          "boards"
+        ],
+        "baseColorSRGB": [
+          35,
+          18,
+          10
+        ],
+        "roughness": 0.56,
+        "metallic": 0,
+        "normalStrength": 1
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "dark_planks",
+        "name": "Dark Planks",
+        "url": "https://polyhaven.com/a/dark_planks",
+        "apiUrl": "https://api.polyhaven.com/files/dark_planks",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "Rob Tuytel"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_wood_dark_stained_BC.png",
+          "bytes": 3330765,
+          "sha256": "b3c6824e8bd1047391f82cea2b333f63614a6dc377fe98496e9123040472dc41",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_planks/dark_planks_diff_2k.png",
+          "sourceMd5": "1bde914fad5289d5212c71a14df17ff0",
+          "outputName": "T_wood_dark_stained_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_wood_dark_stained_N.png",
+          "bytes": 7600965,
+          "sha256": "03fe7e1f20786daad658c0be97a77be5cc1eb5a01129b49bf350f80894e04c88",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_planks/dark_planks_nor_gl_2k.png",
+          "sourceMd5": "50f432b8335ea25dc65335c8985b8f8c",
+          "outputName": "T_wood_dark_stained_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_wood_dark_stained_ORM.png",
+          "bytes": 5484502,
+          "sha256": "6d174b8536051977e95008cccf07908d4419ef870014e9645f896221506750f7",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/dark_planks",
+          "sourceMd5": null,
+          "outputName": "T_wood_dark_stained_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_wood_dark_stained_H.png",
+          "bytes": 3236489,
+          "sha256": "fe63abd99ea877657ec717e2d9245e7e2ed76c54861122b3e4e6c9bb96612c93",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_planks/dark_planks_bump_2k.png",
+          "sourceMd5": "6476ee99a1e580cc000f1de73c3ce223",
+          "outputName": "T_wood_dark_stained_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            35,
+            18,
+            10
+          ],
+          "sourceMeanSRGB": [
+            98.14,
+            94.45,
+            83.68
+          ],
+          "outputMeanSRGB": [
+            35.01,
+            17.99,
+            10
+          ],
+          "appliedScale": [
+            0.36,
+            0.19,
+            0.12
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 142.8,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_planks/dark_planks_diff_2k.png",
+          "md5": "1bde914fad5289d5212c71a14df17ff0",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_planks/dark_planks_nor_gl_2k.png",
+          "md5": "50f432b8335ea25dc65335c8985b8f8c",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_planks/dark_planks_ao_2k.png",
+          "md5": "1cd7bde88952da8fa4f9ffd82c9fad34",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_planks/dark_planks_rough_2k.png",
+          "md5": "dceeb1061d1de31f23bf9fce77282ec5",
+          "resolution": "2k"
+        },
+        "Metallic": null,
+        "Height": {
+          "path": "Bump/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/dark_planks/dark_planks_bump_2k.png",
+          "md5": "6476ee99a1e580cc000f1de73c3ce223",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 1.02,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:03:20.267Z"
+    },
+    {
+      "material": "fabric_black_softbox",
+      "target": {
+        "name": "fabric_black_softbox",
+        "preferredAssetIds": [
+          "denmin_fabric_02",
+          "fabric_pattern_05",
+          "bi_stretch"
+        ],
+        "search": "black light absorbing textile fabric",
+        "tags": [
+          "black",
+          "fabric",
+          "textile",
+          "cloth"
+        ],
+        "baseColorSRGB": [
+          6,
+          6,
+          7
+        ],
+        "roughness": 0.95,
+        "metallic": 0,
+        "normalStrength": 0.65,
+        "sheenWeight": 0.25,
+        "sheenRoughness": 0.9
+      },
+      "sourceAsset": {
+        "provider": "Poly Haven",
+        "id": "bi_stretch",
+        "name": "Bi Stretch",
+        "url": "https://polyhaven.com/a/bi_stretch",
+        "apiUrl": "https://api.polyhaven.com/files/bi_stretch",
+        "license": "CC0 1.0",
+        "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "authors": [
+          "colormass",
+          "Rico Cilliers"
+        ],
+        "reusedByAnotherMaterial": false
+      },
+      "maps": {
+        "BC": {
+          "path": "art/textures/materials/T_fabric_black_softbox_BC.png",
+          "bytes": 2547646,
+          "sha256": "f93ee7c31a455e59853e5982e7ddb1bce0cf41446e927b28106c717f55a187f5",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bi_stretch/bi_stretch_diff_2k.png",
+          "sourceMd5": "1e5b31f85ae66753cd0a49739fc17e2d",
+          "outputName": "T_fabric_black_softbox_BC.png"
+        },
+        "N": {
+          "path": "art/textures/materials/T_fabric_black_softbox_N.png",
+          "bytes": 7153150,
+          "sha256": "52c99020db3b2060f5ca905789dae88c1941913f01b05d36143767a1f73c4346",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bi_stretch/bi_stretch_nor_gl_2k.png",
+          "sourceMd5": "03e7e7b0da4f4192f5d63fff4c1c0bc3",
+          "outputName": "T_fabric_black_softbox_N.png"
+        },
+        "ORM": {
+          "path": "art/textures/materials/T_fabric_black_softbox_ORM.png",
+          "bytes": 8310766,
+          "sha256": "38cb8081dfe9f5b77ae9358d17c0fa63cbf7c6c82289a9629e9929e1de268bad",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://api.polyhaven.com/files/bi_stretch",
+          "sourceMd5": null,
+          "outputName": "T_fabric_black_softbox_ORM.png"
+        },
+        "H": {
+          "path": "art/textures/materials/T_fabric_black_softbox_H.png",
+          "bytes": 3548248,
+          "sha256": "360344d22072f1ee6d97209e6af2c9fc30e4a9dd2ca9cd27fd6b7d418c030e2f",
+          "width": 2048,
+          "height": 2048,
+          "sourceUrl": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bi_stretch/bi_stretch_disp_2k.png",
+          "sourceMd5": "ec8e64a771306888c78bbbc03b900d2c",
+          "outputName": "T_fabric_black_softbox_H.png"
+        }
+      },
+      "transformations": {
+        "baseColorGrade": {
+          "method": "per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+          "targetSRGB": [
+            6,
+            6,
+            7
+          ],
+          "sourceMeanSRGB": [
+            247.7,
+            171.68,
+            39.73
+          ],
+          "outputMeanSRGB": [
+            20,
+            13.74,
+            7.01
+          ],
+          "appliedScale": [
+            0.08,
+            0.08,
+            0.18
+          ],
+          "scaleClamp": [
+            0.08,
+            2.5
+          ]
+        },
+        "normal": {
+          "outputConvention": "OpenGL",
+          "sourceConvention": "OpenGL or labelled normal",
+          "greenChannelInverted": false
+        },
+        "orm": {
+          "channels": {
+            "R": "ambient occlusion",
+            "G": "roughness",
+            "B": "metallic"
+          },
+          "missingSourceFallbacks": {
+            "ao": 255,
+            "roughness": 242.25,
+            "metallic": 0
+          }
+        }
+      },
+      "sourceMaps": {
+        "BC": {
+          "path": "Diffuse/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bi_stretch/bi_stretch_diff_2k.png",
+          "md5": "1e5b31f85ae66753cd0a49739fc17e2d",
+          "resolution": "2k"
+        },
+        "N": {
+          "path": "nor_gl/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bi_stretch/bi_stretch_nor_gl_2k.png",
+          "md5": "03e7e7b0da4f4192f5d63fff4c1c0bc3",
+          "resolution": "2k",
+          "convention": "OpenGL or labelled normal"
+        },
+        "AO": {
+          "path": "AO/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bi_stretch/bi_stretch_ao_2k.png",
+          "md5": "3f94e6bfede57ed6f7464464e1d29af5",
+          "resolution": "2k"
+        },
+        "Roughness": {
+          "path": "Rough/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bi_stretch/bi_stretch_rough_2k.png",
+          "md5": "feceea1ae87df56c64cff07aa7d0be18",
+          "resolution": "2k"
+        },
+        "Metallic": {
+          "path": "Metal/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bi_stretch/bi_stretch_metal_2k.png",
+          "md5": "77772135b98cefda2014471eccd7b5a8",
+          "resolution": "2k"
+        },
+        "Height": {
+          "path": "Displacement/2k/png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Textures/png/2k/bi_stretch/bi_stretch_disp_2k.png",
+          "md5": "ec8e64a771306888c78bbbc03b900d2c",
+          "resolution": "2k"
+        }
+      },
+      "ormChannels": {
+        "red": "ambient occlusion",
+        "green": "roughness",
+        "blue": "metallic"
+      },
+      "tileability": {
+        "edgeMeanDelta": 0,
+        "maxAcceptedDelta": 64,
+        "status": "pass"
+      },
+      "generatedAt": "2026-10-14T09:03:29.362Z"
+    }
+  ]
+}
