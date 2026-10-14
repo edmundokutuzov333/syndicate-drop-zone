@@ -82,7 +82,7 @@ try {
       "prod.desk_l", "prod.monitor_daw", "prod.monitors_pair",
       "prod.imac", "photo.backdrop_seal", "photo.garments", "photo.rack",
     ]);
-    const protectedName = /studio\\.|artist_slot_\\d{3}|artists_wall|door_main_(stile_|rail_|handle_plate|lever|lock_cylinder|hinge_)|door_left_(stile_|rail_|handle_plate|lever|lock_cylinder|hinge_)|vault_ceiling|vault_rib_|monitor_daw_screen|photo_backdrop|garment/i;
+    const protectedName = /studio\.|artist_slot_\d{3}|artists_wall|door_main_(stile_|rail_|handle_plate|lever|lock_cylinder|hinge_)|door_left_(stile_|rail_|handle_plate|lever|lock_cylinder|hinge_)|vault_ceiling|vault_rib_|monitor_daw_screen|photo_backdrop|garment/i;
     const nodes = document.getRoot().listNodes();
     const keepNode = (node) => {
       const extras = node.getExtras() ?? {};

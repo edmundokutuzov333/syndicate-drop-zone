@@ -39,6 +39,9 @@ describe("Camping frontend model compatibility", () => {
     slot.name = "SDT_right_artist_slot_001";
     slot.userData.interactionId = "studio.artist-slot-001";
     root.add(slot);
+    const blank = mesh();
+    blank.name = "SDT_right_artist_slot_001_blank";
+    root.add(blank);
 
     expect(normalizeCampingModel(root)).toBe("blender-v3");
     expect(root.userData.campingModelVersion).toBe(3);
@@ -50,5 +53,6 @@ describe("Camping frontend model compatibility", () => {
     expect(root.getObjectByName("studio.door-handle")).toBe(handle);
     expect(handle.parent).toBe(door);
     expect(root.getObjectByName("studio.artist-slot-001")).toBe(slot);
+    expect(blank.parent).toBe(slot);
   });
 });

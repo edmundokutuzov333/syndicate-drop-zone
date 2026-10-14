@@ -68,6 +68,23 @@ export function normalizeCampingModel(root: THREE.Group): CampingModelSource {
     root.add(crossBeams);
   }
 
+  // Blender keeps frame, blank face and the printed number as separate objects
+  // in COL_right. Parent only the slot's own surface/number to its interaction
+  // root so the runtime can replace the blank face with the real backend portrait.
+  for (let index = 1; index <= 17; index += 1) {
+    const slotId = "studio.artist-slot-" + String(index).padStart(3, "0");
+    const slotRoot = root.getObjectByName(slotId);
+    if (!slotRoot) continue;
+    const slotSuffix = String(index).padStart(3, "0");
+    const children = objects.filter((object) => {
+      const name = originalNames.get(object) ?? "";
+      return name === "SDT_right_artist_slot_" + slotSuffix + "_blank" ||
+        name === "SDT_right_artist_slot_number_" + slotSuffix;
+    });
+    root.updateMatrixWorld(true);
+    for (const child of children) slotRoot.attach(child);
+  }
+
   const mainDoor = root.getObjectByName("studio.inner-door");
   if (mainDoor) {
     const originalDoorName = originalNames.get(mainDoor) ?? "";
