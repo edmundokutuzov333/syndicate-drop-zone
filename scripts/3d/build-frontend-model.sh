@@ -15,6 +15,8 @@ command -v toktx >/dev/null
 mkdir -p art/out/optimized
 node scripts/build-3d.mjs art/out/xoyens-studio.raw.glb art/out/optimized
 node scripts/verify-glb-contract.mjs art/out/optimized/xoyens-studio.high.glb docs/camping-v3/scene-bible.json --frontend-optimized
+node scripts/verify-glb-contract.mjs art/out/optimized/xoyens-studio.mid.glb docs/camping-v3/scene-bible.json --frontend-optimized
+node scripts/verify-glb-contract.mjs art/out/optimized/xoyens-studio.low.glb docs/camping-v3/scene-bible.json --frontend-optimized
 node scripts/3d/promote-frontend-model.mjs art/out/optimized/xoyens-studio.high.glb public/models/camping/xoyens-studio.glb public/models/camping/xoyens-studio.model.json docs/camping-v3/scene-bible.json
 node scripts/verify-glb-contract.mjs public/models/camping/xoyens-studio.glb docs/camping-v3/scene-bible.json --frontend-optimized
 node scripts/check-3d-budgets.mjs public/models/camping/xoyens-studio.glb high
