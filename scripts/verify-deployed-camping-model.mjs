@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 const BASE_URL = process.env.CAMPING_PRODUCTION_URL || "https://syndicate-drop-zone.vercel.app";
 const MODEL_PATH = "/models/camping/xoyens-studio.glb";
 const METADATA_PATH = "/models/camping/xoyens-studio.model.json";
+const EXPECTED_MODEL_PHASE = Number(process.env.CAMPING_EXPECTED_MODEL_PHASE || process.env.CAMPING_PHASE || 8);
 const REQUIRED_EXTENSIONS = ["KHR_texture_basisu", "EXT_meshopt_compression"];
 const REQUIRED_PHASE08_MATERIALS = ["ceramic_red", "glass_mirror", "led_warm_emissive"];
 const REQUIRED_INTERACTIONS = [
@@ -141,7 +142,7 @@ async function verifyPublishedAsset(metadata) {
   const productionScreen = (gltf.nodes ?? []).find(node => node.name === "SDT_production_monitor_daw_screen" && Number.isInteger(node.mesh));
   if (!productionScreen) throw new Error("served GLB is missing the live monitor DAW screen mesh");
   const productionZone = metadata.geometry?.productionZone;
-  if (metadata.phase !== 8 || metadata.productionPhase !== 8 ||
+  if (metadata.phase !== EXPECTED_MODEL_PHASE || metadata.productionPhase !== EXPECTED_MODEL_PHASE ||
       productionZone?.sourceStatus !== "source-validated" ||
       productionZone?.requiredElements !== 19 ||
       productionZone?.chairUpholsteryTrianglesSource < 14000 ||
@@ -192,9 +193,9 @@ while (Date.now() < deadline) {
 
     // Do not request the model URL while the public manifest still declares a
     // legacy phase. This avoids treating the old GLB as a valid candidate.
-    if (metadata.version !== 3 || metadata.phase !== 8 || metadata.productionPhase !== 8 ||
+    if (metadata.version !== 3 || metadata.phase !== EXPECTED_MODEL_PHASE || metadata.productionPhase !== EXPECTED_MODEL_PHASE ||
         metadata.surfacePhase !== 7 || metadata.status !== "blender-v3-published") {
-      lastError = "public metadata is not Phase 08 certified: version=" + metadata.version + ", phase=" + metadata.phase +
+      lastError = "public metadata is not certified for expected phase " + EXPECTED_MODEL_PHASE + ": version=" + metadata.version + ", phase=" + metadata.phase +
         ", productionPhase=" + metadata.productionPhase + ", surfacePhase=" + metadata.surfacePhase + ", status=" + metadata.status;
     } else {
       const result = await verifyPublishedAsset(metadata);
