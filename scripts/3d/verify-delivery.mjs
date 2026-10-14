@@ -58,6 +58,43 @@ export function glbContract(j, bible) {
   check("at least 10 materials", (j.materials ?? []).length >= 10, String((j.materials ?? []).length));
   check("extras zone and lmGroup", extras.some((extra) => extra.zone) && extras.some((extra) => extra.lmGroup));
   check("visual GLB excludes COL_* collision nodes", !nodes.some((node) => String(node.name ?? "").startsWith("COL_")));
+
+  const findPhaseNode = (elementId, namePattern) =>
+    nodes.find((node) => node.extras?.elementId === elementId && node.extras?.surfacePhase === 7) ??
+    nodes.find((node) => namePattern.test(String(node.name ?? "")) && node.extras?.surfacePhase === 7);
+  const floorNode = findPhaseNode("floor.wood", /floor_wood_hero/i);
+  const vinylNode = findPhaseNode("floor.vinyl_sweep", /vinyl_sweep_hero/i);
+  const bambooNode = findPhaseNode("arch.vault_ceiling", /vault_ceiling/i);
+  const paperWallNode = nodes.find((node) => /paper_cyclorama_wall/i.test(String(node.name ?? "")) && node.extras?.surfacePhase === 7);
+  const paperCurveNode = nodes.find((node) => /paper_cyclorama_curve/i.test(String(node.name ?? "")) && node.extras?.surfacePhase === 7);
+  check("Phase 07 floor is a 100+ board running-bond mesh",
+    Boolean(floorNode && Number.isInteger(floorNode.extras?.phase7BoardCount) && floorNode.extras.phase7BoardCount >= 100),
+    String(floorNode?.extras?.phase7BoardCount ?? "missing"));
+  const floorPrimitives = Number.isInteger(floorNode?.mesh) ? (j.meshes?.[floorNode.mesh]?.primitives ?? []) : [];
+  check("Phase 07 floor COLOR_0, UV0 and UV1 retained",
+    floorPrimitives.length > 0 && floorPrimitives.every((primitive) =>
+      primitive.attributes?.COLOR_0 !== undefined &&
+      primitive.attributes?.TEXCOORD_0 !== undefined &&
+      primitive.attributes?.TEXCOORD_1 !== undefined),
+    floorPrimitives.length + " floor primitives");
+  check("Phase 07 vinyl radius, thickness and edge lift",
+    Boolean(vinylNode) &&
+      Math.abs(Number(vinylNode?.extras?.phase7VinylRadiusM) - 2.3) <= 0.003 &&
+      Math.abs(Number(vinylNode?.extras?.phase7VinylThicknessM) - 0.0012) <= 0.0001 &&
+      Math.abs(Number(vinylNode?.extras?.phase7VinylEdgeLiftM) - 0.004) <= 0.0001,
+    vinylNode ? JSON.stringify({
+      radiusM: vinylNode.extras?.phase7VinylRadiusM,
+      thicknessM: vinylNode.extras?.phase7VinylThicknessM,
+      edgeLiftM: vinylNode.extras?.phase7VinylEdgeLiftM,
+    }) : "missing");
+  check("Phase 07 bamboo tile length is 1.2 m",
+    Boolean(bambooNode) && Math.abs(Number(bambooNode?.extras?.phase7BambooTileMeters) - 1.2) <= 0.0001,
+    String(bambooNode?.extras?.phase7BambooTileMeters ?? "missing"));
+  check("Phase 07 continuous black-paper cyclorama",
+    Boolean(paperWallNode && paperCurveNode) &&
+      Math.abs(Number(paperCurveNode?.extras?.phase7CycloramaRadiusM) - 0.35) <= 0.0001 &&
+      paperCurveNode?.extras?.phase7PaperContinuousToFloor === true,
+    paperWallNode && paperCurveNode ? "wall + curve connected contract" : "missing wall or curve");
   return out;
 }
 
@@ -127,6 +164,35 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
     add(".blend present", false, "missing");
   }
 
+  const surfaceSourceReportPath = join(dir, "art/out/phase07-surfaces.json");
+  const surfaceValidationReportPath = join(dir, "art/xoyens-studio.phase07.report.json");
+  if (existsSync(surfaceSourceReportPath)) {
+    try {
+      const phase7 = JSON.parse(readFileSync(surfaceSourceReportPath, "utf8"));
+      add("Phase 07 source surface report", phase7.phase === 7 && phase7.floor?.boardCount >= 100 &&
+        phase7.vinyl?.radiusM === 2.3 && phase7.bamboo?.tileMeters === 1.2 && phase7.cyclorama?.continuesToFloor === true,
+        JSON.stringify({ phase: phase7.phase, boardCount: phase7.floor?.boardCount, vinylRadiusM: phase7.vinyl?.radiusM }));
+    } catch (error) {
+      add("Phase 07 source surface report", false, error instanceof Error ? error.message : String(error));
+    }
+  } else {
+    add("Phase 07 source surface report", false, "missing art/out/phase07-surfaces.json");
+  }
+  if (existsSync(surfaceValidationReportPath)) {
+    try {
+      const phase7 = JSON.parse(readFileSync(surfaceValidationReportPath, "utf8"));
+      add("Phase 07 Blender acceptance report", phase7.phase === 7 && phase7.status === "source-validated" &&
+        phase7.floor?.boards >= 100 && phase7.floor?.verticalRaycastHits === phase7.floor?.boards &&
+        phase7.floor?.roughness?.roughnessRange >= 0.08,
+        JSON.stringify({ phase: phase7.phase, status: phase7.status, boards: phase7.floor?.boards,
+          raycastHits: phase7.floor?.verticalRaycastHits, roughnessRange: phase7.floor?.roughness?.roughnessRange }));
+    } catch (error) {
+      add("Phase 07 Blender acceptance report", false, error instanceof Error ? error.message : String(error));
+    }
+  } else {
+    add("Phase 07 Blender acceptance report", false, "missing art/xoyens-studio.phase07.report.json");
+  }
+
   const reportPath = join(dir, "art/xoyens-studio.report.json");
   let report = null;
   if (existsSync(reportPath)) {
@@ -175,9 +241,9 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
         add("frontend metadata SHA-256 matches model", metadata.geometry && metadata.geometry.sha256 === digest, digest);
         add("frontend metadata points at canonical URL", metadata.model === "/models/camping/xoyens-studio.glb");
         add(
-          "frontend metadata certifies Blender V3 phase 6",
-          metadata.version === 3 && metadata.phase === 6 && metadata.status === "blender-v3-published",
-          JSON.stringify({ version: metadata.version, phase: metadata.phase, status: metadata.status }),
+          "frontend metadata certifies Blender V3 Phase 07 surfaces",
+          metadata.version === 3 && metadata.phase === 7 && metadata.surfacePhase === 7 && metadata.status === "blender-v3-published",
+          JSON.stringify({ version: metadata.version, phase: metadata.phase, surfacePhase: metadata.surfacePhase, status: metadata.status }),
         );
         add("frontend metadata byte count matches model", metadata.geometry?.bytes === statSync(frontendGlb).size);
         add("frontend delivery SHA-256 matches model", metadata.frontendDelivery?.sha256 === digest, metadata.frontendDelivery?.sha256 ?? "missing");
