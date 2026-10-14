@@ -55,7 +55,16 @@ def validate_architectural_shell(bible):
             if count: nonmanifold.append(obj.name+"="+str(count))
         finally: bm.free()
     if not boundary: errors.append("enclosure boundary empty")
-    if nonmanifold: errors.append("non-manifold boundary meshes: "+", ".join(nonmanifold[:20]))
+    if nonmanifold:
+        errors.append("non-manifold boundary meshes: "+", ".join(nonmanifold[:20]))
+        for obj in boundary:
+            bm=bmesh.new()
+            try:
+                bm.from_mesh(obj.data)
+                count=sum(1 for edge in bm.edges if not edge.is_manifold)
+            finally: bm.free()
+            if count:
+                errors.append("boundary detail "+obj.name+": elementId="+str(obj.get("elementId"))+", buildModule="+str(obj.get("buildModule"))+", shellBoundary="+str(obj.get("shellBoundary"))+", nonManifoldEdges="+str(count))
     rays={"origins":3,"directionsPerOrigin":1000,"total":3000,"misses":0}
     if boundary:
         try:
@@ -70,7 +79,7 @@ def validate_architectural_shell(bible):
                     location,_normal,_face,_distance=tree.ray_cast(Vector(origin),direction,20.0)
                     if location is None: misses.append((oi,i))
             rays["misses"]=len(misses); rays["missSamples"]=misses[:10]
-            if misses: errors.append(str(len(misses))+"/3000 enclosure rays missed the shell")
+            if misses: errors.append(str(len(misses))+"/3000 enclosure rays missed the shell; sample (originIndex, directionIndex, rayDirection)="+repr([(oi, i, (round(math.cos(golden*i)*math.sqrt(max(0,1-(1-2*(i+0.5)/1000.0)**2)),5), round(1-2*(i+0.5)/1000.0,5), round(math.sin(golden*i)*math.sqrt(max(0,1-(1-2*(i+0.5)/1000.0)**2)),5))) for oi,i in misses[:12]]))
         except Exception as exc: errors.append("ray closure test failed: "+str(exc))
     if errors: raise RuntimeError("Phase 06 shell contract failed: "+"; ".join(errors[:30]))
     result={"archElementIds":len(expected),"primaryRibs":primary,"secondaryRibs":secondary,"acLouvers":vents,
