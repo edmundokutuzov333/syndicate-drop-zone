@@ -25,6 +25,11 @@ function gitCommit() {
 function countPrimitives(json) {
   return (json.meshes || []).reduce((sum, mesh) => sum + (mesh.primitives || []).length, 0);
 }
+const targetPhase = Number(process.env.CAMPING_PHASE || 8);
+if (!Number.isInteger(targetPhase) || targetPhase < 1 || targetPhase > 22) {
+  throw new Error("CAMPING_PHASE must be an integer between 1 and 22");
+}
+
 function countTriangles(json) {
   const accessors = json.accessors || [];
   let total = 0;
@@ -202,8 +207,8 @@ const materials = gltf.materials || [];
 const updated = {
   ...previous,
   version: 3,
-  phase: 8,
-  productionPhase: 8,
+  phase: targetPhase,
+  productionPhase: targetPhase,
   surfacePhase: 7,
   status: "blender-v3-published",
   model: "/models/camping/xoyens-studio.glb",
