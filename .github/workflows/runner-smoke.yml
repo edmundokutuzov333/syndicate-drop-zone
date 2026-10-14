@@ -1,6 +1,10 @@
 name: Runner smoke test
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/runner-smoke.yml"
 permissions:
   contents: read
 jobs:
