@@ -1,25 +1,36 @@
 {
-  "version": 1,
-  "phase": 2,
-  "status": "model-mounted",
+  "version": 3,
+  "phase": 6,
+  "status": "blender-v3-published",
   "model": "/models/camping/xoyens-studio.glb",
-  "sourceCommit": "dc5197505155b0c9e7b0d2a7b11d2900216db618",
-  "format": "glTF 2.0 binary",
+  "sourceCommit": "2f62ce6a66060a36cf1bc7949c5a11a3a037a349",
+  "format": "glTF 2.0 binary · KTX2/Basis + Meshopt",
   "units": "metres",
   "boundsMeters": {
-    "width": 14.2,
-    "length": 9.2,
-    "wallHeight": 3.2,
-    "ceilingApex": 4.35
+    "width": 7.6,
+    "length": 5.6,
+    "wallHeight": 2.85,
+    "ceilingApex": 3.45
   },
   "forwardAxis": "entry from +Z, room back -Z",
   "reference": "Xoyens studio panorama supplied 2026-10-09",
   "geometry": {
-    "objectGroups": 102,
-    "meshes": 102,
-    "primitives": 150,
-    "materials": 26,
-    "embeddedImages": 13,
+    "objectGroups": 142,
+    "meshes": 125,
+    "primitives": 125,
+    "triangles": 97988,
+    "materials": 40,
+    "embeddedImages": 60,
+    "bytes": 10871884,
+    "sha256": "a8eacd5a7bdca8fdadae1938c55df5a77a940be698291868af8afb1d42de0cc1",
+    "extensionsUsed": [
+      "EXT_meshopt_compression",
+      "KHR_materials_clearcoat",
+      "KHR_materials_emissive_strength",
+      "KHR_materials_sheen",
+      "KHR_mesh_quantization",
+      "KHR_texture_basisu"
+    ],
     "officialBrandImages": [
       "/__l5e/assets-v1/8d1c8b73-1330-4900-8723-85f98946699a/sindicato-logo.png",
       "/__l5e/assets-v1/1fa67bdd-f452-442e-a0d5-a9fb482388de/sindicato-selo.png"
@@ -39,8 +50,8 @@
       "source": "published artists"
     },
     {
-      "id": "studio.artist-photo.001..017",
-      "node": "studio.artist-slot-*",
+      "id": "studio.artist-slot-001..017",
+      "node": "studio.artist-slot-001..017",
       "action": "open-artist-dossier",
       "source": "published artists",
       "placeholder": true
@@ -78,615 +89,855 @@
   ],
   "objects": [
     {
-      "name": "studio.floor",
+      "name": "SDT_shell_wall_wall.back_a",
       "nodeIndex": 0,
       "meshIndex": 0,
       "interactionId": null
     },
     {
-      "name": "studio.left-wall",
+      "name": "node-1",
       "nodeIndex": 1,
       "meshIndex": 1,
       "interactionId": null
     },
     {
-      "name": "studio.right-wall",
-      "nodeIndex": 2,
+      "name": "node-6",
+      "nodeIndex": 6,
       "meshIndex": 2,
       "interactionId": null
     },
     {
-      "name": "studio.back-wall",
-      "nodeIndex": 3,
+      "name": "node-9",
+      "nodeIndex": 9,
       "meshIndex": 3,
       "interactionId": null
     },
     {
-      "name": "studio.baseboards",
-      "nodeIndex": 4,
+      "name": "node-10",
+      "nodeIndex": 10,
       "meshIndex": 4,
       "interactionId": null
     },
     {
-      "name": "studio.vaulted-timber-ceiling",
-      "nodeIndex": 5,
+      "name": "SDT_shell_vault_ceiling",
+      "nodeIndex": 11,
       "meshIndex": 5,
       "interactionId": null
     },
     {
-      "name": "studio.ceiling-arches",
-      "nodeIndex": 6,
+      "name": "SDT_shell_vault_rib_primary_01",
+      "nodeIndex": 12,
       "meshIndex": 6,
       "interactionId": null
     },
     {
-      "name": "studio.ceiling-cross-beams",
-      "nodeIndex": 7,
+      "name": "SDT_shell_vault_rib_primary_02",
+      "nodeIndex": 13,
       "meshIndex": 7,
       "interactionId": null
     },
     {
-      "name": "studio.desk-wall-panel",
-      "nodeIndex": 8,
+      "name": "SDT_shell_vault_rib_secondary_01",
+      "nodeIndex": 14,
       "meshIndex": 8,
       "interactionId": null
     },
     {
-      "name": "studio.desk-wall-slats",
-      "nodeIndex": 9,
+      "name": "SDT_shell_vault_rib_secondary_02",
+      "nodeIndex": 15,
       "meshIndex": 9,
       "interactionId": null
     },
     {
-      "name": "studio.acoustic-panel",
-      "nodeIndex": 10,
+      "name": "SDT_shell_vault_rib_secondary_03",
+      "nodeIndex": 16,
       "meshIndex": 10,
       "interactionId": null
     },
     {
-      "name": "studio.parquet",
-      "nodeIndex": 11,
+      "name": "SDT_shell_vault_rib_secondary_04",
+      "nodeIndex": 17,
       "meshIndex": 11,
       "interactionId": null
     },
     {
-      "name": "studio.inner-door",
-      "nodeIndex": 12,
+      "name": "SDT_shell_vault_rib_secondary_05",
+      "nodeIndex": 18,
       "meshIndex": 12,
-      "interactionId": "studio.inner-door"
+      "interactionId": null
     },
     {
-      "name": "studio.door-panel",
-      "nodeIndex": 13,
+      "name": "SDT_shell_vault_rib_secondary_06",
+      "nodeIndex": 19,
       "meshIndex": 13,
       "interactionId": null
     },
     {
-      "name": "studio.door-handle",
-      "nodeIndex": 14,
+      "name": "SDT_shell_vault_rib_secondary_07",
+      "nodeIndex": 20,
       "meshIndex": 14,
       "interactionId": null
     },
     {
-      "name": "studio.air-conditioner",
-      "nodeIndex": 15,
+      "name": "SDT_shell_vault_rib_secondary_08",
+      "nodeIndex": 21,
       "meshIndex": 15,
       "interactionId": null
     },
     {
-      "name": "studio.ac-grille",
-      "nodeIndex": 16,
+      "name": "SDT_shell_vault_rib_secondary_09",
+      "nodeIndex": 22,
       "meshIndex": 16,
       "interactionId": null
     },
     {
-      "name": "studio.production-desk",
-      "nodeIndex": 17,
+      "name": "SDT_shell_vault_rib_secondary_10",
+      "nodeIndex": 23,
       "meshIndex": 17,
-      "interactionId": "studio.production-desk"
+      "interactionId": null
     },
     {
-      "name": "studio.desk-legs",
-      "nodeIndex": 18,
+      "name": "SDT_shell_vault_rib_secondary_11",
+      "nodeIndex": 24,
       "meshIndex": 18,
       "interactionId": null
     },
     {
-      "name": "studio.keyboard-tray",
-      "nodeIndex": 19,
+      "name": "SDT_shell_vault_rib_secondary_12",
+      "nodeIndex": 25,
       "meshIndex": 19,
       "interactionId": null
     },
     {
-      "name": "studio.midi-keyboard",
-      "nodeIndex": 20,
+      "name": "SDT_shell_vault_rib_secondary_13",
+      "nodeIndex": 26,
       "meshIndex": 20,
       "interactionId": null
     },
     {
-      "name": "studio.midi-keys",
-      "nodeIndex": 21,
+      "name": "SDT_shell_vault_rib_secondary_14",
+      "nodeIndex": 27,
       "meshIndex": 21,
       "interactionId": null
     },
     {
-      "name": "studio.midi-black-keys",
-      "nodeIndex": 22,
-      "meshIndex": 22,
+      "name": "node-28",
+      "nodeIndex": 28,
+      "meshIndex": 123,
       "interactionId": null
     },
     {
-      "name": "studio.imac-foot",
-      "nodeIndex": 23,
+      "name": "SDT_shell_door_main",
+      "nodeIndex": 32,
+      "meshIndex": 22,
+      "interactionId": "studio.inner-door"
+    },
+    {
+      "name": "SDT_shell_door_main_stile_-1",
+      "nodeIndex": 33,
       "meshIndex": 23,
       "interactionId": null
     },
     {
-      "name": "studio.imac-stand",
-      "nodeIndex": 24,
+      "name": "SDT_shell_door_main_stile_1",
+      "nodeIndex": 34,
       "meshIndex": 24,
       "interactionId": null
     },
     {
-      "name": "studio.imac-body",
-      "nodeIndex": 25,
+      "name": "SDT_shell_door_main_rail_bottom",
+      "nodeIndex": 35,
       "meshIndex": 25,
       "interactionId": null
     },
     {
-      "name": "studio.imac-bezel",
-      "nodeIndex": 26,
+      "name": "SDT_shell_door_main_rail_top",
+      "nodeIndex": 36,
       "meshIndex": 26,
       "interactionId": null
     },
     {
-      "name": "studio.imac-screen",
-      "nodeIndex": 27,
+      "name": "node-37",
+      "nodeIndex": 37,
       "meshIndex": 27,
       "interactionId": null
     },
     {
-      "name": "studio.imac-daw-track",
-      "nodeIndex": 28,
+      "name": "node-41",
+      "nodeIndex": 41,
       "meshIndex": 28,
       "interactionId": null
     },
     {
-      "name": "studio.monitor-speakers",
-      "nodeIndex": 29,
+      "name": "SDT_shell_door_main_handle_plate",
+      "nodeIndex": 42,
       "meshIndex": 29,
       "interactionId": null
     },
     {
-      "name": "studio.monitor-cones",
-      "nodeIndex": 30,
+      "name": "SDT_shell_door_main_lever",
+      "nodeIndex": 43,
       "meshIndex": 30,
       "interactionId": null
     },
     {
-      "name": "studio.monitor-tweeters",
-      "nodeIndex": 31,
+      "name": "SDT_shell_door_main_lock_cylinder",
+      "nodeIndex": 44,
       "meshIndex": 31,
       "interactionId": null
     },
     {
-      "name": "studio.subwoofer",
-      "nodeIndex": 32,
+      "name": "SDT_shell_door_main_hinge_1",
+      "nodeIndex": 45,
       "meshIndex": 32,
       "interactionId": null
     },
     {
-      "name": "studio.chair-pedestal",
-      "nodeIndex": 33,
+      "name": "SDT_shell_door_main_hinge_2",
+      "nodeIndex": 46,
       "meshIndex": 33,
       "interactionId": null
     },
     {
-      "name": "studio.chair-seat",
-      "nodeIndex": 34,
+      "name": "SDT_shell_door_main_hinge_3",
+      "nodeIndex": 47,
       "meshIndex": 34,
       "interactionId": null
     },
     {
-      "name": "studio.chair-back",
-      "nodeIndex": 35,
+      "name": "SDT_shell_door_left",
+      "nodeIndex": 48,
       "meshIndex": 35,
       "interactionId": null
     },
     {
-      "name": "studio.chair-arms",
-      "nodeIndex": 36,
+      "name": "SDT_shell_door_left_stile_-1",
+      "nodeIndex": 49,
       "meshIndex": 36,
       "interactionId": null
     },
     {
-      "name": "studio.chair-arm-pads",
-      "nodeIndex": 37,
+      "name": "SDT_shell_door_left_stile_1",
+      "nodeIndex": 50,
       "meshIndex": 37,
       "interactionId": null
     },
     {
-      "name": "studio.photo-backdrop-frame",
-      "nodeIndex": 38,
+      "name": "SDT_shell_door_left_rail_bottom",
+      "nodeIndex": 51,
       "meshIndex": 38,
       "interactionId": null
     },
     {
-      "name": "studio.photo-backdrop",
-      "nodeIndex": 39,
-      "meshIndex": 39,
-      "interactionId": "studio.photo-backdrop"
+      "name": "SDT_shell_door_left_rail_top",
+      "nodeIndex": 52,
+      "meshIndex": 38,
+      "interactionId": null
     },
     {
-      "name": "studio.photo-floor",
-      "nodeIndex": 40,
+      "name": "node-53",
+      "nodeIndex": 53,
+      "meshIndex": 39,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_shell_door_left_handle_plate",
+      "nodeIndex": 58,
       "meshIndex": 40,
       "interactionId": null
     },
     {
-      "name": "studio.photo-backdrop-seal",
-      "nodeIndex": 41,
+      "name": "SDT_shell_door_left_lever",
+      "nodeIndex": 59,
       "meshIndex": 41,
       "interactionId": null
     },
     {
-      "name": "studio.softbox-stands",
-      "nodeIndex": 42,
+      "name": "SDT_shell_door_left_lock_cylinder",
+      "nodeIndex": 60,
       "meshIndex": 42,
       "interactionId": null
     },
     {
-      "name": "studio.tripod-legs",
-      "nodeIndex": 43,
+      "name": "SDT_shell_door_left_hinge_1",
+      "nodeIndex": 61,
       "meshIndex": 43,
       "interactionId": null
     },
     {
-      "name": "studio.softboxes",
-      "nodeIndex": 44,
+      "name": "SDT_shell_door_left_hinge_2",
+      "nodeIndex": 62,
       "meshIndex": 44,
       "interactionId": null
     },
     {
-      "name": "studio.softbox-diffusers",
-      "nodeIndex": 45,
+      "name": "SDT_shell_door_left_hinge_3",
+      "nodeIndex": 63,
       "meshIndex": 45,
       "interactionId": null
     },
     {
-      "name": "studio.rack-uprights",
-      "nodeIndex": 46,
+      "name": "SDT_shell_ac_split",
+      "nodeIndex": 64,
       "meshIndex": 46,
       "interactionId": null
     },
     {
-      "name": "studio.rack-feet",
-      "nodeIndex": 47,
+      "name": "node-74",
+      "nodeIndex": 74,
       "meshIndex": 47,
       "interactionId": null
     },
     {
-      "name": "studio.rack-rail",
-      "nodeIndex": 48,
+      "name": "node-75",
+      "nodeIndex": 75,
       "meshIndex": 48,
       "interactionId": null
     },
     {
-      "name": "studio.hangers",
-      "nodeIndex": 49,
+      "name": "SDT_shell_conduit_pvc",
+      "nodeIndex": 76,
       "meshIndex": 49,
       "interactionId": null
     },
     {
-      "name": "studio.hanger-hooks",
-      "nodeIndex": 50,
+      "name": "SDT_production_outlet_pair",
+      "nodeIndex": 82,
       "meshIndex": 50,
       "interactionId": null
     },
     {
-      "name": "studio.garments",
-      "nodeIndex": 51,
+      "name": "node-84",
+      "nodeIndex": 84,
       "meshIndex": 51,
       "interactionId": null
     },
     {
-      "name": "studio.clothing-rack",
-      "nodeIndex": 52,
+      "name": "SDT_shell_switch_plate",
+      "nodeIndex": 91,
       "meshIndex": 52,
-      "interactionId": "studio.merch-rack"
+      "interactionId": null
     },
     {
-      "name": "studio.sofa-base",
-      "nodeIndex": 53,
+      "name": "node-108",
+      "nodeIndex": 108,
       "meshIndex": 53,
       "interactionId": null
     },
     {
-      "name": "studio.sofa-seat",
-      "nodeIndex": 54,
+      "name": "SDT_shell_soffit_box",
+      "nodeIndex": 109,
       "meshIndex": 54,
       "interactionId": null
     },
     {
-      "name": "studio.sofa-back",
-      "nodeIndex": 55,
+      "name": "SDT_shell_wood",
+      "nodeIndex": 112,
       "meshIndex": 55,
       "interactionId": null
     },
     {
-      "name": "studio.sofa-arm",
-      "nodeIndex": 56,
+      "name": "SDT_photo_vinyl_sweep",
+      "nodeIndex": 113,
       "meshIndex": 56,
       "interactionId": null
     },
     {
-      "name": "studio.mural-base",
-      "nodeIndex": 57,
+      "name": "node-114",
+      "nodeIndex": 114,
       "meshIndex": 57,
       "interactionId": null
     },
     {
-      "name": "studio.mural-colours",
-      "nodeIndex": 58,
+      "name": "SDT_production_desk_l",
+      "nodeIndex": 115,
       "meshIndex": 58,
-      "interactionId": null
+      "interactionId": "studio.production-desk"
     },
     {
-      "name": "studio.mural-eyes",
-      "nodeIndex": 59,
+      "name": "SDT_production_monitor_daw",
+      "nodeIndex": 121,
       "meshIndex": 59,
-      "interactionId": null
+      "interactionId": "studio.imac"
     },
     {
-      "name": "studio.mural-pupils",
-      "nodeIndex": 60,
+      "name": "SDT_production_monitor_daw_screen",
+      "nodeIndex": 122,
       "meshIndex": 60,
       "interactionId": null
     },
     {
-      "name": "studio.guitar-body",
-      "nodeIndex": 61,
+      "name": "SDT_production_monitors_pair",
+      "nodeIndex": 125,
       "meshIndex": 61,
-      "interactionId": null
+      "interactionId": "studio.audio-system"
     },
     {
-      "name": "studio.guitar-neck",
-      "nodeIndex": 62,
+      "name": "node-126",
+      "nodeIndex": 126,
       "meshIndex": 62,
       "interactionId": null
     },
     {
-      "name": "studio.guitar-fretboard",
-      "nodeIndex": 63,
+      "name": "node-127",
+      "nodeIndex": 127,
       "meshIndex": 63,
       "interactionId": null
     },
     {
-      "name": "studio.guitar-frets",
-      "nodeIndex": 64,
+      "name": "node-128",
+      "nodeIndex": 128,
       "meshIndex": 64,
       "interactionId": null
     },
     {
-      "name": "studio.guitar-head",
-      "nodeIndex": 65,
+      "name": "node-133",
+      "nodeIndex": 133,
       "meshIndex": 65,
       "interactionId": null
     },
     {
-      "name": "studio.guitar-stand",
-      "nodeIndex": 66,
+      "name": "node-145",
+      "nodeIndex": 145,
       "meshIndex": 66,
       "interactionId": null
     },
     {
-      "name": "studio.plant-pot",
-      "nodeIndex": 67,
+      "name": "node-158",
+      "nodeIndex": 158,
       "meshIndex": 67,
       "interactionId": null
     },
     {
-      "name": "studio.plant-stem",
-      "nodeIndex": 68,
+      "name": "node-162",
+      "nodeIndex": 162,
       "meshIndex": 68,
       "interactionId": null
     },
     {
-      "name": "studio.plant-branches",
-      "nodeIndex": 69,
+      "name": "node-193",
+      "nodeIndex": 193,
       "meshIndex": 69,
       "interactionId": null
     },
     {
-      "name": "studio.plant-leaves",
-      "nodeIndex": 70,
+      "name": "SDT_photo_roller_backdrop",
+      "nodeIndex": 218,
       "meshIndex": 70,
-      "interactionId": null
+      "interactionId": "studio.photo-backdrop"
     },
     {
-      "name": "studio.archive-posters",
-      "nodeIndex": 71,
+      "name": "node-219",
+      "nodeIndex": 219,
       "meshIndex": 71,
       "interactionId": null
     },
     {
-      "name": "studio.archive-poster-images",
-      "nodeIndex": 72,
+      "name": "SDT_photo_backdrop_seal",
+      "nodeIndex": 220,
       "meshIndex": 72,
       "interactionId": null
     },
     {
-      "name": "studio.archive-tape",
-      "nodeIndex": 73,
+      "name": "SDT_photo_rack",
+      "nodeIndex": 221,
       "meshIndex": 73,
+      "interactionId": "studio.merch-rack"
+    },
+    {
+      "name": "node-222",
+      "nodeIndex": 222,
+      "meshIndex": 74,
       "interactionId": null
     },
     {
-      "name": "studio.artists-wall",
-      "nodeIndex": 74,
-      "meshIndex": 74,
-      "interactionId": "studio.artists-wall"
-    },
-    {
-      "name": "studio.artist-slot-001",
-      "nodeIndex": 75,
+      "name": "SDT_photo_garments",
+      "nodeIndex": 226,
       "meshIndex": 75,
-      "interactionId": "studio.artist-photo.001"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-002",
-      "nodeIndex": 76,
+      "name": "SDT_photo_garments_garment_1",
+      "nodeIndex": 227,
       "meshIndex": 76,
-      "interactionId": "studio.artist-photo.002"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-003",
-      "nodeIndex": 77,
+      "name": "SDT_photo_garments_hanger_1",
+      "nodeIndex": 228,
       "meshIndex": 77,
-      "interactionId": "studio.artist-photo.003"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-004",
-      "nodeIndex": 78,
+      "name": "SDT_photo_garments_garment_2",
+      "nodeIndex": 229,
       "meshIndex": 78,
-      "interactionId": "studio.artist-photo.004"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-005",
-      "nodeIndex": 79,
+      "name": "SDT_photo_garments_hanger_2",
+      "nodeIndex": 230,
       "meshIndex": 79,
-      "interactionId": "studio.artist-photo.005"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-006",
-      "nodeIndex": 80,
+      "name": "SDT_photo_garments_garment_3",
+      "nodeIndex": 231,
       "meshIndex": 80,
-      "interactionId": "studio.artist-photo.006"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-007",
-      "nodeIndex": 81,
+      "name": "SDT_photo_garments_hanger_3",
+      "nodeIndex": 232,
       "meshIndex": 81,
-      "interactionId": "studio.artist-photo.007"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-008",
-      "nodeIndex": 82,
+      "name": "SDT_photo_garments_garment_4",
+      "nodeIndex": 233,
       "meshIndex": 82,
-      "interactionId": "studio.artist-photo.008"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-009",
-      "nodeIndex": 83,
+      "name": "SDT_photo_garments_hanger_4",
+      "nodeIndex": 234,
       "meshIndex": 83,
-      "interactionId": "studio.artist-photo.009"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-010",
-      "nodeIndex": 84,
+      "name": "SDT_photo_garments_garment_5",
+      "nodeIndex": 235,
       "meshIndex": 84,
-      "interactionId": "studio.artist-photo.010"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-011",
-      "nodeIndex": 85,
+      "name": "SDT_photo_garments_hanger_5",
+      "nodeIndex": 236,
       "meshIndex": 85,
-      "interactionId": "studio.artist-photo.011"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-012",
-      "nodeIndex": 86,
+      "name": "node-237",
+      "nodeIndex": 237,
       "meshIndex": 86,
-      "interactionId": "studio.artist-photo.012"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-013",
-      "nodeIndex": 87,
+      "name": "node-248",
+      "nodeIndex": 248,
       "meshIndex": 87,
-      "interactionId": "studio.artist-photo.013"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-014",
-      "nodeIndex": 88,
+      "name": "node-249",
+      "nodeIndex": 249,
       "meshIndex": 88,
-      "interactionId": "studio.artist-photo.014"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-015",
-      "nodeIndex": 89,
+      "name": "node-251",
+      "nodeIndex": 251,
       "meshIndex": 89,
-      "interactionId": "studio.artist-photo.015"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-016",
-      "nodeIndex": 90,
+      "name": "node-257",
+      "nodeIndex": 257,
       "meshIndex": 90,
-      "interactionId": "studio.artist-photo.016"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-017",
-      "nodeIndex": 91,
+      "name": "node-258",
+      "nodeIndex": 258,
       "meshIndex": 91,
-      "interactionId": "studio.artist-photo.017"
+      "interactionId": null
     },
     {
-      "name": "studio.wall-posters",
-      "nodeIndex": 92,
+      "name": "node-259",
+      "nodeIndex": 259,
       "meshIndex": 92,
       "interactionId": null
     },
     {
-      "name": "studio.poster-art",
-      "nodeIndex": 93,
+      "name": "node-260",
+      "nodeIndex": 260,
+      "meshIndex": 124,
+      "interactionId": null
+    },
+    {
+      "name": "node-281",
+      "nodeIndex": 281,
       "meshIndex": 93,
       "interactionId": null
     },
     {
-      "name": "studio.audio-system",
-      "nodeIndex": 94,
+      "name": "node-282",
+      "nodeIndex": 282,
       "meshIndex": 94,
-      "interactionId": "studio.audio-system"
+      "interactionId": null
     },
     {
-      "name": "studio.audio-grille",
-      "nodeIndex": 95,
+      "name": "node-284",
+      "nodeIndex": 284,
       "meshIndex": 95,
       "interactionId": null
     },
     {
-      "name": "studio.audio-driver",
-      "nodeIndex": 96,
+      "name": "node-285",
+      "nodeIndex": 285,
       "meshIndex": 96,
       "interactionId": null
     },
     {
-      "name": "studio.ceiling-lamp-cords",
-      "nodeIndex": 97,
+      "name": "node-301",
+      "nodeIndex": 301,
       "meshIndex": 97,
       "interactionId": null
     },
     {
-      "name": "studio.ceiling-lamp-cups",
-      "nodeIndex": 98,
+      "name": "node-303",
+      "nodeIndex": 303,
       "meshIndex": 98,
       "interactionId": null
     },
     {
-      "name": "studio.warm-bulbs",
-      "nodeIndex": 99,
+      "name": "node-312",
+      "nodeIndex": 312,
       "meshIndex": 99,
       "interactionId": null
     },
     {
-      "name": "studio.red-led",
-      "nodeIndex": 100,
+      "name": "node-321",
+      "nodeIndex": 321,
       "meshIndex": 100,
       "interactionId": null
     },
     {
-      "name": "studio.visible-cables",
-      "nodeIndex": 101,
+      "name": "SDT_right_wall",
+      "nodeIndex": 322,
       "meshIndex": 101,
+      "interactionId": "studio.artists-wall"
+    },
+    {
+      "name": "SDT_right_artist_slot_001",
+      "nodeIndex": 323,
+      "meshIndex": 102,
+      "interactionId": "studio.artist-slot-001"
+    },
+    {
+      "name": "SDT_right_artist_slot_001_blank",
+      "nodeIndex": 324,
+      "meshIndex": 103,
+      "interactionId": null
+    },
+    {
+      "name": "node-325",
+      "nodeIndex": 325,
+      "meshIndex": 104,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_002",
+      "nodeIndex": 326,
+      "meshIndex": 102,
+      "interactionId": "studio.artist-slot-002"
+    },
+    {
+      "name": "SDT_right_artist_slot_002_blank",
+      "nodeIndex": 327,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_003",
+      "nodeIndex": 329,
+      "meshIndex": 106,
+      "interactionId": "studio.artist-slot-003"
+    },
+    {
+      "name": "SDT_right_artist_slot_003_blank",
+      "nodeIndex": 330,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_004",
+      "nodeIndex": 332,
+      "meshIndex": 107,
+      "interactionId": "studio.artist-slot-004"
+    },
+    {
+      "name": "SDT_right_artist_slot_004_blank",
+      "nodeIndex": 333,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_005",
+      "nodeIndex": 335,
+      "meshIndex": 108,
+      "interactionId": "studio.artist-slot-005"
+    },
+    {
+      "name": "SDT_right_artist_slot_005_blank",
+      "nodeIndex": 336,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_006",
+      "nodeIndex": 338,
+      "meshIndex": 109,
+      "interactionId": "studio.artist-slot-006"
+    },
+    {
+      "name": "SDT_right_artist_slot_006_blank",
+      "nodeIndex": 339,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_007",
+      "nodeIndex": 341,
+      "meshIndex": 110,
+      "interactionId": "studio.artist-slot-007"
+    },
+    {
+      "name": "SDT_right_artist_slot_007_blank",
+      "nodeIndex": 342,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_008",
+      "nodeIndex": 344,
+      "meshIndex": 111,
+      "interactionId": "studio.artist-slot-008"
+    },
+    {
+      "name": "SDT_right_artist_slot_008_blank",
+      "nodeIndex": 345,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_009",
+      "nodeIndex": 347,
+      "meshIndex": 112,
+      "interactionId": "studio.artist-slot-009"
+    },
+    {
+      "name": "SDT_right_artist_slot_009_blank",
+      "nodeIndex": 348,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_010",
+      "nodeIndex": 350,
+      "meshIndex": 113,
+      "interactionId": "studio.artist-slot-010"
+    },
+    {
+      "name": "SDT_right_artist_slot_010_blank",
+      "nodeIndex": 351,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_011",
+      "nodeIndex": 353,
+      "meshIndex": 114,
+      "interactionId": "studio.artist-slot-011"
+    },
+    {
+      "name": "SDT_right_artist_slot_011_blank",
+      "nodeIndex": 354,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_012",
+      "nodeIndex": 356,
+      "meshIndex": 115,
+      "interactionId": "studio.artist-slot-012"
+    },
+    {
+      "name": "SDT_right_artist_slot_012_blank",
+      "nodeIndex": 357,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_013",
+      "nodeIndex": 359,
+      "meshIndex": 116,
+      "interactionId": "studio.artist-slot-013"
+    },
+    {
+      "name": "SDT_right_artist_slot_013_blank",
+      "nodeIndex": 360,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_014",
+      "nodeIndex": 362,
+      "meshIndex": 117,
+      "interactionId": "studio.artist-slot-014"
+    },
+    {
+      "name": "SDT_right_artist_slot_014_blank",
+      "nodeIndex": 363,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_015",
+      "nodeIndex": 365,
+      "meshIndex": 118,
+      "interactionId": "studio.artist-slot-015"
+    },
+    {
+      "name": "SDT_right_artist_slot_015_blank",
+      "nodeIndex": 366,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_016",
+      "nodeIndex": 368,
+      "meshIndex": 119,
+      "interactionId": "studio.artist-slot-016"
+    },
+    {
+      "name": "SDT_right_artist_slot_016_blank",
+      "nodeIndex": 369,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_artist_slot_017",
+      "nodeIndex": 371,
+      "meshIndex": 120,
+      "interactionId": "studio.artist-slot-017"
+    },
+    {
+      "name": "SDT_right_artist_slot_017_blank",
+      "nodeIndex": 372,
+      "meshIndex": 105,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_shell_wood.001",
+      "nodeIndex": 374,
+      "meshIndex": 121,
+      "interactionId": null
+    },
+    {
+      "name": "node-386",
+      "nodeIndex": 386,
+      "meshIndex": 122,
       "interactionId": null
     }
   ],
@@ -911,5 +1162,14 @@
       "status": "implemented-in-main; latest Vercel deployment and browser pixel comparison not yet confirmed"
     }
   },
-  "auditUpdatedAt": "2026-10-12"
+  "auditUpdatedAt": "2026-10-12",
+  "frontendDelivery": {
+    "generatedAt": "2026-10-14T13:50:18.130Z",
+    "sourceGlb": "art/out/optimized/xoyens-studio.high.glb",
+    "canonicalUrl": "/models/camping/xoyens-studio.glb",
+    "hashAlgorithm": "SHA-256",
+    "sha256": "a8eacd5a7bdca8fdadae1938c55df5a77a940be698291868af8afb1d42de0cc1",
+    "bytes": 10871884,
+    "browserLoader": "GLTFLoader + KTX2Loader + MeshoptDecoder"
+  }
 }
