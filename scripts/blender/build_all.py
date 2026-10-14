@@ -11,6 +11,8 @@ import sys
 import time
 from pathlib import Path
 
+import bpy
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parents[1]
 sys.path.insert(0, str(SCRIPT_DIR))
