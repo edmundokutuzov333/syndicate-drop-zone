@@ -9,6 +9,7 @@ on:
       - "scripts/validate-pbr-materials.mjs"
       - "scripts/3d/**"
       - "scripts/build-3d.mjs"
+      - "scripts/check-3d-budgets.mjs"
       - "src/features/camping/scene/CampingStudioEngine.ts"
       - "src/features/camping/scene/camping-model-compatibility.ts"
       - "vite.config.ts"
