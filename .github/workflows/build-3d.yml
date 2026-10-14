@@ -14,7 +14,7 @@ on:
       - "docker/blender-ci/Dockerfile"
       - ".github/workflows/build-3d.yml"
 concurrency:
-  group: build-3d-\${{ github.ref }}
+  group: build-3d-${{ github.ref }}
   cancel-in-progress: false
 permissions:
   contents: read
@@ -68,7 +68,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: fase04-entrega-\${{ github.sha }}
+          name: fase04-entrega-${{ github.sha }}
           retention-days: 30
           if-no-files-found: warn
           path: |
@@ -91,7 +91,7 @@ jobs:
       - name: Checkout exact certified source commit without pulling old LFS binary
         uses: actions/checkout@v7
         with:
-          ref: \${{ github.sha }}
+          ref: ${{ github.sha }}
           lfs: false
           fetch-depth: 0
       - name: Setup Node 24 for independent verification
@@ -108,7 +108,7 @@ jobs:
       - name: Download artifact from the successful build job
         uses: actions/download-artifact@v7
         with:
-          name: fase04-entrega-\${{ github.sha }}
+          name: fase04-entrega-${{ github.sha }}
           path: /tmp/fase04-delivery
       - name: Reconstruct delivery, certify again and publish native file through LFS
         shell: bash

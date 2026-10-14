@@ -106,7 +106,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: camping-visual-evidence-\${{ github.sha }}
+          name: camping-visual-evidence-${{ github.sha }}
           path: |
             test-results/camping-reference-full-ui.png
             test-results/camping-reference-canvas.png
