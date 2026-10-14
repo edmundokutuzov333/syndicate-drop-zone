@@ -44,49 +44,6 @@ def _find_material_nodes(mat):
     return mat.node_tree, bsdf
 
 
-def _wire_floor_vertex_tint():
-    """Multiply the existing PBR colour texture by COLOR_0 without replacing BC/ORM maps."""
-    mat = bpy.data.materials.get("floor_walnut_semi_gloss")
-    tree, bsdf = _find_material_nodes(mat)
-    base_input = bsdf.inputs.get("Base Color")
-    existing = next((link for link in tree.links if link.to_socket == base_input), None)
-    original_socket = None
-    original_value = tuple(base_input.default_value)
-    old_mix = tree.nodes.get("SDT_FloorTintMultiply")
-    if old_mix:
-        old_source = next((link.from_socket for link in tree.links if link.to_socket == old_mix.inputs[1]), None)
-        original_socket = old_source
-    elif existing:
-        original_socket = existing.from_socket
-
-    for name in ("SDT_FloorTintMultiply", "SDT_FloorVertexColor"):
-        node = tree.nodes.get(name)
-        if node:
-            tree.nodes.remove(node)
-
-    # Capture the pre-existing source again in case a stale node was removed.
-    existing = next((link for link in tree.links if link.to_socket == base_input), None)
-    if existing:
-        original_socket = existing.from_socket
-        tree.links.remove(existing)
-
-    tint = tree.nodes.new("ShaderNodeVertexColor")
-    tint.name = "SDT_FloorVertexColor"
-    tint.label = "Per-plank natural tone variation"
-    tint.layer_name = "Color"
-    multiply = tree.nodes.new("ShaderNodeMixRGB")
-    multiply.name = "SDT_FloorTintMultiply"
-    multiply.label = "PBR base colour × plank tint"
-    multiply.blend_type = "MULTIPLY"
-    multiply.inputs[0].default_value = 1.0
-    if original_socket:
-        tree.links.new(original_socket, multiply.inputs[1])
-    else:
-        multiply.inputs[1].default_value = original_value
-    tree.links.new(tint.outputs["Color"], multiply.inputs[2])
-    tree.links.new(multiply.outputs["Color"], base_input)
-
-
 def _partition_row(width, rng, previous_joints, x_min):
     """Deterministic random running-bond row with 0.9–2.2 m pieces and ≥0.3 m joint offset."""
     for _ in range(6000):
@@ -205,7 +162,6 @@ def _make_plank_mesh(width, depth, floor_y, floor_element):
     bpy.context.scene.collection.objects.link(obj)
     finish_mesh(obj, ["floor_walnut_semi_gloss"], element=floor_element,
                 collider="none", zone="shell", lm_group="shell", bevel=0)
-    _wire_floor_vertex_tint()
 
     # Each board has independent local UVs; U follows board length (X), V follows width (Z).
     uv = _create_or_get_layer(mesh, "UVMap")
@@ -434,6 +390,8 @@ def _build_cyclorama(bible, ctx, element):
                 co = mesh.vertices[mesh.loops[loop_index].vertex_index].co
                 if label == "curve":
                     angle = math.atan2(co.y - (curve_floor_y + CYCLO_R_M), co.x - (wall_x + CYCLO_R_M))
+                    if angle < 0:
+                        angle += math.tau
                     arc_length = max(0.0, min(CYCLO_R_M * math.pi / 2.0,
                         (angle - math.pi) * CYCLO_R_M))
                     uv.data[loop_index].uv = (arc_length / BAMBOO_TILE_M, (co.z - z_min) / BAMBOO_TILE_M)
