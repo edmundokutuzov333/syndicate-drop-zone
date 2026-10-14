@@ -208,7 +208,7 @@ async function edgeMetric(buffer){
 export function outputRelativePath(path){
   // Files are generated in a staging directory and atomically moved to OUT_DIR.
   // The manifest must describe the final committed location, never the temporary path.
-  return join(OUT_DIR, basename(path)).replace(/\\\\/g,"/");
+  return join(OUT_DIR, basename(path)).split(String.fromCharCode(92)).join("/");
 }
 async function writeOutput(buffer,path){
   await writeFile(path,buffer);
