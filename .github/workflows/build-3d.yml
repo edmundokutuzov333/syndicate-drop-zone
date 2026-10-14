@@ -17,7 +17,8 @@ on:
       - ".github/workflows/build-3d.yml"
 concurrency:
   group: build-3d-${{ github.ref }}
-  cancel-in-progress: false
+  # Only certify the newest main revision; stale builds must not hold the queue.
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
