@@ -16,6 +16,7 @@ export function CodeGate({ onOpen }: { onOpen: () => void }) {
   const [value,setValue]=useState("");
   const [error,setError]=useState(false);
   const [accepted,setAccepted]=useState(false);
+  const [hydrated,setHydrated]=useState(false);
   const press=(key:string)=>{
     if(accepted)return;
     click(); buzz(12); setError(false);
@@ -37,10 +38,11 @@ export function CodeGate({ onOpen }: { onOpen: () => void }) {
       else if(event.key==="Backspace"||event.key==="Escape")press("C");
     };
     window.addEventListener("keydown",handle);
+    setHydrated(true);
     return()=>window.removeEventListener("keydown",handle);
   },[accepted,value]);
   return (
-    <div data-site-gate="locked" className="grain scanlines fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-background p-4">
+    <div data-site-gate="locked" data-gate-hydrated={hydrated ? "true" : "false"} className="grain scanlines fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-background p-4">
       <img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute -left-24 -top-24 w-[28rem] rotate-12 opacity-10"/>
       <img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute -bottom-32 -right-24 w-[34rem] -rotate-6 opacity-[0.07]"/>
       <div className={"relative w-full max-w-sm border-2 border-ash bg-card p-5 shadow-[inset_0_2px_0_oklch(1_0_0/0.06),0_30px_60px_oklch(0_0_0/0.7)] transition-transform "+(error?"gate-error":"")}>
