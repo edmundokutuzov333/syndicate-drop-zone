@@ -2,7 +2,8 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, resolve } from "node:path";
+import { dirname, resolve, join } from "node:path";
+import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -48,25 +49,37 @@ for (const name of ["basis_transcoder.js", "basis_transcoder.wasm"]) {
 }
 
 if (!process.argv.includes("--packages-only")) {
-  for (const command of [
-    { name: "blender", args: ["--version"] },
-    { name: "toktx", args: ["--version"] },
-    { name: "ktx", args: ["--version"] }
-  ]) {
-    const result = spawnSync(command.name, command.args, { cwd: root, encoding: "utf8" });
-    if (result.error || result.status !== 0) {
-      fail(command.name + " não executou: " + (result.error?.message ?? (result.stderr || result.stdout || "exit " + result.status).trim()));
-      continue;
-    }
-    const output = (result.stdout || result.stderr || "").trim().split(/\r?\n/)[0] || "versão disponível";
-    if (command.name === "blender") {
-      const match = output.match(/Blender\s+(\d+)\.(\d+)/i);
-      if (!match || (Number(match[1]) < 4 || (Number(match[1]) === 4 && Number(match[2]) < 2))) {
-        fail("Blender >= 4.2 obrigatório; recebido: " + output);
-        continue;
+  const home = homedir();
+  const blenderCandidates = [
+    process.env.BLENDER_BIN,
+    join(home, "tools", "blender-4.5.14", "blender"),
+    join(home, "tools", "blender-4.5.14", "Blender.app", "Contents", "MacOS", "Blender"),
+    "/Applications/Blender.app/Contents/MacOS/Blender",
+    "blender"
+  ].filter(Boolean);
+  let resolvedBlender = null;
+  for (const candidate of blenderCandidates) {
+    const probe = spawnSync(candidate, ["--version"], { cwd: root, encoding: "utf8" });
+    if (probe.error || probe.status !== 0) continue;
+    resolvedBlender = candidate;
+    const line = (probe.stdout || probe.stderr || "").trim().split(/\\r?\\n/)[0];
+    const match = line.match(/Blender\\s+(\\d+)\\.(\\d+)/i);
+    if (!match || Number(match[1]) !== 4 || Number(match[2]) !== 5) fail("Blender 4.5.x obrigatório; recebido: " + line);
+    else ok("blender: " + line + " (" + candidate + ")");
+    break;
+  }
+  if (!resolvedBlender) fail("Blender não encontrado; defina BLENDER_BIN ou instale Blender 4.5.14");
+  if (process.platform === "linux") {
+    for (const command of [{ name: "toktx", args: ["--version"] }, { name: "ktx", args: ["--version"] }]) {
+      const result = spawnSync(command.name, command.args, { cwd: root, encoding: "utf8" });
+      if (result.error || result.status !== 0) {
+        fail(command.name + " não executou: " + (result.error?.message ?? (result.stderr || result.stdout || "exit " + result.status).trim()));
+      } else {
+        ok(command.name + ": " + (result.stdout || result.stderr || "").trim().split(/\\r?\\n/)[0]);
       }
     }
-    ok(command.name + ": " + output);
+  } else {
+    ok("KTX CLI não bloqueia build da Fase 04 em macOS; é verificado noutra fase.");
   }
 } else {
   console.log("Modo --packages-only: valida dependências Node e ficheiros Basis; ferramentas de sistema ficam para o workflow próprio.");
