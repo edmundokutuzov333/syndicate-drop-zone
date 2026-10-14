@@ -65,7 +65,21 @@ const images = (json.images ?? []).map((image, index) => {
 });
 const extensions = new Set([...(json.extensionsUsed ?? [])]);
 const embedded = images.filter((image) => image.dims);
-const minHero = embedded.length ? Math.min(...embedded.map((image) => Math.max(...image.dims))) : 0;
+const imageByIndex = new Map(images.map((image) => [image.index, image]));
+const baseColorImageIndexes = (json.materials ?? [])
+  .map((material) => material.pbrMetallicRoughness?.baseColorTexture?.index)
+  .filter((index) => Number.isInteger(index))
+  .map((textureIndex) => {
+    const texture = json.textures?.[textureIndex];
+    return texture?.extensions?.KHR_texture_basisu?.source ?? texture?.source;
+  })
+  .filter((imageIndex) => Number.isInteger(imageIndex));
+const baseColorImages = baseColorImageIndexes
+  .map((imageIndex) => imageByIndex.get(imageIndex))
+  .filter((image) => image?.dims);
+const minHero = baseColorImages.length
+  ? Math.min(...baseColorImages.map((image) => Math.max(...image.dims)))
+  : 0;
 const maxHero = embedded.length ? Math.max(...embedded.map((image) => Math.max(...image.dims))) : 0;
 const sizeMB = statSync(file).size / 1048576;
 const materialsWithNormals = (json.materials ?? []).filter((material) => material.normalTexture).length;
@@ -75,7 +89,7 @@ const checks = [
   ["materiais", json.materials?.length ?? 0, "≤ " + budgets.maxMaterials, (json.materials?.length ?? 0) <= budgets.maxMaterials],
   ["primitivas", prims, "≤ " + budgets.maxPrimitives, prims <= budgets.maxPrimitives],
   ["tamanho do GLB (MB)", sizeMB.toFixed(2), "≤ " + budgets.maxTransferMB, sizeMB <= budgets.maxTransferMB],
-  ["textura embebida mais pequena (px)", minHero, "≥ " + budgets.minHeroTexturePx, minHero >= budgets.minHeroTexturePx],
+  ["textura baseColor mais pequena (px)", minHero, "≥ " + budgets.minHeroTexturePx, minHero >= budgets.minHeroTexturePx],
   ["textura embebida maior (px)", maxHero, "≤ " + budgets.maxTexturePx, maxHero <= budgets.maxTexturePx],
   ["UV1 para lightmaps", hasUv1, budgets.requireUv1 ? "obrigatório" : "opcional", !budgets.requireUv1 || hasUv1],
   ["KTX2/BasisU", extensions.has("KHR_texture_basisu"), budgets.requireKtx2 ? "obrigatório" : "opcional", !budgets.requireKtx2 || extensions.has("KHR_texture_basisu")],
