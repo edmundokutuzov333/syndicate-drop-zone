@@ -9,6 +9,8 @@ on:
       - "scripts/validate-pbr-materials.mjs"
       - "scripts/3d/**"
       - "scripts/build-3d.mjs"
+      - "src/features/camping/scene/CampingStudioEngine.ts"
+      - "src/features/camping/scene/camping-model-compatibility.ts"
       - "scripts/build-blend.sh"
       - "scripts/install-3d-toolchain.sh"
       - "scripts/verify-glb-contract.mjs"
