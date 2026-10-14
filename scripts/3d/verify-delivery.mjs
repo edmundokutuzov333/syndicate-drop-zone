@@ -137,22 +137,29 @@ const parseCodes = (source) => new Map(source.split(/\r?\n/).map((line) => line.
   return index > 0 ? [line.slice(0, index), line.slice(index + 1)] : [line, ""];
 }));
 
-export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
+export async function verify(dir, biblePath, { checkExitCodes = false, phase = Number(process.env.CAMPING_PHASE || 8) } = {}) {
   const out = [];
   const add = (name, pass, detail = "") => out.push({ name, pass, detail });
   const manifestPath = [join(dir, "art/_delivery/manifest.json"), join(dir, "manifest.json")].find(existsSync);
   const manifest = manifestPath ? JSON.parse(readFileSync(manifestPath, "utf8")) : null;
   add("manifest present", Boolean(manifest));
+  const currentPhase = Number(phase);
+  if (!Number.isInteger(currentPhase) || currentPhase < 1 || currentPhase > 22) throw new Error("CAMPING phase must be an integer between 1 and 22");
+  add("manifest phase matches requested phase", Boolean(manifest) && Number(manifest.phase ?? currentPhase) === currentPhase,
+    String(manifest?.phase ?? "unspecified") + " / expected " + currentPhase);
 
   if (manifest) {
     add("all required files in manifest", (manifest.missing ?? []).length === 0, (manifest.missing ?? []).join(", "));
     add("commit recorded", Boolean(manifest.commit && manifest.commit !== "unknown"), manifest.commit ?? "");
     const manifestPaths = new Set((manifest.files ?? []).map((file) => file.path));
-    add("collider GLB included in manifest", manifestPaths.has("art/out/xoyens-studio.colliders.glb"));
+    add("collider GLBs included in manifest", currentPhase < 14 || (
+      manifestPaths.has("art/out/xoyens-studio.colliders.glb") &&
+      manifestPaths.has("public/models/camping/xoyens-studio.colliders.glb")
+    ), currentPhase < 14 ? "deferred until Phase 14" : "source and public collider files are required");
     add("frontend canonical GLB included in manifest", manifestPaths.has("public/models/camping/xoyens-studio.glb"));
     add("frontend model metadata included in manifest", manifestPaths.has("public/models/camping/xoyens-studio.model.json"));
     add("PBR material manifest included in delivery", manifestPaths.has("art/textures/materials.manifest.json"));
-    add("Phase 08 production report included in delivery", manifestPaths.has("art/xoyens-studio.phase08.report.json"));
+    add("Phase 08 production report included in delivery", currentPhase < 8 || manifestPaths.has("art/xoyens-studio.phase08.report.json"));
     for (const file of manifest.files ?? []) {
       const path = join(dir, file.path);
       if (!existsSync(path)) {
@@ -204,7 +211,7 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
   }
 
   const productionReportPath = join(dir, "art/xoyens-studio.phase08.report.json");
-  if (existsSync(productionReportPath)) {
+  if (currentPhase >= 8 && existsSync(productionReportPath)) {
     try {
       const phase8 = JSON.parse(readFileSync(productionReportPath, "utf8"));
       const zone = phase8.productionZone ?? {};
@@ -215,7 +222,7 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
         JSON.stringify({ phase: phase8.phase, status: phase8.status, chairTriangles: zone.chairUpholsteryTrianglesSource,
           midi: [zone.midiWhiteKeys, zone.midiBlackKeys], panels: zone.acousticFabricPanels, foam: zone.acousticFoamTiles, pendants: zone.pendants }));
     } catch (error) { add("Phase 08 source production report", false, error instanceof Error ? error.message : String(error)); }
-  } else add("Phase 08 source production report", false, "missing art/xoyens-studio.phase08.report.json");
+  } else if (currentPhase >= 8) add("Phase 08 source production report", false, "missing art/xoyens-studio.phase08.report.json");
 
   const reportPath = join(dir, "art/xoyens-studio.report.json");
   let report = null;
@@ -229,7 +236,9 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
     add("triangles_estimate", Number.isInteger(report.triangles_estimate) && report.triangles_estimate > 0);
     add("seven collections", Array.isArray(report.collections) && report.collections.length >= 7, JSON.stringify(report.collections ?? []));
     add("blend_bytes matches file", Number.isInteger(report.blend_bytes) && existsSync(blend) && report.blend_bytes === statSync(blend).size);
-    add("collider count present in Blender report", Number.isInteger(report.collectionObjects?.COL_colliders) && report.collectionObjects.COL_colliders > 0, String(report.collectionObjects?.COL_colliders ?? "missing"));
+    if (currentPhase >= 14) {
+      add("collider count present in Blender report", Number.isInteger(report.collectionObjects?.COL_colliders) && report.collectionObjects.COL_colliders >= 12, String(report.collectionObjects?.COL_colliders ?? "missing"));
+    }
   } else {
     add("report present", false, "missing");
   }
@@ -270,7 +279,7 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
         add("frontend metadata points at canonical URL", metadata.model === "/models/camping/xoyens-studio.glb");
         add(
           "frontend metadata certifies Blender V3 Phase 08 production and Phase 07 surfaces",
-          metadata.version === 3 && metadata.phase === 8 && metadata.productionPhase === 8 && metadata.surfacePhase === 7 && metadata.status === "blender-v3-published",
+          metadata.version === 3 && metadata.phase === currentPhase && metadata.productionPhase === currentPhase && metadata.surfacePhase === 7 && metadata.status === "blender-v3-published",
           JSON.stringify({ version: metadata.version, phase: metadata.phase, productionPhase: metadata.productionPhase, surfacePhase: metadata.surfacePhase, status: metadata.status }),
         );
         add("frontend metadata byte count matches model", metadata.geometry?.bytes === statSync(frontendGlb).size);
@@ -311,17 +320,26 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
     add("frontend GLB and Scene Bible accessible", false, "missing");
   }
 
-  const colliderGlb = join(dir, "art/out/xoyens-studio.colliders.glb");
-  if (existsSync(colliderGlb) && report) {
-    try {
-      for (const check of colliderGlbContract(parseGlb(readFileSync(colliderGlb)), report.collectionObjects?.COL_colliders)) {
-        add("Collider GLB: " + check.name, check.pass, check.detail);
+  if (currentPhase >= 14) {
+    const colliderFiles = [
+      ["source", join(dir, "art/out/xoyens-studio.colliders.glb")],
+      ["public", join(dir, "public/models/camping/xoyens-studio.colliders.glb")],
+    ];
+    for (const [label, colliderPath] of colliderFiles) {
+      if (existsSync(colliderPath) && report) {
+        try {
+          for (const check of colliderGlbContract(parseGlb(readFileSync(colliderPath)), report.collectionObjects?.COL_colliders)) {
+            add("Collider GLB (" + label + "): " + check.name, check.pass, check.detail);
+          }
+        } catch (error) {
+          add("Collider GLB (" + label + ") readable", false, error instanceof Error ? error.message : String(error));
+        }
+      } else {
+        add("collider GLB (" + label + ") present", false, "required from Phase 14; missing file or Blender report");
       }
-    } catch (error) {
-      add("Collider GLB readable", false, error instanceof Error ? error.message : String(error));
     }
   } else {
-    add("collider GLB present", false, "missing file or Blender report");
+    add("collider GLB gate ordered by phase", true, "collider GLB certification is deferred until Phase 14");
   }
 
   if (checkExitCodes) {
@@ -341,13 +359,16 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const [dir, ...args] = process.argv.slice(2);
   const bible = args.find((arg) => !arg.startsWith("--")) ?? "docs/camping-v3/scene-bible.json";
+  const phaseToken = args.find((arg) => arg.startsWith("--phase="));
+  const phaseIndex = args.findIndex((arg) => arg === "--phase");
+  const phase = Number(phaseToken?.split("=")[1] ?? (phaseIndex >= 0 ? args[phaseIndex + 1] : undefined) ?? process.env.CAMPING_PHASE ?? 8);
   const checkExitCodes = args.includes("--check-exit-codes");
   if (!dir) {
-    console.error("Usage: node scripts/3d/verify-delivery.mjs <delivery> [scene-bible.json] [--check-exit-codes]");
+    console.error("Usage: node scripts/3d/verify-delivery.mjs <delivery> [scene-bible.json] [--phase=8] [--check-exit-codes]");
     process.exit(2);
   }
   try {
-    const checks = await verify(dir, bible, { checkExitCodes });
+    const checks = await verify(dir, bible, { checkExitCodes, phase });
     let failures = 0;
     for (const check of checks) {
       if (!check.pass) failures += 1;
