@@ -39,7 +39,7 @@ try {
     import("sharp"),
     import("@gltf-transform/cli")
   ]);
-  const { dedup, weld, simplify, prune, textureCompress, meshopt, instance, reorder, quantize, flatten, join } = functions;
+  const { dedup, weld, simplify, prune, textureCompress, meshopt, reorder, quantize, flatten, join } = functions;
   const { MeshoptEncoder, MeshoptSimplifier } = meshoptimizer;
   const sharp = sharpModule.default;
   const { Mode, toktx } = cli;
@@ -70,7 +70,10 @@ try {
       }));
     }
 
-    await document.transform(instance({ min: 3 }));
+    // Do not apply global GPU instancing here: the transform batches shared meshes
+    // across nodes without considering glTF extras, which would collapse the 17
+    // independently clickable portrait slots. Static joining below provides the
+    // required draw-call reduction while named interaction anchors remain distinct.
 
     // Keep named runtime anchors, interactions and moving details intact. Other
     // static Blender meshes become anonymous and are joined by compatible material

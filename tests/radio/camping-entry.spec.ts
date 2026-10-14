@@ -383,6 +383,7 @@ test("serves the optimized Blender V3 model on the canonical CAMPING URL", async
   if (await page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]').isVisible()) {
     test.skip(true, "Este Chromium não disponibiliza WebGL para validar a cena renderizada.");
   }
+  await page.getByRole("button", { name: "NAVEGAÇÃO GUIADA" }).focus();
   await page.keyboard.press("8");
   await page.keyboard.press("0");
   await page.keyboard.press("8");
