@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { unlockSite } from "./site-gate";
@@ -373,25 +374,93 @@ test.describe("CAMPING V2 / 808 access", () => {
 });
 
 
-test("serves the optimized Blender V3 model on the canonical CAMPING URL", async ({ page }) => {
-  await page.setViewportSize({ width: 1774, height: 887 });
-  const modelResponsePromise = page.waitForResponse((response) =>
-    new URL(response.url()).pathname === "/models/camping/xoyens-studio.glb" && response.status() === 200,
-    { timeout: 60_000 },
+test("serves a certified optimized Blender V3 model on the canonical CAMPING URL", async ({ page }) => {
+  // Validate the files served by the app before trying WebGL. This must never
+  // be skipped because the CI browser lacks a GPU/WebGL implementation.
+  const metadataResponse = await page.request.get("/models/camping/xoyens-studio.model.json", {
+    headers: { "cache-control": "no-cache" },
+  });
+  expect(metadataResponse.status(), "canonical CAMPING model metadata must be served").toBe(200);
+  const metadata = await metadataResponse.json();
+
+  expect(metadata.version).toBe(3);
+  expect(metadata.phase).toBe(6);
+  expect(metadata.status).toBe("blender-v3-published");
+  expect(metadata.model).toBe("/models/camping/xoyens-studio.glb");
+
+  const modelResponse = await page.request.get(metadata.model, {
+    headers: { "cache-control": "no-cache" },
+  });
+  expect(modelResponse.status(), "canonical CAMPING GLB must be served").toBe(200);
+  const modelBytes = await modelResponse.body();
+  expect(modelBytes.length).toBeGreaterThan(20);
+  expect(modelBytes.length).toBeLessThanOrEqual(16 * 1024 * 1024);
+  expect(modelBytes.toString("ascii", 0, 4)).toBe("glTF");
+  expect(modelBytes.readUInt32LE(4)).toBe(2);
+  expect(modelBytes.readUInt32LE(8)).toBe(modelBytes.length);
+
+  const digest = createHash("sha256").update(modelBytes).digest("hex");
+  expect(metadata.geometry?.sha256, "metadata geometry hash must match served GLB").toBe(digest);
+  expect(metadata.geometry?.bytes, "metadata geometry byte count must match served GLB").toBe(modelBytes.length);
+  expect(metadata.frontendDelivery?.sha256, "delivery hash must match served GLB").toBe(digest);
+  expect(metadata.frontendDelivery?.bytes, "delivery byte count must match served GLB").toBe(modelBytes.length);
+  expect(metadata.frontendDelivery?.canonicalUrl).toBe(metadata.model);
+
+  let offset = 12;
+  let gltf: Record<string, any> | null = null;
+  while (offset + 8 <= modelBytes.length) {
+    const length = modelBytes.readUInt32LE(offset);
+    const type = modelBytes.readUInt32LE(offset + 4);
+    const start = offset + 8;
+    expect(start + length).toBeLessThanOrEqual(modelBytes.length);
+    if (type === 0x4e4f534a) {
+      gltf = JSON.parse(modelBytes.subarray(start, start + length).toString("utf8").replace(/\0+$/g, "").trim());
+    }
+    offset = start + length;
+  }
+  expect(gltf, "served GLB must contain a valid JSON chunk").not.toBeNull();
+  const extensions = new Set(gltf?.extensionsUsed ?? []);
+  expect(extensions.has("KHR_texture_basisu"), "served GLB must contain KTX2/Basis textures").toBe(true);
+  expect(extensions.has("EXT_meshopt_compression"), "served GLB must contain Meshopt compression").toBe(true);
+  expect(metadata.geometry?.extensionsUsed).toEqual(expect.arrayContaining([
+    "KHR_texture_basisu",
+    "EXT_meshopt_compression",
+  ]));
+
+  const nodes = gltf?.nodes ?? [];
+  const interactionIds = new Set(
+    nodes.map((node: { extras?: { interactionId?: unknown } }) => node.extras?.interactionId)
+      .filter((id: unknown): id is string => typeof id === "string"),
   );
+  const requiredInteractions = [
+    "studio.imac",
+    "studio.artists-wall",
+    "studio.merch-rack",
+    "studio.photo-backdrop",
+    "studio.production-desk",
+    "studio.audio-system",
+    "studio.inner-door",
+    ...Array.from({ length: 17 }, (_, index) => "studio.artist-slot-" + String(index + 1).padStart(3, "0")),
+  ];
+  expect(requiredInteractions.filter((id) => !interactionIds.has(id))).toEqual([]);
+  expect(metadata.geometry?.meshes).toBe(gltf?.meshes?.length);
+  expect(metadata.geometry?.primitives).toBe(
+    (gltf?.meshes ?? []).reduce((count: number, mesh: { primitives?: unknown[] }) => count + (mesh.primitives?.length ?? 0), 0),
+  );
+  expect(metadata.geometry?.materials).toBe(gltf?.materials?.length);
+  expect(metadata.geometry?.embeddedImages).toBe(gltf?.images?.length);
+
+  // Preserve the browser-level rendering check when WebGL is supported.
+  await page.setViewportSize({ width: 1774, height: 887 });
   await openCamping(page);
   if (await page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]').isVisible()) {
-    test.skip(true, "Este Chromium não disponibiliza WebGL para validar a cena renderizada.");
+    test.skip(true, "Os bytes, o hash, os metadados e os contratos 3D foram validados; este Chromium não disponibiliza WebGL para validar a cena renderizada.");
   }
   await page.getByRole("button", { name: "NAVEGAÇÃO GUIADA" }).focus();
   await page.keyboard.press("8");
   await page.keyboard.press("0");
   await page.keyboard.press("8");
   await expect(page.locator(".camping-studio__explore-state")).toContainText("EXPLORATION ACTIVE", { timeout: 30_000 });
-  const response = await modelResponsePromise;
-  const bytes = Number(response.headers()["content-length"] ?? 0);
-  expect(bytes).toBeGreaterThan(0);
-  expect(bytes).toBeLessThanOrEqual(16 * 1024 * 1024);
   const canvas = page.locator("canvas.camping-studio__canvas");
   await expect(canvas).toHaveAttribute("data-camping-model-source", "blender-v3", { timeout: 60_000 });
   await expect(canvas).toHaveAttribute("data-camping-model-version", "3");
