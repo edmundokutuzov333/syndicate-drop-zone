@@ -1,41 +1,62 @@
-Fase 04-R · leitura de anotações
-Observado em: 2026-10-14T06:40:00Z
-Classificação: UNKNOWN
+Fase 04-R · diagnóstico de runners e certificação final
+Actualizado: 2026-10-14
+Repositório: edmundokutuzov333/syndicate-drop-zone
+Branch: main
 
-Runs verificados:
-- 38378115395 / job 115231891106: runner_id=0, runner_name vazio, steps=[], failure.
-- 38423793670 / job 115387875010: runner_id=0, runner_name vazio, steps=[], failure.
+## 1. Anotações históricas do bloqueio de runner
 
-A consulta dos metadados confirma que os jobs não chegaram a iniciar. A consulta ao endpoint de anotações não foi autorizada pela integração disponível e não há GITHUB_TOKEN no ambiente de execução. Não foi obtido qualquer texto exacto de Annotations. Portanto, NÃO há base suficiente para classificar a causa como billing, política, quota ou incidente.
+Classificação das falhas históricas: UNKNOWN.
 
-Próximo passo obrigatório: abrir o run no GitHub UI e copiar o texto exacto da secção Annotations, ou executar scripts/ci/read-run-annotations.mjs com um GITHUB_TOKEN autorizado.
+Os runs 38378115395 (job 115231891106), 38423793670 (job 115387875010), 38525746588 (jobs 115725652932 e 115725653309), 38525929465 (job 115726141876) e 38525393516 (job 115724441631) falharam antes de iniciar steps, com runner_id=0. A integração GitHub disponível recusou o endpoint de check-run annotations e não foi possível obter o texto original de Annotations. Portanto, billing, política de Actions, quota e provisionamento não foram confirmados. Não classificar retroactivamente a causa sem a anotação original.
 
-A Fase 04 permanece aberta. Nenhum artefacto Blender foi criado ou certificado por este diagnóstico.
+## 2. Execução real posterior
 
+Build CAMPING 3D - Fase 04:
+- Run: 38527906358
+- URL: https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38527906358
+- Commit de build: e40d013526e23162782c9ab0404228226022b6bd
+- Job de build: 115732530135
+- Runner: 1000012342
+- Resultado do build: success
+- Etapa "Syntax and recovery tests without Blender": success
+- Etapa "Shared route build, reopen, validate and package": success
+- Etapa "Upload outputs and evidence even on failure": success
 
-SUPPLEMENTAL RUN EVIDENCE · 2026-10-14T07:04:00Z
+A primeira execução real revelou `IndentationError` em scripts/blender/build_all.py (corrigido no commit 4efa8ddfac9b120620e02748a67beff315d3028f). A seguinte revelou um objecto Material passado em vez de material name a finish_mesh() em scripts/blender/common.py (corrigido no commit c258de8953e628b884c850e76a9f9323c4002d9c). O pipeline foi então executado com sucesso.
 
-Runner smoke test second attempt:
-- run 38525746588 / job 115725652932 (ubuntu-24.04): failure in about 3 seconds, runner_id=0, runner name empty, steps=0.
-- run 38525746588 / job 115725653309 (ubuntu-22.04): failure in about 4 seconds, runner_id=0, runner name empty, steps=0.
-- Camera Production CI run 38525929465 / job 115726141876: failure in about 3 seconds, runner_id=0, steps=0.
-- Build CAMPING 3D run 38525393516 / job 115724441631: failure in about 3 seconds, runner_id=0, steps=0.
+## 3. Certificação e artefactos reais
 
-The GitHub connector still refuses the check-run annotations endpoint. This is stronger evidence of a pre-step runner allocation failure but does not identify whether the cause is billing, policy, quota or provisioning. Classification remains UNKNOWN until the exact original annotation is captured.
+Resultado integral do verificador: "Fase 04 certificável".
+- Blender: 4.5.14 LTS
+- .blend: 8 248 183 bytes; magic BLENDER; reaberto e validado
+- Scene: 54 elementos, 378 objectos, 371 malhas, 37 046 vértices, 62 864 triângulos estimados, 7 colecções
+- GLB: 5 693 056 bytes, 359 nós, 359 malhas, 359 primitivas, 38 materiais
+- IDs de interacção: 7/7 presentes
+- Slots de artistas: 17, IDs 001–017, sem 018
+- Materiais/UV0/UV1: nenhuma primitiva sem material, UV0 ou UV1; UV1 em 359/359
+- Extras zone e lmGroup: presentes
+- Exit codes exigidos: validate=0, blend=0, blend-check=0, verify=0
+- doctor=1 foi informativo antes da instalação; install-blender=0 e doctor-after-install=0.
 
+## 4. Promoção Git LFS real
 
-## Testes locais do kit · 2026-10-14
+- Commit: ec362ec04665085dd2ce8ff6b5a13306b0727bd1
+- URL: https://github.com/edmundokutuzov333/syndicate-drop-zone/commit/ec362ec04665085dd2ce8ff6b5a13306b0727bd1
+- Git LFS object SHA-256 / oid: cfbffce61ed393a427b0f167847f05ba6dc1fa04df7fff64700def48909bbb58
+- Tamanho binário: 8 248 183 bytes
+- O script confirmou o pointer gerado pelo filtro LFS com a mesma oid e size, `git lfs ls-files --long --size`, `git lfs fsck --objects HEAD`, `git lfs push origin HEAD`, `git push origin HEAD:main`, e comparou o remote main com o commit local. Tudo passou. O pointer não foi criado manualmente.
 
-Arquivo de entrada: kit-fase04-recovery.zip  
-SHA-256 do ZIP de entrada: a1241da939e93fc3baf95cc9b53ebbb8e3c2b854998a4344a6df92679ddadaef
+## 5. Checksums SHA-256
 
-Resultados:
-- PASS: node --check nos 4 ficheiros .mjs fornecidos.
-- PASS: bash -n nos 3 scripts shell fornecidos.
-- PASS: JSON do devcontainer.
-- PASS: parse dos 3 workflows YAML (build GitHub, smoke GitHub, GitLab).
-- PASS: node --test scripts/3d/recovery.test.mjs: 4 testes, 4 passaram, 0 falharam.
-- PASS: assertivas adicionais do classificador de causa, identificador mágico Blender vs ponteiro LFS, contrato GLB positivo e negativos de UV1/slot 018.
-- BLOCKED: doctor.mjs --json saiu com código 1 porque Blender 4.5.14 não está instalado e download.blender.org está inacessível deste ambiente. Node 22, Python 3, Git e 32 GB de disco foram detectados.
+- art/xoyens-studio.blend: cfbffce61ed393a427b0f167847f05ba6dc1fa04df7fff64700def48909bbb58
+- art/xoyens-studio.report.json: dd8d7e576cbe1ab76536923d3e89b748e88b394dcb9a48f0178ab843f4ce0474
+- art/out/xoyens-studio.raw.glb: 298a3ea8819f92cf21eecb540ba8bb04699762630a4aa7a655fdf46245c0a012
+- ZIP de entrega final art/_delivery/phase04-delivery-e40d013-20261014T072406.zip: 450695dd705c6f68231fa74c823e113855d5793b2c661348b0704b2bd42f25e7
+- Artifact ZIP do GitHub Actions (ID 11876836734): 88f150f558493ae7b6948901d60cd3b86643fa900293bb01fc93cf2fc0d7c3cb
 
-Limite: estes resultados validam sintaxe/configuração/testes unitários do kit fornecido. Não representam execução de Blender, não produziram .blend, GLB ou relatório e não certificam a Fase 04.
+A cópia local do artifact foi revalidada: 15/15 entradas do manifesto passaram os seus checksums. Artifact disponível por 30 dias: https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38527906358/artifacts/11876836734
+
+## 6. Estado final
+
+Certificação da Fase 04: CERTIFIED.
+O diagnóstico exacto das falhas históricas de runner continua UNKNOWN até se obter o texto real de Annotations. Este dado não altera a certificação da entrega actual, porque o build posterior correu num runner atribuído e passou todos os critérios técnicos e de LFS.
