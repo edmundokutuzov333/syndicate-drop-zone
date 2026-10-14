@@ -39,7 +39,7 @@ try {
     import("sharp"),
     import("@gltf-transform/cli")
   ]);
-  const { dedup, weld, simplify, prune, textureCompress, meshopt, instance, reorder, quantize } = functions;
+  const { dedup, weld, simplify, prune, textureCompress, meshopt, instance, reorder, quantize, flatten, join } = functions;
   const { MeshoptEncoder, MeshoptSimplifier } = meshoptimizer;
   const sharp = sharpModule.default;
   const { Mode, toktx } = cli;
@@ -71,6 +71,40 @@ try {
     }
 
     await document.transform(instance({ min: 3 }));
+
+    // Keep named runtime anchors, interactions and moving details intact. Other
+    // static Blender meshes become anonymous and are joined by compatible material
+    // after flattening, reducing draw calls without shrinking triangle budgets.
+    const protectedElementIds = new Set([
+      "floor.wood", "floor.vinyl_sweep", "arch.vault_ceiling",
+      "arch.door_main", "arch.door_left", "arch.ac_split", "arch.conduit_pvc",
+      "arch.outlet_pair", "arch.switch_plate", "arch.soffit_box",
+      "prod.desk_l", "prod.monitor_daw", "prod.monitors_pair",
+      "prod.imac", "photo.backdrop_seal", "photo.garments", "photo.rack",
+    ]);
+    const protectedName = /studio\\.|artist_slot_\\d{3}|artists_wall|door_main_(stile_|rail_|handle_plate|lever|lock_cylinder|hinge_)|door_left_(stile_|rail_|handle_plate|lever|lock_cylinder|hinge_)|vault_ceiling|vault_rib_|monitor_daw_screen|photo_backdrop|garment/i;
+    const nodes = document.getRoot().listNodes();
+    const keepNode = (node) => {
+      const extras = node.getExtras() ?? {};
+      const nodeName = node.getName() ?? "";
+      const elementId = typeof extras.elementId === "string" ? extras.elementId : "";
+      return Boolean(extras.interactionId) ||
+        protectedElementIds.has(elementId) ||
+        protectedName.test(nodeName);
+    };
+    const preservedMeshes = new Set(nodes.filter(keepNode).map((node) => node.getMesh()).filter(Boolean));
+    for (const node of nodes) {
+      if (!keepNode(node)) node.setName("");
+    }
+    for (const mesh of document.getRoot().listMeshes()) {
+      if (!preservedMeshes.has(mesh)) mesh.setName("");
+    }
+    await document.transform(
+      flatten(),
+      join({ keepNamed: true, filter: (node) => !node.getName() }),
+      prune({ keepLeaves: false }),
+    );
+
     await document.transform(textureCompress({ encoder: sharp, resize: [tier.maxTex, tier.maxTex] }));
 
     const slotsForColor = /^(?!.*(normal|occlusion|metallicRoughness|lightMap)).*$/;

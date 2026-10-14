@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 import { readFileSync, statSync } from "node:fs";
 
-const [glbPath = "art/out/xoyens-studio.raw.glb", biblePath = "docs/camping-v3/scene-bible.json"] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const frontendOptimized = args.includes("--frontend-optimized");
+const positional = args.filter((arg) => !arg.startsWith("--"));
+const [glbPath = "art/out/xoyens-studio.raw.glb", biblePath = "docs/camping-v3/scene-bible.json"] = positional;
 const bytes = readFileSync(glbPath);
 if (bytes.toString("ascii", 0, 4) !== "glTF") throw new Error("Output is not a GLB: " + glbPath);
 let offset = 12, json = null;
@@ -14,6 +17,12 @@ while (offset + 8 <= bytes.length) {
 }
 if (!json) throw new Error("GLB has no JSON chunk");
 const bible = JSON.parse(readFileSync(biblePath, "utf8"));
+if (frontendOptimized) {
+  const extensions = new Set(json.extensionsUsed ?? []);
+  const required = ["KHR_texture_basisu", "EXT_meshopt_compression"];
+  const missingExtensions = required.filter((name) => !extensions.has(name));
+  if (missingExtensions.length) throw new Error("Optimized frontend GLB is missing required extensions: " + missingExtensions.join(", "));
+}
 const nodes = json.nodes ?? [];
 const seen = new Set();
 for (const node of nodes) {

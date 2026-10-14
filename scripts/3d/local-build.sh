@@ -17,6 +17,7 @@ step py-compile python3 -m py_compile scripts/blender/*.py
 step validate npm run 3d:validate
 step blend npm run 3d:blend
 step blend-check npm run 3d:blend:validate
+step frontend-model bash scripts/3d/build-frontend-model.sh
 node scripts/3d/pack-delivery.mjs || true
 step verify node scripts/3d/verify-delivery.mjs . docs/camping-v3/scene-bible.json
 node scripts/3d/pack-delivery.mjs || true

@@ -4,7 +4,7 @@ import { createReadStream,existsSync,mkdirSync,readdirSync,statSync,writeFileSyn
 import { execFileSync } from "node:child_process";
 import { join,relative } from "node:path";
 import { pathToFileURL } from "node:url";
-export const REQUIRED=["art/xoyens-studio.blend","art/xoyens-studio.report.json","art/out/xoyens-studio.raw.glb","art/out/xoyens-studio.colliders.glb","art/textures/materials.manifest.json"];
+export const REQUIRED=["art/xoyens-studio.blend","art/xoyens-studio.report.json","art/out/xoyens-studio.raw.glb","art/out/xoyens-studio.colliders.glb","art/textures/materials.manifest.json","public/models/camping/xoyens-studio.glb","public/models/camping/xoyens-studio.model.json"];
 export const sha256=(file)=>new Promise((resolve,reject)=>{const h=createHash("sha256");createReadStream(file).on("data",(chunk)=>h.update(chunk)).on("end",()=>resolve(h.digest("hex"))).on("error",reject);});
 const walk=(dir)=>existsSync(dir)?readdirSync(dir,{withFileTypes:true}).flatMap((e)=>e.isDirectory()?walk(join(dir,e.name)):[join(dir,e.name)]):[];
 const git=(args)=>{try{return execFileSync("git",args,{encoding:"utf8"}).trim();}catch{return "unknown";}};
@@ -17,6 +17,7 @@ export async function buildManifest(root="."){
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
  const root=process.cwd();mkdirSync(join(root,"art/_delivery"),{recursive:true});const m=await buildManifest(root);
  const mp=join(root,"art/_delivery/manifest.json");writeFileSync(mp,JSON.stringify(m,null,2)+"\n");
+ if(process.argv.includes("--manifest-only")){console.log(`manifest: ${relative(root,mp)}\nmissing required: ${m.missing.join(", ")||"none"}`);process.exit(m.missing.length?3:0);}
  const stamp=m.generated_at.replace(/[-:]/g,"").replace(/\.\d+Z$/,"Z").slice(0,15);
  const zip=join(root,`art/_delivery/phase04-delivery-${m.commit.slice(0,7)}-${stamp}.zip`);
  const entries=[...m.files.map((f)=>f.path),"art/_delivery/manifest.json"];let archive=zip;

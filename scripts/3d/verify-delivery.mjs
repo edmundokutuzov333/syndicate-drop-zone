@@ -102,6 +102,8 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
     add("commit recorded", Boolean(manifest.commit && manifest.commit !== "unknown"), manifest.commit ?? "");
     const manifestPaths = new Set((manifest.files ?? []).map((file) => file.path));
     add("collider GLB included in manifest", manifestPaths.has("art/out/xoyens-studio.colliders.glb"));
+    add("frontend canonical GLB included in manifest", manifestPaths.has("public/models/camping/xoyens-studio.glb"));
+    add("frontend model metadata included in manifest", manifestPaths.has("public/models/camping/xoyens-studio.model.json"));
     add("PBR material manifest included in delivery", manifestPaths.has("art/textures/materials.manifest.json"));
     add("PBR material manifest included in delivery", manifestPaths.has("art/textures/materials.manifest.json"));
     for (const file of manifest.files ?? []) {
@@ -156,6 +158,32 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
     add("GLB and Scene Bible accessible", false, "missing");
   }
 
+  const frontendGlb = join(dir, "public/models/camping/xoyens-studio.glb");
+  const frontendMetadata = join(dir, "public/models/camping/xoyens-studio.model.json");
+  if (existsSync(frontendGlb) && bibleExists) {
+    try {
+      const frontendJson = parseGlb(readFileSync(frontendGlb));
+      for (const check of glbContract(frontendJson, JSON.parse(readFileSync(biblePath, "utf8")))) {
+        add("Frontend GLB: " + check.name, check.pass, check.detail);
+      }
+      const used = new Set(frontendJson.extensionsUsed || []);
+      add("frontend KTX2/Basis enabled", used.has("KHR_texture_basisu"));
+      add("frontend Meshopt enabled", used.has("EXT_meshopt_compression"));
+      if (existsSync(frontendMetadata)) {
+        const metadata = JSON.parse(readFileSync(frontendMetadata, "utf8"));
+        const digest = createHash("sha256").update(readFileSync(frontendGlb)).digest("hex");
+        add("frontend metadata SHA-256 matches model", metadata.geometry && metadata.geometry.sha256 === digest, digest);
+        add("frontend metadata points at canonical URL", metadata.model === "/models/camping/xoyens-studio.glb");
+      } else {
+        add("frontend model metadata present", false, "missing file");
+      }
+    } catch (error) {
+      add("Frontend GLB readable", false, error instanceof Error ? error.message : String(error));
+    }
+  } else {
+    add("frontend GLB and Scene Bible accessible", false, "missing");
+  }
+
   const colliderGlb = join(dir, "art/out/xoyens-studio.colliders.glb");
   if (existsSync(colliderGlb) && report) {
     try {
@@ -175,7 +203,7 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
       add("exit-codes present", false, "missing");
     } else {
       const codes = parseCodes(readFileSync(path, "utf8"));
-      for (const key of ["validate", "blend", "blend-check", "verify"]) {
+      for (const key of ["validate", "blend", "blend-check", "frontend-model", "verify"]) {
         add("exit-code " + key + "=0", codes.get(key) === "0", codes.get(key) ?? "missing");
       }
     }
