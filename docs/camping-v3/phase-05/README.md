@@ -35,3 +35,18 @@ A ingestão agora prefere IDs concretos de superfícies Poly Haven por perfil, v
 O albedo de saída é ajustado por canal à cor-base sRGB especificada para o material na Scene Bible. A transformação conserva a variação espacial da textura e é registada no manifesto com médias de origem/saída, factores aplicados e limites de escala. A normal continua a ser convertida para OpenGL quando a fonte é DirectX; o ORM mantém R=AO, G=roughness e B=metallic. A biblioteca não usa placeholders.
 
 O pacote de artefactos CI exclui os ZIPs de entrega duplicados, mantendo o manifesto de entrega, os mapas individuais, o relatório e os logs necessários para verificação e promoção LFS.
+
+## Certificação Fase 05 · 2026-10-14
+
+**Estado: CONCLUÍDA no pipeline PBR/Blender.**
+
+Evidência reproduzível:
+- Build e certificação Blender: [workflow run 38538988505](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38538988505), conclusão `success`, incluindo a promoção LFS concluída.
+- Manifesto `art/textures/materials.manifest.json`: 20 perfis, IDs e URLs de origem Poly Haven, licença CC0 1.0, hashes SHA-256, mapas e medições de continuidade.
+- Biblioteca: 20 conjuntos de materiais; BC, N e ORM 2048×2048 em cada conjunto. Os mapas H opcionais são mantidos quando fornecidos pela origem.
+- O log da reabertura da fonte regista Blender 4.5.14 LTS, 371 malhas, 43 materiais e zero erros de contrato; `PBR MATERIAL CONTRACT OK` confirma 20 materiais e três mapas por material.
+- O verificador de entrega passou para os artefactos principais e de colisão; os 12 colliders estão no GLB separado com `extras.collider`.
+- O commit publicado de certificação Blender é `93dee96cdd41b90e4cdc24c526bbff2fd705714f`. A promoção confirmou o objecto Blender real via Git LFS, sem force-push.
+- A publicação Vercel ligada ao mesmo commit está em estado `READY`: [deployment](https://vercel.com/kutuzov/syndicate-drop-zone/7CGmfphfRZdySfaTsNcSkfJfENNG).
+
+**Limite conhecido, fora do gate PBR:** a Camera Production CI continua a falhar nos testes E2E da câmara (timeout no fluxo de media e erro de hidratação React). O workflow específico de construção, reabertura, validação PBR, verificação de entrega e promoção LFS passou. A falha E2E geral não é apresentada como resolvida nem foi mascarada nesta fase.
