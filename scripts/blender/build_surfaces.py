@@ -2,6 +2,7 @@
 import json
 import math
 import random
+from pathlib import Path
 
 import bpy
 
@@ -92,7 +93,7 @@ def _partition_row(width, rng, previous_joints, x_min):
         source = [rng.uniform(1.45, 2.05) for _ in range(BOARD_SEGMENT_COUNT)]
         scale = width / sum(source)
         lengths = [value * scale for value in source]
-        if any(length < BOARD_MIN_LENGTH_M or length > BOARD_MAX_LENGTH_M for length in lengths):
+        if any(length < BOARD_MIN_LENGTH_M + BOARD_JOINT_M or length > BOARD_MAX_LENGTH_M for length in lengths):
             continue
         seams = []
         cursor = x_min
@@ -127,7 +128,7 @@ def _partition_row(width, rng, previous_joints, x_min):
     return lengths, seams
 
 
-def _make_plank_mesh(width, depth, floor_y):
+def _make_plank_mesh(width, depth, floor_y, floor_element):
     rng = random.Random(BOARD_SEED)
     x_min, x_max = -width / 2.0, width / 2.0
     z_min = -depth / 2.0
@@ -202,7 +203,6 @@ def _make_plank_mesh(width, depth, floor_y):
     mesh.update()
     obj = bpy.data.objects.new("SDT_shell_floor_wood_hero", mesh)
     bpy.context.scene.collection.objects.link(obj)
-    floor_element = next(element for element in _CURRENT_BIBLE["elements"] if element["id"] == "floor.wood")
     finish_mesh(obj, ["floor_walnut_semi_gloss"], element=floor_element,
                 collider="none", zone="shell", lm_group="shell", bevel=0)
     _wire_floor_vertex_tint()
@@ -267,15 +267,15 @@ def _make_plank_mesh(width, depth, floor_y):
     obj["phase7BoardMaxLengthM"] = BOARD_MAX_LENGTH_M
     obj["phase7BoardBevelM"] = BOARD_BEVEL_M
     obj["phase7FloorY"] = floor_y
-    bpy.context.scene["campingPhase07Report"] = json.dumps({
-        "version": 1,
+    _PHASE7_REPORT["floor"] = {
+        "widthM": width,
+        "depthM": depth,
+        "surfaceY": floor_y,
+        "thicknessM": BOARD_THICKNESS_M,
         "boardCount": len(board_specs),
         "rows": rows_report,
         "boards": board_specs,
-        "floor": {"widthM": width, "depthM": depth, "surfaceY": floor_y, "thicknessM": BOARD_THICKNESS_M},
-    }, separators=(",", ":"))
-    ctx_built = bpy.context.scene
-    _ = ctx_built
+    }
     return obj
 
 
@@ -290,7 +290,7 @@ def _build_floor(bible, ctx, element):
         (width, SUBSTRATE_THICKNESS_M, depth),
         (0.0, floor_y - BOARD_THICKNESS_M - SUBSTRATE_THICKNESS_M / 2.0, 0.0),
         "wood_dark_stained", col, collider="none", bevel=0, zone="shell")
-    obj = _make_plank_mesh(width, depth, floor_y)
+    obj = _make_plank_mesh(width, depth, floor_y, element)
     for current in list(obj.users_collection):
         if current != col:
             current.objects.unlink(obj)
@@ -334,7 +334,7 @@ def _build_vinyl(bible, ctx, element):
             faces.append((ri(ring_index, i), ri(ring_index, j),
                           ri(ring_index + 1, j), ri(ring_index + 1, i)))
         faces.append((bottom_center_index, bottom_ring_start + i, bottom_ring_start + j))
-        faces.append((bottom_ring_start + i, bottom_ring_start + j, ri(2, j), ri(2, i)))
+        faces.append((bottom_ring_start + i, ri(2, i), ri(2, j), bottom_ring_start + j))
 
     mesh = bpy.data.meshes.new("SDT_Photo_Vinyl_CircularSweep")
     mesh.from_pydata(vertices, [], faces)
@@ -364,6 +364,11 @@ def _build_vinyl(bible, ctx, element):
     obj["phase7VinylRadiusM"] = radius
     obj["phase7VinylThicknessM"] = VINYL_THICKNESS_M
     obj["phase7VinylEdgeLiftM"] = VINYL_EDGE_LIFT_M
+    _PHASE7_REPORT["vinyl"] = {
+        "radiusM": radius, "thicknessM": VINYL_THICKNESS_M,
+        "edgeLiftM": VINYL_EDGE_LIFT_M, "segments": segments,
+        "centerXZ": [cx, cz], "surfaceY": floor_y,
+    }
     ctx["built"].add(element["id"])
     return obj
 
@@ -376,8 +381,8 @@ def _build_cyclorama(bible, ctx, element):
     roller_element = next(e for e in bible["elements"] if e["id"] == "photo.roller_backdrop")
     width = float(roller_element["size_m"][0])
     wall_x = cx - 0.008
-    curve_top_y = CYCLO_R_M
     curve_floor_y = float(room.get("floorY", 0.0)) + VINYL_THICKNESS_M
+    curve_top_y = CYCLO_R_M + curve_floor_y
     paper_top_y = roller_y - float(roller_element["size_m"][1]) / 2.0
     z_min, z_max = cz - width / 2.0, cz + width / 2.0
 
@@ -393,14 +398,14 @@ def _build_cyclorama(bible, ctx, element):
     for yi in range(vertical_rows):
         for zi in range(CYCLO_WIDTH_SEGMENTS):
             a = yi * stride + zi
-            vertical_faces.append((a, a + 1, a + stride + 1, a + stride))
+            vertical_faces.append((a, a + stride, a + stride + 1, a + 1))
 
     arc_vertices, arc_faces = [], []
     for ai in range(CYCLO_SEGMENTS + 1):
         t = ai / CYCLO_SEGMENTS
         angle = math.pi + (math.pi / 2.0) * t
         base_x = wall_x + CYCLO_R_M + CYCLO_R_M * math.cos(angle)
-        base_y = CYCLO_R_M + CYCLO_R_M * math.sin(angle)
+        base_y = curve_floor_y + CYCLO_R_M + CYCLO_R_M * math.sin(angle)
         for zi in range(CYCLO_WIDTH_SEGMENTS + 1):
             z = z_min + width * zi / CYCLO_WIDTH_SEGMENTS
             end_taper = math.sin(math.pi * t) ** 2
@@ -410,7 +415,7 @@ def _build_cyclorama(bible, ctx, element):
         for zi in range(CYCLO_WIDTH_SEGMENTS):
             a = ai * stride + zi
             # Winding faces toward the inside of the cyclorama, where the camera is.
-            arc_faces.append((a, a + stride, a + stride + 1, a + 1))
+            arc_faces.append((a, a + 1, a + stride + 1, a + stride))
 
     for label, vertices, faces in (
         ("wall", vertical_vertices, vertical_faces),
@@ -441,6 +446,13 @@ def _build_cyclorama(bible, ctx, element):
         obj["phase7CycloramaWidthM"] = width
         obj["phase7PaperContinuousToFloor"] = True
 
+    _PHASE7_REPORT["cyclorama"] = {
+        "radiusM": CYCLO_R_M, "widthM": width,
+        "wallX": wall_x, "curveTopY": curve_top_y,
+        "floorY": curve_floor_y, "segments": CYCLO_SEGMENTS,
+        "widthSegments": CYCLO_WIDTH_SEGMENTS,
+        "continuesToFloor": True,
+    }
     ctx["built"].add(element["id"])
     return True
 
@@ -471,14 +483,19 @@ def _retile_bamboo(bible):
     roof["phase7BambooTileMeters"] = BAMBOO_TILE_M
     roof["phase7BambooSourceTexturePxPerM"] = 2048.0 / BAMBOO_TILE_M
     roof["phase7BambooParallaxOcclusion"] = False
+    _PHASE7_REPORT["bamboo"] = {
+        "tileMeters": BAMBOO_TILE_M, "sourceTexturePx": 2048,
+        "sourceTexelDensityPxPerM": 2048.0 / BAMBOO_TILE_M,
+        "normalStrength": 1.2, "parallaxOcclusion": False,
+    }
 
 
-_CURRENT_BIBLE = None
+_PHASE7_REPORT = {}
 
 
 def build(bible, ctx):
-    global _CURRENT_BIBLE
-    _CURRENT_BIBLE = bible
+    global _PHASE7_REPORT
+    _PHASE7_REPORT = {"version": 1, "phase": 7}
     floor_element = next(e for e in bible.get("elements", []) if e["id"] == "floor.wood")
     vinyl_element = next(e for e in bible.get("elements", []) if e["id"] == "floor.vinyl_sweep")
     paper_element = next(e for e in bible.get("elements", []) if e["id"] == "photo.paper_folds")
@@ -497,4 +514,6 @@ def build(bible, ctx):
         _retile_bamboo(bible)
     finally:
         set_active_module("bootstrap")
-        _CURRENT_BIBLE = None
+        report_path = Path(__file__).resolve().parents[2] / "art" / "out" / "phase07-surfaces.json"
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_path.write_text(json.dumps(_PHASE7_REPORT, indent=2, sort_keys=True) + "\\n", encoding="utf-8")
