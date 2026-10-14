@@ -174,6 +174,30 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
         const digest = createHash("sha256").update(readFileSync(frontendGlb)).digest("hex");
         add("frontend metadata SHA-256 matches model", metadata.geometry && metadata.geometry.sha256 === digest, digest);
         add("frontend metadata points at canonical URL", metadata.model === "/models/camping/xoyens-studio.glb");
+        add(
+          "frontend metadata certifies Blender V3 phase 6",
+          metadata.version === 3 && metadata.phase === 6 && metadata.status === "blender-v3-published",
+          JSON.stringify({ version: metadata.version, phase: metadata.phase, status: metadata.status }),
+        );
+        add("frontend metadata byte count matches model", metadata.geometry?.bytes === statSync(frontendGlb).size);
+        add("frontend delivery SHA-256 matches model", metadata.frontendDelivery?.sha256 === digest, metadata.frontendDelivery?.sha256 ?? "missing");
+        add("frontend delivery byte count matches model", metadata.frontendDelivery?.bytes === statSync(frontendGlb).size);
+        add("frontend delivery canonical URL matches", metadata.frontendDelivery?.canonicalUrl === metadata.model);
+        add("frontend source commit recorded", /^[a-f0-9]{40}$/i.test(String(metadata.sourceCommit ?? "")), metadata.sourceCommit ?? "missing");
+        const requiredExtensions = ["KHR_texture_basisu", "EXT_meshopt_compression"];
+        for (const extension of requiredExtensions) {
+          add(
+            "frontend metadata extension " + extension,
+            used.has(extension) && (metadata.geometry?.extensionsUsed ?? []).includes(extension),
+          );
+        }
+        add("frontend metadata meshes match GLB", metadata.geometry?.meshes === (frontendJson.meshes ?? []).length);
+        add(
+          "frontend metadata primitives match GLB",
+          metadata.geometry?.primitives === (frontendJson.meshes ?? []).reduce((sum, mesh) => sum + (mesh.primitives ?? []).length, 0),
+        );
+        add("frontend metadata materials match GLB", metadata.geometry?.materials === (frontendJson.materials ?? []).length);
+        add("frontend metadata images match GLB", metadata.geometry?.embeddedImages === (frontendJson.images ?? []).length);
       } else {
         add("frontend model metadata present", false, "missing file");
       }
