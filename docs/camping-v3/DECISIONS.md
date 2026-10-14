@@ -106,3 +106,12 @@ O workflow canónico para a fonte Blender é `.github/workflows/build-3d.yml`. C
 
 ### D030 · Diagnóstico de runners permanece UNKNOWN até ler a anotação
 As consultas de jobs confirmam a assinatura `runner_id=0`, `runner_name=""` e `steps=[]` nas execuções 38378115395 (job 115231891106) e 38423793670 (job 115387875010). A API de jobs, por si só, confirma que nenhum passo foi iniciado, mas não distingue bloqueio de billing, política, quota ou falha de provisionamento. A tentativa de consultar as anotações pela integração GitHub disponível foi recusada pelo acesso ao endpoint; o ambiente de execução também não tem `GITHUB_TOKEN`. Por isso a classificação registada é `UNKNOWN`, não `BILLING_BLOCK`. O passo obrigatório seguinte é recolher o texto real de Annotations no GitHub UI ou executar `scripts/ci/read-run-annotations.mjs` com um token autorizado. A Fase 04 mantém-se aberta.
+
+
+## 2026-10-14 · Recuperação Fase 04-R
+
+### D031 · Diagnóstico de runner permanece UNKNOWN até existir anotação real
+Os metadados de jobs confirmam runner_id=0, nome de runner vazio e steps=[] em runs recentes, pelo que nenhum passo foi iniciado. A integração GitHub disponível não devolveu o conteúdo de Annotations; sem esse texto, billing, política, quota e falha de provisionamento são hipóteses, não causas confirmadas. O script read-run-annotations.mjs recolhe a anotação exacta quando executado com token autorizado. A Fase 04 permanece aberta até esse diagnóstico e uma execução Blender real.
+
+### D032 · Uma entrada de build, cinco rotas de execução
+Local, Docker, Codespaces, GitLab e GitHub Actions invocam scripts/3d/local-build.sh. Esta entrada regista logs e códigos de saída, reabre o .blend numa segunda invocação Blender, empacota apenas ficheiros realmente gerados e chama o verificador estrito. A certificação depende do verificador terminar com código zero; a existência dos scripts ou dos workflows não é prova de build.

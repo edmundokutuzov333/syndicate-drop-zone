@@ -87,3 +87,12 @@ A pipeline usa agora python3 explicitamente para compilar os módulos e orienta 
 ## Workflow de execução real da Fase 04
 
 Foi adicionado `.github/workflows/build-3d.yml`, com `workflow_dispatch` e `push` em `main`, runner Linux x86_64, Node 22, Python 3.11, instalação de Blender 4.5.14/KTX-Software 4.4.2, Git LFS, validação da Scene Bible e construção/validação do `.blend`. Cada comando escreve logs em `logs/`; os artefactos e checksums são carregados por 30 dias. O workflow só valida a fase se os três ficheiros existirem e os comandos concluírem com sucesso. A primeira execução após o commit é o gate de confirmação.
+
+
+## Recuperação da Fase 04-R · 2026-10-14
+
+Foi versionado o kit de recuperação multi-rota: instalação e diagnóstico de Blender, uma única entrada de build, logs e códigos de saída por etapa, manifesto de checksums, verificador de entrega, Docker, Codespaces, GitLab e GitHub Actions. Os workflows de diagnóstico redundantes foram substituídos por Runner smoke test e Build CAMPING 3D.
+
+Causa-raiz do bloqueio de runners: UNKNOWN. Os metadados confirmam runner_id=0 e steps=[], mas o texto exacto das anotações não ficou disponível através da integração usada. A evidência está em docs/camping-v3/phase-04/annotations.json e annotations.txt. Não atribuir a falha a billing ou política sem a anotação original.
+
+A Fase 04 continua Em validação. Esta alteração não inclui uma execução real de Blender, não cria ficheiros .blend/GLB sintéticos, e não certifica a fase. O gate continua a ser a execução real do build, reabertura do .blend, validação do GLB, checksums e códigos de saída exigidos.
