@@ -442,13 +442,18 @@ test("serves a certified optimized Blender V3 model on the canonical CAMPING URL
     "studio.inner-door",
   ];
   expect(requiredInteractions.filter((id) => !interactionIds.has(id))).toEqual([]);
-  const slotNames = new Set(
-    nodes.map((node: { name?: unknown }) => node.name)
-      .filter((name: unknown): name is string => typeof name === "string"),
+  // Blender frame meshes retain SDT_* source names. Their stable slot IDs
+  // are stored in extras.interactionId and normalized into object names by the
+  // frontend runtime before the 17 portraits are mounted.
+  const slotContracts = new Set(
+    nodes.flatMap((node: { name?: unknown; extras?: { interactionId?: unknown } }) => [
+      node.name,
+      node.extras?.interactionId,
+    ]).filter((value: unknown): value is string => typeof value === "string"),
   );
   const requiredSlots = Array.from({ length: 17 }, (_, index) => "studio.artist-slot-" + String(index + 1).padStart(3, "0"));
-  expect(requiredSlots.filter((name) => !slotNames.has(name))).toEqual([]);
-  expect(slotNames.has("studio.artist-slot-018")).toBe(false);
+  expect(requiredSlots.filter((name) => !slotContracts.has(name))).toEqual([]);
+  expect(slotContracts.has("studio.artist-slot-018")).toBe(false);
   expect(metadata.geometry?.meshes).toBe(gltf?.meshes?.length);
   expect(metadata.geometry?.primitives).toBe(
     (gltf?.meshes ?? []).reduce((count: number, mesh: { primitives?: unknown[] }) => count + (mesh.primitives?.length ?? 0), 0),
