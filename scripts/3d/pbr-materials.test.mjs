@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { invertDirectXGreenChannel, packOrmChannels, PROFILES, REQUIRED_MAPS } from "../fetch-cc0-materials.mjs";
+import { invertDirectXGreenChannel, outputRelativePath, packOrmChannels, PROFILES, REQUIRED_MAPS } from "../fetch-cc0-materials.mjs";
 import { isLfsPointer, pngDimensions, renderLicenseRows } from "../validate-pbr-materials.mjs";
 
 test("PBR profiles cover the material library and use unique stable names", () => {
@@ -28,4 +28,11 @@ test("license table includes exact IDs, authors and CC0", () => {
   const rows=renderLicenseRows([{material:"wood",sourceAsset:{id:"test_asset",url:"https://polyhaven.com/a/test_asset",authors:["Test Author"]},sourceMaps:{N:{convention:"OpenGL"}}}]);
   const tick=String.fromCharCode(96);
   assert.ok(rows.includes(tick+"test_asset"+tick));assert.ok(rows.includes("CC0 1.0"));assert.ok(rows.includes("Test Author"));
+});
+
+test("material manifest paths target final directory, not transient staging", () => {
+  assert.equal(
+    outputRelativePath("/repo/art/textures/materials.staging/T_wood_BC.png"),
+    "art/textures/materials/T_wood_BC.png",
+  );
 });

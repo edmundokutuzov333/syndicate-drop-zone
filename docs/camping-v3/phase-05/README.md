@@ -21,3 +21,9 @@ Estado: em validação até terminar o workflow real do Blender, o manifesto e a
 A ingestão não gera placeholders. Se a API não devolver material elegível em 2K, se faltarem mapas ou a continuidade das bordas exceder o limite, a build falha. A métrica de tileability é uma verificação automatizada, não uma declaração de inspecção humana. A tabela de licença é escrita a partir dos IDs exactos depois da recolha.
 
 O runtime público continua a carregar public/models/camping/xoyens-studio.glb. A conversão KTX2/Meshopt e a ligação ao runtime são trabalho das fases posteriores. Evidência de fecho: run completo, manifesto, hashes, códigos validate/blend/blend-check/verify e CI aplicável aprovado.
+
+## Correcção da execução de 2026-10-14
+
+A primeira execução do workflow identificou que o manifesto guardava caminhos dentro de `materials.staging`, embora os PNG fossem movidos atomicamente para `art/textures/materials`. Isso tornava os mapas aparentemente ausentes na validação Blender, mesmo após a recolha. O gerador agora escreve caminhos finais no manifesto e existe um teste de regressão para garantir que nenhum caminho temporário é publicado. O workflow executa também os testes unitários PBR antes de instalar/construir a cena.
+
+A fase continua aberta até uma execução nova confirmar a recolha real de 2K, os hashes/licenças, a reabertura Blender e todos os gates de entrega.

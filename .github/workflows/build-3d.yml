@@ -58,7 +58,7 @@ jobs:
           find scripts -name '*.mjs' -type f -print0 | while IFS= read -r -d '' file; do node --check "$file"; done
           find scripts -name '*.sh' -type f -print0 | while IFS= read -r -d '' file; do bash -n "$file"; done
           python3 -m py_compile scripts/blender/*.py
-          node --test scripts/3d/recovery.test.mjs
+          node --test scripts/3d/recovery.test.mjs scripts/3d/pbr-materials.test.mjs
       - name: Shared route build, reopen, validate and package
         shell: bash
         run: bash scripts/3d/local-build.sh
