@@ -2,7 +2,7 @@
 from common import build_element, clear_module, set_active_module
 
 def build(bible, ctx):
-    owned = [e["id"] for e in bible.get("elements", []) if not e["id"].startswith("arch.") and e["id"] in ctx["assemblies"] and e["id"] not in ctx["placements"]]
+    owned = [e["id"] for e in bible.get("elements", []) if not e["id"].startswith("arch.") and e["id"] in ctx["assemblies"] and e["id"] not in ctx["placements"] and e["id"] != "photo.paper_folds"]
     clear_module(ctx, "props", owned)
     set_active_module("props")
     try:
