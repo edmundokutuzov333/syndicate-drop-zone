@@ -13,7 +13,6 @@ const REQUIRED_INTERACTIONS = [
   "studio.production-desk",
   "studio.audio-system",
   "studio.inner-door",
-  ...Array.from({ length: 17 }, (_, index) => "studio.artist-slot-" + String(index + 1).padStart(3, "0")),
 ];
 const timeoutMs = Number(process.env.CAMPING_PRODUCTION_VERIFY_TIMEOUT_MS || 300_000);
 const pollMs = 5_000;
@@ -70,6 +69,12 @@ async function verifyPublishedAsset(metadata) {
     .filter((id) => typeof id === "string"));
   const missing = REQUIRED_INTERACTIONS.filter((id) => !interactionIds.has(id));
   if (missing.length) throw new Error("served GLB is missing interaction IDs: " + missing.join(", "));
+
+  const nodeNames = new Set((gltf.nodes ?? []).map((node) => node.name).filter((name) => typeof name === "string"));
+  const requiredSlots = Array.from({ length: 17 }, (_, index) => "studio.artist-slot-" + String(index + 1).padStart(3, "0"));
+  const missingSlots = requiredSlots.filter((name) => !nodeNames.has(name));
+  if (missingSlots.length) throw new Error("served GLB is missing artist slot nodes: " + missingSlots.join(", "));
+  if (nodeNames.has("studio.artist-slot-018")) throw new Error("unexpected artist slot 018 is present");
 
   const primitives = (gltf.meshes ?? []).reduce((sum, mesh) => sum + (mesh.primitives ?? []).length, 0);
   const actual = {
