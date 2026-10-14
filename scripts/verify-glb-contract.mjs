@@ -30,11 +30,23 @@ for (const node of nodes) {
   if (extras.interactionId) seen.add(extras.interactionId);
 }
 const expectedInteractions = new Set(bible.elements.map(e => e.interactionId).filter(Boolean));
-for (let i = 1; i <= 17; i++) expectedInteractions.add("studio.artist-slot-" + String(i).padStart(3, "0"));
-expectedInteractions.add("studio.artists-wall");
 const missing = [...expectedInteractions].filter(id => !seen.has(id));
 if (missing.length) {
   console.error("Missing GLB interaction extras:", missing.join(", "));
+  process.exit(1);
+}
+
+// The 17 positions are stable node-name contracts; their photo mesh interaction
+// IDs are studio.artist-photo.NNN. Do not incorrectly require the slot name itself
+// to be repeated as an interactionId in extras.
+const slotNames = new Set(nodes.map(node => node.name).filter(name => typeof name === "string"));
+const expectedSlots = Array.from({ length: 17 }, (_, index) => "studio.artist-slot-" + String(index + 1).padStart(3, "0"));
+const missingSlots = expectedSlots.filter(name => !slotNames.has(name));
+if (missingSlots.length || slotNames.has("studio.artist-slot-018")) {
+  console.error("Artist slot node contract failed:", JSON.stringify({
+    missing: missingSlots,
+    unexpected018: slotNames.has("studio.artist-slot-018"),
+  }));
   process.exit(1);
 }
 let primitives = 0, missingMaterial = 0, missingUv0 = 0, missingUv1 = 0;
@@ -53,7 +65,7 @@ const report = {
   file: glbPath, bytes: statSync(glbPath).size,
   nodes: nodes.length, meshes: (json.meshes ?? []).length, primitives,
   materials: (json.materials ?? []).length, interactions: seen.size,
-  requiredInteractionIds: expectedInteractions.size,
+  requiredInteractionIds: expectedInteractions.size,\n  artistSlots: expectedSlots.length,
   missingMaterial, missingUv0, missingUv1,
   extensionsUsed: json.extensionsUsed ?? [],
 };
