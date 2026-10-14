@@ -16,7 +16,7 @@ Issues de execução: fases 01–17 em [#33–#49](https://github.com/edmundokut
 | 04 | Fonte da verdade em Blender | Certificada | Blender 4.5.14 executado e reaberto em CI; GLB e Scene Bible validados; validate/blend/blend-check/verify=0; fonte .blend publicada em Git LFS real (commit ec362ec) |
 | 05 | Biblioteca de materiais PBR CC0 2K | Certificada | 20 conjuntos CC0 2K, manifesto/licenças/hashes e build Blender real aprovados no run 38538988505 |
 | 06 | Casca arquitectónica fechada | Em validação | abóbada sólida, portas, AC, conduta, zero non-manifold, 3.000 raios interiores e pipeline Blender aprovados |
-| 07 | Superfícies-herói | Pendente | soalho, vinil e bambu com densidade de texel definida |
+| 07 | Superfícies-herói | Em validação | malha de tábuas reais, variação COLOR_0, vinil circular, cyclorama contínuo, UVs físicos do bambu e gate Blender/GLB/deploy em execução |
 | 08 | Zona de produção | Pendente | secretária, DAW, colunas, cadeira, painéis e LED |
 | 09 | Zona fotográfica | Pendente | fundo, selo oficial, cabideiro, peças e luzes |
 | 10 | Zonas esquerda e direita | Pendente | mural, sofá, bandeira, estante e quadro |
