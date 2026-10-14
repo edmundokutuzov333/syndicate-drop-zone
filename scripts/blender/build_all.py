@@ -55,17 +55,27 @@ def main():
         raise RuntimeError("Blend output exceeds 200 MiB: " + str(size_bytes))
     elapsed = time.monotonic() - started
     mesh_objects = [obj for obj in bpy.context.scene.objects if obj.type == "MESH"]
+object_count = len(bpy.context.scene.objects)
+    vertex_count = sum(len(obj.data.vertices) for obj in mesh_objects)
+    triangle_count = sum(sum(max(1, len(poly.vertices) - 2) for poly in obj.data.polygons) for obj in mesh_objects)
+    collection_names = sorted(ctx["collections"].keys())
     report.update({
         "output": str(output_path),
         "blendBytes": size_bytes,
         "elapsedSeconds": round(elapsed, 3),
         "blenderVersion": bpy.app.version_string,
-        "vertices": sum(len(obj.data.vertices) for obj in mesh_objects),
+        "vertices": vertex_count,
         "polygons": sum(len(obj.data.polygons) for obj in mesh_objects),
-        "estimatedTriangles": sum(sum(max(1, len(poly.vertices) - 2) for poly in obj.data.polygons) for obj in mesh_objects),
+        "estimatedTriangles": triangle_count,
         "collectionObjects": {name: len(collection.objects) for name, collection in ctx["collections"].items()},
         "sourceElements": len(bible.get("elements", [])),
         "lightSources": sum(len(element.get("lights", [])) for element in bible.get("elements", [])),
+        "blender_version": bpy.app.version_string,
+        "duration_seconds": round(elapsed, 3),
+        "objects": object_count,
+        "triangles_estimate": triangle_count,
+        "collections": collection_names,
+        "blend_bytes": size_bytes,
     })
     report_path = output_path.with_suffix(".report.json")
     report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + chr(10), encoding="utf-8")
