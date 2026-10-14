@@ -1,4 +1,4 @@
-name: Build CAMPING 3D - Fase 04
+name: Build CAMPING 3D - Blender + frontend V3
 on:
   workflow_dispatch:
   push:
@@ -8,6 +8,7 @@ on:
       - "scripts/fetch-cc0-materials.mjs"
       - "scripts/validate-pbr-materials.mjs"
       - "scripts/3d/**"
+      - "scripts/build-3d.mjs"
       - "scripts/build-blend.sh"
       - "scripts/install-3d-toolchain.sh"
       - "scripts/verify-glb-contract.mjs"
