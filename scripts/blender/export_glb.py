@@ -39,6 +39,17 @@ def export_subset(output, colliders_only):
         kind = "collision" if colliders_only else "visual"
         raise RuntimeError("No " + kind + " objects selected for GLB export")
 
+    # Publish stable artist-slot names in glTF as a second, exporter-independent
+    # representation of the interaction contract. Preserve source object names in
+    # the .blend by restoring them immediately after export.
+    original_names = {obj: obj.name for obj in selected}
+    for obj in selected:
+        interaction_id = obj.get("interactionId")
+        if isinstance(interaction_id, str) and interaction_id.startswith("studio.artist-slot-"):
+            suffix = interaction_id.removeprefix("studio.artist-slot-")
+            if len(suffix) == 3 and suffix.isdigit() and 1 <= int(suffix) <= 17:
+                obj.name = interaction_id
+
     try:
         bpy.context.view_layer.objects.active = selected[0]
         bpy.ops.export_scene.gltf(
@@ -51,6 +62,7 @@ def export_subset(output, colliders_only):
     finally:
         for obj in selected:
             obj.select_set(False)
+            obj.name = original_names[obj]
             if obj.name in hidden_states:
                 obj.hide_set(hidden_states[obj.name])
 
