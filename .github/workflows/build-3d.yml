@@ -27,6 +27,8 @@ concurrency:
   cancel-in-progress: true
 permissions:
   contents: read
+env:
+  CAMPING_PHASE: "8"
 jobs:
   build:
     name: Build, reopen and certify Blender delivery
@@ -77,6 +79,7 @@ jobs:
           path: |
             public/models/camping/xoyens-studio.glb
             public/models/camping/xoyens-studio.model.json
+            public/models/camping/xoyens-studio.colliders.glb
           if-no-files-found: error
           retention-days: 30
       - name: Render and verify Phase 06 evidence views
@@ -130,8 +133,8 @@ jobs:
                   raise SystemExit("Phase 08 capture SHA-256 mismatch: " + name)
           print("PHASE 08 CAPTURES VERIFIED", json.dumps(manifest, sort_keys=True))
           PY
-          node scripts/3d/pack-delivery.mjs --manifest-only
-          node scripts/3d/verify-delivery.mjs . docs/camping-v3/scene-bible.json --check-exit-codes
+          node scripts/3d/pack-delivery.mjs --manifest-only --phase="${CAMPING_PHASE:-8}"
+          node scripts/3d/verify-delivery.mjs . docs/camping-v3/scene-bible.json --phase="${CAMPING_PHASE:-8}" --check-exit-codes
       - name: Write evidence summary
         if: always()
         shell: bash
@@ -233,7 +236,10 @@ jobs:
           test -s /tmp/fase04-delivery/xoyens-studio.blend
           test -s /tmp/fase04-delivery/xoyens-studio.report.json
           test -s /tmp/fase04-delivery/out/xoyens-studio.raw.glb
-          test -s /tmp/fase04-delivery/out/xoyens-studio.colliders.glb
+          if [[ "${CAMPING_PHASE:-8}" -ge 14 ]]; then
+            test -s /tmp/fase04-delivery/out/xoyens-studio.colliders.glb
+            test -s /tmp/camping-frontend-model/xoyens-studio.colliders.glb
+          fi
           test -s /tmp/fase04-delivery/out/phase07-surfaces.json
           test -s /tmp/fase04-delivery/xoyens-studio.phase07.report.json
           test -s /tmp/fase04-delivery/xoyens-studio.phase08.report.json
@@ -256,7 +262,10 @@ jobs:
           cp /tmp/fase04-delivery/xoyens-studio.blend art/xoyens-studio.blend
           cp /tmp/fase04-delivery/xoyens-studio.report.json art/xoyens-studio.report.json
           cp /tmp/fase04-delivery/out/xoyens-studio.raw.glb art/out/xoyens-studio.raw.glb
-          cp /tmp/fase04-delivery/out/xoyens-studio.colliders.glb art/out/xoyens-studio.colliders.glb
+          if [[ "${CAMPING_PHASE:-8}" -ge 14 ]]; then
+            cp /tmp/fase04-delivery/out/xoyens-studio.colliders.glb art/out/xoyens-studio.colliders.glb
+            cp /tmp/camping-frontend-model/xoyens-studio.colliders.glb public/models/camping/xoyens-studio.colliders.glb
+          fi
           cp /tmp/fase04-delivery/out/phase07-surfaces.json art/out/phase07-surfaces.json
           cp /tmp/fase04-delivery/xoyens-studio.phase07.report.json art/xoyens-studio.phase07.report.json
           cp /tmp/fase04-delivery/xoyens-studio.phase08.report.json art/xoyens-studio.phase08.report.json
@@ -273,12 +282,12 @@ jobs:
           mkdir -p public/models/camping
           cp /tmp/camping-frontend-model/xoyens-studio.glb public/models/camping/xoyens-studio.glb
           cp /tmp/camping-frontend-model/xoyens-studio.model.json public/models/camping/xoyens-studio.model.json
-          node scripts/3d/pack-delivery.mjs --manifest-only
+          node scripts/3d/pack-delivery.mjs --manifest-only --phase="${CAMPING_PHASE:-8}"
           node scripts/validate-pbr-materials.mjs --write-licenses
           node scripts/validate-pbr-materials.mjs
 
           # The artifact is re-verified after download, before any Git write.
-          node scripts/3d/verify-delivery.mjs . docs/camping-v3/scene-bible.json --check-exit-codes
+          node scripts/3d/verify-delivery.mjs . docs/camping-v3/scene-bible.json --phase="${CAMPING_PHASE:-8}" --check-exit-codes
 
           test "$(git check-attr filter -- art/xoyens-studio.blend | awk '{print $3}')" = "lfs"
           BLEND_SHA="$(sha256sum art/xoyens-studio.blend | awk '{print $1}')"
@@ -290,6 +299,7 @@ jobs:
           git add art/xoyens-studio.blend art/textures/materials/*.png art/textures/materials.manifest.json docs/camping-v3/ASSET-LICENSES.md
           git add docs/camping-v3/phase-06/ceiling.png docs/camping-v3/phase-06/main-door.png docs/camping-v3/phase-06/capture-manifest.json
           git add public/models/camping/xoyens-studio.glb public/models/camping/xoyens-studio.model.json
+          if [[ "${CAMPING_PHASE:-8}" -ge 14 ]]; then git add public/models/camping/xoyens-studio.colliders.glb; fi
           git add docs/camping-v3/phase-07/surface-validation.json docs/camping-v3/phase-07/surface-source.json
           git add art/xoyens-studio.phase08.report.json docs/camping-v3/phase-08/production-validation.json
           git add docs/camping-v3/phase-08/production-overview.png docs/camping-v3/phase-08/production-detail.png docs/camping-v3/phase-08/capture-manifest.json
