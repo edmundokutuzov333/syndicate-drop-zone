@@ -6,6 +6,7 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 from common import argv_after_dashes, validate_scene_contract
+from validate_shell import validate_architectural_shell
 
 def main():
     args = argv_after_dashes()
@@ -15,6 +16,7 @@ def main():
     bible = json.loads(bible_path.read_text(encoding="utf-8"))
     path = bpy.data.filepath
     report = validate_scene_contract(bible, path)
+    report["phase06Shell"] = validate_architectural_shell(bible)
     meshes = [obj for obj in bpy.context.scene.objects if obj.type == "MESH"]
     report.update({
         "blender_version": bpy.app.version_string,

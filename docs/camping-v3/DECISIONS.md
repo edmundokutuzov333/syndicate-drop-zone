@@ -145,3 +145,8 @@ A Fase 05 altera a pipeline de materiais, fonte Blender e documentação. Não a
 
 ### D023 · Evidência visual
 A métrica das bordas é um gate automatizado, não substitui a inspecção visual. A fidelidade panorâmica, o bake, tone mapping, screenshot A/B e score são medidos nas fases de harness e rendering; não são declarados concluídos na Fase 05.
+
+
+## 2026-10-14 · Fase 06: contrato da casca arquitectónica
+
+A fonte continua a ser o Scene Bible e o módulo existente `scripts/blender/build_shell.py`. A abóbada usa superfícies interior/exterior e tampas de fecho. A validação da fonte reaberta conta arestas non-manifold dos componentes de fronteira, aplica o intervalo de 18.000–25.000 triângulos à casca e testa 3.000 raios determinísticos a partir de três posições interiores. Portas, AC e PVC são geometrias modeladas e recebem UVMap/UV_Lightmap pelo helper de acabamento. Não foram alterados IDs de interacção, slots de artistas, módulos de produção/fotografia/lados ou budgets.

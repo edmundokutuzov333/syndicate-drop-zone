@@ -14,8 +14,8 @@ Issues de execução: fases 01–17 em [#33–#49](https://github.com/edmundokut
 | 02 | Toolchain e dependências | Em validação | dependências, Blender, KTX, Basis, build CLI, lockfile e CI confirmados por execução |
 | 03 | Scene Bible e plano métrico | Em validação | 54 elementos, escala humana, 4 paredes/2 portas, orçamento ≤260000 e 72 células sector/elev validados; CI ainda pendente |
 | 04 | Fonte da verdade em Blender | Certificada | Blender 4.5.14 executado e reaberto em CI; GLB e Scene Bible validados; validate/blend/blend-check/verify=0; fonte .blend publicada em Git LFS real (commit ec362ec) |
-| 05 | Biblioteca de materiais PBR CC0 2K | Em validação | ≥18 materiais com BC/N/ORM 2048², hashes/licenças e build Blender real; fechar apenas com evidência e CI aplicável aprovada |
-| 06 | Casca arquitectónica fechada | Pendente | paredes, abóbada, portas, AC e condutas |
+| 05 | Biblioteca de materiais PBR CC0 2K | Certificada | 20 conjuntos CC0 2K, manifesto/licenças/hashes e build Blender real aprovados no run 38538988505 |
+| 06 | Casca arquitectónica fechada | Em validação | abóbada sólida, portas, AC, conduta, zero non-manifold, 3.000 raios interiores e pipeline Blender aprovados |
 | 07 | Superfícies-herói | Pendente | soalho, vinil e bambu com densidade de texel definida |
 | 08 | Zona de produção | Pendente | secretária, DAW, colunas, cadeira, painéis e LED |
 | 09 | Zona fotográfica | Pendente | fundo, selo oficial, cabideiro, peças e luzes |
@@ -116,3 +116,8 @@ Foram executados e passaram a verificação de sintaxe Node dos quatro ficheiros
 ## Execução da Fase 05 · 2026-10-14
 
 O pipeline de ingestão e validação foi preparado na main. A fase não fica concluída pelo simples facto de os scripts existirem. Exige recolha real de assets da API Poly Haven, manifesto validado, build e reabertura Blender, artefactos/checksums e CI relevante aprovado. Os mapas PBR são versionados em Git LFS; o GLB público e o runtime não são alterados nesta fase, ficando a optimização KTX2/Meshopt e a integração no runtime para fases posteriores.
+
+
+## Estado real da Fase 06
+
+A implementação permanece em validação até o workflow reconstruir e reabrir a fonte Blender. O módulo `scripts/blender/build_shell.py` cria uma abóbada de espessura real com caps de fecho, duas costelas principais e catorze secundárias, portas com painel recuado e ferragens, AC com nove lamelas, PVC com ramificações, tomadas, interruptor, rodapés segmentados nos vãos, cove/lancil, shadow gaps e soffit. `scripts/blender/validate_shell.py` verifica as arestas non-manifold, 18.000–25.000 triângulos de casca e 1.000 direcções de raio em cada um de três pontos no interior. A fase só será certificada quando os resultados reais confirmarem zero fugas e todos os gates de entrega.
