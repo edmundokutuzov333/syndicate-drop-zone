@@ -1,6 +1,6 @@
 # CAMPING V3 · Estado das 22 fases
 
-Última actualização: 2026-10-13  
+Última actualização: 2026-10-14  
 Branch de execução: `main`  
 Referência: `docs/camping-v3/reference/reference-sectors.json`  
 Hash da panorâmica original: `998f637c62fad46c1459a0c85c99db79f2f799951b9d2c4c38b659ad2e193813`  
@@ -13,7 +13,7 @@ Issues de execução: fases 01–17 em [#33–#49](https://github.com/edmundokut
 | 01 | Linha de base, instrumentação e harness de fidelidade | Em validação | baseline executado, API debug, 7 poses, 21 capturas aprovadas, CI verde |
 | 02 | Toolchain e dependências | Em validação | dependências, Blender, KTX, Basis, build CLI, lockfile e CI confirmados por execução |
 | 03 | Scene Bible e plano métrico | Em validação | 54 elementos, escala humana, 4 paredes/2 portas, orçamento ≤260000 e 72 células sector/elev validados; CI ainda pendente |
-| 04 | Fonte da verdade em Blender | Em validação | pipeline CLI, colecções, extras, UVs e proxies de colisão implementados; ficheiro .blend e CI ainda por executar |
+| 04 | Fonte da verdade em Blender | Certificada | Blender 4.5.14 executado e reaberto em CI; GLB e Scene Bible validados; validate/blend/blend-check/verify=0; fonte .blend publicada em Git LFS real (commit ec362ec) |
 | 05 | Biblioteca de materiais PBR CC0 2K | Pendente | manifestos e licenças verificados |
 | 06 | Casca arquitectónica fechada | Pendente | paredes, abóbada, portas, AC e condutas |
 | 07 | Superfícies-herói | Pendente | soalho, vinil e bambu com densidade de texel definida |
@@ -73,20 +73,20 @@ O verificador local sobre o candidato da Fase 03 devolveu 54 elementos, 221 710 
 
 A arquitectura Blender é agora definida por scripts versionados em scripts/blender/: common.py, build_all.py, builders de casca/superfícies/produção/fotografia/lados/props, luzes, colliders, validação do .blend e exportação GLB. O comando npm run 3d:blend reconstrói a cena desde o zero a partir de docs/camping-v3/scene-bible.json, valida o contrato, exporta GLB cru e verifica extras e UVs. O workflow CAMPING 3D Toolchain foi ampliado para compilar a sintaxe Python, executar o build e carregar os artefactos.
 
-A fonte editável .blend ainda não foi gerada nesta execução: o runner de GitHub Actions tem falhado antes de ser atribuído (runner_id=0, steps=[]), e Blender não está disponível no ambiente local. Não há um binário .blend commitado nem se criou um ponteiro LFS sem objecto correspondente. O resultado permanece em validação até o workflow produzir e validar o artefacto; depois deve ser guardado com Git LFS se o ficheiro ficar abaixo de 200 MiB.
+A fonte editável `art/xoyens-studio.blend` foi gerada por Blender 4.5.14 LTS num runner GitHub Actions real, reaberta num segundo processo e certificada por `scripts/3d/verify-delivery.mjs`. O ficheiro tem 8 248 183 bytes e está publicada em Git LFS verdadeiro no commit `ec362ec04665085dd2ce8ff6b5a13306b0727bd1`; o SHA-256 do conteúdo binário é `cfbffce61ed393a427b0f167847f05ba6dc1fa04df7fff64700def48909bbb58`. O validador confirmou sete colecções, 378 objectos, 37 046 vértices, 62 864 triângulos estimados, 17 slots de artistas, sete IDs de interacção, UV0 em todas as primitivas e UV1 em 359/359 primitivas do GLB. A certificação integral está em `docs/camping-v3/phase-04/certification-2026-10-14.md`.
 
 ### Revisão geométrica pós-commit da Fase 04
 Foi preparada uma correcção adicional à orientação das superfícies e à escala/orientação de alguns props. Esta revisão não altera o contrato do backend, os IDs de produto, o número de artistas nem os budgets. A certificação continua dependente de o runner executar Blender e os gates da pipeline.
 
 ### PBR and shading helper follow-up
-The Blender common module now supports optional color/normal/ORM/height paths with color-space validation and named nodes, and includes Blender 4.x angle-based sharp-edge marking alongside Weighted Normal. No third-party textures have been added yet; the maps parameter is for the material asset phase. These Blender API paths remain unexecuted because the GitHub runner is not being allocated.
+The Blender common module now supports optional color/normal/ORM/height paths with color-space validation and named nodes, and includes Blender 4.x angle-based sharp-edge marking alongside Weighted Normal. No third-party textures have been added yet; the maps parameter is for the material asset phase. Os caminhos de API Blender deste helper foram executados na certificação real com Blender 4.5.14 LTS; a execução e os resultados estão ligados no registo de certificação da Fase 04.
 
-A pipeline usa agora python3 explicitamente para compilar os módulos e orienta a alavanca da porta no eixo horizontal. O teste Blender continua por executar por falta de runner atribuível.
+A pipeline chama `python3` explicitamente para compilar os módulos e orienta a alavanca da porta no eixo horizontal. A primeira execução real revelou duas falhas de código, agora corrigidas em `4efa8dd` (indentação em `build_all.py`) e `c258de8` (nome do material enviado a `finish_mesh`). A execução final passou os testes de sintaxe, build Blender, reabertura, validação GLB e verificação final.
 
 
 ## Workflow de execução real da Fase 04
 
-Foi adicionado `.github/workflows/build-3d.yml`, com `workflow_dispatch` e `push` em `main`, runner Linux x86_64, Node 22, Python 3.11, instalação de Blender 4.5.14/KTX-Software 4.4.2, Git LFS, validação da Scene Bible e construção/validação do `.blend`. Cada comando escreve logs em `logs/`; os artefactos e checksums são carregados por 30 dias. O workflow só valida a fase se os três ficheiros existirem e os comandos concluírem com sucesso. A primeira execução após o commit é o gate de confirmação.
+Foi adicionado `.github/workflows/build-3d.yml`, com `workflow_dispatch` e `push` em `main`, runner Linux x86_64, Node 22, Python 3.11, instalação de Blender 4.5.14/KTX-Software 4.4.2, Git LFS, validação da Scene Bible e construção/validação do `.blend`. Cada comando escreve logs em `logs/`; os artefactos e checksums são carregados por 30 dias. O workflow valida a fase somente quando os três ficheiros existem, o `.blend` reabre, o GLB cumpre o contrato e os códigos `validate`, `blend`, `blend-check` e `verify` são zero. A execução `38527906358` cumpriu esse gate e publicou a fonte verificada em Git LFS.
 
 
 ## Recuperação da Fase 04-R · 2026-10-14
@@ -95,8 +95,19 @@ Foi versionado o kit de recuperação multi-rota: instalação e diagnóstico de
 
 Causa-raiz do bloqueio de runners: UNKNOWN. Os metadados confirmam runner_id=0 e steps=[], mas o texto exacto das anotações não ficou disponível através da integração usada. A evidência está em docs/camping-v3/phase-04/annotations.json e annotations.txt. Não atribuir a falha a billing ou política sem a anotação original.
 
-A Fase 04 continua Em validação. Esta alteração não inclui uma execução real de Blender, não cria ficheiros .blend/GLB sintéticos, e não certifica a fase. O gate continua a ser a execução real do build, reabertura do .blend, validação do GLB, checksums e códigos de saída exigidos.
+A execução de `38527906358` gerou os ficheiros com Blender real, voltou a abrir o `.blend`, validou o GLB e passou todos os gates. A promoção para LFS foi concluída no commit `ec362ec04665085dd2ce8ff6b5a13306b0727bd1`; não foram usados ficheiros sintéticos nem ponteiros LFS manuais.
 
 
 ### Testes locais do kit de recuperação · 2026-10-14
-Foram executados e passaram a verificação de sintaxe Node dos quatro ficheiros .mjs do kit fornecido, bash -n dos três scripts .sh, parse JSON do devcontainer, parse YAML dos três workflows e quatro testes unitários do classificador/contrato GLB. O doctor reportou Blender 4.5.14 ausente e sem acesso de rede ao servidor de downloads. Esta evidência está registada em docs/camping-v3/phase-04/annotations.json e annotations.txt. A validação não executou Blender e não gera certificação da cena.
+Foram executados e passaram a verificação de sintaxe Node dos quatro ficheiros .mjs do kit fornecido, bash -n dos três scripts .sh, parse JSON do devcontainer, parse YAML dos três workflows e quatro testes unitários do classificador/contrato GLB. O doctor local reportou Blender 4.5.14 ausente e sem acesso de rede ao servidor de downloads. A máquina local não executou Blender; a certificação vem da execução hosted `38527906358`, que instalou Blender 4.5.14, construiu, reabriu e validou a entrega real.
+
+
+### Certificação final · 2026-10-14
+
+- **Run de build real:** [Build CAMPING 3D - Fase 04 #38527906358](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38527906358), build source commit `e40d013526e23162782c9ab0404228226022b6bd`, runner atribuído e job concluído com `success`.
+- **Promoção LFS:** [commit `ec362ec04665085dd2ce8ff6b5a13306b0727bd1`](https://github.com/edmundokutuzov333/syndicate-drop-zone/commit/ec362ec04665085dd2ce8ff6b5a13306b0727bd1). `git lfs ls-files`, `git lfs fsck --objects HEAD`, o SHA/size do ponteiro gerado pelo filtro e o push para `main` passaram.
+- **Blender:** 4.5.14 LTS; 54 elementos Scene Bible; 378 objectos, 371 malhas, 37 046 vértices, 62 864 triângulos estimados; 43 materiais na cena; 7 colecções.
+- **GLB:** 5 693 056 bytes; 359 nós, malhas e primitivas; 38 materiais; 7 IDs de interacção; 17 slots únicos (001–017), sem slot 018; todas as primitivas têm material, UV0 e UV1; 359/359 têm UV1; extras `zone` e `lmGroup` presentes.
+- **Códigos de saída requeridos:** `validate=0`, `blend=0`, `blend-check=0`, `verify=0`. `doctor=1` reflecte apenas que o binário ainda não estava instalado antes da etapa de instalação; `install-blender=0` e `doctor-after-install=0`.
+- **Checksums SHA-256:** `.blend` `cfbffce61ed393a427b0f167847f05ba6dc1fa04df7fff64700def48909bbb58`; `.report.json` `dd8d7e576cbe1ab76536923d3e89b748e88b394dcb9a48f0178ab843f4ce0474`; `.raw.glb` `298a3ea8819f92cf21eecb540ba8bb04699762630a4aa7a655fdf46245c0a012`; ZIP de entrega `450695dd705c6f68231fa74c823e113855d5793b2c661348b0704b2bd42f25e7`; artifact ZIP do Actions `88f150f558493ae7b6948901d60cd3b86643fa900293bb01fc93cf2fc0d7c3cb`.
+- O pacote contém os três ficheiros gerados, logs, manifesto e códigos de saída. A causa original das falhas históricas de runner continua `UNKNOWN` até ser obtido o texto real de Annotations; isso não invalida a execução bem-sucedida que certificou esta entrega.
