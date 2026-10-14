@@ -27,7 +27,8 @@
     "3d:toolchain:install": "bash scripts/install-3d-toolchain.sh",
     "3d:toolchain:check": "node scripts/check-3d-toolchain.mjs",
     "3d:blend": "bash scripts/build-blend.sh",
-    "3d:blend:validate": "blender -b art/xoyens-studio.blend -P scripts/blender/validate_blend.py -- docs/camping-v3/scene-bible.json"
+    "3d:blend:validate": "bash scripts/3d/validate-blend.sh",
+    "3d:recovery:test": "node --test scripts/3d/recovery.test.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"
