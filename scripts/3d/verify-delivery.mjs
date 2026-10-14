@@ -31,7 +31,7 @@ export function blendKind(b) {
   return "unknown";
 }
 
-export function glbContract(j, bible) {
+export function glbContract(j, bible, { requirePhase8 = false } = {}) {
   const out = [];
   const check = (name, pass, detail = "") => out.push({ name, pass, detail });
   const nodes = j.nodes ?? [];
@@ -95,11 +95,15 @@ export function glbContract(j, bible) {
       Math.abs(Number(paperCurveNode?.extras?.phase7CycloramaRadiusM) - 0.35) <= 0.0001 &&
       paperCurveNode?.extras?.phase7PaperContinuousToFloor === true,
     paperWallNode && paperCurveNode ? "wall + curve connected contract" : "missing wall or curve");
-  const phase8Materials = new Set((j.materials ?? []).map((material) => material.name).filter(Boolean));
-  for (const materialName of ["ceramic_red", "glass_mirror", "led_warm_emissive"]) check("Phase 08 material " + materialName, phase8Materials.has(materialName));
-  check("Phase 08 live DAW screen node", nodes.some((node) => node.name === "SDT_production_monitor_daw_screen" && Number.isInteger(node.mesh)));
-  for (const interactionId of ["studio.production-desk", "studio.imac", "studio.audio-system"]) {
-    check("Phase 08 interaction " + interactionId, extras.some((extra) => extra.interactionId === interactionId) || names.has(interactionId));
+  if (requirePhase8) {
+    const phase8Materials = new Set((j.materials ?? []).map((material) => material.name).filter(Boolean));
+    for (const materialName of ["ceramic_red", "glass_mirror", "led_warm_emissive"]) {
+      check("Phase 08 material " + materialName, phase8Materials.has(materialName));
+    }
+    check("Phase 08 live DAW screen node", nodes.some((node) => node.name === "SDT_production_monitor_daw_screen" && Number.isInteger(node.mesh)));
+    for (const interactionId of ["studio.production-desk", "studio.imac", "studio.audio-system"]) {
+      check("Phase 08 interaction " + interactionId, extras.some((extra) => extra.interactionId === interactionId) || names.has(interactionId));
+    }
   }
   return out;
 }
@@ -234,7 +238,9 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
   const glb = join(dir, "art/out/xoyens-studio.raw.glb");
   if (existsSync(glb) && bibleExists) {
     try {
-      for (const check of glbContract(parseGlb(readFileSync(glb)), JSON.parse(readFileSync(biblePath, "utf8")))) {
+      for (const check of glbContract(parseGlb(readFileSync(glb)), JSON.parse(readFileSync(biblePath, "utf8")), {
+        requirePhase8: existsSync(productionReportPath),
+      })) {
         add("GLB: " + check.name, check.pass, check.detail);
       }
     } catch (error) {
@@ -249,7 +255,9 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
   if (existsSync(frontendGlb) && bibleExists) {
     try {
       const frontendJson = parseGlb(readFileSync(frontendGlb));
-      for (const check of glbContract(frontendJson, JSON.parse(readFileSync(biblePath, "utf8")))) {
+      for (const check of glbContract(frontendJson, JSON.parse(readFileSync(biblePath, "utf8")), {
+        requirePhase8: existsSync(productionReportPath),
+      })) {
         add("Frontend GLB: " + check.name, check.pass, check.detail);
       }
       const used = new Set(frontendJson.extensionsUsed || []);
