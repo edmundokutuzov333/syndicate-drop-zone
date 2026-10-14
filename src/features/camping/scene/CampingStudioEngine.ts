@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
+import { MeshoptDecoder } from "meshoptimizer";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import xoyensLogo from "@/assets/brand/xoyens.png.asset.json";
 import sindicatoSeloAsset from "@/assets/brand/sindicato-selo.png.asset.json";
@@ -40,6 +42,7 @@ import { DynamicResolution } from "../v3/dynamic-resolution";
 import { createDawScreen } from "../v3/screen-texture";
 import { renderEquirect, rgbaToDataUrl, createDifferenceImage } from "../v3/refmatch";
 import { referenceMatchScore, sectorStats, type Rgba } from "../v3/sector-stats";
+import { normalizeCampingModel } from "./camping-model-compatibility";
 import { REFERENCE_SECTOR_STATS, REFERENCE_SOURCE_SHA256 } from "../v3/reference-sector-baseline";
 import type { CampingDebugMetrics, CampingDebugPoseId, CampingReferenceMatch } from "../v3/debug-api";
 
@@ -607,6 +610,7 @@ export class CampingStudioEngine {
   private roomTransitionDoorPivot: THREE.Object3D | null = null;
   private roomTransitionDoorBaseRotation = 0;
   private loader: GLTFLoader | null = null;
+  private ktx2Loader: KTX2Loader | null = null;
   private entryDoor: THREE.Group | null = null;
   private keypadDisplay: THREE.Mesh | null = null;
   private lockLight: THREE.PointLight | null = null;
@@ -788,6 +792,8 @@ export class CampingStudioEngine {
     this.virtualState.clear();
     this.tween = null;
     this.loader = null;
+    this.ktx2Loader?.dispose();
+    this.ktx2Loader = null;
     this.interactiveRoots = [];
     this.hitTargets = [];
     this.hoveredRoot = null;
@@ -1910,6 +1916,11 @@ export class CampingStudioEngine {
     if (this.studioLoaded || this.loader || this.disposed) return;
     this.callbacks.onAssetState("loading");
     this.loader = new GLTFLoader();
+    if (this.renderer) {
+      this.ktx2Loader = new KTX2Loader().setTranscoderPath("/basis/").detectSupport(this.renderer);
+      this.loader.setKTX2Loader(this.ktx2Loader);
+    }
+    this.loader.setMeshoptDecoder(MeshoptDecoder);
     this.loader.load(
       STUDIO_URL,
       (gltf) => {
@@ -1925,14 +1936,25 @@ export class CampingStudioEngine {
         const root = gltf.scene;
         root.name = "CAMPING / XOYENS STUDIO GLB";
         root.visible = this.phase !== "LOCKED" && this.phase !== "CODE_ENTRY" && this.phase !== "ACCESS_GRANTED";
-        const compositionReport = applyCampingReferenceComposition(root);
+        const modelSource = normalizeCampingModel(root);
         if (this.canvas) {
-          this.canvas.dataset.campingReferenceComposition = compositionReport.applied ? "applied" : "already-applied";
-          this.canvas.dataset.campingReferenceFixes = compositionReport.correctedNodes.join(",");
-          this.canvas.dataset.campingReferenceMissingNodes = compositionReport.missingNodes.join(",");
+          this.canvas.dataset.campingModelSource = modelSource;
+          this.canvas.dataset.campingModelVersion = modelSource === "blender-v3" ? "3" : "legacy";
+        }
+        if (modelSource === "legacy-glb") {
+          const compositionReport = applyCampingReferenceComposition(root);
+          if (this.canvas) {
+            this.canvas.dataset.campingReferenceComposition = compositionReport.applied ? "applied" : "already-applied";
+            this.canvas.dataset.campingReferenceFixes = compositionReport.correctedNodes.join(",");
+            this.canvas.dataset.campingReferenceMissingNodes = compositionReport.missingNodes.join(",");
+          }
+        } else if (this.canvas) {
+          this.canvas.dataset.campingReferenceComposition = "metric-authored-v3";
+          this.canvas.dataset.campingReferenceFixes = "";
+          this.canvas.dataset.campingReferenceMissingNodes = "";
         }
         this.prepareInnerDoorPivot(root);
-        this.prepareArtistWallMounting(root);
+        if (modelSource === "legacy-glb") this.prepareArtistWallMounting(root);
         this.addSyndicateBanner(root);
         this.addXoyensBacklitSign(root);
         this.addDawScreen(root);
@@ -2495,6 +2517,14 @@ export class CampingStudioEngine {
           return;
         }
         if (candidateMaterials.length === 1 && candidateMaterials[0]?.name === "black") {
+          photoCandidates.push({ mesh: candidate, materialIndex: 0 });
+          return;
+        }
+        if (
+          root.userData.campingModelVersion === 3 &&
+          candidateMaterials.length === 1 &&
+          /artist_slot_\d{3}_blank/i.test(candidate.name)
+        ) {
           photoCandidates.push({ mesh: candidate, materialIndex: 0 });
         }
       });

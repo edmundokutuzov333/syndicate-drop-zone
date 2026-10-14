@@ -371,3 +371,29 @@ test.describe("CAMPING V2 / 808 access", () => {
     await expect(page.locator("body")).toHaveJSProperty("scrollWidth", await page.evaluate(() => document.body.clientWidth));
   });
 });
+
+
+test("serves the optimized Blender V3 model on the canonical CAMPING URL", async ({ page }) => {
+  await page.setViewportSize({ width: 1774, height: 887 });
+  const modelResponsePromise = page.waitForResponse((response) =>
+    new URL(response.url()).pathname === "/models/camping/xoyens-studio.glb" && response.status() === 200,
+    { timeout: 60_000 },
+  );
+  await openCamping(page);
+  if (await page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]').isVisible()) {
+    test.skip(true, "Este Chromium não disponibiliza WebGL para validar a cena renderizada.");
+  }
+  await page.keyboard.press("8");
+  await page.keyboard.press("0");
+  await page.keyboard.press("8");
+  await expect(page.locator(".camping-studio__explore-state")).toContainText("EXPLORATION ACTIVE", { timeout: 30_000 });
+  const response = await modelResponsePromise;
+  const bytes = Number(response.headers()["content-length"] ?? 0);
+  expect(bytes).toBeGreaterThan(0);
+  expect(bytes).toBeLessThanOrEqual(16 * 1024 * 1024);
+  const canvas = page.locator("canvas.camping-studio__canvas");
+  await expect(canvas).toHaveAttribute("data-camping-model-source", "blender-v3", { timeout: 60_000 });
+  await expect(canvas).toHaveAttribute("data-camping-model-version", "3");
+  await expect(canvas).toHaveAttribute("data-camping-scene-status", "ready");
+  await expect(canvas).toHaveAttribute("data-camping-artist-slots", "17");
+});

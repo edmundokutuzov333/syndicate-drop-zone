@@ -44,7 +44,7 @@ jobs:
         run: npm run check:camping-baseline
 
       - name: Engineering tests
-        run: npm run test -- src/features/camping/interactions/access-machine.test.ts src/features/camping/camera/camping-collision.test.ts src/features/camping/scene/camping-object-contracts.test.ts src/features/camping/scene/camping-glb-contract.test.ts src/features/camping/scene/camping-room-world.test.ts src/features/camping/v3/v3.test.ts src/lib/merch-stock.test.ts src/test/camera-engineering.test.ts src/test/frequency.test.ts src/test/supabase-public.test.ts src/test/membership.test.ts src/test/fan-membership.test.ts src/test/fan-video.test.ts src/test/fan-video-api.test.ts src/test/filiacao.test.tsx src/test/partnership.test.ts src/test/phase1.test.ts src/lib/site-content.test.ts
+        run: npm run test -- src/features/camping/interactions/access-machine.test.ts src/features/camping/camera/camping-collision.test.ts src/features/camping/scene/camping-object-contracts.test.ts src/features/camping/scene/camping-model-compatibility.test.ts src/features/camping/scene/camping-glb-contract.test.ts src/features/camping/scene/camping-room-world.test.ts src/features/camping/v3/v3.test.ts src/lib/merch-stock.test.ts src/test/camera-engineering.test.ts src/test/frequency.test.ts src/test/supabase-public.test.ts src/test/membership.test.ts src/test/fan-membership.test.ts src/test/fan-video.test.ts src/test/fan-video-api.test.ts src/test/filiacao.test.tsx src/test/partnership.test.ts src/test/phase1.test.ts src/lib/site-content.test.ts
 
       - name: Production build
         run: npm run build
