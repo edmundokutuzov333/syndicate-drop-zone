@@ -70,11 +70,16 @@ async function verifyPublishedAsset(metadata) {
   const missing = REQUIRED_INTERACTIONS.filter((id) => !interactionIds.has(id));
   if (missing.length) throw new Error("served GLB is missing interaction IDs: " + missing.join(", "));
 
-  const nodeNames = new Set((gltf.nodes ?? []).map((node) => node.name).filter((name) => typeof name === "string"));
+  // The Blender exporter keeps SDT_* frame names; extras.interactionId is the
+  // stable slot contract consumed by normalizeCampingModel at runtime.
+  const slotContracts = new Set((gltf.nodes ?? []).flatMap((node) => [
+    node.name,
+    node.extras?.interactionId,
+  ]).filter((value) => typeof value === "string" && /^studio\\.artist-slot-\\d{3}$/.test(value)));
   const requiredSlots = Array.from({ length: 17 }, (_, index) => "studio.artist-slot-" + String(index + 1).padStart(3, "0"));
-  const missingSlots = requiredSlots.filter((name) => !nodeNames.has(name));
-  if (missingSlots.length) throw new Error("served GLB is missing artist slot nodes: " + missingSlots.join(", "));
-  if (nodeNames.has("studio.artist-slot-018")) throw new Error("unexpected artist slot 018 is present");
+  const missingSlots = requiredSlots.filter((name) => !slotContracts.has(name));
+  if (missingSlots.length) throw new Error("served GLB is missing artist slot contracts: " + missingSlots.join(", "));
+  if (slotContracts.has("studio.artist-slot-018")) throw new Error("unexpected artist slot 018 is present");
 
   const primitives = (gltf.meshes ?? []).reduce((sum, mesh) => sum + (mesh.primitives ?? []).length, 0);
   const actual = {

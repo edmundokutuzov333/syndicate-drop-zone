@@ -36,16 +36,19 @@ if (missing.length) {
   process.exit(1);
 }
 
-// The 17 positions are stable node-name contracts; their photo mesh interaction
-// IDs are studio.artist-photo.NNN. Do not incorrectly require the slot name itself
-// to be repeated as an interactionId in extras.
-const slotNames = new Set(nodes.map(node => node.name).filter(name => typeof name === "string"));
+// Blender exports artist frames with their SDT_* mesh names and the stable slot
+// contract in extras.interactionId. The Three.js compatibility layer promotes these
+// IDs to runtime object names before portrait mounting, so validate both encodings.
+const slotIds = new Set(nodes.flatMap(node => [node.name, node.extras?.interactionId])
+  .filter(value => typeof value === "string")
+  .map(value => value.match(/^studio\\.artist-slot-(\\d{3})$/)?.[1])
+  .filter(Boolean));
 const expectedSlots = Array.from({ length: 17 }, (_, index) => "studio.artist-slot-" + String(index + 1).padStart(3, "0"));
-const missingSlots = expectedSlots.filter(name => !slotNames.has(name));
-if (missingSlots.length || slotNames.has("studio.artist-slot-018")) {
-  console.error("Artist slot node contract failed:", JSON.stringify({
+const missingSlots = expectedSlots.filter(name => !slotIds.has(name.slice(-3)));
+if (missingSlots.length || slotIds.has("018")) {
+  console.error("Artist slot contract failed:", JSON.stringify({
     missing: missingSlots,
-    unexpected018: slotNames.has("studio.artist-slot-018"),
+    unexpected018: slotIds.has("018"),
   }));
   process.exit(1);
 }

@@ -112,16 +112,19 @@ export function verifyCampingFrontendPublication(root = process.cwd()): void {
   const missing = REQUIRED_INTERACTIONS.filter((id) => !interactions.has(id));
   if (missing.length) throw new Error("optimized GLB is missing required interaction IDs: " + missing.join(", "));
 
-  // Artist slots are stable node-name contracts. Their clickable photo meshes
-  // use studio.artist-photo.NNN interaction IDs, not slot IDs.
-  const slotNames = new Set<string>(
-    nodes.map((node: { name?: unknown }) => node.name)
-      .filter((name: unknown): name is string => typeof name === "string"),
+  // Blender exports slot frame meshes under SDT_* names and stores each
+  // stable studio.artist-slot-NNN ID in extras.interactionId. The runtime maps
+  // these IDs to node names before portrait mounting.
+  const slotContracts = new Set<string>(
+    nodes.flatMap((node: { name?: unknown; extras?: { interactionId?: unknown } }) => [
+      node.name,
+      node.extras?.interactionId,
+    ]).filter((value: unknown): value is string => typeof value === "string" && /^studio\\.artist-slot-\\d{3}$/.test(value)),
   );
   const requiredSlots = Array.from({ length: 17 }, (_, index) => "studio.artist-slot-" + String(index + 1).padStart(3, "0"));
-  const missingSlots = requiredSlots.filter((name) => !slotNames.has(name));
-  if (missingSlots.length) throw new Error("optimized GLB is missing artist slot nodes: " + missingSlots.join(", "));
-  if (slotNames.has("studio.artist-slot-018")) throw new Error("unexpected artist slot 018 is present");
+  const missingSlots = requiredSlots.filter((name) => !slotContracts.has(name));
+  if (missingSlots.length) throw new Error("optimized GLB is missing artist slot contracts: " + missingSlots.join(", "));
+  if (slotContracts.has("studio.artist-slot-018")) throw new Error("unexpected artist slot 018 is present");
 
   const actual = {
     meshes: (gltf.meshes ?? []).length,

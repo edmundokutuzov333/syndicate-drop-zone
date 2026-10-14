@@ -61,15 +61,19 @@ if (missingInteractions.length) {
   throw new Error("Refusing promotion: interaction IDs missing: " + missingInteractions.join(", "));
 }
 
-// Each portrait frame is contracted by its stable node name. Its actual photo
-// mesh may use studio.artist-photo.NNN as the separate runtime interaction ID.
-const nodeNames = new Set(nodes.map((node) => node.name).filter((value) => typeof value === "string"));
+// Blender's frame objects retain SDT_* names in the GLB while interactionId
+// extras carry the stable studio.artist-slot-NNN contract. The runtime maps those
+// IDs to object names before mounting portraits, so accept either representation.
+const slotContracts = new Set(nodes.flatMap((node) => [
+  node.name,
+  node.extras && node.extras.interactionId,
+]).filter((value) => typeof value === "string" && /^studio\\.artist-slot-\\d{3}$/.test(value)));
 const requiredSlots = Array.from({ length: 17 }, (_, index) => "studio.artist-slot-" + String(index + 1).padStart(3, "0"));
-const missingSlots = requiredSlots.filter((name) => !nodeNames.has(name));
-if (missingSlots.length || nodeNames.has("studio.artist-slot-018")) {
-  throw new Error("Refusing promotion: artist slot node contract failed: " + JSON.stringify({
+const missingSlots = requiredSlots.filter((name) => !slotContracts.has(name));
+if (missingSlots.length || slotContracts.has("studio.artist-slot-018")) {
+  throw new Error("Refusing promotion: artist slot contract failed: " + JSON.stringify({
     missing: missingSlots,
-    unexpected018: nodeNames.has("studio.artist-slot-018"),
+    unexpected018: slotContracts.has("studio.artist-slot-018"),
   }));
 }
 
