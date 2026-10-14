@@ -172,6 +172,30 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          # A main push may arrive while Blender is running. Fast-forward the
+          # unpublished workspace to current origin/main before creating the
+          # bot commit, but refuse promotion if any geometry/material source
+          # changed since the artifacts were built.
+          git fetch origin main
+          BUILD_COMMIT="$GITHUB_SHA"
+          REMOTE_MAIN="$(git rev-parse origin/main)"
+          if [[ "$REMOTE_MAIN" != "$BUILD_COMMIT" ]]; then
+            git merge-base --is-ancestor "$BUILD_COMMIT" "$REMOTE_MAIN" || {
+              echo "Refusing publication: build commit is not an ancestor of origin/main."
+              exit 9
+            }
+            if ! git diff --quiet "$BUILD_COMMIT" "$REMOTE_MAIN" -- \
+              scripts/blender scripts/3d scripts/build-3d.mjs \
+              docs/camping-v3/scene-bible.json docs/camping-v3/phase-05 \
+              art/textures/materials art/textures/materials.manifest.json; then
+              echo "Refusing stale model promotion: geometry/material inputs changed after this build."
+              exit 10
+            fi
+            git checkout --detach "$REMOTE_MAIN"
+            echo "PUBLISH_BASE=$REMOTE_MAIN"
+          fi
+
           test -s /tmp/fase04-delivery/xoyens-studio.blend
           test -s /tmp/fase04-delivery/xoyens-studio.report.json
           test -s /tmp/fase04-delivery/out/xoyens-studio.raw.glb
