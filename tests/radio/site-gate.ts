@@ -6,12 +6,11 @@ import { expect, type Page } from "@playwright/test";
  * and can prevent React from hydrating event handlers in browser tests.
  */
 export async function unlockSite(page: Page): Promise<void> {
-  const ok = page.getByRole("button", { name: "OK", exact: true });
-  if (!(await ok.isVisible().catch(() => false))) return;
-
   const siteGate = page.locator('[data-site-gate="locked"]');
+  if (!(await siteGate.isVisible().catch(() => false))) return;
+  const ok = siteGate.getByRole("button", { name: "OK", exact: true });
   await expect(siteGate).toHaveAttribute("data-gate-hydrated", "true", { timeout: 15_000 });
-  const display = page.locator('[aria-live="polite"][aria-atomic="true"]');
+  const display = siteGate.locator('[aria-live="polite"][aria-atomic="true"]');
   const sequence = [
     { digit: "8", expected: "8__" },
     { digit: "0", expected: "80_" },
@@ -24,5 +23,5 @@ export async function unlockSite(page: Page): Promise<void> {
   }
 
   await ok.click();
-  await expect(ok).toHaveCount(0, { timeout: 5_000 });
+  await expect(siteGate).toHaveCount(0, { timeout: 5_000 });
 }
