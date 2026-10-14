@@ -31,7 +31,7 @@ if (!existsSync(src)) {
 }
 
 try {
-  const [{ NodeIO }, { ALL_EXTENSIONS }, functions, meshoptimizer, sharpModule, cli] = await Promise.all([
+  const [{ NodeIO, PropertyType }, { ALL_EXTENSIONS }, functions, meshoptimizer, sharpModule, cli] = await Promise.all([
     import("@gltf-transform/core"),
     import("@gltf-transform/extensions"),
     import("@gltf-transform/functions"),
@@ -51,14 +51,77 @@ try {
   mkdirSync(outDir, { recursive: true });
   const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ "meshopt.encoder": MeshoptEncoder });
   const tiers = [
-    { name: "high", maxTex: 2048, ratio: 1.0, error: 0.0005 },
-    { name: "mid", maxTex: 1024, ratio: 0.5, error: 0.002 },
-    { name: "low", maxTex: 512, ratio: 0.25, error: 0.006 }
+    // Preserve sharp base-colour textures while reducing costly PBR data maps.
+    // These sizes are balanced against the transfer budgets in perf-budgets.json.
+    { name: "high", maxTex: 2048, colorTex: 1024, dataTex: 512, ratio: 1.0, error: 0.0005 },
+    { name: "mid", maxTex: 1024, colorTex: 512, dataTex: 256, ratio: 0.5, error: 0.002 },
+    { name: "low", maxTex: 512, colorTex: 256, dataTex: 128, ratio: 0.25, error: 0.006 }
   ];
+
+  function descendantNodes(node) {
+    const result = [];
+    const visit = (parent) => {
+      for (const child of parent.listChildren()) {
+        result.push(child);
+        visit(child);
+      }
+    };
+    visit(node);
+    return result;
+  }
+
+  function preserveContractMetadata(document) {
+    const nodes = document.getRoot().listNodes();
+
+    // Interactions can be exported on empty parent nodes. Copy their IDs to
+    // descendant mesh nodes before pruning/flattening so raycasting still finds
+    // the same interaction and the optimizer can protect the clickable mesh.
+    for (const node of nodes) {
+      const interactionId = node.getExtras()?.interactionId;
+      if (typeof interactionId !== "string" || !interactionId) continue;
+      const targets = [
+        ...(node.getMesh() ? [node] : []),
+        ...descendantNodes(node).filter((child) => child.getMesh()),
+      ];
+      for (const target of targets) {
+        const extras = { ...(target.getExtras() ?? {}) };
+        if (typeof extras.interactionId !== "string" || !extras.interactionId) {
+          extras.interactionId = interactionId;
+          target.setExtras(extras);
+        }
+      }
+    }
+
+    // zone/lmGroup are application metadata, not disposable exporter extras.
+    // Carry each required classification onto one protected mesh before flatten.
+    for (const key of ["zone", "lmGroup"]) {
+      const sourceNode = nodes.find((node) => node.getExtras()?.[key] !== undefined);
+      if (!sourceNode) continue;
+      const targetNode = sourceNode.getMesh()
+        ? sourceNode
+        : descendantNodes(sourceNode).find((child) => child.getMesh());
+      if (!targetNode) continue;
+      const extras = { ...(targetNode.getExtras() ?? {}) };
+      if (extras[key] === undefined) extras[key] = sourceNode.getExtras()[key];
+      targetNode.setExtras(extras);
+      const name = targetNode.getName() ?? "";
+      if (!/camping-contract/i.test(name)) {
+        targetNode.setName(name ? name + "__camping-contract-" + key : "__camping-contract-" + key);
+      }
+    }
+  }
 
   for (const tier of tiers) {
     const document = await io.read(src);
-    await document.transform(dedup(), prune({ keepLeaves: false }), weld({ tolerance: 1e-4 }));
+    preserveContractMetadata(document);
+
+    // Keep UV1 for lightmap workflows even when core glTF materials do not
+    // reference TEXCOORD_1 directly. Preserve the custom extras at the same time.
+    await document.transform(
+      dedup(),
+      prune({ keepLeaves: false, keepAttributes: true, keepExtras: true }),
+      weld({ tolerance: 1e-4 }),
+    );
 
     // Não achatar nem juntar nós com extras.interactionId: são contratos do produto.
     if (tier.ratio < 1) {
@@ -85,7 +148,7 @@ try {
       "prod.desk_l", "prod.monitor_daw", "prod.monitors_pair",
       "prod.imac", "photo.backdrop_seal", "photo.garments", "photo.rack",
     ]);
-    const protectedName = /studio\.|artist_slot_\d{3}|artists_wall|door_main_(stile_|rail_|handle_plate|lever|lock_cylinder|hinge_)|door_left_(stile_|rail_|handle_plate|lever|lock_cylinder|hinge_)|vault_ceiling|vault_rib_|monitor_daw_screen|photo_backdrop|garment/i;
+    const protectedName = /camping-contract|studio\.|artist_slot_\d{3}|artists_wall|door_main_(stile_|rail_|handle_plate|lever|lock_cylinder|hinge_)|door_left_(stile_|rail_|handle_plate|lever|lock_cylinder|hinge_)|vault_ceiling|vault_rib_|monitor_daw_screen|photo_backdrop|garment/i;
     const nodes = document.getRoot().listNodes();
     const keepNode = (node) => {
       const extras = node.getExtras() ?? {};
@@ -104,14 +167,25 @@ try {
     }
     await document.transform(
       flatten(),
-      join({ keepNamed: true, filter: (node) => !node.getName() }),
-      prune({ keepLeaves: false }),
+      join({ keepNamed: true, cleanup: false, filter: (node) => !node.getName() }),
+      prune({
+        propertyTypes: [PropertyType.NODE, PropertyType.MESH, PropertyType.PRIMITIVE, PropertyType.ACCESSOR],
+        keepAttributes: true,
+        keepIndices: true,
+        keepLeaves: false,
+        keepExtras: true,
+      }),
     );
-
-    await document.transform(textureCompress({ encoder: sharp, resize: [tier.maxTex, tier.maxTex] }));
 
     const slotsForColor = /^(?!.*(normal|occlusion|metallicRoughness|lightMap)).*$/;
     const slotsForData = /(normal|occlusion|metallicRoughness)/;
+
+    // High tier: 1024px colour maps and 512px normal/ORM maps. The previous
+    // single 2048px UASTC pass produced a 106.92 MiB GLB against a 16 MiB budget.
+    await document.transform(
+      textureCompress({ encoder: sharp, resize: [tier.colorTex, tier.colorTex], slots: slotsForColor }),
+      textureCompress({ encoder: sharp, resize: [tier.dataTex, tier.dataTex], slots: slotsForData }),
+    );
     await document.transform(
       toktx({ encoder: sharp, mode: Mode.ETC1S, slots: slotsForColor, quality: 192, compression: 4 }),
       toktx({ encoder: sharp, mode: Mode.UASTC, slots: slotsForData, level: 2, rdo: true, rdoLambda: 4, zstd: 18 })
