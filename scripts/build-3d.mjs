@@ -164,8 +164,12 @@ try {
       const extras = node.getExtras() ?? {};
       const nodeName = node.getName() ?? "";
       const elementId = typeof extras.elementId === "string" ? extras.elementId : "";
+      // Phase 07 hero surfaces carry physical dimensions and vertex colour data;
+      // keep their named nodes and extras intact instead of joining them into a generic
+      // material batch. Later tiers may simplify their render geometry, not their contract.
       return Boolean(extras.interactionId) ||
         Boolean(extras.__campingPreserveMetadata) ||
+        extras.surfacePhase === 7 ||
         protectedElementIds.has(elementId) ||
         protectedName.test(nodeName);
     };
