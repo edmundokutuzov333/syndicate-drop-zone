@@ -103,11 +103,10 @@ try {
       if (!targetNode) continue;
       const extras = { ...(targetNode.getExtras() ?? {}) };
       if (extras[key] === undefined) extras[key] = sourceNode.getExtras()[key];
+      // Mark, rather than rename, the representative node. Renaming is unsafe
+      // for exact runtime anchors such as the 17 studio.artist-slot.NNN nodes.
+      extras.__campingPreserveMetadata = true;
       targetNode.setExtras(extras);
-      const name = targetNode.getName() ?? "";
-      if (!/camping-contract/i.test(name)) {
-        targetNode.setName(name ? name + "__camping-contract-" + key : "__camping-contract-" + key);
-      }
     }
   }
 
@@ -155,6 +154,7 @@ try {
       const nodeName = node.getName() ?? "";
       const elementId = typeof extras.elementId === "string" ? extras.elementId : "";
       return Boolean(extras.interactionId) ||
+        Boolean(extras.__campingPreserveMetadata) ||
         protectedElementIds.has(elementId) ||
         protectedName.test(nodeName);
     };
