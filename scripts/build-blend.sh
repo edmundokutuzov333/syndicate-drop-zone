@@ -19,6 +19,9 @@ test -s "$BLEND_OUT" || { echo "Blender produced no source file: $BLEND_OUT" >&2
 # Reopen the saved source in a separate process. Factory startup must not be used here.
 "$BLENDER_BIN" -b "$BLEND_OUT" --python-exit-code 1 -P scripts/blender/validate_blend.py -- "$SCENE_BIBLE"
 test -s "${BLEND_OUT%.blend}.report.json" || { echo "Build report missing next to $BLEND_OUT" >&2; exit 3; }
+# Phase 08 is certified against the reopened source, before exporting to GLB.
+"$BLENDER_BIN" -b "$BLEND_OUT" --python-exit-code 1 -P scripts/blender/validate_production.py -- "$SCENE_BIBLE" art/xoyens-studio.phase08.report.json
+test -s art/xoyens-studio.phase08.report.json || { echo "Phase 08 production report missing" >&2; exit 3; }
 "$BLENDER_BIN" -b "$BLEND_OUT" --python-exit-code 1 -P scripts/blender/export_glb.py -- "$RAW_OUT"
 test -s "$RAW_OUT" || { echo "GLB export missing: $RAW_OUT" >&2; exit 3; }
 node scripts/verify-glb-contract.mjs "$RAW_OUT" "$SCENE_BIBLE"
