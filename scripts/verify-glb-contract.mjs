@@ -65,7 +65,8 @@ const report = {
   file: glbPath, bytes: statSync(glbPath).size,
   nodes: nodes.length, meshes: (json.meshes ?? []).length, primitives,
   materials: (json.materials ?? []).length, interactions: seen.size,
-  requiredInteractionIds: expectedInteractions.size,\n  artistSlots: expectedSlots.length,
+  requiredInteractionIds: expectedInteractions.size,
+  artistSlots: expectedSlots.length,
   missingMaterial, missingUv0, missingUv1,
   extensionsUsed: json.extensionsUsed ?? [],
 };
