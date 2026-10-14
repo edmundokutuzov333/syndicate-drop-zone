@@ -552,7 +552,7 @@ def _build_vault(element, ctx, col):
         bpy.ops.object.convert(target="MESH")
         obj_rib = bpy.context.object
         obj_rib.name = "SDT_shell_vault_rib_" + str(k + 1).zfill(2)
-        finish_mesh(obj_rib, rib_mat, element=None, collider="none", zone="shell", bevel=0, smooth=True)
+        finish_mesh(obj_rib, rib_mat.name, element=None, collider="none", zone="shell", bevel=0, smooth=True)
 
 def build_structural_walls(ctx, col):
     plan = ctx["bible"]["metricPlan"]
