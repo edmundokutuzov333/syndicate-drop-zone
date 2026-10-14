@@ -28,7 +28,9 @@
     "3d:toolchain:check": "node scripts/check-3d-toolchain.mjs",
     "3d:blend": "bash scripts/build-blend.sh",
     "3d:blend:validate": "bash scripts/3d/validate-blend.sh",
-    "3d:recovery:test": "node --test scripts/3d/recovery.test.mjs"
+    "3d:recovery:test": "node --test scripts/3d/recovery.test.mjs",
+    "3d:materials:fetch": "node scripts/fetch-cc0-materials.mjs --download",
+    "3d:materials:validate": "node scripts/validate-pbr-materials.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

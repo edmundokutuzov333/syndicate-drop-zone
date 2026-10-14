@@ -153,7 +153,8 @@ def material(name, colour=None, roughness=None, metallic=None, emission_strength
 
 
 def pbr_material(name, base=None, roughness=None, metallic=None, maps=None,
-                 emissive=None, emissive_strength=0.0):
+                 emissive=None, emissive_strength=0.0, normal_strength=1.0,
+                 coat_weight=0.0, coat_roughness=0.35, sheen_weight=0.0, sheen_roughness=0.8):
     """Principled PBR material with optional color, normal, ORM and height maps.
 
     ORM follows glTF packing: red=AO, green=roughness, blue=metallic.
@@ -172,6 +173,10 @@ def pbr_material(name, base=None, roughness=None, metallic=None, maps=None,
             bsdf.inputs["Emission Color"].default_value = emissive
         if "Emission Strength" in bsdf.inputs:
             bsdf.inputs["Emission Strength"].default_value = float(emissive_strength)
+    for socket_name, socket_value in (("Coat Weight", float(coat_weight)), ("Coat Roughness", float(coat_roughness)), ("Sheen Weight", float(sheen_weight)), ("Sheen Roughness", float(sheen_roughness))):
+        socket = bsdf.inputs.get(socket_name)
+        if socket is not None:
+            socket.default_value = socket_value
 
     maps = maps or {}
     # Re-running a material module removes only generated image/map nodes.
@@ -244,7 +249,7 @@ def pbr_material(name, base=None, roughness=None, metallic=None, maps=None,
     if normal_node is not None:
         normal_map = nodes.new("ShaderNodeNormalMap")
         normal_map.name = "SDT_PBR_NormalMap"
-        normal_map.inputs["Strength"].default_value = 1.0
+        normal_map.inputs["Strength"].default_value = max(0.0, float(normal_strength))
         normal_map["sdtPbrNode"] = True
         links.new(normal_node.outputs["Color"], normal_map.inputs["Color"])
         normal_output = normal_map.outputs["Normal"]
@@ -291,12 +296,55 @@ def apply_auto_smooth(mesh, angle_degrees=32.0):
     mesh.update()
 
 def material_library(bible):
+    """Build shared materials and connect the validated PBR texture manifest."""
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+    manifest_path = root / "art" / "textures" / "materials.manifest.json"
+    if not manifest_path.is_file():
+        raise FileNotFoundError("PBR material manifest missing: " + str(manifest_path))
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    entries = manifest.get("materials", [])
+    if len(entries) < 18:
+        raise RuntimeError("PBR material manifest must contain at least 18 material profiles")
+    profiles = {entry.get("material"): entry for entry in entries}
+    for name, entry in profiles.items():
+        for key in ("BC", "N", "ORM"):
+            asset = entry.get("maps", {}).get(key)
+            if not asset or not asset.get("path"):
+                raise RuntimeError(name + ": required " + key + " map missing from manifest")
+            path = root / asset["path"]
+            if not path.is_file():
+                raise FileNotFoundError(name + ": PBR map missing: " + str(path))
+
     names = set()
     for element in bible.get("elements", []):
         names.update(element.get("materials", []))
     names.update(MATERIAL_COLOURS.keys())
     for name in sorted(names):
-        material(name)
+        entry = profiles.get(name)
+        if entry:
+            target = entry.get("target", {})
+            maps = entry.get("maps", {})
+            pbr_material(
+                name,
+                roughness=target.get("roughness"),
+                metallic=target.get("metallic"),
+                maps={
+                    "color": str((root / maps["BC"]["path"]).resolve()),
+                    "normal": str((root / maps["N"]["path"]).resolve()),
+                    "orm": str((root / maps["ORM"]["path"]).resolve()),
+                    **({"height": str((root / maps["H"]["path"]).resolve())} if maps.get("H") else {}),
+                },
+                normal_strength=target.get("normalStrength", 1.0),
+                coat_weight=target.get("coatWeight", 0.0),
+                coat_roughness=target.get("coatRoughness", 0.35),
+                sheen_weight=target.get("sheenWeight", 0.0),
+                sheen_roughness=target.get("sheenRoughness", 0.8),
+            )
+        else:
+            material(name)
 
 def tag(obj, element=None, interaction_id=None, collider="none", zone=None, lm_group=None):
     if element is not None:

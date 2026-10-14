@@ -4,12 +4,13 @@ import { createReadStream,existsSync,mkdirSync,readdirSync,statSync,writeFileSyn
 import { execFileSync } from "node:child_process";
 import { join,relative } from "node:path";
 import { pathToFileURL } from "node:url";
-export const REQUIRED=["art/xoyens-studio.blend","art/xoyens-studio.report.json","art/out/xoyens-studio.raw.glb","art/out/xoyens-studio.colliders.glb"];
+export const REQUIRED=["art/xoyens-studio.blend","art/xoyens-studio.report.json","art/out/xoyens-studio.raw.glb","art/out/xoyens-studio.colliders.glb","art/textures/materials.manifest.json"];
 export const sha256=(file)=>new Promise((resolve,reject)=>{const h=createHash("sha256");createReadStream(file).on("data",(chunk)=>h.update(chunk)).on("end",()=>resolve(h.digest("hex"))).on("error",reject);});
 const walk=(dir)=>existsSync(dir)?readdirSync(dir,{withFileTypes:true}).flatMap((e)=>e.isDirectory()?walk(join(dir,e.name)):[join(dir,e.name)]):[];
 const git=(args)=>{try{return execFileSync("git",args,{encoding:"utf8"}).trim();}catch{return "unknown";}};
 export async function buildManifest(root="."){
- const paths=[...REQUIRED,...walk(join(root,"art/_delivery/logs")).map((f)=>relative(root,f)),"art/_delivery/environment.txt","art/_delivery/exit-codes.txt"].filter((p)=>existsSync(join(root,p)));
+ const materialImages=walk(join(root,"art/textures/materials")).filter((p)=>/\.png$/i.test(p)).map((f)=>relative(root,f));
+ const paths=[...REQUIRED,...materialImages,...walk(join(root,"art/_delivery/logs")).map((f)=>relative(root,f)),"art/_delivery/environment.txt","art/_delivery/exit-codes.txt"].filter((p)=>existsSync(join(root,p)));
  const files=[];for(const path of [...new Set(paths)].sort()){const full=join(root,path);files.push({path,bytes:statSync(full).size,sha256:await sha256(full)});}
  return{generated_at:new Date().toISOString(),commit:git(["rev-parse","HEAD"]),branch:git(["rev-parse","--abbrev-ref","HEAD"]),working_tree_dirty:git(["status","--porcelain"])!=="",required:REQUIRED,missing:REQUIRED.filter((p)=>!existsSync(join(root,p))),files};
 }

@@ -11,3 +11,6 @@ art/bake/**/*.exr filter=lfs diff=lfs merge=lfs -text
 
 # Explicit root-level source path plus future archived bake maps.
 art/xoyens-studio.blend filter=lfs diff=lfs merge=lfs -text
+
+# Generated CC0 PBR maps are binary assets maintained in Git LFS.
+art/textures/materials/*.png filter=lfs diff=lfs merge=lfs -text

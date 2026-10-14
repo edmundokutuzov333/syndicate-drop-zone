@@ -102,6 +102,8 @@ export async function verify(dir, biblePath, { checkExitCodes = false } = {}) {
     add("commit recorded", Boolean(manifest.commit && manifest.commit !== "unknown"), manifest.commit ?? "");
     const manifestPaths = new Set((manifest.files ?? []).map((file) => file.path));
     add("collider GLB included in manifest", manifestPaths.has("art/out/xoyens-studio.colliders.glb"));
+    add("PBR material manifest included in delivery", manifestPaths.has("art/textures/materials.manifest.json"));
+    add("PBR material manifest included in delivery", manifestPaths.has("art/textures/materials.manifest.json"));
     for (const file of manifest.files ?? []) {
       const path = join(dir, file.path);
       if (!existsSync(path)) {

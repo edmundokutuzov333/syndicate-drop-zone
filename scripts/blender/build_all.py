@@ -47,6 +47,15 @@ def main():
         print("[CAMPING] Building " + label + " with " + module_name)
         module.build(bible, ctx)
     report = validate_scene_contract(bible)
+    # Texture files are versioned separately; use paths relative to the .blend parent (art/).
+    texture_root = (REPO_ROOT / "art" / "textures" / "materials").resolve()
+    for image in bpy.data.images:
+        try:
+            image_path = Path(bpy.path.abspath(image.filepath)).resolve()
+            if image_path.is_relative_to(texture_root):
+                image.filepath = "//textures/materials/" + image_path.name
+        except (OSError, RuntimeError):
+            pass
     output_path.parent.mkdir(parents=True, exist_ok=True)
     bpy = __import__("bpy")
     bpy.ops.wm.save_as_mainfile(filepath=str(output_path))

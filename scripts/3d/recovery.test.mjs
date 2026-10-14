@@ -59,3 +59,18 @@ test("collider GLB contains only COL_* mesh nodes with extras.collider", () => {
   assert.ok(colliderGlbContract(missingExtras, 2).some((check) => check.name.includes("extras.collider") && !check.pass));
   assert.ok(colliderGlbContract(colliders, 3).some((check) => check.name.includes("match Blender report") && !check.pass));
 });
+
+
+test("PBR material helper contracts are deterministic", async () => {
+  const { PROFILES, REQUIRED_MAPS, packOrmChannels, invertDirectXGreenChannel } = await import("../fetch-cc0-materials.mjs");
+  const { pngDimensions, isLfsPointer, renderLicenseRows } = await import("../validate-pbr-materials.mjs");
+  assert.ok(PROFILES.length >= 18);
+  assert.equal(new Set(PROFILES.map((p) => p.name)).size, PROFILES.length);
+  assert.deepEqual(REQUIRED_MAPS, ["BC", "N", "ORM"]);
+  assert.deepEqual([...packOrmChannels(Buffer.from([1]), Buffer.from([2]), Buffer.from([3]), 1)], [1, 2, 3]);
+  assert.deepEqual([...invertDirectXGreenChannel(Buffer.from([5, 10, 15]), 1, 1)], [5, 245, 15]);
+  const png = Buffer.alloc(24); Buffer.from("89504e470d0a1a0a", "hex").copy(png); png.writeUInt32BE(2048, 16); png.writeUInt32BE(2048, 20);
+  assert.deepEqual(pngDimensions(png), { width: 2048, height: 2048 });
+  assert.equal(isLfsPointer(Buffer.from("version https://git-lfs.github.com/spec/v1\\n")), true);
+  assert.ok(renderLicenseRows([{ material: "wood", sourceAsset: { id: "test_asset", url: "https://polyhaven.com/a/test_asset", authors: ["Test Author"] } }]).includes("CC0 1.0"));
+});

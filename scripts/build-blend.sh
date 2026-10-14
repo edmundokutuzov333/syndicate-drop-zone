@@ -8,6 +8,9 @@ BLENDER_BIN="${BLENDER_BIN:-blender}"
 command -v "$BLENDER_BIN" >/dev/null 2>&1 || { echo "Blender not found. Run npm run 3d:toolchain:install first." >&2; exit 2; }
 test -s "$SCENE_BIBLE" || { echo "Scene Bible missing: $SCENE_BIBLE" >&2; exit 2; }
 python3 -m py_compile scripts/blender/*.py
+node scripts/fetch-cc0-materials.mjs --download
+node scripts/validate-pbr-materials.mjs --write-licenses
+node scripts/validate-pbr-materials.mjs
 mkdir -p "$(dirname "$BLEND_OUT")" "$(dirname "$RAW_OUT")"
 "$BLENDER_BIN" --version
 # Deterministic initial build from factory startup.

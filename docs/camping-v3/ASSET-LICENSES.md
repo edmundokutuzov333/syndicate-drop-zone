@@ -8,8 +8,16 @@ Este ficheiro regista a proveniência de cada asset externo que entre no project
 | Selo do Sindicato do Trap | Manifesto de marca existente no repositório | Asset oficial do projecto; não redesenhar | Reutilizado como decal/textura |
 | Logo Xoyens | Manifesto de marca existente no repositório | Asset oficial do projecto; não redesenhar | Reutilizado como decal/textura |
 | Fotografias dos 17 artistas | Backend / conteúdo publicado existente | Dados do produto, não placeholders gerados | Contrato de 17 slots preservado |
-| Texturas e modelos de terceiros | Nenhum asset novo adicionado na Fase 01 | A registar individualmente antes da integração; preferência CC0 | Pendente para fases de materiais/modelação |
+| Texturas PBR do estúdio | Recolha reproduzível pela API oficial Poly Haven; IDs, autores, URLs, CC0 e hashes materializados pela Fase 05 | CC0 1.0; mapa e transformação documentados no manifesto | Validado pelo pipeline antes de publicar |
+
+<!-- POLY HAVEN MATERIALS START -->
+<!-- POLY HAVEN MATERIALS END -->
 
 ## Regra de entrada
 
 Cada asset futuro deve registar URL de origem, autor, licença, data de aquisição, transformação aplicada e caminho do ficheiro. Assets gerados por IA exigem confirmação de termos comerciais e verificação de ausência de iluminação cozida nas texturas.
+
+
+## Crédito de API
+
+**Powered by Poly Haven**. Os ficheiros são derivados de materiais CC0 1.0. O manifesto regista o ID exacto, URL, autor quando indicado e hashes dos ficheiros de origem e saída. A API é usada apenas durante a ingestão de assets, nunca a partir do browser do visitante.

@@ -130,3 +130,18 @@ Após uma segunda verificação de entrega descarregada do próprio artifact do 
 
 ### D036 · Resultado do contrato da entrega
 Blender 4.5.14 LTS reportou 54 elementos Scene Bible, 378 objectos, 371 malhas, 37 046 vértices, 62 864 triângulos estimados e as sete colecções exigidas. O GLB final tem 359 nós/malhas/primitivas, 38 materiais, todos os sete IDs de interacção, slots 001–017 sem 018, material e UV0 em todas as primitivas e UV1 em 359/359. O verificador final terminou com `Fase 04 certificável`; os códigos de saída exigidos foram `validate=0`, `blend=0`, `blend-check=0` e `verify=0`. Os hashes, manifesto e execução integral estão em `docs/camping-v3/phase-04/certification-2026-10-14.md`.
+
+
+## 2026-10-14 · Fase 05
+
+### D020 · Proveniência da biblioteca PBR
+Os materiais são recolhidos pela API oficial Poly Haven com User-Agent identificável. O manifesto regista os IDs exactos retornados pela API, URLs, autores quando disponíveis, CC0 1.0, MD5 da origem e SHA-256 das saídas. Não existem IDs presumidos na fonte. Falha de API, licença, mapa ou validação interrompe a build, sem gerar placeholders.
+
+### D021 · Convenção e armazenamento
+Cada perfil PBR tem BaseColor (BC), normal OpenGL (N) e ORM (R=AO, G=roughness, B=metallic), PNG 2048x2048. A normal DirectX é convertida invertendo o canal verde se não existir OpenGL. Os PNG estão em Git LFS e o Blender usa caminhos relativos para não duplicar mapas dentro do .blend.
+
+### D022 · Limite de fase
+A Fase 05 altera a pipeline de materiais, fonte Blender e documentação. Não altera rotas, Control Room, IDs de interacção, slots de artistas, esquema Supabase nem o GLB servido publicamente. KTX2/Meshopt e integração do runtime ficam em fases posteriores.
+
+### D023 · Evidência visual
+A métrica das bordas é um gate automatizado, não substitui a inspecção visual. A fidelidade panorâmica, o bake, tone mapping, screenshot A/B e score são medidos nas fases de harness e rendering; não são declarados concluídos na Fase 05.

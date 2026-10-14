@@ -14,7 +14,7 @@ Issues de execução: fases 01–17 em [#33–#49](https://github.com/edmundokut
 | 02 | Toolchain e dependências | Em validação | dependências, Blender, KTX, Basis, build CLI, lockfile e CI confirmados por execução |
 | 03 | Scene Bible e plano métrico | Em validação | 54 elementos, escala humana, 4 paredes/2 portas, orçamento ≤260000 e 72 células sector/elev validados; CI ainda pendente |
 | 04 | Fonte da verdade em Blender | Certificada | Blender 4.5.14 executado e reaberto em CI; GLB e Scene Bible validados; validate/blend/blend-check/verify=0; fonte .blend publicada em Git LFS real (commit ec362ec) |
-| 05 | Biblioteca de materiais PBR CC0 2K | Pendente | manifestos e licenças verificados |
+| 05 | Biblioteca de materiais PBR CC0 2K | Em validação | ≥18 materiais com BC/N/ORM 2048², hashes/licenças e build Blender real; fechar apenas com evidência e CI aplicável aprovada |
 | 06 | Casca arquitectónica fechada | Pendente | paredes, abóbada, portas, AC e condutas |
 | 07 | Superfícies-herói | Pendente | soalho, vinil e bambu com densidade de texel definida |
 | 08 | Zona de produção | Pendente | secretária, DAW, colunas, cadeira, painéis e LED |
@@ -111,3 +111,8 @@ Foram executados e passaram a verificação de sintaxe Node dos quatro ficheiros
 - **Códigos de saída requeridos:** `validate=0`, `blend=0`, `blend-check=0`, `verify=0`. `doctor=1` reflecte apenas que o binário ainda não estava instalado antes da etapa de instalação; `install-blender=0` e `doctor-after-install=0`.
 - **Checksums SHA-256:** `.blend` `cfbffce61ed393a427b0f167847f05ba6dc1fa04df7fff64700def48909bbb58`; `.report.json` `dd8d7e576cbe1ab76536923d3e89b748e88b394dcb9a48f0178ab843f4ce0474`; `.raw.glb` `298a3ea8819f92cf21eecb540ba8bb04699762630a4aa7a655fdf46245c0a012`; ZIP de entrega `450695dd705c6f68231fa74c823e113855d5793b2c661348b0704b2bd42f25e7`; artifact ZIP do Actions `88f150f558493ae7b6948901d60cd3b86643fa900293bb01fc93cf2fc0d7c3cb`.
 - O pacote contém os três ficheiros gerados, logs, manifesto e códigos de saída. A causa original das falhas históricas de runner continua `UNKNOWN` até ser obtido o texto real de Annotations; isso não invalida a execução bem-sucedida que certificou esta entrega.
+
+
+## Execução da Fase 05 · 2026-10-14
+
+O pipeline de ingestão e validação foi preparado na main. A fase não fica concluída pelo simples facto de os scripts existirem. Exige recolha real de assets da API Poly Haven, manifesto validado, build e reabertura Blender, artefactos/checksums e CI relevante aprovado. Os mapas PBR são versionados em Git LFS; o GLB público e o runtime não são alterados nesta fase, ficando a optimização KTX2/Meshopt e a integração no runtime para fases posteriores.

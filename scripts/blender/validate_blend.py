@@ -25,6 +25,33 @@ def main():
         "collections": sorted(collection.name for collection in bpy.data.collections if collection.name.startswith("COL_")),
         "blend_bytes": Path(path).stat().st_size if path and Path(path).is_file() else 0,
     })
+    manifest_path = Path(__file__).resolve().parents[2] / "art" / "textures" / "materials.manifest.json"
+    if not manifest_path.is_file():
+        raise FileNotFoundError("PBR material manifest missing: " + str(manifest_path))
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    pbr_errors = []
+    for entry in manifest.get("materials", []):
+        name = entry.get("material", "")
+        material = bpy.data.materials.get(name)
+        if material is None or not material.use_nodes:
+            pbr_errors.append(name + ": Blender PBR material missing")
+            continue
+        expected_nodes = {"BC": "SDT_PBR_color", "N": "SDT_PBR_normal", "ORM": "SDT_PBR_orm"}
+        for key, node_name in expected_nodes.items():
+            node = material.node_tree.nodes.get(node_name)
+            if node is None or getattr(node, "image", None) is None:
+                pbr_errors.append(name + ": " + key + " map node missing")
+                continue
+            if tuple(node.image.size[:2]) != (2048, 2048):
+                pbr_errors.append(name + ": " + key + " image is not 2048x2048")
+            image_path = Path(bpy.path.abspath(node.image.filepath)).resolve()
+            if not image_path.is_file():
+                pbr_errors.append(name + ": relative image path missing: " + str(image_path))
+    if len(manifest.get("materials", [])) < 18:
+        pbr_errors.append("fewer than 18 PBR materials")
+    if pbr_errors:
+        raise RuntimeError("PBR Blender validation failed: " + "; ".join(pbr_errors[:30]))
+    print("PBR MATERIAL CONTRACT OK", json.dumps({"materials": len(manifest["materials"]), "mapsPerMaterial": 3}, sort_keys=True))
     print("CAMPING BLEND CONTRACT OK", json.dumps(report, sort_keys=True))
 
 if __name__ == "__main__":
