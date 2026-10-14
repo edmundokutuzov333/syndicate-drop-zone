@@ -11,6 +11,8 @@ on:
       - "scripts/build-3d.mjs"
       - "src/features/camping/scene/CampingStudioEngine.ts"
       - "src/features/camping/scene/camping-model-compatibility.ts"
+      - "vite.config.ts"
+      - "scripts/camping-frontend-publication-guard.ts"
       - "scripts/build-blend.sh"
       - "scripts/install-3d-toolchain.sh"
       - "scripts/verify-glb-contract.mjs"
