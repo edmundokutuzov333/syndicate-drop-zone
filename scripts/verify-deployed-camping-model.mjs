@@ -81,6 +81,45 @@ async function verifyPublishedAsset(metadata) {
   if (missingSlots.length) throw new Error("served GLB is missing artist slot contracts: " + missingSlots.join(", "));
   if (slotContracts.has("studio.artist-slot-018")) throw new Error("unexpected artist slot 018 is present");
 
+  const findPhaseNode = (elementId, namePattern) =>
+    (gltf.nodes ?? []).find(node => node.extras?.elementId === elementId && node.extras?.surfacePhase === 7) ??
+    (gltf.nodes ?? []).find(node => namePattern.test(String(node.name ?? "")) && node.extras?.surfacePhase === 7);
+  const floorNode = findPhaseNode("floor.wood", /floor_wood_hero/i);
+  const vinylNode = findPhaseNode("floor.vinyl_sweep", /vinyl_sweep_hero/i);
+  const bambooNode = findPhaseNode("arch.vault_ceiling", /vault_ceiling/i);
+  const paperWallNode = (gltf.nodes ?? []).find(node => /paper_cyclorama_wall/i.test(String(node.name ?? "")) && node.extras?.surfacePhase === 7);
+  const paperCurveNode = (gltf.nodes ?? []).find(node => /paper_cyclorama_curve/i.test(String(node.name ?? "")) && node.extras?.surfacePhase === 7);
+  if (!floorNode || !Number.isInteger(floorNode.extras?.phase7BoardCount) || floorNode.extras.phase7BoardCount < 100) {
+    throw new Error("served GLB is not the Phase 07 real-plank floor");
+  }
+  const floorPrimitives = gltf.meshes?.[floorNode.mesh]?.primitives ?? [];
+  if (!floorPrimitives.length || !floorPrimitives.every(primitive =>
+    primitive.attributes?.COLOR_0 !== undefined && primitive.attributes?.TEXCOORD_0 !== undefined && primitive.attributes?.TEXCOORD_1 !== undefined)) {
+    throw new Error("served Phase 07 floor lost per-plank COLOR_0 or UV0/UV1");
+  }
+  if (!vinylNode || Math.abs(Number(vinylNode.extras?.phase7VinylRadiusM) - 2.3) > 0.003 ||
+      Math.abs(Number(vinylNode.extras?.phase7VinylThicknessM) - 0.0012) > 0.0001 ||
+      Math.abs(Number(vinylNode.extras?.phase7VinylEdgeLiftM) - 0.004) > 0.0001) {
+    throw new Error("served GLB has incorrect/missing Phase 07 vinyl geometry");
+  }
+  if (!bambooNode || Math.abs(Number(bambooNode.extras?.phase7BambooTileMeters) - 1.2) > 0.0001) {
+    throw new Error("served GLB is missing 1.2 m bamboo weave tiling");
+  }
+  if (!paperWallNode || !paperCurveNode ||
+      Math.abs(Number(paperCurveNode.extras?.phase7CycloramaRadiusM) - 0.35) > 0.0001 ||
+      paperCurveNode.extras?.phase7PaperContinuousToFloor !== true) {
+    throw new Error("served GLB is missing the seamless Phase 07 paper cyclorama");
+  }
+  const surfaces = metadata.geometry?.heroSurfaces;
+  if (metadata.surfacePhase !== 7 ||
+      surfaces?.floorBoards !== floorNode.extras?.phase7BoardCount ||
+      surfaces?.floorHasColor0 !== true || surfaces?.floorHasUv0Uv1 !== true ||
+      Math.abs(Number(surfaces?.vinylRadiusM) - 2.3) > 0.003 ||
+      Math.abs(Number(surfaces?.bambooTileMeters) - 1.2) > 0.0001 ||
+      Math.abs(Number(surfaces?.cycloramaRadiusM) - 0.35) > 0.0001) {
+    throw new Error("served model manifest does not certify the Phase 07 hero surfaces");
+  }
+
   const primitives = (gltf.meshes ?? []).reduce((sum, mesh) => sum + (mesh.primitives ?? []).length, 0);
   const actual = {
     meshes: (gltf.meshes ?? []).length,
@@ -98,6 +137,8 @@ async function verifyPublishedAsset(metadata) {
     sha256,
     version: metadata.version,
     phase: metadata.phase,
+    surfacePhase: metadata.surfacePhase,
+    heroSurfaces: surfaces,
     sourceCommit: metadata.sourceCommit,
     ...actual,
     artistSlots: 17,
@@ -115,8 +156,8 @@ while (Date.now() < deadline) {
 
     // Do not request the model URL while the public manifest still declares a
     // legacy phase. This avoids treating the old GLB as a valid candidate.
-    if (metadata.version !== 3 || metadata.phase !== 6 || metadata.status !== "blender-v3-published") {
-      lastError = "public metadata still declares version=" + metadata.version + ", phase=" + metadata.phase + ", status=" + metadata.status;
+    if (metadata.version !== 3 || metadata.phase !== 7 || metadata.surfacePhase !== 7 || metadata.status !== "blender-v3-published") {
+      lastError = "public metadata still declares version=" + metadata.version + ", phase=" + metadata.phase + ", surfacePhase=" + metadata.surfacePhase + ", status=" + metadata.status;
     } else {
       const result = await verifyPublishedAsset(metadata);
       console.log("CAMPING PRODUCTION MODEL CERTIFIED", JSON.stringify(result, null, 2));
