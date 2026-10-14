@@ -18,7 +18,7 @@ if (result.error) {
 }
 
 const expectedFailures = [
-  "textura embebida mais pequena",
+  "textura baseColor mais pequena",
   "UV1 para lightmaps",
   "KTX2/BasisU",
   "Meshopt",
