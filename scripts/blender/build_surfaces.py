@@ -474,4 +474,4 @@ def build(bible, ctx):
         set_active_module("bootstrap")
         report_path = Path(__file__).resolve().parents[2] / "art" / "out" / "phase07-surfaces.json"
         report_path.parent.mkdir(parents=True, exist_ok=True)
-        report_path.write_text(json.dumps(_PHASE7_REPORT, indent=2, sort_keys=True) + "\\n", encoding="utf-8")
+        report_path.write_text(json.dumps(_PHASE7_REPORT, indent=2, sort_keys=True) + "\n", encoding="utf-8")
