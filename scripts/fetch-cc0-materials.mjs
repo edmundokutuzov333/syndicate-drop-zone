@@ -205,9 +205,14 @@ async function edgeMetric(buffer){
   }
   return Math.round(total/Math.max(count,1)*100)/100;
 }
+export function outputRelativePath(path){
+  // Files are generated in a staging directory and atomically moved to OUT_DIR.
+  // The manifest must describe the final committed location, never the temporary path.
+  return join(OUT_DIR, basename(path)).replace(/\\\\/g,"/");
+}
 async function writeOutput(buffer,path){
   await writeFile(path,buffer);
-  return {path:path.slice(ROOT.length+1).replace(/\\/g,"/"),bytes:buffer.length,sha256:digest(buffer),width:SIZE,height:SIZE};
+  return {path:outputRelativePath(path),bytes:buffer.length,sha256:digest(buffer),width:SIZE,height:SIZE};
 }
 async function renderMaterial(profile,selected,staging){
   const s=await sharp();const src=selected.maps;const downloaded={};
