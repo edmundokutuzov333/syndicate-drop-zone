@@ -1,16 +1,16 @@
-"""Attached construction details defined by metricPlan.assemblyRules."""
+"""Build attached props outside architectural and production-owned scene zones."""
 from common import build_element, clear_module, set_active_module
-from phase08_production import PHASE08_HANDLED_IDS
+
 
 def build(bible, ctx):
     surface_owned = {"floor.wood", "floor.vinyl_sweep", "photo.paper_folds"}
     owned = [
-        e["id"] for e in bible.get("elements", [])
-        if not e["id"].startswith("arch.")
-        and e["id"] in ctx["assemblies"]
-        and e["id"] not in ctx["placements"]
-        and e["id"] not in surface_owned
-        and e["id"] not in PHASE08_HANDLED_IDS
+        element["id"]
+        for element in bible.get("elements", [])
+        if not element["id"].startswith(("arch.", "prod."))
+        and element["id"] in ctx["assemblies"]
+        and element["id"] not in ctx["placements"]
+        and element["id"] not in surface_owned
     ]
     clear_module(ctx, "props", owned)
     set_active_module("props")
