@@ -165,8 +165,12 @@ describe("CAMPING real GLB composition contract", () => {
     expect(hasAny("studio.production-desk", "prod.desk_l")).toBe(true);
     expect(hasAny("studio.photo-backdrop", "photo.backdrop_seal")).toBe(true);
     expect(hasAny("studio.photo-floor", "floor.vinyl_sweep")).toBe(true);
-    expect(hasAny("studio.ceiling-cross-beams") ||
-      nodes.some((node) => /SDT_shell_vault_(?:cross_)?beam/i.test(node.name ?? ""))).toBe(true);
+    // Blender V3 models the reference ceiling's arch structure as two primary
+    // ribs plus fourteen secondary ribs, rather than the legacy cross-beam alias.
+    const ceilingRibs = nodes.filter((node) =>
+      /^SDT_shell_vault_rib_(?:primary|secondary)_\d{2}$/i.test(node.name ?? ""));
+    expect(ceilingRibs.filter((node) => /_primary_/i.test(node.name ?? "")).length).toBeGreaterThanOrEqual(2);
+    expect(ceilingRibs.filter((node) => /_secondary_/i.test(node.name ?? "")).length).toBeGreaterThanOrEqual(14);
     expect(hasAny("studio.rack-uprights", "studio.merch-rack", "photo.garments")).toBe(true);
     expect(hasAny("studio.garments", "photo.garments")).toBe(true);
   });
