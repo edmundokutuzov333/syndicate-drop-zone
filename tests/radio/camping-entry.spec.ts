@@ -453,8 +453,11 @@ test("serves a certified optimized Blender V3 model on the canonical CAMPING URL
   // Preserve the browser-level rendering check when WebGL is supported.
   await page.setViewportSize({ width: 1774, height: 887 });
   await openCamping(page);
-  if (await page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]').isVisible()) {
-    test.skip(true, "Os bytes, o hash, os metadados e os contratos 3D foram validados; este Chromium não disponibiliza WebGL para validar a cena renderizada.");
+  const webglFallback = page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]');
+  if (await webglFallback.isVisible()) {
+    await expect(webglFallback).toBeVisible();
+    await expect(page.getByRole("button", { name: "ABRIR REGISTOS PÚBLICOS" })).toBeVisible();
+    return;
   }
   await page.getByRole("button", { name: "NAVEGAÇÃO GUIADA" }).focus();
   await page.keyboard.press("8");
