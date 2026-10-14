@@ -13,26 +13,26 @@ export const SIZE = 2048;
 export const REQUIRED_MAPS = ["BC", "N", "ORM"];
 
 export const PROFILES = [
- {name:"floor_walnut_semi_gloss",search:"dark walnut wood floor planks",tags:["walnut","wood","floor","planks"],baseColorSRGB:[62,30,16],roughness:.45,metallic:0,normalStrength:1,coatWeight:.15,coatRoughness:.35},
- {name:"bamboo_weave",search:"bamboo woven weave rattan cane",tags:["bamboo","woven","weave","rattan","cane"],baseColorSRGB:[125,75,28],roughness:.72,metallic:0,normalStrength:1.2},
- {name:"plaster_stucco_cream",search:"rough beige plaster stucco wall",tags:["plaster","stucco","rough","wall"],baseColorSRGB:[205,178,142],roughness:.92,metallic:0,normalStrength:1.6},
- {name:"paint_black_matte",search:"black matte painted wall plaster",tags:["black","paint","matte","wall"],baseColorSRGB:[8,8,9],roughness:.85,metallic:0,normalStrength:.8},
- {name:"leather_black_quilted",search:"black quilted leather upholstery",tags:["black","leather","quilted","upholstery"],baseColorSRGB:[12,12,13],roughness:.44,metallic:0,normalStrength:.8,coatWeight:.25,coatRoughness:.4},
- {name:"leather_black_tufted",search:"black leather upholstery textured",tags:["black","leather","upholstery","textured"],baseColorSRGB:[12,12,13],roughness:.46,metallic:0,normalStrength:.75,coatWeight:.2,coatRoughness:.42},
- {name:"fabric_black_acoustic",search:"black acoustic fabric textile cloth",tags:["black","acoustic","fabric","textile","cloth"],baseColorSRGB:[7,7,8],roughness:.95,metallic:0,normalStrength:1,sheenWeight:1,sheenRoughness:.8},
- {name:"foam_black_grid",search:"black acoustic foam pyramid grid",tags:["black","acoustic","foam","grid","pyramid"],baseColorSRGB:[5,5,5],roughness:.98,metallic:0,normalStrength:1},
- {name:"steel_brushed",search:"brushed stainless steel metal",tags:["brushed","steel","metal","stainless"],baseColorSRGB:[170,170,175],roughness:.35,metallic:1,normalStrength:.65},
- {name:"steel_black",search:"black powder coated metal steel",tags:["black","powder","coated","metal","steel"],baseColorSRGB:[10,10,10],roughness:.5,metallic:.12,normalStrength:.7},
- {name:"cotton_black",search:"black cotton jersey fabric textile",tags:["black","cotton","jersey","fabric","textile"],baseColorSRGB:[14,14,15],roughness:.92,metallic:0,normalStrength:.9,sheenWeight:.5,sheenRoughness:.85},
- {name:"paper_black_seamless",search:"black seamless photo backdrop paper",tags:["black","seamless","backdrop","paper"],baseColorSRGB:[18,16,15],roughness:.85,metallic:0,normalStrength:.3},
- {name:"paper_matte",search:"kraft matte paper fibrous",tags:["kraft","paper","matte","fibrous"],baseColorSRGB:[96,75,54],roughness:.85,metallic:0,normalStrength:.55},
- {name:"wood_reclaimed_planks",search:"reclaimed weathered wood planks",tags:["reclaimed","weathered","wood","planks"],baseColorSRGB:[96,58,30],roughness:.65,metallic:0,normalStrength:1.3},
- {name:"wood_reclaimed_top",search:"reclaimed wood timber board tabletop",tags:["reclaimed","wood","timber","board"],baseColorSRGB:[96,58,30],roughness:.55,metallic:0,normalStrength:1.1},
- {name:"vinyl_black_matte",search:"black rubber vinyl flooring",tags:["black","rubber","vinyl","flooring"],baseColorSRGB:[10,10,11],roughness:.7,metallic:0,normalStrength:.65},
- {name:"canvas_print_mural",search:"canvas fabric woven material",tags:["canvas","fabric","woven","textile"],baseColorSRGB:[120,70,55],roughness:.8,metallic:0,normalStrength:.6},
- {name:"fabric_black_flag",search:"black woven flag fabric cloth",tags:["black","woven","flag","fabric","cloth"],baseColorSRGB:[9,9,10],roughness:.9,metallic:0,normalStrength:.7},
- {name:"wood_dark_stained",search:"dark stained walnut wood boards",tags:["dark","stained","walnut","wood","boards"],baseColorSRGB:[35,18,10],roughness:.56,metallic:0,normalStrength:1},
- {name:"fabric_black_softbox",search:"black light absorbing textile fabric",tags:["black","fabric","textile","cloth"],baseColorSRGB:[6,6,7],roughness:.95,metallic:0,normalStrength:.65,sheenWeight:.25,sheenRoughness:.9}
+ {name:"floor_walnut_semi_gloss",preferredAssetIds:["dark_wooden_planks","dark_wood","wood_planks"],search:"dark walnut wood floor planks",tags:["walnut","wood","floor","planks"],baseColorSRGB:[62,30,16],roughness:.45,metallic:0,normalStrength:1,coatWeight:.15,coatRoughness:.35},
+ {name:"bamboo_weave",preferredAssetIds:["bamboo_wall_02","bamboo_wall_03","bamboo_wall"],search:"bamboo woven weave rattan cane",tags:["bamboo","woven","weave","rattan","cane"],baseColorSRGB:[125,75,28],roughness:.72,metallic:0,normalStrength:1.2},
+ {name:"plaster_stucco_cream",preferredAssetIds:["white_stucco","plastered_wall_05","painted_plaster_wall"],search:"rough beige plaster stucco wall",tags:["plaster","stucco","rough","wall"],baseColorSRGB:[205,178,142],roughness:.92,metallic:0,normalStrength:1.6},
+ {name:"paint_black_matte",preferredAssetIds:["painted_plaster_wall","plastered_wall_05","concrete_wall_003"],search:"black matte painted wall plaster",tags:["black","paint","matte","wall"],baseColorSRGB:[8,8,9],roughness:.85,metallic:0,normalStrength:.8},
+ {name:"leather_black_quilted",preferredAssetIds:["brown_leather","leather_red_03","fabric_leather_01"],search:"black quilted leather upholstery",tags:["black","leather","quilted","upholstery"],baseColorSRGB:[12,12,13],roughness:.44,metallic:0,normalStrength:.8,coatWeight:.25,coatRoughness:.4},
+ {name:"leather_black_tufted",preferredAssetIds:["fabric_leather_01","fabric_leather_02","brown_leather"],search:"black leather upholstery textured",tags:["black","leather","upholstery","textured"],baseColorSRGB:[12,12,13],roughness:.46,metallic:0,normalStrength:.75,coatWeight:.2,coatRoughness:.42},
+ {name:"fabric_black_acoustic",preferredAssetIds:["rough_linen","hessian_380","book_pattern"],search:"black acoustic fabric textile cloth",tags:["black","acoustic","fabric","textile","cloth"],baseColorSRGB:[7,7,8],roughness:.95,metallic:0,normalStrength:1,sheenWeight:1,sheenRoughness:.8},
+ {name:"foam_black_grid",preferredAssetIds:["polystyrene","rubber_tiles","asphalt_03"],search:"black acoustic foam pyramid grid",tags:["black","acoustic","foam","grid","pyramid"],baseColorSRGB:[5,5,5],roughness:.98,metallic:0,normalStrength:1},
+ {name:"steel_brushed",preferredAssetIds:["blue_metal_plate","metal_plate_02","metal_plate"],search:"brushed stainless steel metal",tags:["brushed","steel","metal","stainless"],baseColorSRGB:[170,170,175],roughness:.35,metallic:1,normalStrength:.65},
+ {name:"steel_black",preferredAssetIds:["metal_plate_02","box_profile_metal_sheet","metal_plate"],search:"black powder coated metal steel",tags:["black","powder","coated","metal","steel"],baseColorSRGB:[10,10,10],roughness:.5,metallic:.12,normalStrength:.7},
+ {name:"cotton_black",preferredAssetIds:["cotton_jersey","denmin_fabric_02","fabric_pattern_05"],search:"black cotton jersey fabric textile",tags:["black","cotton","jersey","fabric","textile"],baseColorSRGB:[14,14,15],roughness:.92,metallic:0,normalStrength:.9,sheenWeight:.5,sheenRoughness:.85},
+ {name:"paper_black_seamless",preferredAssetIds:["concrete_wall_003","decrepit_wallpaper","painted_plaster_wall"],search:"black seamless photo backdrop paper",tags:["black","seamless","backdrop","paper"],baseColorSRGB:[18,16,15],roughness:.85,metallic:0,normalStrength:.3},
+ {name:"paper_matte",preferredAssetIds:["decrepit_wallpaper","book_pattern","paper_black"],search:"kraft matte paper fibrous",tags:["kraft","paper","matte","fibrous"],baseColorSRGB:[96,75,54],roughness:.85,metallic:0,normalStrength:.55},
+ {name:"wood_reclaimed_planks",preferredAssetIds:["weathered_planks","old_planks_02","wood_planks"],search:"reclaimed weathered wood planks",tags:["reclaimed","weathered","wood","planks"],baseColorSRGB:[96,58,30],roughness:.65,metallic:0,normalStrength:1.3},
+ {name:"wood_reclaimed_top",preferredAssetIds:["wood_planks","wooden_planks","weathered_planks"],search:"reclaimed wood timber board tabletop",tags:["reclaimed","wood","timber","board"],baseColorSRGB:[96,58,30],roughness:.55,metallic:0,normalStrength:1.1},
+ {name:"vinyl_black_matte",preferredAssetIds:["rubber_tiles","old_linoleum_flooring_01","linoleum_brown"],search:"black rubber vinyl flooring",tags:["black","rubber","vinyl","flooring"],baseColorSRGB:[10,10,11],roughness:.7,metallic:0,normalStrength:.65},
+ {name:"canvas_print_mural",preferredAssetIds:["hessian_380","rough_linen","fabric_pattern_05"],search:"canvas fabric woven material",tags:["canvas","fabric","woven","textile"],baseColorSRGB:[120,70,55],roughness:.8,metallic:0,normalStrength:.6},
+ {name:"fabric_black_flag",preferredAssetIds:["book_pattern","fabric_pattern_05","denmin_fabric_02"],search:"black woven flag fabric cloth",tags:["black","woven","flag","fabric","cloth"],baseColorSRGB:[9,9,10],roughness:.9,metallic:0,normalStrength:.7},
+ {name:"wood_dark_stained",preferredAssetIds:["dark_planks","weathered_planks","wood_planks"],search:"dark stained walnut wood boards",tags:["dark","stained","walnut","wood","boards"],baseColorSRGB:[35,18,10],roughness:.56,metallic:0,normalStrength:1},
+ {name:"fabric_black_softbox",preferredAssetIds:["denmin_fabric_02","fabric_pattern_05","bi_stretch"],search:"black light absorbing textile fabric",tags:["black","fabric","textile","cloth"],baseColorSRGB:[6,6,7],roughness:.95,metallic:0,normalStrength:.65,sheenWeight:.25,sheenRoughness:.9}
 ];
 
 const ROOT = process.cwd();
@@ -58,6 +58,28 @@ export function invertDirectXGreenChannel(rgb,width,height) {
   const out=Buffer.from(rgb);
   for(let i=1;i<out.length;i+=3)out[i]=255-out[i];
   return out;
+}
+export function scaleAlbedoToTarget(rgb,targetRGB,minScale=0.08,maxScale=2.5) {
+  if(!Buffer.isBuffer(rgb)||rgb.length===0||rgb.length%3!==0) throw new Error("Albedo must be packed RGB");
+  if(!Array.isArray(targetRGB)||targetRGB.length!==3||targetRGB.some(v=>!Number.isFinite(v)||v<0||v>255)) {
+    throw new Error("Target sRGB color must contain three values from 0 to 255");
+  }
+  if(!Number.isFinite(minScale)||!Number.isFinite(maxScale)||minScale<=0||maxScale<minScale) {
+    throw new Error("Invalid albedo scale limits");
+  }
+  const count=rgb.length/3,sums=[0,0,0];
+  for(let i=0;i<rgb.length;i+=3){sums[0]+=rgb[i];sums[1]+=rgb[i+1];sums[2]+=rgb[i+2];}
+  const sourceMean=sums.map(v=>v/count);
+  const appliedScale=targetRGB.map((target,i)=>Math.max(minScale,Math.min(maxScale,target/Math.max(sourceMean[i],1))));
+  const data=Buffer.allocUnsafe(rgb.length),outSums=[0,0,0];
+  for(let i=0;i<rgb.length;i+=3){
+    for(let channel=0;channel<3;channel++){
+      const value=Math.max(0,Math.min(255,Math.round(rgb[i+channel]*appliedScale[channel])));
+      data[i+channel]=value;outSums[channel]+=value;
+    }
+  }
+  const round=values=>values.map(v=>Math.round(v*100)/100);
+  return {data,sourceMeanRGB:round(sourceMean),outputMeanRGB:round(outSums.map(v=>v/count)),appliedScale:round(appliedScale)};
 }
 async function sharp() {
   if(!sharpModule)sharpModule=(await import("sharp")).default;
@@ -167,28 +189,42 @@ function bestFile(files,k){
   });
   return a[0]??null;
 }
-async function selectAsset(profile,index,used){
-  const ranking=await candidatesFor(profile,index);
-  const ordered=ranking.filter(c=>(c.score??0)>=.06).sort((a,b)=>{
-    return ((b.score??0)-(used.has(b.id)?.18:0))-((a.score??0)-(used.has(a.id)?.18:0));
-  });
-  const errors=[];
-  for(const item of ordered.slice(0,12)){
-    const c=await detailedInfo(item);
-    try{
-      const all=leaves(await get(API+"/files/"+encodeURIComponent(c.id),true));
-      const maps={
-        BC:bestFile(all,"BC"),normalGL:bestFile(all,"normalGL"),normalDX:bestFile(all,"normalDX"),
-        normal:bestFile(all,"normal"),ao:bestFile(all,"ao"),roughness:bestFile(all,"roughness"),
-        metallic:bestFile(all,"metallic"),height:bestFile(all,"height")
-      };
-      maps.N=maps.normalGL??maps.normal??maps.normalDX;
-      if(!maps.BC||!maps.N){errors.push(c.id+": no exact 2K BC/normal maps");continue;}
-      return {candidate:c,files:all,maps,reused:used.has(c.id)};
-    }catch(e){errors.push(c.id+": "+e.message);}
-  }
-  throw new Error("No 2K CC0 asset for "+profile.name+". Candidates: "+ordered.slice(0,12).map(x=>x.id).join(", ")+". "+errors.join("; "));
+async function inspectAsset(item,profile) {
+  const candidate=await detailedInfo(item);
+  const files=leaves(await get(API+"/files/"+encodeURIComponent(candidate.id),true));
+  const maps={
+    BC:bestFile(files,"BC"),normalGL:bestFile(files,"normalGL"),normalDX:bestFile(files,"normalDX"),
+    normal:bestFile(files,"normal"),ao:bestFile(files,"ao"),roughness:bestFile(files,"roughness"),
+    metallic:bestFile(files,"metallic"),height:bestFile(files,"height")
+  };
+  maps.N=maps.normalGL??maps.normal??maps.normalDX;
+  if(!maps.BC||!maps.N)throw new Error(candidate.id+": no exact 2K BC/normal maps");
+  return {candidate,files,maps,reused:false};
 }
+async function selectAsset(profile,index,used){
+  const errors=[];
+  const lookup=id=>index?.find(candidate=>candidate.id===id)??{id,meta:{}};
+  for(const id of profile.preferredAssetIds??[]){
+    if(used.has(id))continue;
+    try{
+      const selected=await inspectAsset(lookup(id),profile);
+      console.log("  preferred source="+id+" (2K maps verified)");
+      return selected;
+    }catch(error){
+      errors.push("preferred "+id+": "+(error instanceof Error?error.message:String(error)));
+    }
+  }
+  const ranking=await candidatesFor(profile,index);
+  const ordered=ranking
+    .filter(candidate=>(candidate.score??0)>=.06&&!used.has(candidate.id))
+    .sort((a,b)=>(b.score??0)-(a.score??0));
+  for(const item of ordered.slice(0,24)){
+    try{return await inspectAsset(item,profile);}
+    catch(error){errors.push(item.id+": "+(error instanceof Error?error.message:String(error)));}
+  }
+  throw new Error("No unique 2K CC0 asset for "+profile.name+". Candidates: "+ordered.slice(0,12).map(x=>x.id).join(", ")+". "+errors.join("; "));
+}
+
 async function sourceBytes(file){
   if(!file)return null;
   const bytes=await get(file.url,false);
@@ -220,7 +256,10 @@ async function renderMaterial(profile,selected,staging){
   const names={BC:"T_"+profile.name+"_BC.png",N:"T_"+profile.name+"_N.png",ORM:"T_"+profile.name+"_ORM.png",H:"T_"+profile.name+"_H.png"};
   const paths=Object.fromEntries(Object.entries(names).map(([k,v])=>[k,join(staging,v)]));
   const buffers={};
-  buffers.BC=await s(downloaded.BC).resize(SIZE,SIZE,{fit:"fill"}).removeAlpha().toColourspace("srgb").png().toBuffer();
+  const colorRaw=await s(downloaded.BC).resize(SIZE,SIZE,{fit:"fill"}).removeAlpha().toColourspace("srgb").raw().toBuffer({resolveWithObject:true});
+  if(colorRaw.info.channels!==3)throw new Error(profile.name+" base colour expected RGB, got "+colorRaw.info.channels);
+  const albedoGrade=scaleAlbedoToTarget(colorRaw.data,profile.baseColorSRGB??[128,128,128]);
+  buffers.BC=await s(albedoGrade.data,{raw:{width:SIZE,height:SIZE,channels:3}}).png({compressionLevel:9}).toBuffer();
   await writeFile(paths.BC,buffers.BC);
   const norm=await s(downloaded.N).resize(SIZE,SIZE,{fit:"fill"}).removeAlpha().raw().toBuffer({resolveWithObject:true});
   if(norm.info.channels!==3)throw new Error(profile.name+" normal expected RGB, got "+norm.info.channels);
@@ -256,6 +295,18 @@ async function renderMaterial(profile,selected,staging){
     target:profile,
     sourceAsset:{provider:"Poly Haven",id:selected.candidate.id,name:source.name??selected.candidate.id,url:sourceUrl,apiUrl:API+"/files/"+selected.candidate.id,license:"CC0 1.0",licenseUrl:"https://creativecommons.org/publicdomain/zero/1.0/",authors,reusedByAnotherMaterial:selected.reused},
     maps:outputMaps,
+    transformations:{
+      baseColorGrade:{
+        method:"per-channel mean matching to the Scene Bible baseColorSRGB while preserving source texture variation",
+        targetSRGB:profile.baseColorSRGB??[128,128,128],
+        sourceMeanSRGB:albedoGrade.sourceMeanRGB,
+        outputMeanSRGB:albedoGrade.outputMeanRGB,
+        appliedScale:albedoGrade.appliedScale,
+        scaleClamp:[0.08,2.5]
+      },
+      normal:{outputConvention:"OpenGL",sourceConvention:dx?"DirectX converted to OpenGL":"OpenGL or labelled normal",greenChannelInverted:dx},
+      orm:{channels:{R:"ambient occlusion",G:"roughness",B:"metallic"},missingSourceFallbacks:{ao:255,roughness:profile.roughness*255,metallic:profile.metallic*255}}
+    },
     sourceMaps:{
       BC:src.BC?{path:src.BC.path,url:src.BC.url,md5:src.BC.md5,resolution:"2k"}:null,
       N:src.N?{path:src.N.path,url:src.N.url,md5:src.N.md5,resolution:"2k",convention:dx?"DirectX converted to OpenGL":"OpenGL or labelled normal"}:null,

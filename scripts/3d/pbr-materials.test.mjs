@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { invertDirectXGreenChannel, outputRelativePath, packOrmChannels, PROFILES, REQUIRED_MAPS } from "../fetch-cc0-materials.mjs";
+import { invertDirectXGreenChannel, outputRelativePath, packOrmChannels, PROFILES, REQUIRED_MAPS, scaleAlbedoToTarget } from "../fetch-cc0-materials.mjs";
 import { isLfsPointer, pngDimensions, renderLicenseRows } from "../validate-pbr-materials.mjs";
 
 test("PBR profiles cover the material library and use unique stable names", () => {
@@ -42,4 +42,19 @@ test("Blender build imports bpy globally without shadowing it inside main", asyn
   const source = await readFile(new URL("../blender/build_all.py", import.meta.url), "utf8");
   assert.match(source, /^import bpy$/m);
   assert.doesNotMatch(source, /^\s+bpy\s*=\s*__import__\(["']bpy["']\)/m);
+});
+
+test("each PBR profile has a deterministic unique primary CC0 source", () => {
+  assert.ok(PROFILES.every(profile => profile.preferredAssetIds?.length));
+  const primary = PROFILES.map(profile => profile.preferredAssetIds[0]);
+  assert.equal(new Set(primary).size, primary.length);
+});
+test("albedo grading preserves detail while matching the Scene Bible sRGB target", () => {
+  const source = Buffer.from([100,50,25,200,100,50]);
+  const graded = scaleAlbedoToTarget(source, [150,80,40]);
+  assert.deepEqual(graded.outputMeanRGB, [150,80,40]);
+  assert.deepEqual(graded.sourceMeanRGB, [150,75,37.5]);
+  assert.deepEqual([...graded.data], [100,53,27,200,107,53]);
+  assert.deepEqual([...source], [100,50,25,200,100,50]);
+  assert.throws(() => scaleAlbedoToTarget(Buffer.from([1,2]), [10,10,10]), /packed RGB/);
 });

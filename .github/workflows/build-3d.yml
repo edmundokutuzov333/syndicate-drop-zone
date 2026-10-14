@@ -84,6 +84,8 @@ jobs:
           if-no-files-found: warn
           path: |
             art/_delivery/**
+            !art/_delivery/phase04-delivery-*.zip
+            !art/_delivery/phase04-delivery-*.tar.gz
             art/xoyens-studio.blend
             art/xoyens-studio.report.json
             art/out/xoyens-studio.raw.glb
