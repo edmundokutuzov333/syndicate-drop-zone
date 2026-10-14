@@ -53,15 +53,25 @@ if (!extensions.has("EXT_meshopt_compression")) throw new Error("Refusing promot
 
 const nodes = gltf.nodes || [];
 const interactions = new Set(nodes.map((node) => node.extras && node.extras.interactionId).filter((value) => typeof value === "string" && value));
-const missing = [];
-for (let slot = 1; slot <= 17; slot += 1) {
-  const id = "studio.artist-slot-" + String(slot).padStart(3, "0");
-  if (!interactions.has(id)) missing.push(id);
-}
+const missingInteractions = [];
 for (const id of ["studio.imac", "studio.artists-wall", "studio.merch-rack", "studio.photo-backdrop", "studio.production-desk", "studio.audio-system", "studio.inner-door"]) {
-  if (!interactions.has(id)) missing.push(id);
+  if (!interactions.has(id)) missingInteractions.push(id);
 }
-if (missing.length) throw new Error("Refusing promotion: interaction IDs missing: " + missing.join(", "));
+if (missingInteractions.length) {
+  throw new Error("Refusing promotion: interaction IDs missing: " + missingInteractions.join(", "));
+}
+
+// Each portrait frame is contracted by its stable node name. Its actual photo
+// mesh may use studio.artist-photo.NNN as the separate runtime interaction ID.
+const nodeNames = new Set(nodes.map((node) => node.name).filter((value) => typeof value === "string"));
+const requiredSlots = Array.from({ length: 17 }, (_, index) => "studio.artist-slot-" + String(index + 1).padStart(3, "0"));
+const missingSlots = requiredSlots.filter((name) => !nodeNames.has(name));
+if (missingSlots.length || nodeNames.has("studio.artist-slot-018")) {
+  throw new Error("Refusing promotion: artist slot node contract failed: " + JSON.stringify({
+    missing: missingSlots,
+    unexpected018: nodeNames.has("studio.artist-slot-018"),
+  }));
+}
 
 mkdirSync(dirname(target), { recursive: true });
 copyFileSync(source, target);
