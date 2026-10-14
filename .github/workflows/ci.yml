@@ -40,7 +40,7 @@ jobs:
       - name: CAMPING scene bible contract
         run: npm run validate:camping-scene
 
-      - name: CAMPING GLB phase 1 baseline (four known violations)
+      - name: CAMPING published GLB high-tier budget contract
         run: npm run check:camping-baseline
 
       - name: Engineering tests
@@ -109,6 +109,7 @@ jobs:
         env:
           CAMPING_PRODUCTION_URL: https://syndicate-drop-zone.vercel.app
           CAMPING_PRODUCTION_VERIFY_TIMEOUT_MS: "300000"
+          CAMPING_EXPECTED_MODEL_PHASE: "8"
         run: node scripts/verify-deployed-camping-model.mjs
 
       - name: Upload CAMPING visual and failure evidence
