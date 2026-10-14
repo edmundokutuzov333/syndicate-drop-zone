@@ -33,6 +33,8 @@ def validate_architectural_shell(bible):
     missing=sorted(expected-actual)
     if missing: errors.append("missing arch IDs: "+", ".join(missing))
     if "SDT_shell_vault_ceiling" not in names: errors.append("solid vault missing")
+    for name in ("SDT_shell_gable_left", "SDT_shell_gable_right"):
+        if name not in names: errors.append("vault end wall missing: "+name)
     primary=sum(n.startswith(PRIMARY) for n in names)
     secondary=sum(n.startswith(SECONDARY) for n in names)
     vents=sum(n.startswith("SDT_shell_ac_vent_") for n in names)

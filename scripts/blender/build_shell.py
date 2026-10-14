@@ -79,6 +79,75 @@ def _vault(element,ctx,col):
             cylinder("SDT_shell_vault_fastener_"+str(x)+"_"+str(side),0.009,0.012,
                      (x,h-0.045,side*(half-0.055)),"steel_brushed",col,vertices=16,zone="shell")
 
+
+def _gable_end(name, x_sign, room, col):
+    """Close each barrel-vault end with a solid, profile-matched gable.
+
+    The inner profile follows the interior vault arc. The exterior profile
+    follows the outer vault arc and expands by the wall thickness. Lofting
+    the matching boundary loops creates a closed shell wall rather than a
+    decorative flat triangle over the opening.
+    """
+    width = float(room["clearWidthM"])
+    depth = float(room["clearDepthM"])
+    wall_h = float(room["wallHeightM"])
+    crown = float(room["vaultCrownY"])
+    thickness = float(room["wallThicknessM"])
+    half = depth / 2.0
+    rise = crown - wall_h
+    inner_r = (half * half + rise * rise) / (2.0 * rise)
+    inner_cy = crown - inner_r
+    inner_angle = math.asin(half / inner_r)
+    half_out = half + thickness
+    rise_out = rise + thickness
+    outer_r = (half_out * half_out + rise_out * rise_out) / (2.0 * rise_out)
+    outer_cy = crown + thickness - outer_r
+    outer_angle = math.asin(half_out / outer_r)
+    segments = 56
+    inner_x = x_sign * width / 2.0
+    outer_x = x_sign * (width / 2.0 + thickness)
+
+    inner_profile = [(wall_h, -half)]
+    for index in range(1, segments):
+        a = -inner_angle + 2.0 * inner_angle * index / segments
+        inner_profile.append((inner_cy + inner_r * math.cos(a), inner_r * math.sin(a)))
+    inner_profile.append((wall_h, half))
+
+    outer_profile = [(wall_h, -half_out)]
+    for index in range(1, segments):
+        a = -outer_angle + 2.0 * outer_angle * index / segments
+        outer_profile.append((outer_cy + outer_r * math.cos(a), outer_r * math.sin(a)))
+    outer_profile.append((wall_h, half_out))
+
+    vertices = []
+    for x, profile in ((inner_x, inner_profile), (outer_x, outer_profile)):
+        vertices.extend((x, y, z) for y, z in profile)
+
+    count = len(inner_profile)
+    inner = list(range(count))
+    outer = list(range(count, count * 2))
+    faces = [tuple(inner), tuple(reversed(outer))]
+    for index in range(count):
+        nxt = (index + 1) % count
+        faces.append((inner[index], inner[nxt], outer[nxt], outer[index]))
+
+    mesh = bpy.data.meshes.new(name + "_mesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.update()
+    bm = bmesh.new()
+    bm.from_mesh(mesh)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(mesh)
+    bm.free()
+
+    obj = bpy.data.objects.new(name, mesh)
+    col.objects.link(obj)
+    mat = "paint_black_matte" if x_sign < 0 else "plaster_stucco_cream"
+    finish_mesh(obj, mat, collider="none", zone="shell", lm_group="shell", bevel=0, smooth=False)
+    obj["shellBoundary"] = True
+    obj["architecturalDetail"] = "closed-vault-gable"
+    return obj
+
 def _door(element,ctx,col,room):
     cx,_,wz=tuple(ctx["placements"][element["id"]]["centerM"])
     w,h=float(element["size_m"][0]),float(element["size_m"][1])
@@ -214,6 +283,8 @@ def build(bible,ctx):
     try:
         col=ctx["collections"]["COL_shell"]; room=ctx["bible"]["metricPlan"]["room"]; enclosure=ctx["bible"]["metricPlan"]["enclosure"]
         build_structural_walls(ctx,col)
+        _gable_end("SDT_shell_gable_left", -1, room, col)
+        _gable_end("SDT_shell_gable_right", 1, room, col)
         _vault(ctx["elements"]["arch.vault_ceiling"],ctx,col)
         custom={"arch.door_main","arch.door_left","arch.ac_split","arch.conduit_pvc","arch.outlet_pair","arch.switch_plate","arch.soffit_box"}
         for elem in bible.get("elements",[]):
