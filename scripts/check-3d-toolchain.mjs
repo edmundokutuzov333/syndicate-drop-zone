@@ -62,8 +62,8 @@ if (!process.argv.includes("--packages-only")) {
     const probe = spawnSync(candidate, ["--version"], { cwd: root, encoding: "utf8" });
     if (probe.error || probe.status !== 0) continue;
     resolvedBlender = candidate;
-    const line = (probe.stdout || probe.stderr || "").trim().split(/\\r?\\n/)[0];
-    const match = line.match(/Blender\\s+(\\d+)\\.(\\d+)/i);
+    const line = (probe.stdout || probe.stderr || "").trim().split(/\r?\n/)[0];
+    const match = line.match(/Blender\s+(\d+)\.(\d+)/i);
     if (!match || Number(match[1]) !== 4 || Number(match[2]) !== 5) fail("Blender 4.5.x obrigatório; recebido: " + line);
     else ok("blender: " + line + " (" + candidate + ")");
     break;
@@ -75,7 +75,7 @@ if (!process.argv.includes("--packages-only")) {
       if (result.error || result.status !== 0) {
         fail(command.name + " não executou: " + (result.error?.message ?? (result.stderr || result.stdout || "exit " + result.status).trim()));
       } else {
-        ok(command.name + ": " + (result.stdout || result.stderr || "").trim().split(/\\r?\\n/)[0]);
+        ok(command.name + ": " + (result.stdout || result.stderr || "").trim().split(/\r?\n/)[0]);
       }
     }
   } else {
