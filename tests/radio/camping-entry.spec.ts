@@ -52,7 +52,7 @@ const PUBLISHED_ARTIST_FIXTURE = ARTIST_PHOTO_URLS.map((photo_url, index) => ({
   status: "published",
 }));
 
-async function openCamping(page: import("@playwright/test").Page, query = "") {
+async function openCamping(page: import("@playwright/test").Page, query = "", afterUnlock?: () => void) {
   await page.route("**/rest/v1/**", async (route) => {
     const pathname = new URL(route.request().url()).pathname;
     await route.fulfill({
@@ -69,6 +69,7 @@ async function openCamping(page: import("@playwright/test").Page, query = "") {
 
   await page.goto("/camping" + query);
   await unlockSite(page);
+  afterUnlock?.();
   await expect(page.locator("main.camping-studio-route")).toBeVisible();
   const canvas = page.locator("canvas.camping-studio__canvas");
   await expect(canvas).toBeVisible();
@@ -550,9 +551,19 @@ test("serves a certified optimized Blender V3 model on the canonical CAMPING URL
   expect(metadata.geometry?.materials).toBe(gltf?.materials?.length);
   expect(metadata.geometry?.embeddedImages).toBe(gltf?.images?.length);
 
-  // Preserve the browser-level rendering check when WebGL is supported.
+  // Keep the large compressed GLB response paused until the code gate has
+  // completed its React transition. This isolates gate hydration from model
+  // decoding while still verifying that the browser subsequently loads it.
   await page.setViewportSize({ width: 1774, height: 887 });
-  await openCamping(page);
+  let releaseModelResponse!: () => void;
+  const modelResponseGate = new Promise<void>((resolve) => {
+    releaseModelResponse = resolve;
+  });
+  await page.route("**/models/camping/xoyens-studio.glb**", async (route) => {
+    await modelResponseGate;
+    await route.continue();
+  });
+  await openCamping(page, "", () => releaseModelResponse());
   const webglFallback = page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]');
   if (await webglFallback.isVisible()) {
     await expect(webglFallback).toBeVisible();
