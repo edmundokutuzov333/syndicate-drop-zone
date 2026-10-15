@@ -165,10 +165,38 @@ try {
       "; available redirects=" + resolved.size);
   }
 
+  async function ensureBaseColorTextureResolution(document, minimum) {
+    const textures = new Set(document.getRoot().listMaterials()
+      .map((material) => material.getBaseColorTexture())
+      .filter(Boolean));
+    for (const texture of textures) {
+      const source = texture.getImage();
+      if (!source || source.byteLength === 0) continue;
+      const input = Buffer.from(source);
+      const metadata = await sharp(input).metadata();
+      if (!metadata.width || !metadata.height) {
+        throw new Error("Unable to read dimensions for a base-colour texture: " + (texture.getName() || "unnamed"));
+      }
+      const longestSide = Math.max(metadata.width, metadata.height);
+      if (longestSide >= minimum) continue;
+      // Upscale only base-colour maps that would violate the hero-texture floor.
+      // Preserve the aspect ratio and artwork; do not weaken the budget or stretch decals.
+      const resized = await sharp(input)
+        .resize({ width: minimum, height: minimum, fit: "inside", withoutEnlargement: false })
+        .png()
+        .toBuffer();
+      texture.setImage(resized);
+      texture.setMimeType("image/png");
+      console.log("[hero texture floor] " + (texture.getName() || "unnamed") + " " +
+        metadata.width + "x" + metadata.height + " -> " + minimum + "px maximum side");
+    }
+  }
+
   for (const tier of tiers) {
     const document = await io.read(src);
     if (tier.name !== "high") mergeLowTierMaterials(document, tier.name);
     preserveContractMetadata(document);
+    await ensureBaseColorTextureResolution(document, tier.colorTex);
 
     // Keep UV1 for lightmap workflows even when core glTF materials do not
     // reference TEXCOORD_1 directly. Preserve the custom extras at the same time.
