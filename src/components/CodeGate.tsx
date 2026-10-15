@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { click, hiss, kick808 } from "@/lib/sfx";
 import { openGate } from "@/lib/gate";
 import { frequency } from "@/lib/frequency";
@@ -14,30 +14,32 @@ const KEYS = ["1","2","3","4","5","6","7","8","9","C","0","OK"];
 
 export function CodeGate({ onOpen }: { onOpen: () => void }) {
   const [value,setValue]=useState("");
+  const valueRef = useRef("");
+  const acceptedRef = useRef(false);
   const [error,setError]=useState(false);
   const [accepted,setAccepted]=useState(false);
   const [hydrated,setHydrated]=useState(false);
   const press=(key:string)=>{
-    if(accepted)return;
+    if(acceptedRef.current)return;
     // Sound and analytics are optional enhancements. They must never block
     // the keypad state machine or leave the whole site trapped behind the gate.
     try { click(); } catch { /* Optional browser API; continue without this enhancement. */ }
     try { buzz(12); } catch { /* Optional browser API; continue without this enhancement. */ }
     setError(false);
-    if(key==="C"){setValue("");return;}
+    if(key==="C"){
+      valueRef.current = "";
+      setValue("");
+      return;
+    }
     if(key==="OK"){
-      if(value===CODE){
+      if(valueRef.current===CODE){
+        acceptedRef.current = true;
         setAccepted(true);
-        // Release React's site shell before running storage or audio side effects.
-        // The UI must not remain hidden if sessionStorage is restricted.
+        // Commit the React shell transition first. Storage and media APIs are
+        // enhancements and cannot be allowed to keep the entire route hidden.
         onOpen();
-        try {
-          openGate();
-        } catch {
-          // Access must still be granted when browser storage or the boot gate fails.
-        }
-        // Keep the synchronous CSS gate in lockstep with React state.
-        document.documentElement.dataset.gate = "open";
+        try { openGate(); } catch { /* Access must still be granted if storage is restricted. */ }
+        try { document.documentElement.dataset.gate = "open"; } catch { /* React state remains authoritative. */ }
         window.setTimeout(() => {
           try { buzz([60,40,60,40,220]); } catch { /* Optional browser API; continue without this enhancement. */ }
           try { kick808(); } catch { /* Optional browser API; continue without this enhancement. */ }
@@ -48,11 +50,15 @@ export function CodeGate({ onOpen }: { onOpen: () => void }) {
         }, 0);
       }else{
         try { buzz([180,60,180]); } catch { /* Optional browser API; continue without this enhancement. */ }
-        setError(true); setValue("");
+        valueRef.current = "";
+        setError(true);
+        setValue("");
       }
       return;
     }
-    setValue((current)=>(current+key).slice(0,3));
+    const next = (valueRef.current + key).slice(0,3);
+    valueRef.current = next;
+    setValue(next);
   };
   useEffect(()=>{
     const handle=(event:KeyboardEvent)=>{
