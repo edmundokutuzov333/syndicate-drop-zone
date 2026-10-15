@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { unlockSite } from "./site-gate";
 
 type CampingGlbPrimitive = { attributes?: Record<string, number>; indices?: number; mode?: number; material?: number };
@@ -51,6 +51,33 @@ const PUBLISHED_ARTIST_FIXTURE = ARTIST_PHOTO_URLS.map((photo_url, index) => ({
   photo_url,
   status: "published",
 }));
+
+async function expectCampingModelReady(page: Page, canvas: Locator, timeout = 60_000): Promise<void> {
+  try {
+    await expect(page.locator(".camping-studio__asset-state")).toContainText("MODEL / READY", { timeout });
+  } catch (error) {
+    const diagnostics = await canvas.evaluate((element) => ({
+      webglStatus: element.getAttribute("data-camping-webgl-status"),
+      webglError: element.getAttribute("data-camping-webgl-error"),
+      loadStage: element.getAttribute("data-camping-model-load-stage"),
+      loadStageAt: element.getAttribute("data-camping-model-load-stage-at"),
+      loadError: element.getAttribute("data-camping-model-load-error"),
+      source: element.getAttribute("data-camping-model-source"),
+      sourceVersion: element.getAttribute("data-camping-model-version"),
+      cacheVerified: element.getAttribute("data-camping-model-cache-verified"),
+      sha256: element.getAttribute("data-camping-model-sha256"),
+      sceneStatus: element.getAttribute("data-camping-scene-status"),
+      portraitsRequested: element.getAttribute("data-camping-portraits-requested"),
+      portraitsLoaded: element.getAttribute("data-camping-portraits-loaded"),
+    }));
+    throw new Error(
+      "CAMPING failed to reach MODEL / READY. Runtime diagnostics: " +
+      JSON.stringify(diagnostics) +
+      ". Original assertion: " +
+      (error instanceof Error ? error.message : String(error)),
+    );
+  }
+}
 
 async function openCamping(page: import("@playwright/test").Page, query = "", options: { skipUnlock?: boolean; afterNavigation?: () => void } = {}) {
   await page.route("**/rest/v1/**", async (route) => {
@@ -236,6 +263,7 @@ test.describe("CAMPING V2 / 808 access", () => {
     if (await page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]').isVisible()) {
       test.skip(true, "O runtime Chromium deste job não disponibiliza WebGL.");
     }
+    const canvas = page.locator("canvas.camping-studio__canvas");
 
     const glbResponses: number[] = [];
     const portraitResponses = new Map<string, number>();
@@ -265,9 +293,8 @@ test.describe("CAMPING V2 / 808 access", () => {
     await expect(codeSlots).toHaveAttribute("aria-label", "Código introduzido: 80");
     await page.keyboard.press("8");
     await expect(page.locator(".camping-studio__transition")).toBeVisible({ timeout: 5_000 });
-    await expect(page.locator(".camping-studio__asset-state")).toContainText("MODEL / READY", { timeout: 60_000 });
+    await expectCampingModelReady(page, canvas, 60_000);
     await expect(page.locator(".camping-studio__explore-state")).toContainText("EXPLORATION ACTIVE", { timeout: 30_000 });
-    const canvas = page.locator("canvas.camping-studio__canvas");
     await expect(canvas).toHaveAttribute("data-camping-scene-status", "ready");
     await expect(canvas).toHaveAttribute("data-camping-scene-missing-nodes", "");
     await expect(canvas).toHaveAttribute("data-camping-artist-slots", "17");
@@ -330,7 +357,7 @@ test.describe("CAMPING V2 / 808 access", () => {
 
     // The explicit debug flag intentionally performs the 808 access sequence
     // after renderer startup so deterministic captures cannot race the keypad.
-    await expect(page.locator(".camping-studio__asset-state")).toContainText("MODEL / READY", { timeout: 60_000 });
+    await expectCampingModelReady(page, canvas, 60_000);
     await expect(page.locator(".camping-studio__explore-state")).toContainText("EXPLORATION ACTIVE", { timeout: 30_000 });
     await expect.poll(() => page.evaluate(() => window.__SDT3D__?.ready ?? false), { timeout: 30_000 }).toBe(true);
 
