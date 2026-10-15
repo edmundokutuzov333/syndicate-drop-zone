@@ -274,6 +274,23 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
 
   const frontendGlb = join(dir, "public/models/camping/xoyens-studio.glb");
   const frontendMetadata = join(dir, "public/models/camping/xoyens-studio.model.json");
+  if (currentPhase >= 6) {
+    const optimizedFrontendGlb = join(dir, "art/out/optimized/xoyens-studio.high.glb");
+    const hasOptimizedSource = existsSync(optimizedFrontendGlb);
+    add("optimized high-tier frontend source present", hasOptimizedSource,
+      hasOptimizedSource ? optimizedFrontendGlb : "missing art/out/optimized/xoyens-studio.high.glb");
+    if (hasOptimizedSource && existsSync(frontendGlb)) {
+      const optimizedDigest = createHash("sha256").update(readFileSync(optimizedFrontendGlb)).digest("hex");
+      const canonicalDigest = createHash("sha256").update(readFileSync(frontendGlb)).digest("hex");
+      add("canonical frontend GLB exactly matches optimized high-tier source", optimizedDigest === canonicalDigest,
+        "optimized=" + optimizedDigest + "; canonical=" + canonicalDigest);
+    } else {
+      add("canonical frontend GLB matches optimized high-tier source", false,
+        "both optimized source and canonical frontend GLB are required");
+    }
+  } else {
+    add("optimized high-tier frontend source", true, "deferred until Phase 06");
+  }
   if (existsSync(frontendGlb) && bibleExists) {
     try {
       const frontendJson = parseGlb(readFileSync(frontendGlb));
