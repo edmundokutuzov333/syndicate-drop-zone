@@ -150,7 +150,20 @@ export function phasePrerequisiteFailures(root = ".", phase = PHASE_DEFAULT) {
         }
         if (number >= 9) {
           const photo = metadata.geometry?.photoZone ?? {};
-          add(photo.sourceStatus === "source-validated" && photo.requiredElements === 9 && photo.garments === 5 && photo.sealDiameterM === 2.2, "Canonical model metadata does not certify Phase 09 photo geometry");
+          add(photo.sourceStatus === "source-validated" && photo.requiredElements === 9 &&
+            photo.taggedPhotoObjects === 9 && photo.garments === 5 &&
+            photo.sealDiameterM === 2.2 && photo.rackWidthM === 1.6,
+            "Canonical model metadata does not certify Phase 09 photo geometry");
+          for (const materialName of ["print_official_seal", "print_official_xoyens", "led_panel_emissive", "led_warm_emissive"]) {
+            add(photo.requiredMaterialsLinked?.includes(materialName) === true,
+              "Canonical model metadata does not certify Phase 09 material " + materialName);
+          }
+          for (const interactionId of ["studio.photo-backdrop", "studio.merch-rack"]) {
+            add(photo.requiredInteractionsPreserved?.includes(interactionId) === true,
+              "Canonical model metadata does not certify preserved Phase 09 interaction " + interactionId);
+          }
+          add(JSON.stringify(photo.garmentTypes) === JSON.stringify(["tee-seal", "tee-seal", "tee-xoyens", "hoodie", "hoodie-grey-sleeve"]),
+            "Canonical model metadata does not certify the five Phase 09 garment types");
         }
       } catch (error) {
         failures.push("Canonical frontend model could not be verified: " + (error instanceof Error ? error.message : String(error)));
