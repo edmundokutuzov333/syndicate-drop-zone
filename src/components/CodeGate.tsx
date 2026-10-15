@@ -59,6 +59,11 @@ export function CodeGate({ onOpen }: { onOpen: () => void }) {
     setHydrated(true);
     return()=>window.removeEventListener("keydown",handle);
   },[accepted,value]);
+  // A valid code must release the visible blocker immediately, even if the
+  // parent shell is delayed during hydration. onOpen still synchronizes the
+  // shared application state and starts the post-gate experience.
+  if (accepted) return null;
+
   return (
     <div data-site-gate="locked" data-gate-hydrated={hydrated ? "true" : "false"} className="grain scanlines fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-background p-4">
       <img src={selo.url} alt="" aria-hidden className="pointer-events-none absolute -left-24 -top-24 w-[28rem] rotate-12 opacity-10"/>
