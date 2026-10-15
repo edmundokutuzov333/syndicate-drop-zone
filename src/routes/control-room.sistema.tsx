@@ -45,15 +45,15 @@ function System() {
     try {
       await publicQuery("/auth/v1/settings");
       platformNext.auth = true;
-    } catch {}
+    } catch { /* This subsystem is optional; other health checks still run. */ }
     try {
       const storage = await checkStorageBucket(getMediaBucket());
       platformNext.media = storage.ok && storage.public;
-    } catch {}
+    } catch { /* This subsystem is optional; other health checks still run. */ }
     try {
       await publicQuery("/rest/v1/site_settings?select=id&limit=1");
       platformNext.site = true;
-    } catch {}
+    } catch { /* This subsystem is optional; other health checks still run. */ }
     try {
       const [clock, listeners] = await Promise.all([getFrequencyClock(), getFrequencyListenerCount()]);
       setFrequencyInfo({ startedAt: clock?.station_started_at ?? null, listeners, loaded: Boolean(clock) });
