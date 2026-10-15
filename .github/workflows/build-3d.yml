@@ -167,7 +167,7 @@ jobs:
         shell: bash
         run: |
           {
-            echo "CAMPING V3 Fase 04"
+            echo "CAMPING V3 Fases 06-09"
             echo "Commit: $(git rev-parse HEAD)"
             echo "Exit codes:"
             cat art/_delivery/exit-codes.txt 2>/dev/null || echo "not created"
@@ -178,7 +178,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: fase04-entrega-${{ github.sha }}
+          name: camping-v3-phase09-delivery-${{ github.sha }}
           retention-days: 30
           if-no-files-found: warn
           path: |
@@ -227,7 +227,7 @@ jobs:
       - name: Download certified Blender delivery
         uses: actions/download-artifact@v7
         with:
-          name: fase04-entrega-${{ github.sha }}
+          name: camping-v3-phase09-delivery-${{ github.sha }}
           path: /tmp/fase04-delivery
       - name: Download optimized frontend model
         uses: actions/download-artifact@v7
