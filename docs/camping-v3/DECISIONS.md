@@ -183,3 +183,13 @@ A promoção exige o relatório real da Fase 08, o nó SDT_production_monitor_da
 - A promoção exige os nove IDs de elemento, cinco malhas de roupa, selo de 2,2 m, materiais de decal/iluminação e evidência Blender com checksums.
 - O modelo optimizado continua a ser promovido para `public/models/camping/xoyens-studio.glb`. A publicação falha se a geometria ou os metadados da Fase 09 não estiverem presentes.
 - O estado só muda para Certificada após CI, promoção para `main` e verificação do deployment.
+
+## 2026-10-15 · Hotfix de entrada e câmara
+
+A análise da falha do acesso 808 encontrou uma incompatibilidade entre o validador de chão e o estado real do asset: `metricPlan.status` continua `phase-03-approved-target-not-yet-built`, enquanto `runtimeCompatibility` declara que o GLB publicado ainda usa o envelope legacy de 14,2 × 9,2 m (limites de colisão interiores de 13,1 × 8,26 m). O validador só aceitava a futura planta de 7,6 × 5,6 m. Assim, `deriveCampingFloorBounds` devolvia `null`, a pose Blender V3 da entrada não podia ser derivada e a máquina de estados bloqueava em `CAMERA GEOMETRY INVALID` ao terminar a animação da porta.
+
+A correcção aceita as duas plantas documentadas, incluindo exportações em que X/Z ficam trocados, mas continua a exigir uma superfície identificada como chão e espessura vertical máxima de 0,35 m. A caixa de sala, as paredes e a abóbada continuam inválidas como chão. A pose de entrada fica dentro dos bounds, do lado +Z, olha para -Z e usa 1,62 m acima do topo do chão para os olhos, com alvo a 1,48 m. Os offsets limitados mantêm um enquadramento de primeira pessoa nas duas escalas documentadas.
+
+Foram acrescentados testes unitários para as duas orientações da planta legacy, altura e inclinação da câmara, envelope de tecto inválido e rejeição de superfícies arbitrariamente grandes. A adenda v1.1 continua a reger a separação entre GLB visual e GLB de colisores; este hotfix não altera o modelo Blender, os metadados certificados, o estado de migração métrica nem os contratos de interacção.
+
+**Limite de evidência:** a presença dos testes no repositório não substitui a execução. A confirmação final depende dos resultados reais de Vitest, lint, build e do teste browser de entrada quando o ambiente WebGL o suportar.
