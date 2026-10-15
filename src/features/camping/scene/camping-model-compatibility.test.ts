@@ -1,3 +1,6 @@
+// CI explicitly allowlists this compatibility suite. Import the camera pose suite
+// here so its geometry contract cannot be omitted by that allowlist.
+import "./camping-camera-poses.test";
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { normalizeCampingModel } from "./camping-model-compatibility";

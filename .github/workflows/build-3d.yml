@@ -329,6 +329,7 @@ jobs:
           mkdir -p public/models/camping
           cp /tmp/camping-frontend-model/xoyens-studio.glb public/models/camping/xoyens-studio.glb
           cp /tmp/camping-frontend-model/xoyens-studio.model.json public/models/camping/xoyens-studio.model.json
+          node scripts/verify-glb-contract.mjs public/models/camping/xoyens-studio.glb docs/camping-v3/scene-bible.json --frontend-optimized
           node scripts/3d/pack-delivery.mjs --manifest-only --phase="${CAMPING_PHASE:-9}"
           node scripts/validate-pbr-materials.mjs --write-licenses
           node scripts/validate-pbr-materials.mjs

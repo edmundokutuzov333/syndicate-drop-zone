@@ -200,3 +200,11 @@ Foram acrescentados testes unitários para as duas orientações da planta legac
 A falha de entrada mostrou que a caixa global do GLB não é uma fonte segura para a câmara: elementos decorativos podem alargar o envelope sem alterar as dimensões reais da sala. A recuperação passa a medir apenas as malhas estruturais identificadas (paredes, abóbada e portas), transforma as caixas locais para coordenadas de mundo e valida o resultado contra os intervalos métrico/legacy documentados. A altura dos olhos é calculada a partir da base medida das paredes, a 1,62 m; o alvo fica a 1,48 m e a pose mantém a entrada em +Z a olhar para -Z.
 
 O envelope resultante é exclusivamente para a câmara. O construtor de colisões continua a exigir uma superfície física de chão, e nenhum collider é fabricado a partir das paredes ou do tecto. Foi acrescentado um teste com um elemento decorativo fora da sala para impedir regressões causadas por bounds globais contaminados. A fase continua em validação até Vitest, Playwright, CI, promoção do GLB e verificação do deployment passarem.
+
+## 2026-10-15 · D038 · Exportação Y-up
+
+O Playwright confirmou que o GLB e os 17 retratos carregam, mas a entrada falha com `floor=not-found`. Os bounds medidos do soalho são 7,5988 × 5,5986 × 0,01855 m, com a espessura no eixo Z, em contradição com o Scene Bible (`+Y cima`).
+
+Os builders Blender do CAMPING já escrevem alturas no eixo Y. O exportador aplicava uma segunda conversão de eixos. A exportação visual e a de colisores passam a usar `export_yup=False` para preservar o referencial já usado pela cena. O verificador passa a exigir planta em X/Z, espessura no eixo Y e anchor do chão sem rotação; o mesmo gate corre no GLB bruto e no ficheiro optimizado copiado para o caminho público.
+
+A Fase 09 permanece em validação até o novo GLB, a entrada 808, os testes de câmara e a verificação HTTP de produção passarem.

@@ -52,9 +52,14 @@ def export_subset(output, colliders_only):
 
     try:
         bpy.context.view_layer.objects.active = selected[0]
+        # CAMPING's Scene Bible and Blender builders deliberately author geometry in
+        # a +Y-up frame. Blender's default export_yup=True assumes native +Z-up and
+        # rotates this scene a second time, leaving the floor in XY with thickness Z.
+        # Preserve the authored coordinates; the resulting GLB is already +Y-up.
         bpy.ops.export_scene.gltf(
             filepath=str(output), export_format="GLB", use_selection=True,
             export_extras=True, export_apply=True, export_texcoords=True,
+            export_yup=False,
             export_normals=True, export_tangents=True, export_materials="EXPORT",
             export_cameras=False, export_lights=False, export_image_format="AUTO",
             export_draco_mesh_compression_enable=False,

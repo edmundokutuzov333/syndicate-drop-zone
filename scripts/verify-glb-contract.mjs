@@ -66,6 +66,39 @@ const paperCurveNode = nodes.find(node => /paper_cyclorama_curve/i.test(String(n
 if (!floorNode || !Number.isInteger(floorNode.extras?.phase7BoardCount) || floorNode.extras.phase7BoardCount < 100) {
   throw new Error("Phase 07 floor: certified real-plank geometry (100+ boards) is missing");
 }
+const floorMeshForAxis = json.meshes?.[floorNode.mesh];
+const floorPositionAccessors = (floorMeshForAxis?.primitives ?? [])
+  .map((primitive) => json.accessors?.[primitive.attributes?.POSITION])
+  .filter(Boolean);
+if (!floorPositionAccessors.length || floorPositionAccessors.some((accessor) =>
+  !Array.isArray(accessor.min) || !Array.isArray(accessor.max) ||
+  accessor.min.length !== 3 || accessor.max.length !== 3 ||
+  ![...accessor.min, ...accessor.max].every(Number.isFinite)
+)) {
+  throw new Error("CAMPING coordinate contract: floor POSITION accessors must expose finite XYZ bounds");
+}
+const floorPositionMin = [0, 1, 2].map((axis) =>
+  Math.min(...floorPositionAccessors.map((accessor) => accessor.min[axis])));
+const floorPositionMax = [0, 1, 2].map((axis) =>
+  Math.max(...floorPositionAccessors.map((accessor) => accessor.max[axis])));
+const floorSizeMeters = floorPositionMax.map((value, axis) => value - floorPositionMin[axis]);
+const floorRotation = floorNode.rotation ?? [0, 0, 0, 1];
+const floorRotationIsIdentity = Math.abs(floorRotation[0]) < 1e-4 &&
+  Math.abs(floorRotation[1]) < 1e-4 && Math.abs(floorRotation[2]) < 1e-4 &&
+  Math.abs(Math.abs(floorRotation[3]) - 1) < 1e-4;
+const floorArea = floorSizeMeters[0] * floorSizeMeters[2];
+if (!floorRotationIsIdentity ||
+    floorSizeMeters[0] < 3.8 || floorSizeMeters[2] < 3.8 ||
+    floorSizeMeters[1] > 0.35 || floorArea < 30 || floorArea > 180) {
+  throw new Error("CAMPING coordinate contract failed: Scene Bible requires +Y up and a floor spanning X/Z with thickness on Y. " +
+    JSON.stringify({ floorSizeMeters, floorRotation, floorArea }));
+}
+const floorCoordinateContract = {
+  upAxis: "+Y",
+  footprintAxes: ["X", "Z"],
+  sizeMeters: floorSizeMeters.map((value) => Number(value.toFixed(5))),
+  rotationIdentity: floorRotationIsIdentity,
+};
 const floorPrimitives = json.meshes?.[floorNode.mesh]?.primitives ?? [];
 if (!floorPrimitives.length || !floorPrimitives.every(primitive =>
   primitive.attributes?.COLOR_0 !== undefined &&
@@ -129,6 +162,7 @@ const report = {
   materials: (json.materials ?? []).length, interactions: seen.size,
   requiredInteractionIds: expectedInteractions.size,
   artistSlots: expectedSlots.length,
+  floorCoordinateContract,
   missingMaterial, missingUv0, missingUv1,
   extensionsUsed: json.extensionsUsed ?? [],
 };

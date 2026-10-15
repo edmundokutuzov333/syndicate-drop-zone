@@ -54,7 +54,47 @@ const PUBLISHED_ARTIST_FIXTURE = ARTIST_PHOTO_URLS.map((photo_url, index) => ({
 
 async function expectCampingModelReady(page: Page, canvas: Locator, timeout = 60_000): Promise<void> {
   try {
-    await expect(page.locator(".camping-studio__asset-state")).toContainText("MODEL / READY", { timeout });
+    const badge = page.locator(".camping-studio__asset-state");
+    await expect(badge).toHaveText("MODEL / READY", { timeout });
+    await expect(badge).toHaveAttribute("data-camping-asset-state", "ready", { timeout });
+    await expect(canvas).toHaveAttribute("data-camping-webgl-status", "ready", { timeout });
+    await expect(canvas).toHaveAttribute("data-camping-model-load-stage", "ready", { timeout });
+    await expect(canvas).toHaveAttribute("data-camping-model-source", "blender-v3", { timeout });
+    await expect(canvas).toHaveAttribute("data-camping-model-version", "3", { timeout });
+    await expect(canvas).toHaveAttribute("data-camping-model-cache-verified", "true", { timeout });
+    await expect(canvas).toHaveAttribute("data-camping-scene-status", "ready", { timeout });
+    await expect(canvas).toHaveAttribute("data-camping-artist-slots", "17", { timeout });
+    await expect(canvas).toHaveAttribute("data-camping-portraits-requested", "17", { timeout });
+    await expect(canvas).toHaveAttribute("data-camping-portraits-loaded", "17", { timeout });
+    await expect.poll(() => canvas.getAttribute("data-camping-access-phase"), { timeout }).toBe("EXPLORATION");
+    await expect.poll(() => canvas.getAttribute("data-camping-camera-geometry-status"), { timeout })
+      .toMatch(/^(architectural-envelope-entry|floor-mesh-ready|room-envelope-pose-fallback)$/);
+    const camera = await canvas.evaluate((element) => ({
+      sha256: element.getAttribute("data-camping-model-sha256"),
+      poseSource: element.getAttribute("data-camping-camera-pose-source"),
+      poseError: element.getAttribute("data-camping-camera-pose-error"),
+      eyeY: Number(element.getAttribute("data-camping-camera-eye-y")),
+      floorY: element.getAttribute("data-camping-camera-pose-bounds-y"),
+      position: element.getAttribute("data-camping-camera-position"),
+      look: element.getAttribute("data-camping-camera-look-target"),
+      pitch: Number(element.getAttribute("data-camping-camera-pitch-deg")),
+    }));
+    const floorY = camera.floorY ? JSON.parse(camera.floorY) as number[] : null;
+    const position = camera.position ? JSON.parse(camera.position) as number[] : [];
+    const look = camera.look ? JSON.parse(camera.look) as number[] : [];
+    expect(camera.sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(camera.poseSource).toMatch(/^blender-v3-/);
+    expect(camera.poseError).toBeNull();
+    expect(floorY).not.toBeNull();
+    if (!floorY || floorY.length !== 2) throw new Error("CAMPING camera floor bounds are missing.");
+    expect(camera.eyeY - floorY[1]).toBeCloseTo(1.62, 2);
+    expect(position).toHaveLength(3);
+    expect(position.every(Number.isFinite)).toBe(true);
+    expect(Math.abs(position[1] - camera.eyeY)).toBeLessThan(0.03);
+    expect(look).toHaveLength(3);
+    expect(look.every(Number.isFinite)).toBe(true);
+    expect(camera.pitch).toBeGreaterThan(-12);
+    expect(camera.pitch).toBeLessThan(5);
   } catch (error) {
     const diagnostics = await canvas.evaluate((element) => ({
       webglStatus: element.getAttribute("data-camping-webgl-status"),
