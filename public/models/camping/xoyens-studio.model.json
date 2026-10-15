@@ -3,7 +3,7 @@
   "phase": 8,
   "status": "blender-v3-published",
   "model": "/models/camping/xoyens-studio.glb",
-  "sourceCommit": "f59e80d6c9c4aea0f44f9b8e978f17087b0fadad",
+  "sourceCommit": "eaf831c118b3d94384f48cd6572605c01ceb75ed",
   "format": "glTF 2.0 binary · KTX2/Basis + Meshopt",
   "units": "metres",
   "boundsMeters": {
@@ -21,8 +21,8 @@
     "triangles": 263144,
     "materials": 43,
     "embeddedImages": 60,
-    "bytes": 13245224,
-    "sha256": "f831ddbba5a7e57dd2ada184d44cf5cdcf209e6a8e03a8f8beb513d13bd84c4e",
+    "bytes": 13246780,
+    "sha256": "761257c066466749996b541c31d1f249d2d0837b8dac227a5248c665380313b9",
     "extensionsUsed": [
       "EXT_meshopt_compression",
       "KHR_materials_clearcoat",
@@ -302,67 +302,67 @@
     {
       "name": "node-37",
       "nodeIndex": 37,
-      "meshIndex": 131,
+      "meshIndex": 28,
       "interactionId": null
     },
     {
       "name": "node-41",
       "nodeIndex": 41,
-      "meshIndex": 28,
+      "meshIndex": 29,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_main_handle_plate",
       "nodeIndex": 42,
-      "meshIndex": 29,
+      "meshIndex": 30,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_main_lever",
       "nodeIndex": 43,
-      "meshIndex": 30,
+      "meshIndex": 31,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_main_lock_cylinder",
       "nodeIndex": 44,
-      "meshIndex": 31,
+      "meshIndex": 32,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_main_hinge_1",
       "nodeIndex": 45,
-      "meshIndex": 32,
+      "meshIndex": 33,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_main_hinge_2",
       "nodeIndex": 46,
-      "meshIndex": 33,
+      "meshIndex": 34,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_main_hinge_3",
       "nodeIndex": 47,
-      "meshIndex": 34,
+      "meshIndex": 35,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_left",
       "nodeIndex": 48,
-      "meshIndex": 35,
+      "meshIndex": 36,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_left_stile_-1",
       "nodeIndex": 49,
-      "meshIndex": 36,
+      "meshIndex": 37,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_left_stile_1",
       "nodeIndex": 50,
-      "meshIndex": 37,
+      "meshIndex": 24,
       "interactionId": null
     },
     {
@@ -572,13 +572,13 @@
     {
       "name": "node-381",
       "nodeIndex": 381,
-      "meshIndex": 72,
+      "meshIndex": 132,
       "interactionId": null
     },
     {
       "name": "node-397",
       "nodeIndex": 397,
-      "meshIndex": 132,
+      "meshIndex": 72,
       "interactionId": null
     },
     {
@@ -590,127 +590,127 @@
     {
       "name": "node-430",
       "nodeIndex": 430,
-      "meshIndex": 74,
+      "meshIndex": 133,
       "interactionId": null
     },
     {
       "name": "node-446",
       "nodeIndex": 446,
-      "meshIndex": 75,
+      "meshIndex": 74,
       "interactionId": null
     },
     {
       "name": "node-472",
       "nodeIndex": 472,
-      "meshIndex": 76,
+      "meshIndex": 75,
       "interactionId": null
     },
     {
       "name": "node-474",
       "nodeIndex": 474,
-      "meshIndex": 77,
+      "meshIndex": 76,
       "interactionId": null
     },
     {
       "name": "node-566",
       "nodeIndex": 566,
-      "meshIndex": 78,
+      "meshIndex": 77,
       "interactionId": null
     },
     {
       "name": "SDT_photo_vinyl_sweep_hero",
       "nodeIndex": 570,
-      "meshIndex": 79,
+      "meshIndex": 78,
       "interactionId": null
     },
     {
       "name": "SDT_photo_paper_cyclorama_wall",
       "nodeIndex": 571,
-      "meshIndex": 80,
+      "meshIndex": 79,
       "interactionId": null
     },
     {
       "name": "SDT_photo_paper_cyclorama_curve",
       "nodeIndex": 572,
-      "meshIndex": 81,
+      "meshIndex": 80,
       "interactionId": null
     },
     {
       "name": "SDT_photo_roller_backdrop",
       "nodeIndex": 609,
-      "meshIndex": 82,
+      "meshIndex": 81,
       "interactionId": "studio.photo-backdrop"
     },
     {
       "name": "node-610",
       "nodeIndex": 610,
-      "meshIndex": 83,
+      "meshIndex": 82,
       "interactionId": null
     },
     {
       "name": "SDT_photo_backdrop_seal",
       "nodeIndex": 611,
-      "meshIndex": 84,
+      "meshIndex": 83,
       "interactionId": null
     },
     {
       "name": "SDT_photo_rack",
       "nodeIndex": 612,
-      "meshIndex": 85,
+      "meshIndex": 84,
       "interactionId": "studio.merch-rack"
     },
     {
       "name": "node-613",
       "nodeIndex": 613,
-      "meshIndex": 86,
+      "meshIndex": 85,
       "interactionId": null
     },
     {
       "name": "SDT_photo_garments",
       "nodeIndex": 617,
-      "meshIndex": 87,
+      "meshIndex": 86,
       "interactionId": null
     },
     {
       "name": "SDT_photo_garments_garment_1",
       "nodeIndex": 618,
-      "meshIndex": 88,
+      "meshIndex": 87,
       "interactionId": null
     },
     {
       "name": "SDT_photo_garments_hanger_1",
       "nodeIndex": 619,
-      "meshIndex": 89,
+      "meshIndex": 88,
       "interactionId": null
     },
     {
       "name": "SDT_photo_garments_garment_2",
       "nodeIndex": 620,
-      "meshIndex": 90,
+      "meshIndex": 89,
       "interactionId": null
     },
     {
       "name": "SDT_photo_garments_hanger_2",
       "nodeIndex": 621,
-      "meshIndex": 91,
+      "meshIndex": 90,
       "interactionId": null
     },
     {
       "name": "SDT_photo_garments_garment_3",
       "nodeIndex": 622,
-      "meshIndex": 92,
+      "meshIndex": 91,
       "interactionId": null
     },
     {
       "name": "SDT_photo_garments_hanger_3",
       "nodeIndex": 623,
-      "meshIndex": 93,
+      "meshIndex": 92,
       "interactionId": null
     },
     {
       "name": "SDT_photo_garments_garment_4",
       "nodeIndex": 624,
-      "meshIndex": 90,
+      "meshIndex": 93,
       "interactionId": null
     },
     {
@@ -776,259 +776,259 @@
     {
       "name": "node-661",
       "nodeIndex": 661,
-      "meshIndex": 133,
+      "meshIndex": 104,
       "interactionId": null
     },
     {
       "name": "node-682",
       "nodeIndex": 682,
-      "meshIndex": 104,
+      "meshIndex": 105,
       "interactionId": null
     },
     {
       "name": "node-683",
       "nodeIndex": 683,
-      "meshIndex": 105,
+      "meshIndex": 106,
       "interactionId": null
     },
     {
       "name": "node-685",
       "nodeIndex": 685,
-      "meshIndex": 106,
+      "meshIndex": 107,
       "interactionId": null
     },
     {
       "name": "node-686",
       "nodeIndex": 686,
-      "meshIndex": 107,
+      "meshIndex": 108,
       "interactionId": null
     },
     {
       "name": "node-702",
       "nodeIndex": 702,
-      "meshIndex": 108,
+      "meshIndex": 109,
       "interactionId": null
     },
     {
       "name": "node-713",
       "nodeIndex": 713,
-      "meshIndex": 109,
+      "meshIndex": 110,
       "interactionId": null
     },
     {
       "name": "node-722",
       "nodeIndex": 722,
-      "meshIndex": 110,
+      "meshIndex": 111,
       "interactionId": null
     },
     {
       "name": "SDT_right_wall",
       "nodeIndex": 723,
-      "meshIndex": 111,
+      "meshIndex": 112,
       "interactionId": "studio.artists-wall"
     },
     {
       "name": "studio.artist-slot-001",
       "nodeIndex": 724,
-      "meshIndex": 112,
+      "meshIndex": 113,
       "interactionId": "studio.artist-slot-001"
     },
     {
       "name": "SDT_right_artist_slot_001_blank",
       "nodeIndex": 725,
-      "meshIndex": 113,
+      "meshIndex": 114,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-002",
       "nodeIndex": 727,
-      "meshIndex": 114,
+      "meshIndex": 115,
       "interactionId": "studio.artist-slot-002"
     },
     {
       "name": "SDT_right_artist_slot_002_blank",
       "nodeIndex": 728,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-003",
       "nodeIndex": 730,
-      "meshIndex": 116,
+      "meshIndex": 117,
       "interactionId": "studio.artist-slot-003"
     },
     {
       "name": "SDT_right_artist_slot_003_blank",
       "nodeIndex": 731,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-004",
       "nodeIndex": 733,
-      "meshIndex": 117,
+      "meshIndex": 118,
       "interactionId": "studio.artist-slot-004"
     },
     {
       "name": "SDT_right_artist_slot_004_blank",
       "nodeIndex": 734,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-005",
       "nodeIndex": 736,
-      "meshIndex": 118,
+      "meshIndex": 119,
       "interactionId": "studio.artist-slot-005"
     },
     {
       "name": "SDT_right_artist_slot_005_blank",
       "nodeIndex": 737,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-006",
       "nodeIndex": 739,
-      "meshIndex": 119,
+      "meshIndex": 120,
       "interactionId": "studio.artist-slot-006"
     },
     {
       "name": "SDT_right_artist_slot_006_blank",
       "nodeIndex": 740,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-007",
       "nodeIndex": 742,
-      "meshIndex": 120,
+      "meshIndex": 121,
       "interactionId": "studio.artist-slot-007"
     },
     {
       "name": "SDT_right_artist_slot_007_blank",
       "nodeIndex": 743,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-008",
       "nodeIndex": 745,
-      "meshIndex": 121,
+      "meshIndex": 122,
       "interactionId": "studio.artist-slot-008"
     },
     {
       "name": "SDT_right_artist_slot_008_blank",
       "nodeIndex": 746,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-009",
       "nodeIndex": 748,
-      "meshIndex": 122,
+      "meshIndex": 123,
       "interactionId": "studio.artist-slot-009"
     },
     {
       "name": "SDT_right_artist_slot_009_blank",
       "nodeIndex": 749,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-010",
       "nodeIndex": 751,
-      "meshIndex": 123,
+      "meshIndex": 124,
       "interactionId": "studio.artist-slot-010"
     },
     {
       "name": "SDT_right_artist_slot_010_blank",
       "nodeIndex": 752,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-011",
       "nodeIndex": 754,
-      "meshIndex": 124,
+      "meshIndex": 125,
       "interactionId": "studio.artist-slot-011"
     },
     {
       "name": "SDT_right_artist_slot_011_blank",
       "nodeIndex": 755,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-012",
       "nodeIndex": 757,
-      "meshIndex": 125,
+      "meshIndex": 126,
       "interactionId": "studio.artist-slot-012"
     },
     {
       "name": "SDT_right_artist_slot_012_blank",
       "nodeIndex": 758,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-013",
       "nodeIndex": 760,
-      "meshIndex": 126,
+      "meshIndex": 127,
       "interactionId": "studio.artist-slot-013"
     },
     {
       "name": "SDT_right_artist_slot_013_blank",
       "nodeIndex": 761,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-014",
       "nodeIndex": 763,
-      "meshIndex": 127,
+      "meshIndex": 128,
       "interactionId": "studio.artist-slot-014"
     },
     {
       "name": "SDT_right_artist_slot_014_blank",
       "nodeIndex": 764,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-015",
       "nodeIndex": 766,
-      "meshIndex": 128,
+      "meshIndex": 129,
       "interactionId": "studio.artist-slot-015"
     },
     {
       "name": "SDT_right_artist_slot_015_blank",
       "nodeIndex": 767,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-016",
       "nodeIndex": 769,
-      "meshIndex": 129,
+      "meshIndex": 130,
       "interactionId": "studio.artist-slot-016"
     },
     {
       "name": "SDT_right_artist_slot_016_blank",
       "nodeIndex": 770,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-017",
       "nodeIndex": 772,
-      "meshIndex": 130,
+      "meshIndex": 131,
       "interactionId": "studio.artist-slot-017"
     },
     {
       "name": "SDT_right_artist_slot_017_blank",
       "nodeIndex": 773,
-      "meshIndex": 115,
+      "meshIndex": 116,
       "interactionId": null
     }
   ],
@@ -1255,10 +1255,13 @@
   },
   "auditUpdatedAt": "2026-10-12",
   "frontendDelivery": {
+    "generatedAt": "2026-10-15T06:35:39.253Z",
+    "sourceGlb": "art/out/optimized/xoyens-studio.high.glb",
     "canonicalUrl": "/models/camping/xoyens-studio.glb",
     "hashAlgorithm": "SHA-256",
-    "bytes": 13245224,
-    "sha256": "f831ddbba5a7e57dd2ada184d44cf5cdcf209e6a8e03a8f8beb513d13bd84c4e"
+    "sha256": "761257c066466749996b541c31d1f249d2d0837b8dac227a5248c665380313b9",
+    "bytes": 13246780,
+    "browserLoader": "GLTFLoader + KTX2Loader + MeshoptDecoder"
   },
   "surfacePhase": 7,
   "productionPhase": 8

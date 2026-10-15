@@ -5,15 +5,15 @@
   "version": 1,
   "views": {
     "production-detail.png": {
-      "bytes": 1523904,
+      "bytes": 1523839,
       "height": 720,
-      "sha256": "d08e577479ca96c83327f3618873bd1cd5a33911bcf0ec31c67d46e701fa6dc1",
+      "sha256": "bcbf37c5d1abd36489b6add71b105b759b0418e31d997108956be45ca75a3a9a",
       "width": 1280
     },
     "production-overview.png": {
-      "bytes": 1697088,
+      "bytes": 1697103,
       "height": 720,
-      "sha256": "28ea6255811bca2cfdbcb96790b774c0422aff302c4aee753a6056dea255997d",
+      "sha256": "022259d3a116efe955456d0a1185322d2977bb16c225e695d4b3e3327dfa14df",
       "width": 1280
     }
   }
