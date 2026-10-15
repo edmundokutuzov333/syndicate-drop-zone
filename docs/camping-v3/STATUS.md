@@ -174,3 +174,12 @@ A regra continua fail-closed: qualquer artefacto público com fase anterior, has
 - A correcção aplica a hierarquia completa de transforms glTF aos oito cantos dos bounds locais e mantém os limites físicos em metros. Foram acrescentados testes para a escala quantizada e para uma superfície transformada em plano vertical.
 - A CI passa a executar explicitamente camping-camera-poses.test.ts. O Playwright aceita a origem blender-v3-architectural-envelope, verifica a altura ocular de 1,62 m e rejeita o rótulo antigo LOADING / GLB. O rótulo visual é estável em MODEL / READY; o estado real continua nos atributos de diagnóstico e é validado separadamente.
 - A promoção e a confirmação HTTP da produção ainda têm de passar. A Fase 10 permanece bloqueada até haver CI verde, experiência Playwright completa e confirmação de que a URL pública serve exactamente o GLB e os metadados da Fase 09.
+
+
+## 2026-10-15 · D039 · Falha de bounds do GLB quantizado
+
+A execução [Build CAMPING 3D #197](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38774468044) construiu e validou a fonte Blender, mas falhou antes da promoção do modelo. O erro estava no verificador do GLB optimizado: os limites POSITION de um accessor SHORT normalizado eram tratados como coordenadas em metros antes de aplicar as transformações. O candidato apresentava bounds de chão de 248 989,89 × 607,90 × 183 450,23 m, quando o contrato da Scene Bible exige aproximadamente 7,6 × 0,02 × 5,6 m.
+
+A correcção em preparação descodifica min/max dos accessors normalizados de acordo com o componentType antes de combinar os bounds e aplicar a matriz de mundo. Não altera budgets nem relaxa a validação. O build anterior deixou o GLB canónico e o manifesto antigos, porque a promoção foi correctamente bloqueada.
+
+A execução [Camera Production CI #729](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38774437065) também falhou contra o site publicado em Lovable: quatro testes não encontraram o texto esperado no indicador de estado (vazio ou `LOADING / GLB`). O código na main já contém o rótulo estático `MODEL / READY`, mas a publicação pública ainda não foi comprovada como sincronizada. A Fase 09 permanece em validação até uma nova build promover o modelo, os testes de browser passarem e o endpoint público servir os bytes com o SHA-256 do manifesto.

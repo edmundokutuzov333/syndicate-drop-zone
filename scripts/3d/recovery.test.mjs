@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { classify } from "../ci/read-run-annotations.mjs";
 import { blendKind, colliderGlbContract, glbContract } from "./verify-delivery.mjs";
 import { certifiedPhase7BaselineTriangles } from "./phase-baseline.mjs";
-import { getNodeWorldBounds } from "./glb-world-bounds.mjs";
+import { decodeAccessorBounds, getNodeWorldBounds } from "./glb-world-bounds.mjs";
 
 test("annotation classifier identifies known causes only from annotation text", () => {
   assert.equal(classify(["The job was not started because recent account payments have failed"]).cause, "BILLING_BLOCK");
@@ -27,6 +27,31 @@ test("quantized GLB floor bounds are transformed back to metre-scale world coord
   assert.ok(bounds.size[1] < 0.35, JSON.stringify(bounds));
   assert.ok(Math.abs(bounds.size[2] - 5.6) < 0.02, JSON.stringify(bounds));
   assert.deepEqual(bounds.min, [1, 2, 3]);
+});
+
+
+test("normalized signed 16-bit POSITION bounds decode before world transforms", () => {
+  const accessor = {
+    componentType: 5122,
+    normalized: true,
+    min: [-32767, -80, -24142],
+    max: [32767, 80, 24142],
+  };
+  const decoded = decodeAccessorBounds(accessor);
+  assert.deepEqual(decoded.min, [-1, -80 / 32767, -24142 / 32767]);
+  assert.deepEqual(decoded.max, [1, 80 / 32767, 24142 / 32767]);
+
+  const bounds = getNodeWorldBounds({ nodes: [{ scale: [3.8, 3.8, 3.8] }] }, 0, decoded.min, decoded.max);
+  assert.ok(Math.abs(bounds.size[0] - 7.6) < 0.01, JSON.stringify(bounds));
+  assert.ok(Math.abs(bounds.size[1] - 0.01856) < 0.001, JSON.stringify(bounds));
+  assert.ok(Math.abs(bounds.size[2] - 5.6) < 0.01, JSON.stringify(bounds));
+});
+
+test("non-normalized POSITION bounds remain in their source coordinate domain", () => {
+  assert.deepEqual(
+    decodeAccessorBounds({ componentType: 5122, normalized: false, min: [-7, 0, -4], max: [7, 0.02, 4] }),
+    { min: [-7, 0, -4], max: [7, 0.02, 4] },
+  );
 });
 
 test("world-space bounds detect a floor rotated into a vertical plane", () => {

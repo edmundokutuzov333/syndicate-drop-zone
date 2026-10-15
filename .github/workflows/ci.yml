@@ -26,6 +26,8 @@ on:
       - "docker/blender-ci/Dockerfile"
       - ".github/workflows/build-3d.yml"
       - ".github/workflows/ci.yml"
+      - "docs/camping-v3/STATUS.md"
+      - "docs/camping-v3/DECISIONS.md"
       - "src/features/camping/scene/camping-photo-publication.test.ts"
   pull_request:
     branches: [main]

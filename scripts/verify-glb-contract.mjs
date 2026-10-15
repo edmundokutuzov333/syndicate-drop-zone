@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync, statSync } from "node:fs";
-import { getNodeWorldBounds } from "./3d/glb-world-bounds.mjs";
+import { decodeAccessorBounds, getNodeWorldBounds } from "./3d/glb-world-bounds.mjs";
 
 const args = process.argv.slice(2);
 const frontendOptimized = args.includes("--frontend-optimized");
@@ -78,12 +78,14 @@ if (!floorPositionAccessors.length || floorPositionAccessors.some((accessor) =>
 )) {
   throw new Error("CAMPING coordinate contract: floor POSITION accessors must expose finite XYZ bounds");
 }
+// Decode each accessor independently before merging bounds. With KHR_mesh_quantization,
+// normalized SHORT values are stored as integer min/max in JSON and must be divided
+// by 32767 before node/ancestor transforms restore the metric dimensions.
+const decodedFloorBounds = floorPositionAccessors.map(decodeAccessorBounds);
 const floorPositionMin = [0, 1, 2].map((axis) =>
-  Math.min(...floorPositionAccessors.map((accessor) => accessor.min[axis])));
+  Math.min(...decodedFloorBounds.map((bounds) => bounds.min[axis])));
 const floorPositionMax = [0, 1, 2].map((axis) =>
-  Math.max(...floorPositionAccessors.map((accessor) => accessor.max[axis])));
-// POSITION accessor bounds are local coordinates. Quantized high-tier GLBs can
-// store integer ranges and restore metres through node/ancestor transforms.
+  Math.max(...decodedFloorBounds.map((bounds) => bounds.max[axis])));
 const floorWorldBounds = getNodeWorldBounds(json, nodes.indexOf(floorNode), floorPositionMin, floorPositionMax);
 const floorSizeMeters = floorWorldBounds.size;
 const floorRotation = floorNode.rotation ?? [0, 0, 0, 1];

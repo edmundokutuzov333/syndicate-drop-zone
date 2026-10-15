@@ -215,3 +215,12 @@ A Fase 09 permanece em validação até o novo GLB, a entrada 808, os testes de 
 O gate de coordenadas estava a ler POSITION.min/max do GLB optimizado como se fossem metros. Com quantizePosition: 14, os valores locais podem estar codificados em inteiros e a escala efectiva encontra-se nos transforms do nó/ancestrais. A validação passa a calcular bounds em espaço de mundo, transformando os oito cantos da caixa local. Não se relaxam os limites da Scene Bible: o chão continua a ter de ocupar X/Z e a espessura em Y continua limitada a 0,35 m.
 
 As execuções 38770621421 (Camera Production CI) e 38770621513 (Build CAMPING 3D) reabriram a certificação da Fase 09. A build falhou antes da promoção do candidato, pelo que a nota histórica de publicação não prova o estado actual. A Fase 10 só pode começar depois da nova promoção, dos testes de câmara/Playwright e da confirmação HTTP do modelo servido.
+
+
+## 2026-10-15 · D039 · Decodificação de POSITION quantizado antes dos bounds
+
+**Evidência:** no run 38774468044, o accessor do chão tinha min/max locais `[-32767, -80, -24142]` e `[32767, 80, 24142]`. O cálculo de mundo produziu 248 989,89 × 607,90 × 183 450,23 m, um factor de escala indevido de 32767 nos valores normalizados. O high-tier candidate tinha SHA-256 `e2b4ec18a0fcf188c6dee55936e9a52da973d70226c7ed117bd2ebf3b1561d1b`; o GLB canónico ainda tinha `af8799e5a998a374bb3f3f8e578a6b64b371971c98c79dcbd57cdaaa0d7d6a9e`.
+
+**Decisão:** converter os limites de accessors inteiros normalizados para o domínio usado pelo vertex shader antes de combinar primitivas e aplicar as transformações glTF. Para SHORT normalizado, usar `max(value / 32767, -1)`. Manter os limites de tamanho da Scene Bible, os testes de orientação Y-up, os 17 slots e os sete IDs de interacção. O teste de regressão reproduz as dimensões métricas de 7,6 × 5,6 m e a espessura de aproximadamente 18,6 mm.
+
+**Estado:** correcção de verificador, ainda não certificada pelo runner. A promoção e a publicação continuam bloqueadas até ao build completo, Playwright e verificação HTTP de produção.

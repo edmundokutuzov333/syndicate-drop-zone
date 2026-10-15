@@ -81,6 +81,36 @@ function transformPoint(matrix, point) {
   return result;
 }
 
+
+/**
+ * Decode glTF accessor min/max from the component storage domain to the
+ * values consumed by the vertex shader. Normalized integer POSITION accessors
+ * store raw integer bounds in JSON; those values must be normalized before
+ * applying node/ancestor transforms or they appear tens of thousands of metres
+ * wide. Float and non-normalized accessors remain in their original domain.
+ */
+export function decodeAccessorBounds(accessor) {
+  const { min, max, componentType, normalized = false } = accessor ?? {};
+  if (!Array.isArray(min) || !Array.isArray(max) || min.length !== 3 || max.length !== 3 ||
+      ![...min, ...max].every(Number.isFinite) ||
+      min.some((value, axis) => value > max[axis])) {
+    throw new Error("Invalid glTF accessor bounds");
+  }
+  if (!normalized) return { min: [...min], max: [...max] };
+
+  const normalizers = {
+    5120: (value) => Math.max(value / 127, -1),       // BYTE
+    5121: (value) => value / 255,                     // UNSIGNED_BYTE
+    5122: (value) => Math.max(value / 32767, -1),     // SHORT
+    5123: (value) => value / 65535,                   // UNSIGNED_SHORT
+  };
+  const normalize = normalizers[componentType];
+  if (!normalize) {
+    throw new Error("Unsupported normalized glTF accessor componentType: " + componentType);
+  }
+  return { min: min.map(normalize), max: max.map(normalize) };
+}
+
 export function getNodeWorldBounds(gltf, nodeIndex, localMin, localMax) {
   if (!Array.isArray(localMin) || !Array.isArray(localMax) || localMin.length !== 3 || localMax.length !== 3 ||
       ![...localMin, ...localMax].every(Number.isFinite) ||
