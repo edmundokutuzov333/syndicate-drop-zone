@@ -3,6 +3,17 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import { unlockSite } from "./site-gate";
 
+type CampingGlbPrimitive = { attributes?: Record<string, number>; indices?: number; mode?: number; material?: number };
+type CampingGlbNode = { name?: string; mesh?: number; extras?: Record<string, unknown> };
+type CampingGlb = {
+  extensionsUsed?: string[];
+  nodes?: CampingGlbNode[];
+  meshes?: Array<{ primitives?: CampingGlbPrimitive[] }>;
+  materials?: Array<{ name?: string }>;
+  accessors?: Array<{ count?: number }>;
+  images?: unknown[];
+};
+
 const ARTIST_PHOTO_URLS = [
   "/__l5e/assets-v1/3ca51b71-9b82-4727-9957-fd3763ba89e5/a01.jpg",
   "/__l5e/assets-v1/dcfd0297-cf1d-4909-878c-e565fe7cc304/a02.jpg",
@@ -416,7 +427,7 @@ test("serves a certified optimized Blender V3 model on the canonical CAMPING URL
   expect(metadata.frontendDelivery?.canonicalUrl).toBe(metadata.model);
 
   let offset = 12;
-  let gltf: Record<string, any> | null = null;
+  let gltf: CampingGlb | null = null;
   while (offset + 8 <= modelBytes.length) {
     const length = modelBytes.readUInt32LE(offset);
     const type = modelBytes.readUInt32LE(offset + 4);
