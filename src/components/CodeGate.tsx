@@ -29,15 +29,18 @@ export function CodeGate({ onOpen }: { onOpen: () => void }) {
       if(value===CODE){
         setAccepted(true);
         openGate();
-        // Schedule the unlock before any non-critical WebAudio or analytics
-        // calls, which can throw synchronously in restricted browser contexts.
+        // Commit the state transition first. WebAudio and analytics are optional
+        // effects, so they must not keep the site-wide gate mounted or block the
+        // first CAMPING frame on restricted or resource-constrained browsers.
         onOpen();
-        try { buzz([60,40,60,40,220]); } catch { /* Optional browser API; continue without this enhancement. */ }
-        try { kick808(); } catch { /* Optional browser API; continue without this enhancement. */ }
-        try { track("gate_open"); } catch { /* Optional browser API; continue without this enhancement. */ }
-        try { hiss(0.6); } catch { /* Optional browser API; continue without this enhancement. */ }
-        // RootComponent starts Frequência 808 when the global gate opens.
-        // Avoid a second concurrent start here; it can race the parent lifecycle.
+        window.setTimeout(() => {
+          try { buzz([60,40,60,40,220]); } catch { /* Optional browser API; continue without this enhancement. */ }
+          try { kick808(); } catch { /* Optional browser API; continue without this enhancement. */ }
+          try { track("gate_open"); } catch { /* Optional analytics must never block entry. */ }
+          try { hiss(0.6); } catch { /* Optional browser API; continue without this enhancement. */ }
+          // RootComponent starts Frequência 808 when the global gate opens.
+          // Avoid a second concurrent start here; it can race the parent lifecycle.
+        }, 0);
       }else{
         try { buzz([180,60,180]); } catch { /* Optional browser API; continue without this enhancement. */ }
         setError(true); setValue("");
