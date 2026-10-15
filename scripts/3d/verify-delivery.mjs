@@ -163,7 +163,8 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
     ), currentPhase < 14 ? "deferred until Phase 14" : "source and public collider files are required");
     add("frontend canonical GLB included in manifest", manifestPaths.has("public/models/camping/xoyens-studio.glb"));
     add("frontend model metadata included in manifest", manifestPaths.has("public/models/camping/xoyens-studio.model.json"));
-    add("PBR material manifest included in delivery", manifestPaths.has("art/textures/materials.manifest.json"));
+    add("PBR material manifest included in delivery", currentPhase < 5 || manifestPaths.has("art/textures/materials.manifest.json"),
+      currentPhase < 5 ? "deferred until Phase 05" : "required from Phase 05");
     add("Phase 08 production report included in delivery", currentPhase < 8 || manifestPaths.has("art/xoyens-studio.phase08.report.json"));
     for (const file of manifest.files ?? []) {
       const path = join(dir, file.path);
@@ -283,15 +284,17 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
         add("Frontend GLB: " + check.name, check.pass, check.detail);
       }
       const used = new Set(frontendJson.extensionsUsed || []);
-      add("frontend KTX2/Basis enabled", used.has("KHR_texture_basisu"));
-      add("frontend Meshopt enabled", used.has("EXT_meshopt_compression"));
+      add("frontend KTX2/Basis enabled", currentPhase < 6 || used.has("KHR_texture_basisu"),
+        currentPhase < 6 ? "deferred until Phase 06" : String(used.has("KHR_texture_basisu")));
+      add("frontend Meshopt enabled", currentPhase < 6 || used.has("EXT_meshopt_compression"),
+        currentPhase < 6 ? "deferred until Phase 06" : String(used.has("EXT_meshopt_compression")));
       if (existsSync(frontendMetadata)) {
         const metadata = JSON.parse(readFileSync(frontendMetadata, "utf8"));
         const digest = createHash("sha256").update(readFileSync(frontendGlb)).digest("hex");
         add("frontend metadata SHA-256 matches model", metadata.geometry && metadata.geometry.sha256 === digest, digest);
         add("frontend metadata points at canonical URL", metadata.model === "/models/camping/xoyens-studio.glb");
         add(
-          "frontend metadata certifies Blender V3 Phase 08 production and Phase 07 surfaces",
+          "frontend metadata certifies the requested phase and its predecessor surfaces",
           metadata.version === 3 && metadata.phase === currentPhase &&
             (currentPhase >= 8 ? metadata.productionPhase === currentPhase : metadata.productionPhase == null) &&
             (currentPhase < 7 || metadata.surfacePhase === 7) && metadata.status === "blender-v3-published",
@@ -303,11 +306,15 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
         add("frontend delivery canonical URL matches", metadata.frontendDelivery?.canonicalUrl === metadata.model);
         add("frontend source commit recorded", /^[a-f0-9]{40}$/i.test(String(metadata.sourceCommit ?? "")), metadata.sourceCommit ?? "missing");
         const requiredExtensions = ["KHR_texture_basisu", "EXT_meshopt_compression"];
-        for (const extension of requiredExtensions) {
-          add(
-            "frontend metadata extension " + extension,
-            used.has(extension) && (metadata.geometry?.extensionsUsed ?? []).includes(extension),
-          );
+        if (currentPhase >= 6) {
+          for (const extension of requiredExtensions) {
+            add(
+              "frontend metadata extension " + extension,
+              used.has(extension) && (metadata.geometry?.extensionsUsed ?? []).includes(extension),
+            );
+          }
+        } else {
+          add("frontend metadata compression extensions", true, "deferred until Phase 06");
         }
         add("frontend metadata meshes match GLB", metadata.geometry?.meshes === (frontendJson.meshes ?? []).length);
         add(
