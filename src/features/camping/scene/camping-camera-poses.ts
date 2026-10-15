@@ -122,53 +122,99 @@ export function deriveCampingFloorBounds(root: THREE.Object3D): CampingFloorBoun
  * footprint/height range. This plane is NOT a physical collider and is never used to
  * certify a floor mesh; it only lets entry and guided camera poses remain usable.
  */
-function deriveRoomEnvelopePoseBounds(root: THREE.Object3D): FloorBounds | null {
-  root.updateMatrixWorld(true);
-  const bounds = new THREE.Box3().setFromObject(root);
-  if (bounds.isEmpty()) return null;
+type StructuralRoomEnvelope = {
+  bounds: THREE.Box3;
+  groundY: number;
+  width: number;
+  depth: number;
+  meshCount: number;
+  wallCount: number;
+  ceilingCount: number;
+};
 
-  const width = bounds.max.x - bounds.min.x;
-  const depth = bounds.max.z - bounds.min.z;
-  const height = bounds.max.y - bounds.min.y;
-  const area = width * depth;
-  const meshNames: string[] = [];
+const STRUCTURAL_ROOM_MESH =
+  /^(?:SDT_shell_(?:walls?_plaster(?:_.*)?|wall_.*|vault_.*|door_.*|soffit.*|baseboard.*|ac_split.*|conduit.*|outlet.*|switch.*)|studio\.(?:inner-door|vaulted-timber-ceiling|ceiling-arches)|arch\.(?:walls_plaster|wall_.*|vault_ceiling|door_.*|soffit_box)|(?:wall|ceiling|vault|door)[._ -].*)/i;
+
+/**
+ * Measure the architectural shell independently from the full GLB root.
+ * Decorative meshes can extend beyond the room envelope and must not invalidate
+ * the camera. Only each mesh's own geometry bounds are used, never parent bounds.
+ */
+function getStructuralRoomEnvelope(root: THREE.Object3D): StructuralRoomEnvelope | null {
+  root.updateMatrixWorld(true);
+  const bounds = new THREE.Box3();
+  const wallBottoms: number[] = [];
   let meshCount = 0;
-  let structuralMeshCount = 0;
+  let wallCount = 0;
+  let ceilingCount = 0;
 
   root.traverse((object) => {
     const mesh = object as THREE.Mesh;
-    if (!mesh.isMesh || /^COL_/i.test(mesh.name)) return;
-    if (!mesh.geometry?.attributes?.position?.count) return;
+    if (!mesh.isMesh || !mesh.visible || /^COL_/i.test(mesh.name) || !STRUCTURAL_ROOM_MESH.test(mesh.name)) return;
+
+    const geometry = mesh.geometry;
+    if (!geometry?.attributes?.position?.count) return;
+    if (!geometry.boundingBox) geometry.computeBoundingBox();
+    const localBounds = geometry.boundingBox;
+    if (!localBounds || localBounds.isEmpty()) return;
+
+    const meshBounds = localBounds.clone().applyMatrix4(mesh.matrixWorld);
+    if (meshBounds.isEmpty()) return;
+    const width = meshBounds.max.x - meshBounds.min.x;
+    const height = meshBounds.max.y - meshBounds.min.y;
+    const depth = meshBounds.max.z - meshBounds.min.z;
+    if (![width, height, depth, meshBounds.min.y, meshBounds.max.y].every(Number.isFinite)) return;
+
+    bounds.union(meshBounds);
     meshCount += 1;
-    meshNames.push(mesh.name);
-    if (/wall|vault|ceiling|door|shell|soffit|arch/i.test(mesh.name)) structuralMeshCount += 1;
+    if (/wall/i.test(mesh.name) && height >= 1.8) {
+      wallCount += 1;
+      wallBottoms.push(meshBounds.min.y);
+    }
+    if (/vault|ceiling/i.test(mesh.name)) ceilingCount += 1;
   });
 
-  // The real published GLB contains dozens of independent architectural meshes.
-  // A single room-sized box or a floor mesh with the roof height cannot satisfy this.
+  if (bounds.isEmpty() || meshCount < 3 || wallCount < 2 || ceilingCount < 1) return null;
+
+  const width = bounds.max.x - bounds.min.x;
+  const depth = bounds.max.z - bounds.min.z;
+  const structuralHeight = bounds.max.y - bounds.min.y;
+  const area = width * depth;
   const longSide = Math.max(width, depth);
   const shortSide = Math.min(width, depth);
+
+  // Accept only the documented metric and legacy room envelopes.
   if (
-    meshCount < 8 || structuralMeshCount < 3 ||
-    !Number.isFinite(width) || !Number.isFinite(depth) || !Number.isFinite(height) ||
+    ![width, depth, structuralHeight, area].every(Number.isFinite) ||
     longSide < 5.2 || longSide > 16 ||
     shortSide < 4.2 || shortSide > 10 ||
     area < 30 || area > 180 ||
-    height < 1.8 || height > 6.5
+    structuralHeight < 1.8 || structuralHeight > 6.5
   ) return null;
 
-  // A geometry-derived ground plane at the measured bottom of the closed room.
-  // Distinguish it explicitly from a real floor mesh for diagnostics and tests.
-  const groundY = bounds.min.y;
+  wallBottoms.sort((a, b) => a - b);
+  const middle = Math.floor(wallBottoms.length / 2);
+  const groundY = wallBottoms.length % 2 === 1
+    ? wallBottoms[middle]
+    : (wallBottoms[middle - 1] + wallBottoms[middle]) / 2;
+  if (!Number.isFinite(groundY) || groundY < bounds.min.y - 0.35 || groundY > bounds.min.y + 0.65) return null;
+
+  return { bounds, groundY, width, depth, meshCount, wallCount, ceilingCount };
+}
+
+function deriveRoomEnvelopePoseBounds(root: THREE.Object3D): FloorBounds | null {
+  const envelope = getStructuralRoomEnvelope(root);
+  if (!envelope) return null;
+  // Camera-only ground envelope. This is never used as a physical collider.
   return {
-    minX: bounds.min.x,
-    maxX: bounds.max.x,
-    minY: groundY,
-    maxY: groundY,
-    minZ: bounds.min.z,
-    maxZ: bounds.max.z,
-    width,
-    depth,
+    minX: envelope.bounds.min.x,
+    maxX: envelope.bounds.max.x,
+    minY: envelope.groundY,
+    maxY: envelope.groundY,
+    minZ: envelope.bounds.min.z,
+    maxZ: envelope.bounds.max.z,
+    width: envelope.width,
+    depth: envelope.depth,
     source: "room-envelope",
   };
 }
@@ -190,22 +236,10 @@ export function deriveCampingEntryPoseFromSceneBounds(
   root: THREE.Object3D,
   cameraHeight = 1.62,
 ): CampingCameraPose | null {
-  root.updateMatrixWorld(true);
-  const bounds = new THREE.Box3().setFromObject(root);
-  if (bounds.isEmpty()) return null;
+  const envelope = getStructuralRoomEnvelope(root);
+  if (!envelope) return null;
 
-  const width = bounds.max.x - bounds.min.x;
-  const depth = bounds.max.z - bounds.min.z;
-  const verticalSpan = bounds.max.y - bounds.min.y;
-  const footprintArea = width * depth;
-  if (
-    !Number.isFinite(width) || !Number.isFinite(depth) || !Number.isFinite(verticalSpan) ||
-    width < 3.8 || width > 16 || depth < 3.8 || depth > 16 ||
-    footprintArea < 30 || footprintArea > 180 ||
-    verticalSpan < 1.8 || verticalSpan > 6.5
-  ) return null;
-
-  const groundY = bounds.min.y;
+  const { bounds, width, depth, groundY } = envelope;
   const centerX = (bounds.min.x + bounds.max.x) / 2;
   const centerZ = (bounds.min.z + bounds.max.z) / 2;
   const zMargin = Math.min(0.35, depth * 0.05);
@@ -297,7 +331,8 @@ export function deriveCampingCameraPoses(root: THREE.Object3D, cameraHeight = 1.
   const marginZ = Math.min(0.32, floor.depth * 0.07);
   const minX = floor.minX + marginX, maxX = floor.maxX - marginX;
   const minZ = floor.minZ + marginZ, maxZ = floor.maxZ - marginZ;
-  const roofY = allBounds.max.y;
+  const structuralEnvelope = getStructuralRoomEnvelope(root);
+  const roofY = structuralEnvelope?.bounds.max.y ?? allBounds.max.y;
   const position = (x: number, z: number) =>
     new THREE.Vector3(clamp(x, minX, maxX), eyeY, clamp(z, minZ, maxZ));
 

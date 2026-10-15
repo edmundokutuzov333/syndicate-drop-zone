@@ -193,3 +193,10 @@ A correcção aceita as duas plantas documentadas, incluindo exportações em qu
 Foram acrescentados testes unitários para as duas orientações da planta legacy, altura e inclinação da câmara, envelope de tecto inválido e rejeição de superfícies arbitrariamente grandes. A adenda v1.1 continua a reger a separação entre GLB visual e GLB de colisores; este hotfix não altera o modelo Blender, os metadados certificados, o estado de migração métrica nem os contratos de interacção.
 
 **Limite de evidência:** a presença dos testes no repositório não substitui a execução. A confirmação final depende dos resultados reais de Vitest, lint, build e do teste browser de entrada quando o ambiente WebGL o suportar.
+
+
+## 2026-10-15 · D037 · Câmara baseada na casca arquitectónica
+
+A falha de entrada mostrou que a caixa global do GLB não é uma fonte segura para a câmara: elementos decorativos podem alargar o envelope sem alterar as dimensões reais da sala. A recuperação passa a medir apenas as malhas estruturais identificadas (paredes, abóbada e portas), transforma as caixas locais para coordenadas de mundo e valida o resultado contra os intervalos métrico/legacy documentados. A altura dos olhos é calculada a partir da base medida das paredes, a 1,62 m; o alvo fica a 1,48 m e a pose mantém a entrada em +Z a olhar para -Z.
+
+O envelope resultante é exclusivamente para a câmara. O construtor de colisões continua a exigir uma superfície física de chão, e nenhum collider é fabricado a partir das paredes ou do tecto. Foi acrescentado um teste com um elemento decorativo fora da sala para impedir regressões causadas por bounds globais contaminados. A fase continua em validação até Vitest, Playwright, CI, promoção do GLB e verificação do deployment passarem.

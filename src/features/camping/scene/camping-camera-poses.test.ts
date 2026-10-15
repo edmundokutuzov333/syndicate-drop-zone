@@ -347,6 +347,44 @@ describe("CAMPING V3 camera and collision coordinates", () => {
     expect(createCampingV3CollisionConfig(root)).toBeNull();
   });
 
+  it("derives camera bounds from the architectural shell when an unrelated prop expands the GLB root", () => {
+    const root = new Group();
+    addBox(root, "SDT_shell_wall_left", [0.12, 4.35, 9.2], [-7.04, 2.175, 0]);
+    addBox(root, "SDT_shell_wall_right", [0.12, 4.35, 9.2], [7.04, 2.175, 0]);
+    addBox(root, "SDT_shell_wall_back", [14.2, 4.35, 0.12], [0, 2.175, -4.54]);
+    addBox(root, "SDT_shell_wall_front", [14.2, 4.35, 0.12], [0, 2.175, 4.54]);
+    addBox(root, "SDT_shell_vault_ceiling", [14.2, 0.1, 9.2], [0, 4.3, 0]);
+    addBox(root, "SDT_shell_door_main", [1.1, 2.04, 0.12], [0, 1.02, 4.54]);
+    // A decorative sign is deliberately outside the documented room envelope.
+    addBox(root, "studio.xoyens-sign.backlight", [42, 0.08, 0.4], [22, 4.2, 0]);
+    root.updateMatrixWorld(true);
+
+    const rootBounds = new Box3().setFromObject(root);
+    expect(rootBounds.max.x - rootBounds.min.x).toBeGreaterThan(16);
+    expect(deriveCampingFloorBounds(root)).toBeNull();
+
+    const poseBounds = deriveCampingPoseFloorBounds(root);
+    expect(poseBounds).not.toBeNull();
+    if (!poseBounds) throw new Error("Expected camera bounds from the measured architectural shell.");
+    expect(poseBounds.source).toBe("room-envelope");
+    expect(poseBounds.width).toBeCloseTo(14.2, 1);
+    expect(poseBounds.depth).toBeCloseTo(9.2, 1);
+    expect(poseBounds.minY).toBeCloseTo(0, 2);
+    expect(poseBounds.maxY).toBeCloseTo(0, 2);
+
+    const poses = deriveCampingCameraPoses(root, 1.62);
+    expect(poses).not.toBeNull();
+    if (!poses) throw new Error("Expected guided poses from the measured architectural shell.");
+    expect(poses.entrada.position[1]).toBeCloseTo(1.62, 2);
+    expect(poses.entrada.position[2]).toBeGreaterThan(0);
+    expect(poses.entrada.look[2]).toBeLessThan(0);
+    expect(poses.tecto.look[1]).toBeLessThan(4.5);
+
+    const entry = deriveCampingEntryPoseFromSceneBounds(root, 1.62);
+    expect(entry).not.toBeNull();
+    expect(entry?.position[1]).toBeCloseTo(1.62, 2);
+  });
+
   it("builds collision bounds and obstacle boxes from the metric V3 floor", () => {
     const { root, floor } = makeMetricStudio();
     const config = createCampingV3CollisionConfig(root);
