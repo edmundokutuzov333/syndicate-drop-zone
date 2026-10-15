@@ -1,9 +1,22 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { productionMetadataMismatches } from "./3d/production-model-contract.mjs";
 
 const BASE_URL = process.env.CAMPING_PRODUCTION_URL || "https://syndicate-drop-zone.vercel.app";
 const MODEL_PATH = "/models/camping/xoyens-studio.glb";
 const METADATA_PATH = "/models/camping/xoyens-studio.model.json";
+const LOCAL_MODEL_FILE = process.env.CAMPING_EXPECTED_MODEL_FILE || "public/models/camping/xoyens-studio.glb";
+const LOCAL_METADATA_FILE = process.env.CAMPING_EXPECTED_MODEL_METADATA_FILE || "public/models/camping/xoyens-studio.model.json";
+const expectedMetadata = JSON.parse(readFileSync(LOCAL_METADATA_FILE, "utf8"));
+const localModelBytes = readFileSync(LOCAL_MODEL_FILE);
+const expectedModelSha256 = createHash("sha256").update(localModelBytes).digest("hex");
+if (expectedMetadata.geometry?.sha256 !== expectedModelSha256 ||
+    expectedMetadata.frontendDelivery?.sha256 !== expectedModelSha256 ||
+    expectedMetadata.geometry?.bytes !== localModelBytes.length ||
+    expectedMetadata.frontendDelivery?.bytes !== localModelBytes.length) {
+  throw new Error("local checkout model does not match its expected metadata; refusing production certification");
+}
 const EXPECTED_MODEL_PHASE = Number(process.env.CAMPING_EXPECTED_MODEL_PHASE || process.env.CAMPING_PHASE || 9);
 if (!Number.isInteger(EXPECTED_MODEL_PHASE) || EXPECTED_MODEL_PHASE < 9 || EXPECTED_MODEL_PHASE > 22) {
   throw new Error("CAMPING_EXPECTED_MODEL_PHASE must be an integer between 9 and 22; pre-Phase-09 models are not accepted");
@@ -61,7 +74,7 @@ async function verifyPublishedAsset(metadata) {
   const modelUrl = new URL(MODEL_PATH, BASE_URL);
   // Bind the request cache key to the expected digest. If a CDN serves an old
   // object for this canonical path, the SHA-256 gate below rejects it.
-  modelUrl.searchParams.set("_sdt_sha256", String(metadata.geometry?.sha256 ?? ""));
+  modelUrl.searchParams.set("_sdt_sha256", expectedModelSha256);
   const response = await fetch(modelUrl, {
     cache: "no-store",
     headers: { "Cache-Control": "no-cache, no-store, max-age=0", Pragma: "no-cache" },
@@ -229,9 +242,10 @@ while (Date.now() < deadline) {
     if (!response.ok) throw new Error("metadata returned HTTP " + response.status);
     const metadata = await response.json();
 
-    // Do not request the model URL while the public manifest still declares a
-    // legacy phase. This avoids treating the old GLB as a valid candidate.
-    if (metadata.version !== 3 || metadata.phase !== EXPECTED_MODEL_PHASE || metadata.productionPhase !== EXPECTED_MODEL_PHASE ||
+    const mismatches = productionMetadataMismatches(expectedMetadata, metadata);
+    if (mismatches.length) {
+      lastError = "public metadata is stale or differs from current main delivery: " + mismatches.join("; ");
+    } else if (metadata.version !== 3 || metadata.phase !== EXPECTED_MODEL_PHASE || metadata.productionPhase !== EXPECTED_MODEL_PHASE ||
         metadata.surfacePhase !== 7 || metadata.status !== "blender-v3-published") {
       lastError = "public metadata is not certified for expected phase " + EXPECTED_MODEL_PHASE + ": version=" + metadata.version + ", phase=" + metadata.phase +
         ", productionPhase=" + metadata.productionPhase + ", surfacePhase=" + metadata.surfacePhase + ", status=" + metadata.status;

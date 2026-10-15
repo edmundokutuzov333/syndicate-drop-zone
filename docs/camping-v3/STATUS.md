@@ -183,3 +183,12 @@ A execução [Build CAMPING 3D #197](https://github.com/edmundokutuzov333/syndic
 A correcção em preparação descodifica min/max dos accessors normalizados de acordo com o componentType antes de combinar os bounds e aplicar a matriz de mundo. Não altera budgets nem relaxa a validação. O build anterior deixou o GLB canónico e o manifesto antigos, porque a promoção foi correctamente bloqueada.
 
 A execução [Camera Production CI #729](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38774437065) também falhou contra o site publicado em Lovable: quatro testes não encontraram o texto esperado no indicador de estado (vazio ou `LOADING / GLB`). O código na main já contém o rótulo estático `MODEL / READY`, mas a publicação pública ainda não foi comprovada como sincronizada. A Fase 09 permanece em validação até uma nova build promover o modelo, os testes de browser passarem e o endpoint público servir os bytes com o SHA-256 do manifesto.
+
+
+## 2026-10-15 · D040 · Verificação de produção contra o artefacto da main
+
+A build [#38778515982](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38778515982) concluiu com sucesso a compilação Blender, a reabertura, as capturas das Fases 06/08/09 e a promoção para a main. O commit de publicação é [7f0cfbff93e3c4b8effce2d7b2165fa53ad744fd](https://github.com/edmundokutuzov333/syndicate-drop-zone/commit/7f0cfbff93e3c4b8effce2d7b2165fa53ad744fd). O modelo canónico em main tem 13 536 520 bytes e SHA-256 `d56f1c74b92b9b413cd0aed3b42c87aaca227bc6e8ece9beb0f2f3d94122a85d`.
+
+A auditoria dos logs encontrou um falso positivo no verificador de produção: este aceitou a versão pública antiga porque comparava o GLB servido apenas com o manifesto servido pelo mesmo domínio. O endpoint devolveu SHA-256 `5a6180c1a355a8e8d63342cd1edbe2d64354859f1e88927e017e3ec7f9cec69d` e 13 524 620 bytes, diferentes do artefacto actual da main, apesar de o log ter escrito `CAMPING PRODUCTION MODEL CERTIFIED`.
+
+A verificação foi reforçada para validar primeiro o GLB e o manifesto do checkout, e depois exigir que a metadata pública coincida com esse SHA-256, tamanho, fase e sourceCommit antes de descarregar/validar o modelo servido. Foi acrescentado um teste que reproduz o falso positivo anterior. A Fase 09 permanece aberta até o endpoint público servir exactamente o artefacto actual e os testes Playwright da entrada/porta passarem.

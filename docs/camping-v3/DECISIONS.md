@@ -224,3 +224,12 @@ As execuções 38770621421 (Camera Production CI) e 38770621513 (Build CAMPING 3
 **Decisão:** converter os limites de accessors inteiros normalizados para o domínio usado pelo vertex shader antes de combinar primitivas e aplicar as transformações glTF. Para SHORT normalizado, usar `max(value / 32767, -1)`. Manter os limites de tamanho da Scene Bible, os testes de orientação Y-up, os 17 slots e os sete IDs de interacção. O teste de regressão reproduz as dimensões métricas de 7,6 × 5,6 m e a espessura de aproximadamente 18,6 mm.
 
 **Estado:** correcção de verificador, ainda não certificada pelo runner. A promoção e a publicação continuam bloqueadas até ao build completo, Playwright e verificação HTTP de produção.
+
+
+## 2026-10-15 · D040 · Não aceitar auto-consistência como prova de publicação actual
+
+**Evidência:** a promoção do commit `7f0cfbff93e3c4b8effce2d7b2165fa53ad744fd` registou na main o GLB `d56f1c74b92b9b413cd0aed3b42c87aaca227bc6e8ece9beb0f2f3d94122a85d` (13 536 520 bytes). No mesmo run, o verificador HTTP recebeu da produção o GLB `5a6180c1a355a8e8d63342cd1edbe2d64354859f1e88927e017e3ec7f9cec69d` (13 524 620 bytes), mas marcou sucesso porque o manifesto remoto antigo concordava com o próprio GLB antigo.
+
+**Decisão:** a verificação de produção passa a usar o GLB/manifesto do checkout como fonte esperada, validar a integridade local antes da rede e comparar o manifesto remoto com hash, bytes, fase, URL canónica e sourceCommit do artefacto promovido. A consulta ao modelo público usa o SHA-256 esperado na query de cache-busting. Um deployment antigo não pode passar só por ser internamente consistente.
+
+**Estado:** a build e a promoção do artefacto para main passaram; a verificação HTTP anterior é inválida como certificação de actualidade. A fase continua aberta até uma execução com o novo gate confirmar o hash exacto em produção e o Playwright completar a experiência pública.

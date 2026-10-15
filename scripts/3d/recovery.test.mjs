@@ -4,6 +4,7 @@ import { classify } from "../ci/read-run-annotations.mjs";
 import { blendKind, colliderGlbContract, glbContract } from "./verify-delivery.mjs";
 import { certifiedPhase7BaselineTriangles } from "./phase-baseline.mjs";
 import { decodeAccessorBounds, getNodeWorldBounds } from "./glb-world-bounds.mjs";
+import { productionMetadataMismatches } from "./production-model-contract.mjs";
 
 test("annotation classifier identifies known causes only from annotation text", () => {
   assert.equal(classify(["The job was not started because recent account payments have failed"]).cause, "BILLING_BLOCK");
@@ -62,6 +63,27 @@ test("world-space bounds detect a floor rotated into a vertical plane", () => {
   ] };
   const bounds = getNodeWorldBounds(gltf, 1, [0, 0, 0], [65534, 160, 48284]);
   assert.ok(bounds.size[1] > 4, JSON.stringify(bounds));
+});
+
+test("production verification rejects a self-consistent but stale public model", () => {
+  const expected = {
+    version: 3, phase: 9, productionPhase: 9, surfacePhase: 7, status: "blender-v3-published",
+    sourceCommit: "8ce83cbc65716814ec414179fbe676507feec469",
+    model: "/models/camping/xoyens-studio.glb",
+    geometry: { sha256: "d56f1c74b92b9b413cd0aed3b42c87aaca227bc6e8ece9beb0f2f3d94122a85d", bytes: 13536520 },
+    frontendDelivery: { sha256: "d56f1c74b92b9b413cd0aed3b42c87aaca227bc6e8ece9beb0f2f3d94122a85d", bytes: 13536520, canonicalUrl: "/models/camping/xoyens-studio.glb" },
+  };
+  assert.deepEqual(productionMetadataMismatches(expected, structuredClone(expected)), []);
+  const stale = structuredClone(expected);
+  stale.geometry.sha256 = "5a6180c1a355a8e8d63342cd1edbe2d64354859f1e88927e017e3ec7f9cec69d";
+  stale.frontendDelivery.sha256 = stale.geometry.sha256;
+  stale.geometry.bytes = 13524620;
+  stale.frontendDelivery.bytes = stale.geometry.bytes;
+  stale.sourceCommit = "d892656b434cd7f267cd69af5e03e2ead84a99f3";
+  const failures = productionMetadataMismatches(expected, stale);
+  assert.ok(failures.some((failure) => failure.includes("geometry.sha256")), failures.join("\n"));
+  assert.ok(failures.some((failure) => failure.includes("geometry.bytes")), failures.join("\n"));
+  assert.ok(failures.some((failure) => failure.includes("sourceCommit")), failures.join("\n"));
 });
 
 test("blend detector distinguishes native magic and an LFS pointer", () => {
