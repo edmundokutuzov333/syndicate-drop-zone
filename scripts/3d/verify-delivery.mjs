@@ -346,6 +346,36 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
     add("frontend GLB and Scene Bible accessible", false, "missing");
   }
 
+  if (currentPhase >= 9) {
+    const reportPath = join(dir, "art/xoyens-studio.phase09.report.json");
+    if (!existsSync(reportPath)) add("Phase 09 source report present", false, "missing");
+    else {
+      const photoReport = JSON.parse(readFileSync(reportPath, "utf8"));
+      add("Phase 09 source report certified", photoReport.phase === 9 && photoReport.status === "source-validated" && photoReport.photoElements === 9 && photoReport.photoRootsFound === 9 && photoReport.garments === 5 && photoReport.sealDiameterM === 2.2, JSON.stringify({ roots: photoReport.photoRootsFound, garments: photoReport.garments }));
+    }
+    const captureRoot = join(dir, "art/_delivery/phase-09");
+    const captureManifestPath = join(captureRoot, "capture-manifest.json");
+    if (!existsSync(captureManifestPath)) add("Phase 09 capture manifest present", false, "missing");
+    else {
+      const captureManifest = JSON.parse(readFileSync(captureManifestPath, "utf8"));
+      add("Phase 09 capture manifest has two views", captureManifest.phase === 9 && Object.keys(captureManifest.views ?? {}).sort().join(",") === "photo-detail.png,photo-overview.png");
+      for (const name of ["photo-overview.png", "photo-detail.png"]) {
+        const full = join(captureRoot, name);
+        const view = captureManifest.views?.[name];
+        const exists = existsSync(full);
+        const bytes = exists ? readFileSync(full) : Buffer.alloc(0);
+        const digest = exists ? createHash("sha256").update(bytes).digest("hex") : "";
+        add("Phase 09 capture checksum " + name, exists && bytes.length > 10000 && view?.bytes === bytes.length && view?.sha256 === digest, exists ? bytes.length + " bytes" : "missing");
+      }
+    }
+    const metadataPath = join(dir, "public/models/camping/xoyens-studio.model.json");
+    if (!existsSync(metadataPath)) add("Phase 09 frontend metadata present", false, "missing");
+    else {
+      const metadata = JSON.parse(readFileSync(metadataPath, "utf8"));
+      const photo = metadata.geometry?.photoZone ?? {};
+      add("Phase 09 frontend metadata", metadata.phase === 9 && metadata.productionPhase === 9 && photo.sourceStatus === "source-validated" && photo.requiredElements === 9 && photo.garments === 5 && photo.sealDiameterM === 2.2, JSON.stringify(photo));
+    }
+  }
   if (currentPhase >= 14) {
     const colliderFiles = [
       ["source", join(dir, "art/out/xoyens-studio.colliders.glb")],
