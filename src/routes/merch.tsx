@@ -73,7 +73,7 @@ function Merch() {
   }, [armed]);
 
   useEffect(() => {
-    track("merch_view", { member: Boolean(member) ? 1 : 0 });
+    track("merch_view", { member: member ? 1 : 0 });
   }, []);
 
   const reserve = async () => {
