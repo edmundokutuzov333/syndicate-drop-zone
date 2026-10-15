@@ -7,13 +7,13 @@
     "photo-detail.png": {
       "bytes": 1644871,
       "height": 720,
-      "sha256": "29e1459a5bbd6a6b26c1b17a10061af4157ad030563b7515b216ca97491f23da",
+      "sha256": "ac617ec8d2bcf0a8999b28f63d4edef5d668d4670700f2c7bfe386ba41bb630c",
       "width": 1280
     },
     "photo-overview.png": {
       "bytes": 558809,
       "height": 720,
-      "sha256": "f6f720676d5172e3af5939e43ce47b60fa227b72f64503644482c1d7df521f52",
+      "sha256": "b04355e9167f2ac0a8c204d2ad05549d8cd8557c274bb5f7b0af895ad3185b9e",
       "width": 1280
     }
   }
