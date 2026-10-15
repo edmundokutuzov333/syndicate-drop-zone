@@ -20,6 +20,9 @@ export function requiredFilesForPhase(phase = PHASE_DEFAULT) {
     throw new Error("CAMPING phase must be an integer between 1 and 22");
   }
   const required = [...CORE_REQUIRED];
+  // From Phase 06 onward, the optimized high-tier source is a release artifact.
+  // The canonical public GLB must be byte-for-byte identical to this candidate.
+  if (number >= 6) required.push("art/out/optimized/xoyens-studio.high.glb");
   if (number >= 5) required.push("art/textures/materials.manifest.json");
   if (number >= 7) {
     required.push("art/out/phase07-surfaces.json");
@@ -60,6 +63,18 @@ export function phasePrerequisiteFailures(root = ".", phase = PHASE_DEFAULT) {
       return null;
     }
   };
+
+  if (number >= 6) {
+    const optimizedPath = join(root, "art/out/optimized/xoyens-studio.high.glb");
+    const canonicalPath = join(root, "public/models/camping/xoyens-studio.glb");
+    add(existsSync(optimizedPath), "Optimized high-tier frontend GLB missing: art/out/optimized/xoyens-studio.high.glb");
+    if (existsSync(optimizedPath) && existsSync(canonicalPath)) {
+      const optimizedDigest = createHash("sha256").update(readFileSync(optimizedPath)).digest("hex");
+      const canonicalDigest = createHash("sha256").update(readFileSync(canonicalPath)).digest("hex");
+      add(optimizedDigest === canonicalDigest,
+        "Optimized high-tier GLB and canonical frontend GLB differ (optimized=" + optimizedDigest + ", canonical=" + canonicalDigest + ")");
+    }
+  }
 
   if (number >= 7) {
     const source = load("art/out/phase07-surfaces.json", "Phase 07 source evidence");
