@@ -373,3 +373,10 @@ jobs:
           echo "PUBLISHED_BLEND_SHA256=$BLEND_SHA"
           echo "PUBLISHED_BLEND_BYTES=$BLEND_SIZE"
           echo "REMOTE_MAIN=$REMOTE_MAIN"
+
+      - name: Verify Phase 09 model served by the production alias
+        env:
+          CAMPING_EXPECTED_MODEL_PHASE: "9"
+          CAMPING_PRODUCTION_URL: "https://syndicate-drop-zone.vercel.app"
+          CAMPING_PRODUCTION_VERIFY_TIMEOUT_MS: "300000"
+        run: node scripts/verify-deployed-camping-model.mjs
