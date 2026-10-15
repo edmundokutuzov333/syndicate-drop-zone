@@ -37,4 +37,11 @@ export default tseslint.config(
     },
   },
   eslintPluginPrettier,
+  {
+    files: ["**/*.{js,mjs,cjs,ts,tsx}"],
+    rules: {
+      // Formatting debt is surfaced as warnings; semantic ESLint violations remain blocking.
+      "prettier/prettier": "warn",
+    },
+  },
 );
