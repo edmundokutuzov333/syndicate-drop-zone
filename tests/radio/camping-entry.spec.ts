@@ -434,7 +434,7 @@ test("serves a certified optimized Blender V3 model on the canonical CAMPING URL
     const start = offset + 8;
     expect(start + length).toBeLessThanOrEqual(modelBytes.length);
     if (type === 0x4e4f534a) {
-      gltf = JSON.parse(modelBytes.subarray(start, start + length).toString("utf8").replace(/\0+$/g, "").trim());
+      gltf = JSON.parse(modelBytes.subarray(start, start + length).toString("utf8").replace(/\0+$/g, "").trim()) as CampingGlb;
     }
     offset = start + length;
   }
