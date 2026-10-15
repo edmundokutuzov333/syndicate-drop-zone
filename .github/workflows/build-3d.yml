@@ -29,6 +29,7 @@ concurrency:
   cancel-in-progress: true
 permissions:
   contents: read
+# Release target: build and certify the real Phase 09 model before canonical promotion.
 env:
   CAMPING_PHASE: "9"
 jobs:
