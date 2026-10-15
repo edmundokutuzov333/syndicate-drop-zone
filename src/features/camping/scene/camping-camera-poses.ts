@@ -136,7 +136,7 @@ export function deriveCampingCameraPoses(root: THREE.Object3D, cameraHeight = 1.
   const entryLook = new THREE.Vector3(
     clamp(center.x - floor.width * 0.08, minX, maxX),
     floorY + 1.48,
-    clamp(center.z - floor.depth * 0.25, minZ, maxZ),
+    clamp(center.z - floor.depth * 0.36, minZ, maxZ),
   );
   const production = targetPose(["studio.production-desk", "studio.imac"], Math.min(1.65, floor.depth * 0.3));
   const photography = targetPose(["studio.photo-backdrop"], Math.min(1.55, floor.depth * 0.28));

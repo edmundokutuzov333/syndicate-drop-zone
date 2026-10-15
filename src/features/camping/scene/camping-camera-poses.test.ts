@@ -66,7 +66,7 @@ describe("CAMPING V3 camera and collision coordinates", () => {
       expect(pose.look.every(Number.isFinite), id + " look target").toBe(true);
     }
     expect(poses.entrada.position[2]).toBeGreaterThan(poses.entrada.look[2]);
-    expect(poses.entrada.position[2] - poses.entrada.look[2]).toBeGreaterThan(1.5);
+    expect(poses.entrada.position[2] - poses.entrada.look[2]).toBeGreaterThan(2.4);
     expect(poses.entrada.position[2]).toBeLessThan(
       (bounds.min.z + bounds.max.z) / 2 + (bounds.max.z - bounds.min.z) * 0.2,
     );
