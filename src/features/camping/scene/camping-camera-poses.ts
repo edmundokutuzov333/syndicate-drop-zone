@@ -17,7 +17,7 @@ export type CampingCameraPoseMap = Record<CampingCameraPoseName, CampingCameraPo
 export type CampingFloorBounds = {
   minX: number; maxX: number; minY: number; maxY: number; minZ: number; maxZ: number;
   width: number; depth: number;
-  source: "floor-node" | "floor-element";
+  source: "floor-node" | "floor-element" | "floor-inferred";
 };
 type FloorBounds = CampingFloorBounds;
 
@@ -31,33 +31,22 @@ function toFloorBounds(bounds: THREE.Box3, source: CampingFloorBounds["source"])
   const width = bounds.max.x - bounds.min.x;
   const height = bounds.max.y - bounds.min.y;
   const depth = bounds.max.z - bounds.min.z;
-
-  // A floor candidate is accepted only if it is a named floor surface and is thin.
-  // The Scene Bible's runtimeCompatibility explicitly documents two valid footprints:
-  // the not-yet-built 7.6 × 5.6 m target, and the currently published legacy model
-  // (14.2 × 9.2 m outer envelope; 13.1 × 8.26 m interior collision bounds).
-  // Blender exports may swap world X/Z, so compare long/short sides for the legacy
-  // envelope. Do not widen this to scene/root bounds: walls and the vaulted roof
-  // have vertical thickness far above 0.35 m and remain invalid floor candidates.
   const footprintArea = width * depth;
-  const metricArea = 7.6 * 5.6;
-  const isMetricFootprint =
-    width >= 3.8 && width <= 9.8 &&
-    depth >= 3.8 && depth <= 9.8 &&
-    footprintArea >= metricArea * 0.72 && footprintArea <= metricArea * 1.28;
 
-  const legacyLongSide = Math.max(width, depth);
-  const legacyShortSide = Math.min(width, depth);
-  const isDocumentedLegacyFootprint =
-    legacyLongSide >= 12.5 && legacyLongSide <= 14.8 &&
-    legacyShortSide >= 7.5 && legacyShortSide <= 9.8 &&
-    footprintArea >= 95 && footprintArea <= 135;
-
+  // Accept only an explicitly identified floor surface (or the measured lowest
+  // horizontal plane fallback below), never the room root. The published asset's
+  // metricPlan and runtimeCompatibility currently describe different generations,
+  // so dimensions alone cannot be used as the identity check for the actual floor.
+  // Keep a finite envelope around both documented footprints and require a genuinely
+  // thin surface; a ceiling, wall, or whole-room group therefore remains invalid.
+  const longSide = Math.max(width, depth);
+  const shortSide = Math.min(width, depth);
   if (
     !Number.isFinite(width) || !Number.isFinite(height) || !Number.isFinite(depth) ||
-    width <= 0 || depth <= 0 ||
-    height < 0 || height > 0.35 ||
-    (!isMetricFootprint && !isDocumentedLegacyFootprint)
+    width < 3.8 || depth < 3.8 ||
+    longSide > 16 ||
+    footprintArea < 30 || footprintArea > 180 ||
+    height < 0 || height > 0.35
   ) return null;
 
   return {
@@ -67,7 +56,6 @@ function toFloorBounds(bounds: THREE.Box3, source: CampingFloorBounds["source"])
     width, depth, source,
   };
 }
-
 function getFloorBounds(root: THREE.Object3D): FloorBounds | null {
   root.updateMatrixWorld(true);
   const candidates: Array<{ object: THREE.Object3D; source: CampingFloorBounds["source"]; priority: number }> = [];
@@ -83,6 +71,11 @@ function getFloorBounds(root: THREE.Object3D): FloorBounds | null {
     }
   });
 
+  const documentedAreas = [7.6 * 5.6, 13.1 * 8.26, 14.2 * 9.2];
+  const score = (bounds: FloorBounds) => {
+    const area = bounds.width * bounds.depth;
+    return Math.min(...documentedAreas.map((expected) => Math.abs(Math.log(area / expected))));
+  };
   const valid = candidates
     .map((candidate) => ({
       ...candidate,
@@ -91,19 +84,32 @@ function getFloorBounds(root: THREE.Object3D): FloorBounds | null {
     .filter((candidate): candidate is typeof candidate & { bounds: FloorBounds } => candidate.bounds !== null)
     .sort((a, b) => {
       if (a.priority !== b.priority) return a.priority - b.priority;
-      // If there are multiple thin floor surfaces, prefer a footprint that matches
-      // either documented model envelope rather than silently assuming migration is done.
-      const score = (bounds: FloorBounds) => {
-        const area = bounds.width * bounds.depth;
-        const documentedAreas = [7.6 * 5.6, 13.1 * 8.26, 14.2 * 9.2];
-        return Math.min(...documentedAreas.map((expected) => Math.abs(Math.log(area / expected))));
-      };
       return score(a.bounds) - score(b.bounds);
     });
+  if (valid[0]) return valid[0].bounds;
 
-  // Never substitute the full scene bounds for floor bounds. That is how a
-  // ceiling apex can be mistaken for ground level and place the camera above the room.
-  return valid[0]?.bounds ?? null;
+  // Recovery path for exports whose floor node was renamed or lost its extras.
+  // Find a thin, broad mesh at the measured bottom of the actual scene. This is
+  // still geometry-derived: roof/furniture at elevated Y, tall boxes, COL_* objects,
+  // and arbitrarily large planes are rejected. No camera pose is guessed from the roof.
+  const sceneBounds = new THREE.Box3().setFromObject(root);
+  if (sceneBounds.isEmpty()) return null;
+  const lowestSceneY = sceneBounds.min.y;
+  const inferred: FloorBounds[] = [];
+  root.traverse((object) => {
+    const mesh = object as THREE.Mesh;
+    if (!mesh.isMesh || !mesh.visible || /^COL_/i.test(mesh.name)) return;
+    const bounds = new THREE.Box3().setFromObject(mesh);
+    if (bounds.isEmpty()) return;
+    if (bounds.min.y > lowestSceneY + 0.65 || bounds.max.y > lowestSceneY + 1.0) return;
+    const floorBounds = toFloorBounds(bounds, "floor-inferred");
+    if (floorBounds) inferred.push(floorBounds);
+  });
+  inferred.sort((a, b) => {
+    const areaDifference = b.width * b.depth - a.width * a.depth;
+    return Math.abs(areaDifference) > 0.01 ? areaDifference : score(a) - score(b);
+  });
+  return inferred[0] ?? null;
 }
 
 export function deriveCampingFloorBounds(root: THREE.Object3D): CampingFloorBounds | null {
