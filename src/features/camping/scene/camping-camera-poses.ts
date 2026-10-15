@@ -110,13 +110,14 @@ export function deriveCampingCameraPoses(root: THREE.Object3D, cameraHeight = 1.
     return serializePose(camera, new THREE.Vector3(target.x, targetY, target.z));
   };
 
-  // Start just inside the +Z doorway and look diagonally through the room.
-  // The eye-level target is deliberately separated from the ceiling geometry.
-  const entryPosition = position(center.x, floor.maxZ - Math.min(0.45, floor.depth * 0.08));
+  // Entry composition is computed from the measured room footprint, not from
+  // the doorway edge. Staying 40% of the room depth behind the +Z wall prevents
+  // the door leaf/frame from filling the camera while keeping a first-person view.
+  const entryPosition = position(center.x, center.z + floor.depth * 0.1);
   const entryLook = new THREE.Vector3(
-    clamp(center.x - floor.width * 0.12, minX, maxX),
-    floorY + 1.42,
-    clamp(center.z - floor.depth * 0.3, minZ, maxZ),
+    clamp(center.x - floor.width * 0.08, minX, maxX),
+    floorY + 1.48,
+    clamp(center.z - floor.depth * 0.25, minZ, maxZ),
   );
   const production = targetPose(["studio.production-desk", "studio.imac"], Math.min(1.65, floor.depth * 0.3));
   const photography = targetPose(["studio.photo-backdrop"], Math.min(1.55, floor.depth * 0.28));

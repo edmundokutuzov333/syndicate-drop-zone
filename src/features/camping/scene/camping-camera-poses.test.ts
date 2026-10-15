@@ -38,9 +38,21 @@ describe("CAMPING V3 camera and collision coordinates", () => {
       expect(pose.look.every(Number.isFinite), id + " look target").toBe(true);
     }
     expect(poses.entrada.position[2]).toBeGreaterThan(poses.entrada.look[2]);
-    expect(poses.entrada.position[2] - poses.entrada.look[2]).toBeGreaterThan(2.5);
+    expect(poses.entrada.position[2] - poses.entrada.look[2]).toBeGreaterThan(1.5);
+    expect(poses.entrada.position[2]).toBeLessThan(
+      (bounds.min.z + bounds.max.z) / 2 + (bounds.max.z - bounds.min.z) * 0.2,
+    );
     expect(poses.entrada.look[1]).toBeLessThan(poses.entrada.position[1]);
-    expect(poses.entrada.position[1] - poses.entrada.look[1]).toBeLessThan(0.35);
+    expect(poses.entrada.position[1] - poses.entrada.look[1]).toBeLessThan(0.25);
+    const entryPitch = Math.atan2(
+      poses.entrada.look[1] - poses.entrada.position[1],
+      Math.hypot(
+        poses.entrada.look[0] - poses.entrada.position[0],
+        poses.entrada.look[2] - poses.entrada.position[2],
+      ),
+    ) * 180 / Math.PI;
+    expect(entryPitch).toBeGreaterThan(-12);
+    expect(entryPitch).toBeLessThanOrEqual(0);
     expect(poses.producao.position[2]).toBeGreaterThan(poses.producao.look[2]);
     expect(poses.foto.position[2]).toBeGreaterThan(poses.foto.look[2]);
     expect(poses.artistas.position[0]).toBeLessThan(poses.artistas.look[0]);

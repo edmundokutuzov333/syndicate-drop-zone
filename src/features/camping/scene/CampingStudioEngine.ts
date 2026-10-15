@@ -1359,6 +1359,10 @@ export class CampingStudioEngine {
     this.pitch = Math.asin(THREE.MathUtils.clamp(direction.y, -1, 1));
     this.camera.rotation.order = "YXZ";
     this.camera.rotation.set(this.pitch, this.yaw, 0, "YXZ");
+    if (this.canvas) {
+      this.canvas.dataset.campingCameraPitchDeg = THREE.MathUtils.radToDeg(this.pitch).toFixed(2);
+      this.canvas.dataset.campingCameraYawRad = this.yaw.toFixed(3);
+    }
     this.debugAppliedPose = id;
     this.debugRequestedPose = null;
     if (this.canvas) this.canvas.dataset.campingDebugPose = id;

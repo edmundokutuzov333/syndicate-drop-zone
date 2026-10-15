@@ -381,6 +381,14 @@ test.describe("CAMPING V2 / 808 access", () => {
       expect(cameraPosition[0], pose + " camera x inside floor").toBeLessThan(floorBounds[2]);
       expect(cameraPosition[2], pose + " camera z inside floor").toBeGreaterThan(floorBounds[1]);
       expect(cameraPosition[2], pose + " camera z inside floor").toBeLessThan(floorBounds[3]);
+      if (pose === "entrada") {
+        const floorSize = JSON.parse(cameraBounds.floorSize!) as [number, number];
+        const lookTarget = JSON.parse(
+          await canvas.getAttribute("data-camping-camera-look-target") ?? "null",
+        ) as [number, number, number];
+        expect(floorBounds[3] - cameraPosition[2], "entry camera must clear the front doorway").toBeGreaterThan(floorSize[1] * 0.3);
+        expect(Math.abs(cameraPosition[1] - lookTarget[1]), "entry target must stay near eye height").toBeLessThan(0.25);
+      }
       const metrics = await page.evaluate(() => window.__SDT3D__?.metrics() ?? null);
       expect(metrics).not.toBeNull();
       captureMetrics[pose] = metrics;
