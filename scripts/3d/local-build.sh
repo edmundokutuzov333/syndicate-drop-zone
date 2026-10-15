@@ -26,6 +26,7 @@ step blend-check npm run 3d:blend:validate
 step frontend-model bash scripts/3d/build-frontend-model.sh
 # The optimized candidate is now at the canonical public URL. Run the same
 # frontend gates required by the superprompt before the publish job can commit it.
+# Formatting-only Prettier findings are warnings; semantic ESLint violations remain blocking.
 step frontend-lint npm run lint
 step frontend-tests npm run test
 step frontend-build npm run build
