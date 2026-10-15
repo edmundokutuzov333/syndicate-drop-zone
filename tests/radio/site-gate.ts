@@ -5,9 +5,12 @@ import { expect, type Page } from "@playwright/test";
  * sessionStorage before SSR, which makes server/client initial markup diverge
  * and can prevent React from hydrating event handlers in browser tests.
  */
-export async function unlockSite(page: Page): Promise<void> {
+export async function unlockSite(page: Page, afterUnlock?: () => void): Promise<void> {
   const siteGate = page.locator('[data-site-gate="locked"]');
-  if (!(await siteGate.isVisible().catch(() => false))) return;
+  if (!(await siteGate.isVisible().catch(() => false))) {
+    afterUnlock?.();
+    return;
+  }
   const ok = siteGate.getByRole("button", { name: "OK", exact: true });
   await expect(siteGate).toHaveAttribute("data-gate-hydrated", "true", { timeout: 15_000 });
   const display = siteGate.locator('[aria-live="polite"][aria-atomic="true"]');
@@ -23,5 +26,8 @@ export async function unlockSite(page: Page): Promise<void> {
   }
 
   await ok.click();
+  // Release deliberately paused model requests before waiting for React to
+  // remove the gate. This avoids deadlocking gate transition and GLB startup.
+  afterUnlock?.();
   await expect(siteGate).toHaveCount(0, { timeout: 5_000 });
 }
