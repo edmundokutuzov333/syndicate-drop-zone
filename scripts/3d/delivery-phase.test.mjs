@@ -46,6 +46,32 @@ test("Phase 08 is rejected when Phase 07 source evidence is missing", () => {
   }
 });
 
+test("Phase 09 requires photo source report, official brand assets and canonical frontend metadata", () => {
+  const required = new Set(requiredFilesForPhase(9));
+  assert.equal(required.has("art/xoyens-studio.phase07.report.json"), true);
+  assert.equal(required.has("art/xoyens-studio.phase08.report.json"), true);
+  assert.equal(required.has("art/xoyens-studio.phase09.report.json"), true);
+  assert.equal(required.has("art/textures/brand/sindicato-selo.png"), true);
+  assert.equal(required.has("art/textures/brand/xoyens.png"), true);
+  assert.equal(required.has("public/models/camping/xoyens-studio.glb"), true);
+  assert.equal(required.has("public/models/camping/xoyens-studio.model.json"), true);
+  assert.equal(required.has("public/models/camping/xoyens-studio.colliders.glb"), false);
+});
+
+test("Phase 09 is rejected when the photo report and official assets are absent", () => {
+  const root = mkdtempSync(join(tmpdir(), "camping-phase09-gate-"));
+  try {
+    const failures = phasePrerequisiteFailures(root, 9);
+    assert.ok(failures.some((failure) => failure.includes("Phase 07 source evidence missing")));
+    assert.ok(failures.some((failure) => failure.includes("Phase 08 production validation missing")));
+    assert.ok(failures.some((failure) => failure.includes("Phase 09 photo validation missing")));
+    assert.ok(failures.some((failure) => failure.includes("Phase 09 official brand asset missing")));
+    assert.ok(failures.some((failure) => failure.includes("Canonical frontend model metadata missing")));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("Phase 13 defers collider artifacts, while Phase 14 requires both", () => {
   const phase13 = new Set(requiredFilesForPhase(13));
   assert.equal(phase13.has("art/out/xoyens-studio.colliders.glb"), false);
