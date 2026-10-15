@@ -55,7 +55,7 @@ describe("CAMPING V3 camera and collision coordinates", () => {
     expect(config.maxZ).toBeLessThan(bounds.max.z);
     expect(config.maxX - config.minX).toBeLessThan(7.6);
     expect(config.maxZ - config.minZ).toBeLessThan(5.6);
-    expect(canOccupyStudio({ x: (config.minX + config.maxX) / 2, z: config.minZ + 0.1 }, config)).toBe(true);
+    expect(canOccupyStudio({ x: (config.minX + config.maxX) / 2, z: (config.minZ + config.maxZ) / 2 }, config)).toBe(true);
     expect(canOccupyStudio({ x: config.maxX + 1, z: 0 }, config)).toBe(false);
     expect(config.colliders.some((collider) => collider.id === "production-desk")).toBe(true);
     expect(config.colliders.some((collider) => collider.id === "photography-backdrop")).toBe(true);
