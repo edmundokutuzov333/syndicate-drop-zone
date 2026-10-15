@@ -15,6 +15,7 @@ on:
       - "vite.config.ts"
       - "scripts/camping-frontend-publication-guard.ts"
       - "scripts/build-blend.sh"
+      - "public/models/camping/xoyens-studio.model.json"
       - "scripts/install-3d-toolchain.sh"
       - "scripts/verify-glb-contract.mjs"
       - "docs/camping-v3/scene-bible.json"
@@ -32,6 +33,8 @@ env:
 jobs:
   build:
     name: Build, reopen and certify Blender delivery
+    # The publish job commits its own generated model/metadata. Do not loop on that bot commit.
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
