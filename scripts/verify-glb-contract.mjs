@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFileSync, statSync } from "node:fs";
+import { getNodeWorldBounds } from "./3d/glb-world-bounds.mjs";
 
 const args = process.argv.slice(2);
 const frontendOptimized = args.includes("--frontend-optimized");
@@ -81,23 +82,37 @@ const floorPositionMin = [0, 1, 2].map((axis) =>
   Math.min(...floorPositionAccessors.map((accessor) => accessor.min[axis])));
 const floorPositionMax = [0, 1, 2].map((axis) =>
   Math.max(...floorPositionAccessors.map((accessor) => accessor.max[axis])));
-const floorSizeMeters = floorPositionMax.map((value, axis) => value - floorPositionMin[axis]);
+// POSITION accessor bounds are local coordinates. Quantized high-tier GLBs can
+// store integer ranges and restore metres through node/ancestor transforms.
+const floorWorldBounds = getNodeWorldBounds(json, nodes.indexOf(floorNode), floorPositionMin, floorPositionMax);
+const floorSizeMeters = floorWorldBounds.size;
 const floorRotation = floorNode.rotation ?? [0, 0, 0, 1];
 const floorRotationIsIdentity = Math.abs(floorRotation[0]) < 1e-4 &&
   Math.abs(floorRotation[1]) < 1e-4 && Math.abs(floorRotation[2]) < 1e-4 &&
   Math.abs(Math.abs(floorRotation[3]) - 1) < 1e-4;
 const floorArea = floorSizeMeters[0] * floorSizeMeters[2];
-if (!floorRotationIsIdentity ||
+if (!floorSizeMeters.every(Number.isFinite) ||
     floorSizeMeters[0] < 3.8 || floorSizeMeters[2] < 3.8 ||
     floorSizeMeters[1] > 0.35 || floorArea < 30 || floorArea > 180) {
-  throw new Error("CAMPING coordinate contract failed: Scene Bible requires +Y up and a floor spanning X/Z with thickness on Y. " +
-    JSON.stringify({ floorSizeMeters, floorRotation, floorArea }));
+  throw new Error("CAMPING coordinate contract failed in world space: Scene Bible requires +Y up and a floor spanning X/Z with thickness on Y. " +
+    JSON.stringify({
+      floorSizeMeters,
+      floorRotation,
+      localAccessorBounds: { min: floorPositionMin, max: floorPositionMax },
+      floorWorldBounds,
+    }));
 }
 const floorCoordinateContract = {
   upAxis: "+Y",
   footprintAxes: ["X", "Z"],
   sizeMeters: floorSizeMeters.map((value) => Number(value.toFixed(5))),
-  rotationIdentity: floorRotationIsIdentity,
+  worldBoundsMeters: {
+    min: floorWorldBounds.min.map((value) => Number(value.toFixed(5))),
+    max: floorWorldBounds.max.map((value) => Number(value.toFixed(5))),
+  },
+  localAccessorBounds: { min: floorPositionMin, max: floorPositionMax },
+  nodeRotationIdentity: floorRotationIsIdentity,
+  worldTransformApplied: true,
 };
 const floorPrimitives = json.meshes?.[floorNode.mesh]?.primitives ?? [];
 if (!floorPrimitives.length || !floorPrimitives.every(primitive =>

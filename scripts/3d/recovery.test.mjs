@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { classify } from "../ci/read-run-annotations.mjs";
 import { blendKind, colliderGlbContract, glbContract } from "./verify-delivery.mjs";
 import { certifiedPhase7BaselineTriangles } from "./phase-baseline.mjs";
+import { getNodeWorldBounds } from "./glb-world-bounds.mjs";
 
 test("annotation classifier identifies known causes only from annotation text", () => {
   assert.equal(classify(["The job was not started because recent account payments have failed"]).cause, "BILLING_BLOCK");
@@ -14,6 +15,28 @@ test("annotation classifier identifies known causes only from annotation text", 
 
 test("runner_id 0 without annotation remains unknown", () => {
   assert.equal(classify(["runner_id=0; steps=[]; failure"]).cause, "UNKNOWN");
+});
+
+test("quantized GLB floor bounds are transformed back to metre-scale world coordinates", () => {
+  const gltf = { nodes: [
+    { translation: [1, 2, 3], children: [1] },
+    { mesh: 0, scale: [0.000116, 0.000116, 0.000116] },
+  ] };
+  const bounds = getNodeWorldBounds(gltf, 1, [0, 0, 0], [65534, 160, 48284]);
+  assert.ok(Math.abs(bounds.size[0] - 7.6) < 0.02, JSON.stringify(bounds));
+  assert.ok(bounds.size[1] < 0.35, JSON.stringify(bounds));
+  assert.ok(Math.abs(bounds.size[2] - 5.6) < 0.02, JSON.stringify(bounds));
+  assert.deepEqual(bounds.min, [1, 2, 3]);
+});
+
+test("world-space bounds detect a floor rotated into a vertical plane", () => {
+  const halfSqrt = Math.SQRT1_2;
+  const gltf = { nodes: [
+    { children: [1] },
+    { mesh: 0, scale: [0.000116, 0.000116, 0.000116], rotation: [halfSqrt, 0, 0, halfSqrt] },
+  ] };
+  const bounds = getNodeWorldBounds(gltf, 1, [0, 0, 0], [65534, 160, 48284]);
+  assert.ok(bounds.size[1] > 4, JSON.stringify(bounds));
 });
 
 test("blend detector distinguishes native magic and an LFS pointer", () => {

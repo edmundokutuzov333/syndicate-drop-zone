@@ -276,7 +276,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   }
 
   const stamp = manifest.generated_at.replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z").slice(0, 15);
-  const zip = join(root, `art/_delivery/phase04-delivery-${manifest.commit.slice(0, 7)}-${stamp}.zip`);
+  const zip = join(root, `art/_delivery/phase${String(phase).padStart(2, "0")}-delivery-${manifest.commit.slice(0, 7)}-${stamp}.zip`);
   const entries = [
     ...manifest.files.map((file) => file.path),
     ...(manifest.evidence?.logs ?? []),

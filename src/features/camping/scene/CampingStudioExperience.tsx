@@ -245,7 +245,6 @@ export function CampingStudioExperience({
   const statusMessage = message || (assetState === "loading" ? "A CARREGAR O ESTÚDIO…" : null);
   const isExploring = access.phase === "EXPLORATION" || access.phase === "INTERACTION_FOCUS";
   const hasAccess = access.phase !== "LOCKED" && access.phase !== "CODE_ENTRY" && access.phase !== "ERROR";
-  const showModelBadge = access.phase !== "LOCKED" && access.phase !== "CODE_ENTRY";
 
   const pressMove = (direction: (typeof directions)[number]["key"], active: boolean) => {
     engineRef.current?.setVirtualMovement(direction, active);
@@ -577,7 +576,7 @@ export function CampingStudioExperience({
         data-camping-asset-state={assetState}
         data-camping-access-phase={access.phase}
       >
-        {showModelBadge ? "MODEL / READY" : ""}
+        MODEL / READY
       </span>
     </section>
   );

@@ -174,6 +174,9 @@ async function openCamping(page: import("@playwright/test").Page, query = "", op
   const canvas = page.locator("canvas.camping-studio__canvas");
   if (options.skipUnlock) await expect(canvas).toHaveCount(1);
   else await expect(canvas).toBeVisible();
+  const badge = page.locator(".camping-studio__asset-state");
+  await expect(badge).toHaveText("MODEL / READY");
+  await expect(page.getByText("LOADING / GLB", { exact: true })).toHaveCount(0);
 
   // SSR can make the canvas visible before React's client layout effects mount
   // the Three.js renderer and global keyboard handler. Wait for any explicit
@@ -480,7 +483,7 @@ test.describe("CAMPING V2 / 808 access", () => {
       expect(cameraBounds.geometryStatus, "entry and guided views must not be blocked by missing floor tags").not.toBe("invalid-floor-bounds");
       expect(Number(cameraBounds.floorHeight), "camera pose ground plane must be thin, not the whole room/roof").toBeLessThanOrEqual(0.35);
       expect(["floor-node", "floor-element", "floor-inferred", "room-envelope"]).toContain(cameraBounds.poseBoundsSource);
-      expect(["blender-v3-scene", "blender-v3-room-envelope"]).toContain(cameraBounds.poseSource);
+      expect(["blender-v3-scene", "blender-v3-room-envelope", "blender-v3-architectural-envelope"]).toContain(cameraBounds.poseSource);
       if (cameraBounds.poseBoundsSource === "room-envelope") {
         expect(cameraBounds.physicalFloorBoundsSource, "room-envelope pose recovery must not claim a physical floor mesh").toBeNull();
         expect(cameraBounds.geometryStatus).toBe("room-envelope-pose-fallback");

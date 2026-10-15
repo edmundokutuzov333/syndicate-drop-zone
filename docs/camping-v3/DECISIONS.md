@@ -208,3 +208,10 @@ O Playwright confirmou que o GLB e os 17 retratos carregam, mas a entrada falha 
 Os builders Blender do CAMPING já escrevem alturas no eixo Y. O exportador aplicava uma segunda conversão de eixos. A exportação visual e a de colisores passam a usar `export_yup=False` para preservar o referencial já usado pela cena. O verificador passa a exigir planta em X/Z, espessura no eixo Y e anchor do chão sem rotação; o mesmo gate corre no GLB bruto e no ficheiro optimizado copiado para o caminho público.
 
 A Fase 09 permanece em validação até o novo GLB, a entrada 808, os testes de câmara e a verificação HTTP de produção passarem.
+
+
+## 2026-10-15 · Bounds do GLB quantizado e reabertura da Fase 09
+
+O gate de coordenadas estava a ler POSITION.min/max do GLB optimizado como se fossem metros. Com quantizePosition: 14, os valores locais podem estar codificados em inteiros e a escala efectiva encontra-se nos transforms do nó/ancestrais. A validação passa a calcular bounds em espaço de mundo, transformando os oito cantos da caixa local. Não se relaxam os limites da Scene Bible: o chão continua a ter de ocupar X/Z e a espessura em Y continua limitada a 0,35 m.
+
+As execuções 38770621421 (Camera Production CI) e 38770621513 (Build CAMPING 3D) reabriram a certificação da Fase 09. A build falhou antes da promoção do candidato, pelo que a nota histórica de publicação não prova o estado actual. A Fase 10 só pode começar depois da nova promoção, dos testes de câmara/Playwright e da confirmação HTTP do modelo servido.

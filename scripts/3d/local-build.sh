@@ -3,6 +3,8 @@
 set -uo pipefail
 cd "$(dirname "$0")/../.."
 OUT=art/_delivery; mkdir -p "$OUT/logs"; : > "$OUT/exit-codes.txt"
+PHASE="${CAMPING_PHASE:-9}"
+PHASE_PADDED="$(printf '%02d' "$PHASE")"
 N=1; FAILED=0
 { echo "commit: $(git rev-parse HEAD 2>/dev/null || echo unknown)"; echo "branch: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"; echo "dirty_files: $(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')"; echo "platform: $(uname -a)"; echo "node: $(node --version 2>&1)"; echo "npm: $(npm --version 2>&1)"; echo "python3: $(python3 --version 2>&1)"; echo "date_utc: $(date -u +%FT%TZ)"; echo "requested_blender_bin: ${BLENDER_BIN:-auto-detect}"; echo "ci: ${CI:-false}"; echo "runner_os: ${RUNNER_OS:-local}"; echo "runner_arch: ${RUNNER_ARCH:-$(uname -m)}"; } > "$OUT/environment.txt"
 step(){ local name="$1"; shift; local informational=0; if [ "${1:-}" = "--informational" ]; then informational=1; shift; fi; local log code; log="$OUT/logs/$(printf '%02d' "$N")-${name}.log"; N=$((N+1)); echo "RUN ${name}"; "$@" 2>&1 | tee "$log"; code=${PIPESTATUS[0]}; printf '%s=%s\n' "$name" "$code" >> "$OUT/exit-codes.txt"; if [ "$code" -ne 0 ]; then if [ "$informational" -eq 1 ]; then echo "INFO: ${name} failed (exit ${code})."; else FAILED=$((FAILED+1)); echo "FAILED ${name} (exit ${code})"; fi; fi; return 0; }
@@ -35,9 +37,9 @@ step verify node scripts/3d/verify-delivery.mjs . docs/camping-v3/scene-bible.js
 step package node scripts/3d/pack-delivery.mjs --phase="${CAMPING_PHASE:-9}"
 FINAL_CODE=0
 node scripts/3d/verify-delivery.mjs . docs/camping-v3/scene-bible.json --phase="${CAMPING_PHASE:-9}" --check-exit-codes || FINAL_CODE=$?
-if [ "$FINAL_CODE" -ne 0 ]; then FAILED=$((FAILED+1)); echo "Phase 04 not certified (final verifier exit ${FINAL_CODE})."; fi
+if [ "$FINAL_CODE" -ne 0 ]; then FAILED=$((FAILED+1)); echo "Phase ${PHASE_PADDED} not certified (final verifier exit ${FINAL_CODE})."; fi
 echo "===== EXIT CODES ====="; cat "$OUT/exit-codes.txt"
-find "$OUT" -maxdepth 1 -type f \( -name 'phase04-delivery-*.zip' -o -name 'phase04-delivery-*.tar.gz' -o -name 'phase04-delivery-*.sha256' \) -exec ls -lh {} \; 2>/dev/null || true
-if [ "$FAILED" -eq 0 ] && [ "$FINAL_CODE" -eq 0 ]; then echo "Fase 04 certificável"; exit 0; fi
-echo "${FAILED} required step(s) failed; Phase 04 remains open. Evidence packaged when present."
+find "$OUT" -maxdepth 1 -type f \( -name "phase${PHASE_PADDED}-delivery-*.zip" -o -name "phase${PHASE_PADDED}-delivery-*.tar.gz" -o -name "phase${PHASE_PADDED}-delivery-*.sha256" \) -exec ls -lh {} \; 2>/dev/null || true
+if [ "$FAILED" -eq 0 ] && [ "$FINAL_CODE" -eq 0 ]; then echo "Fase ${PHASE_PADDED} certificável"; exit 0; fi
+echo "${FAILED} required step(s) failed; Phase ${PHASE_PADDED} remains open. Evidence packaged when present."
 exit 1

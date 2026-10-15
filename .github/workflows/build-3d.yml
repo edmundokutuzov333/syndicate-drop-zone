@@ -174,7 +174,7 @@ jobs:
             echo "Exit codes:"
             cat art/_delivery/exit-codes.txt 2>/dev/null || echo "not created"
             echo "Delivery SHA-256:"
-            find art/_delivery -maxdepth 1 -name 'phase04-delivery-*.sha256' -type f -exec cat {} \; 2>/dev/null || true
+            find art/_delivery -maxdepth 1 -name 'phase09-delivery-*.sha256' -type f -exec cat {} \; 2>/dev/null || true
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload outputs and evidence even on failure
         if: always()
@@ -185,8 +185,8 @@ jobs:
           if-no-files-found: warn
           path: |
             art/_delivery/**
-            !art/_delivery/phase04-delivery-*.zip
-            !art/_delivery/phase04-delivery-*.tar.gz
+            !art/_delivery/phase09-delivery-*.zip
+            !art/_delivery/phase09-delivery-*.tar.gz
             art/xoyens-studio.blend
             art/xoyens-studio.report.json
             art/out/xoyens-studio.raw.glb
@@ -231,7 +231,7 @@ jobs:
         uses: actions/download-artifact@v7
         with:
           name: camping-v3-phase09-delivery-${{ github.sha }}
-          path: /tmp/fase04-delivery
+          path: /tmp/phase09-delivery
       - name: Download optimized frontend model
         uses: actions/download-artifact@v7
         with:
@@ -265,67 +265,67 @@ jobs:
             echo "PUBLISH_BASE=$REMOTE_MAIN"
           fi
 
-          test -s /tmp/fase04-delivery/xoyens-studio.blend
-          test -s /tmp/fase04-delivery/xoyens-studio.report.json
-          test -s /tmp/fase04-delivery/out/xoyens-studio.raw.glb
-          test -s /tmp/fase04-delivery/out/optimized/xoyens-studio.high.glb
+          test -s /tmp/phase09-delivery/xoyens-studio.blend
+          test -s /tmp/phase09-delivery/xoyens-studio.report.json
+          test -s /tmp/phase09-delivery/out/xoyens-studio.raw.glb
+          test -s /tmp/phase09-delivery/out/optimized/xoyens-studio.high.glb
           if [[ "${CAMPING_PHASE:-9}" -ge 14 ]]; then
-            test -s /tmp/fase04-delivery/out/xoyens-studio.colliders.glb
+            test -s /tmp/phase09-delivery/out/xoyens-studio.colliders.glb
             test -s /tmp/camping-frontend-model/xoyens-studio.colliders.glb
           fi
-          test -s /tmp/fase04-delivery/out/phase07-surfaces.json
-          test -s /tmp/fase04-delivery/xoyens-studio.phase07.report.json
-          test -s /tmp/fase04-delivery/xoyens-studio.phase08.report.json
-          test -s /tmp/fase04-delivery/xoyens-studio.phase09.report.json
-          test -s /tmp/fase04-delivery/textures/brand/sindicato-selo.png
-          test -s /tmp/fase04-delivery/textures/brand/xoyens.png
-          test -s /tmp/fase04-delivery/_delivery/phase-09/photo-overview.png
-          test -s /tmp/fase04-delivery/_delivery/phase-09/photo-detail.png
-          test -s /tmp/fase04-delivery/_delivery/phase-09/capture-manifest.json
-          test -s /tmp/fase04-delivery/_delivery/phase-08/production-overview.png
-          test -s /tmp/fase04-delivery/_delivery/phase-08/production-detail.png
-          test -s /tmp/fase04-delivery/_delivery/phase-08/capture-manifest.json
-          test -s /tmp/fase04-delivery/textures/materials.manifest.json
+          test -s /tmp/phase09-delivery/out/phase07-surfaces.json
+          test -s /tmp/phase09-delivery/xoyens-studio.phase07.report.json
+          test -s /tmp/phase09-delivery/xoyens-studio.phase08.report.json
+          test -s /tmp/phase09-delivery/xoyens-studio.phase09.report.json
+          test -s /tmp/phase09-delivery/textures/brand/sindicato-selo.png
+          test -s /tmp/phase09-delivery/textures/brand/xoyens.png
+          test -s /tmp/phase09-delivery/_delivery/phase-09/photo-overview.png
+          test -s /tmp/phase09-delivery/_delivery/phase-09/photo-detail.png
+          test -s /tmp/phase09-delivery/_delivery/phase-09/capture-manifest.json
+          test -s /tmp/phase09-delivery/_delivery/phase-08/production-overview.png
+          test -s /tmp/phase09-delivery/_delivery/phase-08/production-detail.png
+          test -s /tmp/phase09-delivery/_delivery/phase-08/capture-manifest.json
+          test -s /tmp/phase09-delivery/textures/materials.manifest.json
           test -s /tmp/camping-frontend-model/xoyens-studio.glb
           test -s /tmp/camping-frontend-model/xoyens-studio.model.json
-          test -s /tmp/fase04-delivery/_delivery/phase-06/ceiling.png
-          test -s /tmp/fase04-delivery/_delivery/phase-06/main-door.png
-          test -s /tmp/fase04-delivery/_delivery/phase-06/capture-manifest.json
-          test -s /tmp/fase04-delivery/_delivery/manifest.json
+          test -s /tmp/phase09-delivery/_delivery/phase-06/ceiling.png
+          test -s /tmp/phase09-delivery/_delivery/phase-06/main-door.png
+          test -s /tmp/phase09-delivery/_delivery/phase-06/capture-manifest.json
+          test -s /tmp/phase09-delivery/_delivery/manifest.json
           mkdir -p art/_delivery art/out
-          cp -a /tmp/fase04-delivery/_delivery/. art/_delivery/
+          cp -a /tmp/phase09-delivery/_delivery/. art/_delivery/
           mkdir -p docs/camping-v3/phase-06
-          cp /tmp/fase04-delivery/_delivery/phase-06/ceiling.png docs/camping-v3/phase-06/ceiling.png
-          cp /tmp/fase04-delivery/_delivery/phase-06/main-door.png docs/camping-v3/phase-06/main-door.png
-          cp /tmp/fase04-delivery/_delivery/phase-06/capture-manifest.json docs/camping-v3/phase-06/capture-manifest.json
-          cp /tmp/fase04-delivery/xoyens-studio.blend art/xoyens-studio.blend
-          cp /tmp/fase04-delivery/xoyens-studio.report.json art/xoyens-studio.report.json
-          cp /tmp/fase04-delivery/out/xoyens-studio.raw.glb art/out/xoyens-studio.raw.glb
+          cp /tmp/phase09-delivery/_delivery/phase-06/ceiling.png docs/camping-v3/phase-06/ceiling.png
+          cp /tmp/phase09-delivery/_delivery/phase-06/main-door.png docs/camping-v3/phase-06/main-door.png
+          cp /tmp/phase09-delivery/_delivery/phase-06/capture-manifest.json docs/camping-v3/phase-06/capture-manifest.json
+          cp /tmp/phase09-delivery/xoyens-studio.blend art/xoyens-studio.blend
+          cp /tmp/phase09-delivery/xoyens-studio.report.json art/xoyens-studio.report.json
+          cp /tmp/phase09-delivery/out/xoyens-studio.raw.glb art/out/xoyens-studio.raw.glb
           mkdir -p art/out/optimized
-          cp /tmp/fase04-delivery/out/optimized/xoyens-studio.high.glb art/out/optimized/xoyens-studio.high.glb
+          cp /tmp/phase09-delivery/out/optimized/xoyens-studio.high.glb art/out/optimized/xoyens-studio.high.glb
           if [[ "${CAMPING_PHASE:-9}" -ge 14 ]]; then
-            cp /tmp/fase04-delivery/out/xoyens-studio.colliders.glb art/out/xoyens-studio.colliders.glb
+            cp /tmp/phase09-delivery/out/xoyens-studio.colliders.glb art/out/xoyens-studio.colliders.glb
             cp /tmp/camping-frontend-model/xoyens-studio.colliders.glb public/models/camping/xoyens-studio.colliders.glb
           fi
-          cp /tmp/fase04-delivery/out/phase07-surfaces.json art/out/phase07-surfaces.json
-          cp /tmp/fase04-delivery/xoyens-studio.phase07.report.json art/xoyens-studio.phase07.report.json
-          cp /tmp/fase04-delivery/xoyens-studio.phase08.report.json art/xoyens-studio.phase08.report.json
-          cp /tmp/fase04-delivery/xoyens-studio.phase09.report.json art/xoyens-studio.phase09.report.json
+          cp /tmp/phase09-delivery/out/phase07-surfaces.json art/out/phase07-surfaces.json
+          cp /tmp/phase09-delivery/xoyens-studio.phase07.report.json art/xoyens-studio.phase07.report.json
+          cp /tmp/phase09-delivery/xoyens-studio.phase08.report.json art/xoyens-studio.phase08.report.json
+          cp /tmp/phase09-delivery/xoyens-studio.phase09.report.json art/xoyens-studio.phase09.report.json
           mkdir -p docs/camping-v3/phase-07 docs/camping-v3/phase-08 docs/camping-v3/phase-09
-          cp /tmp/fase04-delivery/xoyens-studio.phase07.report.json docs/camping-v3/phase-07/surface-validation.json
-          cp /tmp/fase04-delivery/out/phase07-surfaces.json docs/camping-v3/phase-07/surface-source.json
-          cp /tmp/fase04-delivery/xoyens-studio.phase08.report.json docs/camping-v3/phase-08/production-validation.json
-          cp /tmp/fase04-delivery/_delivery/phase-08/production-overview.png docs/camping-v3/phase-08/production-overview.png
-          cp /tmp/fase04-delivery/_delivery/phase-08/production-detail.png docs/camping-v3/phase-08/production-detail.png
-          cp /tmp/fase04-delivery/_delivery/phase-08/capture-manifest.json docs/camping-v3/phase-08/capture-manifest.json
-          cp /tmp/fase04-delivery/xoyens-studio.phase09.report.json docs/camping-v3/phase-09/photo-validation.json
-          cp /tmp/fase04-delivery/_delivery/phase-09/photo-overview.png docs/camping-v3/phase-09/photo-overview.png
-          cp /tmp/fase04-delivery/_delivery/phase-09/photo-detail.png docs/camping-v3/phase-09/photo-detail.png
-          cp /tmp/fase04-delivery/_delivery/phase-09/capture-manifest.json docs/camping-v3/phase-09/capture-manifest.json
+          cp /tmp/phase09-delivery/xoyens-studio.phase07.report.json docs/camping-v3/phase-07/surface-validation.json
+          cp /tmp/phase09-delivery/out/phase07-surfaces.json docs/camping-v3/phase-07/surface-source.json
+          cp /tmp/phase09-delivery/xoyens-studio.phase08.report.json docs/camping-v3/phase-08/production-validation.json
+          cp /tmp/phase09-delivery/_delivery/phase-08/production-overview.png docs/camping-v3/phase-08/production-overview.png
+          cp /tmp/phase09-delivery/_delivery/phase-08/production-detail.png docs/camping-v3/phase-08/production-detail.png
+          cp /tmp/phase09-delivery/_delivery/phase-08/capture-manifest.json docs/camping-v3/phase-08/capture-manifest.json
+          cp /tmp/phase09-delivery/xoyens-studio.phase09.report.json docs/camping-v3/phase-09/photo-validation.json
+          cp /tmp/phase09-delivery/_delivery/phase-09/photo-overview.png docs/camping-v3/phase-09/photo-overview.png
+          cp /tmp/phase09-delivery/_delivery/phase-09/photo-detail.png docs/camping-v3/phase-09/photo-detail.png
+          cp /tmp/phase09-delivery/_delivery/phase-09/capture-manifest.json docs/camping-v3/phase-09/capture-manifest.json
           mkdir -p art/textures/materials art/textures/brand
-          cp -a /tmp/fase04-delivery/textures/brand/. art/textures/brand/
-          cp -a /tmp/fase04-delivery/textures/materials/. art/textures/materials/
-          cp /tmp/fase04-delivery/textures/materials.manifest.json art/textures/materials.manifest.json
+          cp -a /tmp/phase09-delivery/textures/brand/. art/textures/brand/
+          cp -a /tmp/phase09-delivery/textures/materials/. art/textures/materials/
+          cp /tmp/phase09-delivery/textures/materials.manifest.json art/textures/materials.manifest.json
           mkdir -p public/models/camping
           cp /tmp/camping-frontend-model/xoyens-studio.glb public/models/camping/xoyens-studio.glb
           cp /tmp/camping-frontend-model/xoyens-studio.model.json public/models/camping/xoyens-studio.model.json

@@ -163,3 +163,14 @@ Commits de endurecimento: `d68212f` (Vite fail-closed fase 09+), `8f2b8c6` (veri
 - O teste regressivo `delivery manifest excludes mutable run logs and exit codes from file checksums` passou; os logs/códigos mutáveis já não invalidam o manifesto de entrega.
 
 A regra continua fail-closed: qualquer artefacto público com fase anterior, hash/tamanho divergente ou contrato de compatibilidade inválido é rejeitado pelo build ou pelo runtime. Não houve alteração estética adicional nem edição manual do GLB/metadados certificados.
+
+
+## Reabertura da certificação da Fase 09 · 2026-10-15
+
+**Estado actual: REABERTA, NÃO CERTIFICADA.** Esta nota prevalece sobre a certificação anterior até os gates voltarem a passar.
+
+- A execução [Camera Production CI #38770621421](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38770621421), no commit fc797c9dffcb24b6b8c07484dfd936e9121ef0d5, falhou na experiência pública de entrada. A página serviu uma versão anterior do modelo e a geometria do chão não permitiu certificar a pose de entrada.
+- A execução [Build CAMPING 3D #38770621513](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38770621513) falhou antes da promoção. O optimizador produziu bounds locais quantizados [65534, 160, 48284]; o verificador tratou-os como metros e ignorou a escala/transforms do nó glTF. O candidato optimizado (8cefd5afa5904ebc423b829d549362369da1066f140960b05ac3d852669fac83) não foi promovido, enquanto o modelo canónico da branch manteve o hash af8799e5a998a374bb3f3f8e578a6b64b371971c98c79dcbd57cdaaa0d7d6a9e.
+- A correcção aplica a hierarquia completa de transforms glTF aos oito cantos dos bounds locais e mantém os limites físicos em metros. Foram acrescentados testes para a escala quantizada e para uma superfície transformada em plano vertical.
+- A CI passa a executar explicitamente camping-camera-poses.test.ts. O Playwright aceita a origem blender-v3-architectural-envelope, verifica a altura ocular de 1,62 m e rejeita o rótulo antigo LOADING / GLB. O rótulo visual é estável em MODEL / READY; o estado real continua nos atributos de diagnóstico e é validado separadamente.
+- A promoção e a confirmação HTTP da produção ainda têm de passar. A Fase 10 permanece bloqueada até haver CI verde, experiência Playwright completa e confirmação de que a URL pública serve exactamente o GLB e os metadados da Fase 09.
