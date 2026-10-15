@@ -1,0 +1,20 @@
+{
+  "blenderVersion": "4.5.14 LTS",
+  "phase": 8,
+  "status": "source-rendered",
+  "version": 1,
+  "views": {
+    "production-detail.png": {
+      "bytes": 1524063,
+      "height": 720,
+      "sha256": "f782236f98187aaf4884dd09ecc65d8c007a7e847240b3d0e5f6ef60026e8d03",
+      "width": 1280
+    },
+    "production-overview.png": {
+      "bytes": 1696949,
+      "height": 720,
+      "sha256": "6da4288de91cdb1f5a48f675f5faed963d918ab8c986dc7022eb0eaf5d6d9e3f",
+      "width": 1280
+    }
+  }
+}

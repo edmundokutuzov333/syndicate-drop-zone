@@ -1,9 +1,9 @@
 {
   "version": 3,
-  "phase": 7,
+  "phase": 8,
   "status": "blender-v3-published",
   "model": "/models/camping/xoyens-studio.glb",
-  "sourceCommit": "d3cb023b91f66943a6c8bd0ad834de018436f1b5",
+  "sourceCommit": "4cbfe6fbab45a99ff8eaee6253ff66709afd504d",
   "format": "glTF 2.0 binary · KTX2/Basis + Meshopt",
   "units": "metres",
   "boundsMeters": {
@@ -15,14 +15,14 @@
   "forwardAxis": "entry from +Z, room back -Z",
   "reference": "Xoyens studio panorama supplied 2026-10-09",
   "geometry": {
-    "objectGroups": 142,
-    "meshes": 127,
-    "primitives": 127,
-    "triangles": 113556,
-    "materials": 40,
+    "objectGroups": 150,
+    "meshes": 135,
+    "primitives": 135,
+    "triangles": 263332,
+    "materials": 43,
     "embeddedImages": 60,
-    "bytes": 11142136,
-    "sha256": "b4170f34f10337eba58968e22b9458bd227d6d0992eb9af6bc51c0f78551d4f3",
+    "bytes": 13248844,
+    "sha256": "67046e27bbacad8c7001780a43cbf4e01fc900f3b7dbbb7136fe20c256a2bfa2",
     "extensionsUsed": [
       "EXT_meshopt_compression",
       "KHR_materials_clearcoat",
@@ -46,6 +46,37 @@
       "bambooTileMeters": 1.2,
       "cycloramaRadiusM": 0.35,
       "cycloramaContinuousToFloor": true
+    },
+    "productionZone": {
+      "sourceStatus": "source-validated",
+      "requiredElements": 19,
+      "taggedProductionObjects": 19,
+      "chairUpholsteryTrianglesSource": 14768,
+      "midiWhiteKeys": 36,
+      "midiBlackKeys": 25,
+      "acousticFabricPanels": 3,
+      "acousticFoamTiles": 30,
+      "reclaimedWallBoards": 15,
+      "upperLed": "SDT_production_plank_wall_led_diffuser_upper",
+      "lowerLed": "SDT_production_plank_wall_led_diffuser_lower",
+      "pendants": 4,
+      "edisonBulbs": 4,
+      "cableSegments": 40,
+      "cableMaximumY": 0.67402,
+      "requiredPbrMaterialsLinked": [
+        "ceramic_red",
+        "glass_mirror",
+        "led_warm_emissive"
+      ],
+      "requiredInteractionsPreserved": [
+        "studio.production-desk",
+        "studio.imac",
+        "studio.audio-system"
+      ],
+      "productionScreenNode": "SDT_production_monitor_daw_screen",
+      "baselineTriangles": 113556,
+      "publishedTriangles": 263332,
+      "trianglesAddedFromPhase7": 149776
     }
   },
   "interactions": [
@@ -449,507 +480,555 @@
       "interactionId": null
     },
     {
-      "name": "node-114",
-      "nodeIndex": 114,
+      "name": "node-135",
+      "nodeIndex": 135,
       "meshIndex": 58,
       "interactionId": null
     },
     {
-      "name": "SDT_production_desk_l",
-      "nodeIndex": 115,
+      "name": "node-136",
+      "nodeIndex": 136,
       "meshIndex": 59,
+      "interactionId": null
+    },
+    {
+      "name": "node-137",
+      "nodeIndex": 137,
+      "meshIndex": 60,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_production_desk_l",
+      "nodeIndex": 187,
+      "meshIndex": 61,
       "interactionId": "studio.production-desk"
     },
     {
+      "name": "node-191",
+      "nodeIndex": 191,
+      "meshIndex": 62,
+      "interactionId": null
+    },
+    {
       "name": "SDT_production_monitor_daw",
-      "nodeIndex": 121,
-      "meshIndex": 60,
+      "nodeIndex": 220,
+      "meshIndex": 63,
       "interactionId": "studio.imac"
     },
     {
       "name": "SDT_production_monitor_daw_screen",
-      "nodeIndex": 122,
-      "meshIndex": 61,
-      "interactionId": null
-    },
-    {
-      "name": "SDT_production_monitors_pair",
-      "nodeIndex": 125,
-      "meshIndex": 62,
-      "interactionId": "studio.audio-system"
-    },
-    {
-      "name": "node-126",
-      "nodeIndex": 126,
-      "meshIndex": 63,
-      "interactionId": null
-    },
-    {
-      "name": "node-127",
-      "nodeIndex": 127,
+      "nodeIndex": 221,
       "meshIndex": 64,
       "interactionId": null
     },
     {
-      "name": "node-128",
-      "nodeIndex": 128,
+      "name": "node-222",
+      "nodeIndex": 222,
       "meshIndex": 65,
       "interactionId": null
     },
     {
-      "name": "node-133",
-      "nodeIndex": 133,
+      "name": "SDT_production_monitors_pair",
+      "nodeIndex": 226,
       "meshIndex": 66,
-      "interactionId": null
+      "interactionId": "studio.audio-system"
     },
     {
-      "name": "node-145",
-      "nodeIndex": 145,
+      "name": "node-227",
+      "nodeIndex": 227,
       "meshIndex": 67,
       "interactionId": null
     },
     {
-      "name": "node-158",
-      "nodeIndex": 158,
+      "name": "node-229",
+      "nodeIndex": 229,
       "meshIndex": 68,
       "interactionId": null
     },
     {
-      "name": "node-162",
-      "nodeIndex": 162,
+      "name": "node-264",
+      "nodeIndex": 264,
       "meshIndex": 69,
       "interactionId": null
     },
     {
-      "name": "node-193",
-      "nodeIndex": 193,
-      "meshIndex": 124,
-      "interactionId": null
-    },
-    {
-      "name": "SDT_photo_vinyl_sweep_hero",
-      "nodeIndex": 202,
+      "name": "node-336",
+      "nodeIndex": 336,
       "meshIndex": 70,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_paper_cyclorama_wall",
-      "nodeIndex": 203,
+      "name": "node-344",
+      "nodeIndex": 344,
       "meshIndex": 71,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_paper_cyclorama_curve",
-      "nodeIndex": 204,
+      "name": "node-376",
+      "nodeIndex": 376,
       "meshIndex": 72,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_roller_backdrop",
-      "nodeIndex": 221,
+      "name": "node-381",
+      "nodeIndex": 381,
       "meshIndex": 73,
-      "interactionId": "studio.photo-backdrop"
+      "interactionId": null
     },
     {
-      "name": "node-222",
-      "nodeIndex": 222,
+      "name": "node-397",
+      "nodeIndex": 397,
       "meshIndex": 74,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_backdrop_seal",
-      "nodeIndex": 223,
+      "name": "node-428",
+      "nodeIndex": 428,
       "meshIndex": 75,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_rack",
-      "nodeIndex": 224,
+      "name": "node-430",
+      "nodeIndex": 430,
       "meshIndex": 76,
-      "interactionId": "studio.merch-rack"
+      "interactionId": null
     },
     {
-      "name": "node-225",
-      "nodeIndex": 225,
+      "name": "node-446",
+      "nodeIndex": 446,
       "meshIndex": 77,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_garments",
-      "nodeIndex": 229,
+      "name": "node-472",
+      "nodeIndex": 472,
       "meshIndex": 78,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_garments_garment_1",
-      "nodeIndex": 230,
+      "name": "node-474",
+      "nodeIndex": 474,
       "meshIndex": 79,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_garments_hanger_1",
-      "nodeIndex": 231,
+      "name": "node-566",
+      "nodeIndex": 566,
       "meshIndex": 80,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_garments_garment_2",
-      "nodeIndex": 232,
+      "name": "SDT_photo_vinyl_sweep_hero",
+      "nodeIndex": 570,
       "meshIndex": 81,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_garments_hanger_2",
-      "nodeIndex": 233,
+      "name": "SDT_photo_paper_cyclorama_wall",
+      "nodeIndex": 571,
       "meshIndex": 82,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_garments_garment_3",
-      "nodeIndex": 234,
+      "name": "SDT_photo_paper_cyclorama_curve",
+      "nodeIndex": 572,
       "meshIndex": 83,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_garments_hanger_3",
-      "nodeIndex": 235,
+      "name": "SDT_photo_roller_backdrop",
+      "nodeIndex": 609,
       "meshIndex": 84,
-      "interactionId": null
+      "interactionId": "studio.photo-backdrop"
     },
     {
-      "name": "SDT_photo_garments_garment_4",
-      "nodeIndex": 236,
+      "name": "node-610",
+      "nodeIndex": 610,
       "meshIndex": 85,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_garments_hanger_4",
-      "nodeIndex": 237,
+      "name": "SDT_photo_backdrop_seal",
+      "nodeIndex": 611,
       "meshIndex": 86,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_garments_garment_5",
-      "nodeIndex": 238,
+      "name": "SDT_photo_rack",
+      "nodeIndex": 612,
       "meshIndex": 87,
-      "interactionId": null
+      "interactionId": "studio.merch-rack"
     },
     {
-      "name": "SDT_photo_garments_hanger_5",
-      "nodeIndex": 239,
+      "name": "node-613",
+      "nodeIndex": 613,
       "meshIndex": 88,
       "interactionId": null
     },
     {
-      "name": "node-240",
-      "nodeIndex": 240,
+      "name": "SDT_photo_garments",
+      "nodeIndex": 617,
       "meshIndex": 89,
       "interactionId": null
     },
     {
-      "name": "node-251",
-      "nodeIndex": 251,
+      "name": "SDT_photo_garments_garment_1",
+      "nodeIndex": 618,
       "meshIndex": 90,
       "interactionId": null
     },
     {
-      "name": "node-252",
-      "nodeIndex": 252,
+      "name": "SDT_photo_garments_hanger_1",
+      "nodeIndex": 619,
       "meshIndex": 91,
       "interactionId": null
     },
     {
-      "name": "node-254",
-      "nodeIndex": 254,
+      "name": "SDT_photo_garments_garment_2",
+      "nodeIndex": 620,
       "meshIndex": 92,
       "interactionId": null
     },
     {
-      "name": "node-260",
-      "nodeIndex": 260,
+      "name": "SDT_photo_garments_hanger_2",
+      "nodeIndex": 621,
       "meshIndex": 93,
       "interactionId": null
     },
     {
-      "name": "node-261",
-      "nodeIndex": 261,
+      "name": "SDT_photo_garments_garment_3",
+      "nodeIndex": 622,
       "meshIndex": 94,
       "interactionId": null
     },
     {
-      "name": "node-262",
-      "nodeIndex": 262,
+      "name": "SDT_photo_garments_hanger_3",
+      "nodeIndex": 623,
       "meshIndex": 95,
       "interactionId": null
     },
     {
-      "name": "node-263",
-      "nodeIndex": 263,
-      "meshIndex": 125,
-      "interactionId": null
-    },
-    {
-      "name": "node-284",
-      "nodeIndex": 284,
+      "name": "SDT_photo_garments_garment_4",
+      "nodeIndex": 624,
       "meshIndex": 96,
       "interactionId": null
     },
     {
-      "name": "node-285",
-      "nodeIndex": 285,
+      "name": "SDT_photo_garments_hanger_4",
+      "nodeIndex": 625,
       "meshIndex": 97,
       "interactionId": null
     },
     {
-      "name": "node-287",
-      "nodeIndex": 287,
+      "name": "SDT_photo_garments_garment_5",
+      "nodeIndex": 626,
       "meshIndex": 98,
       "interactionId": null
     },
     {
-      "name": "node-288",
-      "nodeIndex": 288,
+      "name": "SDT_photo_garments_hanger_5",
+      "nodeIndex": 627,
       "meshIndex": 99,
       "interactionId": null
     },
     {
-      "name": "node-304",
-      "nodeIndex": 304,
+      "name": "node-628",
+      "nodeIndex": 628,
       "meshIndex": 100,
       "interactionId": null
     },
     {
-      "name": "node-306",
-      "nodeIndex": 306,
+      "name": "node-649",
+      "nodeIndex": 649,
       "meshIndex": 101,
       "interactionId": null
     },
     {
-      "name": "node-315",
-      "nodeIndex": 315,
-      "meshIndex": 126,
-      "interactionId": null
-    },
-    {
-      "name": "node-324",
-      "nodeIndex": 324,
+      "name": "node-650",
+      "nodeIndex": 650,
       "meshIndex": 102,
       "interactionId": null
     },
     {
-      "name": "SDT_right_wall",
-      "nodeIndex": 325,
+      "name": "node-652",
+      "nodeIndex": 652,
       "meshIndex": 103,
-      "interactionId": "studio.artists-wall"
+      "interactionId": null
     },
     {
-      "name": "studio.artist-slot-001",
-      "nodeIndex": 326,
+      "name": "node-658",
+      "nodeIndex": 658,
       "meshIndex": 104,
-      "interactionId": "studio.artist-slot-001"
+      "interactionId": null
     },
     {
-      "name": "SDT_right_artist_slot_001_blank",
-      "nodeIndex": 327,
+      "name": "node-659",
+      "nodeIndex": 659,
       "meshIndex": 105,
       "interactionId": null
     },
     {
-      "name": "node-328",
-      "nodeIndex": 328,
+      "name": "node-660",
+      "nodeIndex": 660,
       "meshIndex": 106,
       "interactionId": null
     },
     {
-      "name": "studio.artist-slot-002",
-      "nodeIndex": 329,
+      "name": "node-661",
+      "nodeIndex": 661,
       "meshIndex": 107,
+      "interactionId": null
+    },
+    {
+      "name": "node-682",
+      "nodeIndex": 682,
+      "meshIndex": 108,
+      "interactionId": null
+    },
+    {
+      "name": "node-683",
+      "nodeIndex": 683,
+      "meshIndex": 109,
+      "interactionId": null
+    },
+    {
+      "name": "node-685",
+      "nodeIndex": 685,
+      "meshIndex": 110,
+      "interactionId": null
+    },
+    {
+      "name": "node-686",
+      "nodeIndex": 686,
+      "meshIndex": 111,
+      "interactionId": null
+    },
+    {
+      "name": "node-702",
+      "nodeIndex": 702,
+      "meshIndex": 112,
+      "interactionId": null
+    },
+    {
+      "name": "node-713",
+      "nodeIndex": 713,
+      "meshIndex": 134,
+      "interactionId": null
+    },
+    {
+      "name": "node-722",
+      "nodeIndex": 722,
+      "meshIndex": 113,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_right_wall",
+      "nodeIndex": 723,
+      "meshIndex": 114,
+      "interactionId": "studio.artists-wall"
+    },
+    {
+      "name": "studio.artist-slot-001",
+      "nodeIndex": 724,
+      "meshIndex": 115,
+      "interactionId": "studio.artist-slot-001"
+    },
+    {
+      "name": "SDT_right_artist_slot_001_blank",
+      "nodeIndex": 725,
+      "meshIndex": 116,
+      "interactionId": null
+    },
+    {
+      "name": "studio.artist-slot-002",
+      "nodeIndex": 727,
+      "meshIndex": 117,
       "interactionId": "studio.artist-slot-002"
     },
     {
       "name": "SDT_right_artist_slot_002_blank",
-      "nodeIndex": 330,
-      "meshIndex": 108,
+      "nodeIndex": 728,
+      "meshIndex": 118,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-003",
-      "nodeIndex": 332,
-      "meshIndex": 109,
+      "nodeIndex": 730,
+      "meshIndex": 119,
       "interactionId": "studio.artist-slot-003"
     },
     {
       "name": "SDT_right_artist_slot_003_blank",
-      "nodeIndex": 333,
-      "meshIndex": 108,
+      "nodeIndex": 731,
+      "meshIndex": 118,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-004",
-      "nodeIndex": 335,
-      "meshIndex": 110,
+      "nodeIndex": 733,
+      "meshIndex": 120,
       "interactionId": "studio.artist-slot-004"
     },
     {
       "name": "SDT_right_artist_slot_004_blank",
-      "nodeIndex": 336,
-      "meshIndex": 108,
+      "nodeIndex": 734,
+      "meshIndex": 118,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-005",
-      "nodeIndex": 338,
-      "meshIndex": 111,
+      "nodeIndex": 736,
+      "meshIndex": 121,
       "interactionId": "studio.artist-slot-005"
     },
     {
       "name": "SDT_right_artist_slot_005_blank",
-      "nodeIndex": 339,
-      "meshIndex": 108,
+      "nodeIndex": 737,
+      "meshIndex": 118,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-006",
-      "nodeIndex": 341,
-      "meshIndex": 112,
+      "nodeIndex": 739,
+      "meshIndex": 122,
       "interactionId": "studio.artist-slot-006"
     },
     {
       "name": "SDT_right_artist_slot_006_blank",
-      "nodeIndex": 342,
-      "meshIndex": 108,
+      "nodeIndex": 740,
+      "meshIndex": 118,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-007",
-      "nodeIndex": 344,
-      "meshIndex": 113,
+      "nodeIndex": 742,
+      "meshIndex": 123,
       "interactionId": "studio.artist-slot-007"
     },
     {
       "name": "SDT_right_artist_slot_007_blank",
-      "nodeIndex": 345,
-      "meshIndex": 108,
+      "nodeIndex": 743,
+      "meshIndex": 118,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-008",
-      "nodeIndex": 347,
-      "meshIndex": 114,
+      "nodeIndex": 745,
+      "meshIndex": 124,
       "interactionId": "studio.artist-slot-008"
     },
     {
       "name": "SDT_right_artist_slot_008_blank",
-      "nodeIndex": 348,
-      "meshIndex": 108,
+      "nodeIndex": 746,
+      "meshIndex": 118,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-009",
-      "nodeIndex": 350,
-      "meshIndex": 115,
+      "nodeIndex": 748,
+      "meshIndex": 125,
       "interactionId": "studio.artist-slot-009"
     },
     {
       "name": "SDT_right_artist_slot_009_blank",
-      "nodeIndex": 351,
-      "meshIndex": 108,
+      "nodeIndex": 749,
+      "meshIndex": 118,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-010",
-      "nodeIndex": 353,
-      "meshIndex": 116,
+      "nodeIndex": 751,
+      "meshIndex": 126,
       "interactionId": "studio.artist-slot-010"
     },
     {
       "name": "SDT_right_artist_slot_010_blank",
-      "nodeIndex": 354,
-      "meshIndex": 108,
+      "nodeIndex": 752,
+      "meshIndex": 118,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-011",
-      "nodeIndex": 356,
-      "meshIndex": 117,
+      "nodeIndex": 754,
+      "meshIndex": 127,
       "interactionId": "studio.artist-slot-011"
     },
     {
       "name": "SDT_right_artist_slot_011_blank",
-      "nodeIndex": 357,
-      "meshIndex": 108,
+      "nodeIndex": 755,
+      "meshIndex": 118,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-012",
-      "nodeIndex": 359,
-      "meshIndex": 118,
+      "nodeIndex": 757,
+      "meshIndex": 128,
       "interactionId": "studio.artist-slot-012"
     },
     {
       "name": "SDT_right_artist_slot_012_blank",
-      "nodeIndex": 360,
-      "meshIndex": 108,
+      "nodeIndex": 758,
+      "meshIndex": 118,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-013",
-      "nodeIndex": 362,
-      "meshIndex": 119,
+      "nodeIndex": 760,
+      "meshIndex": 129,
       "interactionId": "studio.artist-slot-013"
     },
     {
       "name": "SDT_right_artist_slot_013_blank",
-      "nodeIndex": 363,
-      "meshIndex": 108,
+      "nodeIndex": 761,
+      "meshIndex": 118,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-014",
-      "nodeIndex": 365,
-      "meshIndex": 120,
+      "nodeIndex": 763,
+      "meshIndex": 130,
       "interactionId": "studio.artist-slot-014"
     },
     {
       "name": "SDT_right_artist_slot_014_blank",
-      "nodeIndex": 366,
-      "meshIndex": 108,
+      "nodeIndex": 764,
+      "meshIndex": 118,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-015",
-      "nodeIndex": 368,
-      "meshIndex": 121,
+      "nodeIndex": 766,
+      "meshIndex": 131,
       "interactionId": "studio.artist-slot-015"
     },
     {
       "name": "SDT_right_artist_slot_015_blank",
-      "nodeIndex": 369,
-      "meshIndex": 108,
+      "nodeIndex": 767,
+      "meshIndex": 118,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-016",
-      "nodeIndex": 371,
-      "meshIndex": 122,
+      "nodeIndex": 769,
+      "meshIndex": 132,
       "interactionId": "studio.artist-slot-016"
     },
     {
       "name": "SDT_right_artist_slot_016_blank",
-      "nodeIndex": 372,
-      "meshIndex": 108,
+      "nodeIndex": 770,
+      "meshIndex": 118,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-017",
-      "nodeIndex": 374,
-      "meshIndex": 123,
+      "nodeIndex": 772,
+      "meshIndex": 133,
       "interactionId": "studio.artist-slot-017"
     },
     {
       "name": "SDT_right_artist_slot_017_blank",
-      "nodeIndex": 375,
-      "meshIndex": 108,
+      "nodeIndex": 773,
+      "meshIndex": 118,
       "interactionId": null
     }
   ],
@@ -1176,13 +1255,14 @@
   },
   "auditUpdatedAt": "2026-10-12",
   "frontendDelivery": {
-    "generatedAt": "2026-10-14T14:40:34.250Z",
+    "generatedAt": "2026-10-15T05:42:27.527Z",
     "sourceGlb": "art/out/optimized/xoyens-studio.high.glb",
     "canonicalUrl": "/models/camping/xoyens-studio.glb",
     "hashAlgorithm": "SHA-256",
-    "sha256": "b4170f34f10337eba58968e22b9458bd227d6d0992eb9af6bc51c0f78551d4f3",
-    "bytes": 11142136,
+    "sha256": "67046e27bbacad8c7001780a43cbf4e01fc900f3b7dbbb7136fe20c256a2bfa2",
+    "bytes": 13248844,
     "browserLoader": "GLTFLoader + KTX2Loader + MeshoptDecoder"
   },
-  "surfacePhase": 7
+  "surfacePhase": 7,
+  "productionPhase": 8
 }
