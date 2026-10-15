@@ -135,19 +135,18 @@ export function deriveCampingCameraPoses(root: THREE.Object3D, cameraHeight = 1.
     return serializePose(camera, new THREE.Vector3(target.x, targetY, target.z));
   };
 
-  // The certified model manifest defines the entry axis: visitors enter from +Z
-  // and look into the room toward -Z. Do not infer this from studio.inner-door:
-  // that interaction ID is shared by door components and can resolve to a leaf,
-  // handle, or interior-door object instead of the actual entrance.
-  const entryInset = Math.min(1.15, floor.depth * 0.22);
+  // Spawn well inside the measured room footprint, not directly behind the
+  // door leaf. This prevents the entrance panel from filling the entire frame.
+  // Keep the eye height metric and aim at the room centre at eye level so the
+  // first rendered view shows the studio, not the ceiling or the floor.
   const entryPosition = position(
-    clamp(center.x, minX, maxX),
-    floor.maxZ - entryInset,
+    center.x,
+    center.z + Math.min(0.65, floor.depth * 0.1),
   );
   const entryLook = new THREE.Vector3(
-    clamp(center.x, minX, maxX),
+    center.x,
     floorY + 1.48,
-    clamp(center.z - floor.depth * 0.22, minZ, maxZ),
+    center.z - Math.min(1.1, floor.depth * 0.2),
   );
   const production = targetPose(["studio.production-desk", "studio.imac"], Math.min(1.65, floor.depth * 0.3));
   const photography = targetPose(["studio.photo-backdrop"], Math.min(1.55, floor.depth * 0.28));
