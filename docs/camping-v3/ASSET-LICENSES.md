@@ -49,3 +49,9 @@ Cada asset futuro deve registar URL de origem, autor, licença, data de aquisiç
 ## Crédito de API
 
 **Powered by Poly Haven**. Os ficheiros são derivados de materiais CC0 1.0. O manifesto regista o ID exacto, URL, autor quando indicado e hashes dos ficheiros de origem e saída. A API é usada apenas durante a ingestão de assets, nunca a partir do browser do visitante.
+
+## Fase 09 · activos de marca oficiais
+
+- Selo do Sindicato do Trap: manifesto `src/assets/brand/sindicato-selo.png.asset.json`, asset ID `1fa67bdd-f452-442e-a0d5-a9fb482388de`, URL pública `/__l5e/assets-v1/1fa67bdd-f452-442e-a0d5-a9fb482388de/sindicato-selo.png`. Activo de marca do projecto, não um asset de terceiros.
+- Logótipo Xoyens: manifesto `src/assets/brand/xoyens.png.asset.json`, asset ID `b0478989-7ffd-43dd-92e0-a801662907ae`, URL pública `/__l5e/assets-v1/b0478989-7ffd-43dd-92e0-a801662907ae/xoyens.png`. Activo de marca do projecto, não um asset de terceiros.
+- O pipeline regista SHA-256 e tamanho nos logs, e empacota as imagens no `.blend` para remover dependências externas após a ingestão.

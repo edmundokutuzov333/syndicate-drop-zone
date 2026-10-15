@@ -175,3 +175,11 @@ O artefacto público da Fase 07 foi promovido para a main, e o deployment corres
 scripts/blender/phase08_production.py substitui os proxies de produção por geometria modelada: mesa L com retorno, ecrã DAW emissivo com nome de nó preservado, colunas com cone/surround/dust-cap/tweeter/bass-reflex, subwoofer, teclado de 61 teclas, cadeira executiva de alta densidade, painéis e espuma acústica, tábuas recuperadas com LED superior/inferior, quatro pendentes, espelho, interface/caneca e cabos/ferragens. scripts/blender/validate_production.py certifica os 19 elementos prod.*, as três interacções, os materiais cerâmico/espelho/LED, 36 teclas brancas + 25 pretas, cadeira com 14k–18k triângulos, três painéis e quatro lâmpadas.
 
 A promoção exige o relatório real da Fase 08, o nó SDT_production_monitor_daw_screen, materiais realmente ligados a malhas, preservação de studio.production-desk, studio.imac e studio.audio-system, e incremento de triângulos face à Fase 07. O manifesto mantém surfacePhase: 7 e passa a declarar phase: 8 + productionPhase: 8. A fase permanece aberta até os três tiers, os testes frontend, o score de fidelidade do sector 100°–170° e os bytes servidos por produção terem evidência de execução.
+
+## Fase 09 · Zona fotográfica
+
+- O módulo especializado `scripts/blender/phase09_photo.py` substitui os proxies genéricos quando `CAMPING_PHASE=9`, mantendo o builder antigo disponível para a entrega anterior.
+- Os PNGs do selo e do logótipo são obtidos pelos URLs oficiais em `src/assets/brand/*.asset.json`, verificados e empacotados no `.blend`; não há recriação dos logótipos.
+- A promoção exige os nove IDs de elemento, cinco malhas de roupa, selo de 2,2 m, materiais de decal/iluminação e evidência Blender com checksums.
+- O modelo optimizado continua a ser promovido para `public/models/camping/xoyens-studio.glb`. A publicação falha se a geometria ou os metadados da Fase 09 não estiverem presentes.
+- O estado só muda para Certificada após CI, promoção para `main` e verificação do deployment.

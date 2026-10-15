@@ -18,7 +18,7 @@ Issues de execução: fases 01–17 em [#33–#49](https://github.com/edmundokut
 | 06 | Casca arquitectónica fechada | Em validação | abóbada sólida, portas, AC, conduta, zero non-manifold, 3.000 raios interiores e pipeline Blender aprovados |
 | 07 | Superfícies-herói | Em validação | malha de tábuas reais, variação COLOR_0, vinil circular, cyclorama contínuo, UVs físicos do bambu e gate Blender/GLB/deploy em execução |
 | 08 | Zona de produção | Pendente | secretária, DAW, colunas, cadeira, painéis e LED |
-| 09 | Zona fotográfica | Pendente | fundo, selo oficial, cabideiro, peças e luzes |
+| 09 | Zona fotográfica | Em validação | geometria especializada, assets oficiais, cinco peças e evidência Blender; CI e deployment ainda pendentes |
 | 10 | Zonas esquerda e direita | Pendente | mural, sofá, bandeira, estante e quadro |
 | 11 | Props orgânicos, IA e trilho de splats | Pendente | guitarra, plantas e gate de splats |
 | 12 | UV2 e orçamento de lightmaps | Pendente | UV2 validado e atlas por zona |
@@ -121,3 +121,9 @@ O pipeline de ingestão e validação foi preparado na main. A fase não fica co
 ## Estado real da Fase 06
 
 A implementação permanece em validação até o workflow reconstruir e reabrir a fonte Blender. O módulo `scripts/blender/build_shell.py` cria uma abóbada de espessura real com caps de fecho, duas costelas principais e catorze secundárias, portas com painel recuado e ferragens, AC com nove lamelas, PVC com ramificações, tomadas, interruptor, rodapés segmentados nos vãos, cove/lancil, shadow gaps e soffit. `scripts/blender/validate_shell.py` verifica as arestas non-manifold, 18.000–25.000 triângulos de casca e 1.000 direcções de raio em cada um de três pontos no interior. A fase só será certificada quando os resultados reais confirmarem zero fugas e todos os gates de entrega.
+
+## Estado da Fase 09 · Zona fotográfica
+
+A implementação especializada está na main em `scripts/blender/phase09_photo.py` e é activada por `CAMPING_PHASE=9`. O construtor cria o rolo, decal do selo oficial, cabideiro, cinco peças de roupa, suportes de iluminação e detalhes de tripés. O selo e o logótipo Xoyens são obtidos dos manifestos oficiais existentes, não redesenhados.
+
+A aceitação exige nove elementos fotográficos, selo de 2,2 m, cinco peças (duas t-shirts com selo, uma com marca Xoyens, dois hoodies, um com manga cinzenta), quatro rodas, materiais requeridos, duas capturas com SHA-256, metadados do modelo optimizado e confirmação da publicação em `/camping`. A fase permanece em validação até os gates CI e deployment passarem.

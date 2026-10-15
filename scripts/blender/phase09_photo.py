@@ -172,7 +172,7 @@ def _light_stand(element,ctx,center,panel_dims,kind):
     x,y,z=center
     root=_root_box(element,ctx,"housing",panel_dims,(x,y+0.52,z),"plastic_black",0.008)
     # Diffuser/emitter surface facing into the set, plus a deep rim and four barn doors.
-    face_x=x-0.028
+    face_x=x+panel_dims[0]*0.55
     face_mat=material("led_panel_emissive",colour=(0.82,0.88,1.0,1),roughness=0.45,metallic=0.0,emission_strength=2.0)
     _plane(element,ctx,_name(element,"emitter"),(face_x,y+0.52,z),panel_dims[2]*0.82,panel_dims[1]*0.82,face_mat,uv=False)
     if kind=="softbox":
