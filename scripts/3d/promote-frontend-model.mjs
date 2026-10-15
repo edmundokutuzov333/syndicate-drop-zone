@@ -18,6 +18,53 @@ function parseGlb(bytes) {
   return json;
 }
 function sha256(bytes) { return createHash("sha256").update(bytes).digest("hex"); }
+
+// A rerun of Phase 08 may start from an already published Phase 08 model.
+// That is a valid Phase 07 checkpoint only when the embedded hero-surface
+// contract is still present and the published production metadata records the
+// original Phase 07 triangle baseline consistently.
+export function certifiedPhase7BaselineTriangles(metadata) {
+  const phase = Number(metadata?.phase);
+  if (metadata?.version !== 3 || ![7, 8].includes(phase) || metadata?.surfacePhase !== 7 ||
+      metadata?.status !== "blender-v3-published" || metadata?.model !== "/models/camping/xoyens-studio.glb") {
+    throw new Error("Canonical model is not a valid Phase 07+ publication checkpoint");
+  }
+  const geometry = metadata.geometry ?? {};
+  const surfaces = geometry.heroSurfaces ?? {};
+  if (Number(surfaces.floorBoards) < 100 || surfaces.floorHasColor0 !== true || surfaces.floorHasUv0Uv1 !== true ||
+      Math.abs(Number(surfaces.vinylRadiusM) - 2.3) > 0.003 ||
+      Math.abs(Number(surfaces.vinylThicknessM) - 0.0012) > 0.0001 ||
+      Math.abs(Number(surfaces.vinylEdgeLiftM) - 0.004) > 0.0001 ||
+      Math.abs(Number(surfaces.bambooTileMeters) - 1.2) > 0.0001 ||
+      Math.abs(Number(surfaces.cycloramaRadiusM) - 0.35) > 0.0001 || surfaces.cycloramaContinuousToFloor !== true) {
+    throw new Error("Canonical model checkpoint does not retain the certified Phase 07 hero surfaces");
+  }
+  if (phase === 7) {
+    if (metadata.productionPhase != null && Number(metadata.productionPhase) >= 8) {
+      throw new Error("Phase 07 checkpoint cannot claim a future production phase");
+    }
+    const baseline = Number(geometry.triangles);
+    if (!Number.isInteger(baseline) || baseline <= 0) throw new Error("Phase 07 checkpoint has no valid triangle baseline");
+    return baseline;
+  }
+
+  const production = geometry.productionZone ?? {};
+  const requiredInteractions = ["studio.production-desk", "studio.imac", "studio.audio-system"];
+  if (metadata.productionPhase !== 8 || production.sourceStatus !== "source-validated" ||
+      production.requiredElements !== 19 || !Number.isInteger(production.chairUpholsteryTrianglesSource) ||
+      production.chairUpholsteryTrianglesSource < 14000 || production.chairUpholsteryTrianglesSource > 18000 ||
+      production.midiWhiteKeys !== 36 || production.midiBlackKeys !== 25 ||
+      production.acousticFabricPanels !== 3 || production.acousticFoamTiles !== 30 ||
+      production.pendants !== 4 || production.edisonBulbs !== 4 ||
+      !requiredInteractions.every((id) => production.requiredInteractionsPreserved?.includes(id)) ||
+      !Number.isInteger(production.baselineTriangles) || production.baselineTriangles <= 0 ||
+      production.publishedTriangles !== geometry.triangles ||
+      production.baselineTriangles + production.trianglesAddedFromPhase7 !== geometry.triangles ||
+      !(production.trianglesAddedFromPhase7 > 0)) {
+    throw new Error("Published Phase 08 checkpoint does not contain internally consistent Phase 07 baseline evidence");
+  }
+  return production.baselineTriangles;
+}
 function gitCommit() {
   try { return execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(); }
   catch { return process.env.GITHUB_SHA || "unknown"; }
@@ -172,20 +219,20 @@ if (targetPhase >= 8) {
   }
   const previousBytes = readFileSync(previousModelPath);
   const previousDigest = sha256(previousBytes);
-  if (previousPhase7.version !== 3 || previousPhase7.phase !== 7 || previousPhase7.surfacePhase !== 7 ||
-      previousPhase7.status !== "blender-v3-published" ||
-      previousPhase7.model !== "/models/camping/xoyens-studio.glb") {
-    throw new Error("Refusing Phase 08 promotion: canonical metadata is not a Phase 07 publication");
-  }
   if (previousPhase7.geometry?.bytes !== previousBytes.length ||
       previousPhase7.frontendDelivery?.bytes !== previousBytes.length ||
       previousPhase7.geometry?.sha256 !== previousDigest ||
       previousPhase7.frontendDelivery?.sha256 !== previousDigest ||
       previousPhase7.frontendDelivery?.canonicalUrl !== previousPhase7.model ||
       previousPhase7.frontendDelivery?.hashAlgorithm !== "SHA-256") {
-    throw new Error("Refusing Phase 08 promotion: the published Phase 07 GLB does not match its SHA-256/byte metadata");
+    throw new Error("Refusing Phase 08 promotion: the published canonical GLB does not match its SHA-256/byte metadata");
   }
-  const baselineTriangles = Number(previousPhase7.geometry?.triangles || 0);
+  let baselineTriangles;
+  try {
+    baselineTriangles = certifiedPhase7BaselineTriangles(previousPhase7);
+  } catch (error) {
+    throw new Error("Refusing Phase 08 promotion: " + (error instanceof Error ? error.message : String(error)));
+  }
   const phase8Triangles = countTriangles(gltf);
   if (!Number.isInteger(baselineTriangles) || baselineTriangles <= 0 || phase8Triangles <= baselineTriangles) {
     throw new Error("Refusing promotion: high-tier GLB must add geometry over the certified Phase 07 baseline (" +
