@@ -29,7 +29,7 @@
     "cotton_black",
     "fabric_black_acoustic",
     "fabric_black_flag",
-    "fabric_black_softbox",
+    "fabric_grey",
     "floor_walnut_semi_gloss",
     "foam_black_grid",
     "foil_silver",
@@ -102,6 +102,6 @@
     "upperLed": "SDT_production_plank_wall_led_diffuser_upper"
   },
   "status": "source-validated",
-  "triangles": 126464,
+  "triangles": 130410,
   "version": 1
 }

@@ -1,0 +1,28 @@
+{
+  "blenderVersion": "4.5.14 LTS",
+  "failures": [],
+  "garmentTypes": [
+    "tee-seal",
+    "tee-seal",
+    "tee-xoyens",
+    "hoodie",
+    "hoodie-grey-sleeve"
+  ],
+  "garments": 5,
+  "meshCount": 929,
+  "phase": 9,
+  "photoElements": 9,
+  "photoMeshCount": 201,
+  "photoRootsFound": 9,
+  "rackWidthM": 1.6,
+  "requiredMaterials": [
+    "led_panel_emissive",
+    "led_warm_emissive",
+    "print_official_seal",
+    "print_official_xoyens"
+  ],
+  "sealDiameterM": 2.2,
+  "status": "source-validated",
+  "version": 1,
+  "warmStatusLeds": 3
+}

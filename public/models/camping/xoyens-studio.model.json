@@ -1,9 +1,9 @@
 {
   "version": 3,
-  "phase": 8,
+  "phase": 9,
   "status": "blender-v3-published",
   "model": "/models/camping/xoyens-studio.glb",
-  "sourceCommit": "eaf831c118b3d94384f48cd6572605c01ceb75ed",
+  "sourceCommit": "fc12124fbb827d923b73616be2adb67ece2021b9",
   "format": "glTF 2.0 binary · KTX2/Basis + Meshopt",
   "units": "metres",
   "boundsMeters": {
@@ -15,14 +15,14 @@
   "forwardAxis": "entry from +Z, room back -Z",
   "reference": "Xoyens studio panorama supplied 2026-10-09",
   "geometry": {
-    "objectGroups": 150,
-    "meshes": 134,
-    "primitives": 134,
-    "triangles": 263144,
-    "materials": 43,
-    "embeddedImages": 60,
-    "bytes": 13246780,
-    "sha256": "761257c066466749996b541c31d1f249d2d0837b8dac227a5248c665380313b9",
+    "objectGroups": 148,
+    "meshes": 133,
+    "primitives": 133,
+    "triangles": 282910,
+    "materials": 44,
+    "embeddedImages": 59,
+    "bytes": 13524856,
+    "sha256": "fcbacc0c897c02a6b0a70837cd8e65f02883919d8f453032bfb217fd4c30b169",
     "extensionsUsed": [
       "EXT_meshopt_compression",
       "KHR_materials_clearcoat",
@@ -37,7 +37,7 @@
     ],
     "heroSurfaces": {
       "floorBoards": 117,
-      "floorMeshIndex": 56,
+      "floorMeshIndex": 57,
       "floorHasColor0": true,
       "floorHasUv0Uv1": true,
       "vinylRadiusM": 2.3,
@@ -75,8 +75,40 @@
       ],
       "productionScreenNode": "SDT_production_monitor_daw_screen",
       "baselineTriangles": 113556,
-      "publishedTriangles": 263144,
-      "trianglesAddedFromPhase7": 149588
+      "publishedTriangles": 282910,
+      "trianglesAddedFromPhase7": 169354
+    },
+    "photoZone": {
+      "sourceStatus": "source-validated",
+      "requiredElements": 9,
+      "taggedPhotoObjects": 9,
+      "garments": 5,
+      "garmentTypes": [
+        "tee-seal",
+        "tee-seal",
+        "tee-xoyens",
+        "hoodie",
+        "hoodie-grey-sleeve"
+      ],
+      "sealDiameterM": 2.2,
+      "rackWidthM": 1.6,
+      "requiredMaterialsLinked": [
+        "print_official_seal",
+        "print_official_xoyens",
+        "led_panel_emissive",
+        "led_warm_emissive"
+      ],
+      "requiredInteractionsPreserved": [
+        "studio.photo-backdrop",
+        "studio.merch-rack"
+      ],
+      "garmentMeshNodes": [
+        "SDT_photo_garments_garment_1",
+        "SDT_photo_garments_garment_2",
+        "SDT_photo_garments_garment_3",
+        "SDT_photo_garments_garment_4",
+        "SDT_photo_garments_garment_5"
+      ]
     }
   },
   "interactions": [
@@ -362,133 +394,133 @@
     {
       "name": "SDT_shell_door_left_stile_1",
       "nodeIndex": 50,
-      "meshIndex": 24,
+      "meshIndex": 38,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_left_rail_bottom",
       "nodeIndex": 51,
-      "meshIndex": 38,
+      "meshIndex": 39,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_left_rail_top",
       "nodeIndex": 52,
-      "meshIndex": 39,
+      "meshIndex": 40,
       "interactionId": null
     },
     {
       "name": "node-53",
       "nodeIndex": 53,
-      "meshIndex": 40,
+      "meshIndex": 41,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_left_handle_plate",
       "nodeIndex": 58,
-      "meshIndex": 41,
+      "meshIndex": 42,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_left_lever",
       "nodeIndex": 59,
-      "meshIndex": 42,
+      "meshIndex": 43,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_left_lock_cylinder",
       "nodeIndex": 60,
-      "meshIndex": 43,
+      "meshIndex": 44,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_left_hinge_1",
       "nodeIndex": 61,
-      "meshIndex": 44,
+      "meshIndex": 45,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_left_hinge_2",
       "nodeIndex": 62,
-      "meshIndex": 45,
+      "meshIndex": 46,
       "interactionId": null
     },
     {
       "name": "SDT_shell_door_left_hinge_3",
       "nodeIndex": 63,
-      "meshIndex": 46,
+      "meshIndex": 47,
       "interactionId": null
     },
     {
       "name": "SDT_shell_ac_split",
       "nodeIndex": 64,
-      "meshIndex": 47,
+      "meshIndex": 48,
       "interactionId": null
     },
     {
       "name": "node-74",
       "nodeIndex": 74,
-      "meshIndex": 48,
+      "meshIndex": 49,
       "interactionId": null
     },
     {
       "name": "node-75",
       "nodeIndex": 75,
-      "meshIndex": 49,
+      "meshIndex": 50,
       "interactionId": null
     },
     {
       "name": "SDT_shell_conduit_pvc",
       "nodeIndex": 76,
-      "meshIndex": 50,
+      "meshIndex": 51,
       "interactionId": null
     },
     {
       "name": "SDT_production_outlet_pair",
       "nodeIndex": 82,
-      "meshIndex": 51,
+      "meshIndex": 52,
       "interactionId": null
     },
     {
       "name": "node-84",
       "nodeIndex": 84,
-      "meshIndex": 52,
+      "meshIndex": 53,
       "interactionId": null
     },
     {
       "name": "SDT_shell_switch_plate",
       "nodeIndex": 91,
-      "meshIndex": 53,
+      "meshIndex": 54,
       "interactionId": null
     },
     {
       "name": "node-108",
       "nodeIndex": 108,
-      "meshIndex": 54,
+      "meshIndex": 55,
       "interactionId": null
     },
     {
       "name": "SDT_shell_soffit_box",
       "nodeIndex": 109,
-      "meshIndex": 55,
+      "meshIndex": 56,
       "interactionId": null
     },
     {
       "name": "SDT_shell_floor_wood_hero",
       "nodeIndex": 113,
-      "meshIndex": 56,
+      "meshIndex": 57,
       "interactionId": null
     },
     {
       "name": "node-135",
       "nodeIndex": 135,
-      "meshIndex": 57,
+      "meshIndex": 58,
       "interactionId": null
     },
     {
       "name": "node-136",
       "nodeIndex": 136,
-      "meshIndex": 58,
+      "meshIndex": 128,
       "interactionId": null
     },
     {
@@ -548,49 +580,49 @@
     {
       "name": "node-264",
       "nodeIndex": 264,
-      "meshIndex": 68,
+      "meshIndex": 129,
       "interactionId": null
     },
     {
       "name": "node-336",
       "nodeIndex": 336,
-      "meshIndex": 69,
+      "meshIndex": 68,
       "interactionId": null
     },
     {
       "name": "node-344",
       "nodeIndex": 344,
-      "meshIndex": 70,
+      "meshIndex": 69,
       "interactionId": null
     },
     {
       "name": "node-376",
       "nodeIndex": 376,
-      "meshIndex": 71,
+      "meshIndex": 70,
       "interactionId": null
     },
     {
       "name": "node-381",
       "nodeIndex": 381,
-      "meshIndex": 132,
+      "meshIndex": 71,
       "interactionId": null
     },
     {
       "name": "node-397",
       "nodeIndex": 397,
-      "meshIndex": 72,
+      "meshIndex": 130,
       "interactionId": null
     },
     {
       "name": "node-428",
       "nodeIndex": 428,
-      "meshIndex": 73,
+      "meshIndex": 72,
       "interactionId": null
     },
     {
       "name": "node-430",
       "nodeIndex": 430,
-      "meshIndex": 133,
+      "meshIndex": 73,
       "interactionId": null
     },
     {
@@ -636,7 +668,7 @@
       "interactionId": null
     },
     {
-      "name": "SDT_photo_roller_backdrop",
+      "name": "SDT_photo_roller_backdrop_mount",
       "nodeIndex": 609,
       "meshIndex": 81,
       "interactionId": "studio.photo-backdrop"
@@ -648,387 +680,375 @@
       "interactionId": null
     },
     {
-      "name": "SDT_photo_backdrop_seal",
+      "name": "node-611",
       "nodeIndex": 611,
       "meshIndex": 83,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_rack",
-      "nodeIndex": 612,
+      "name": "SDT_photo_backdrop_seal",
+      "nodeIndex": 615,
       "meshIndex": 84,
-      "interactionId": "studio.merch-rack"
-    },
-    {
-      "name": "node-613",
-      "nodeIndex": 613,
-      "meshIndex": 85,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_garments",
+      "name": "SDT_photo_rack_rail",
+      "nodeIndex": 616,
+      "meshIndex": 85,
+      "interactionId": "studio.merch-rack"
+    },
+    {
+      "name": "node-617",
       "nodeIndex": 617,
       "meshIndex": 86,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_garments_garment_1",
-      "nodeIndex": 618,
+      "name": "node-635",
+      "nodeIndex": 635,
       "meshIndex": 87,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_garments_hanger_1",
-      "nodeIndex": 619,
+      "name": "SDT_photo_garments_garment_1",
+      "nodeIndex": 655,
       "meshIndex": 88,
       "interactionId": null
     },
     {
-      "name": "SDT_photo_garments_garment_2",
-      "nodeIndex": 620,
+      "name": "node-656",
+      "nodeIndex": 656,
       "meshIndex": 89,
-      "interactionId": null
-    },
-    {
-      "name": "SDT_photo_garments_hanger_2",
-      "nodeIndex": 621,
-      "meshIndex": 90,
-      "interactionId": null
-    },
-    {
-      "name": "SDT_photo_garments_garment_3",
-      "nodeIndex": 622,
-      "meshIndex": 91,
-      "interactionId": null
-    },
-    {
-      "name": "SDT_photo_garments_hanger_3",
-      "nodeIndex": 623,
-      "meshIndex": 92,
-      "interactionId": null
-    },
-    {
-      "name": "SDT_photo_garments_garment_4",
-      "nodeIndex": 624,
-      "meshIndex": 93,
-      "interactionId": null
-    },
-    {
-      "name": "SDT_photo_garments_hanger_4",
-      "nodeIndex": 625,
-      "meshIndex": 94,
-      "interactionId": null
-    },
-    {
-      "name": "SDT_photo_garments_garment_5",
-      "nodeIndex": 626,
-      "meshIndex": 95,
-      "interactionId": null
-    },
-    {
-      "name": "SDT_photo_garments_hanger_5",
-      "nodeIndex": 627,
-      "meshIndex": 96,
-      "interactionId": null
-    },
-    {
-      "name": "node-628",
-      "nodeIndex": 628,
-      "meshIndex": 97,
-      "interactionId": null
-    },
-    {
-      "name": "node-649",
-      "nodeIndex": 649,
-      "meshIndex": 98,
-      "interactionId": null
-    },
-    {
-      "name": "node-650",
-      "nodeIndex": 650,
-      "meshIndex": 99,
-      "interactionId": null
-    },
-    {
-      "name": "node-652",
-      "nodeIndex": 652,
-      "meshIndex": 100,
-      "interactionId": null
-    },
-    {
-      "name": "node-658",
-      "nodeIndex": 658,
-      "meshIndex": 101,
-      "interactionId": null
-    },
-    {
-      "name": "node-659",
-      "nodeIndex": 659,
-      "meshIndex": 102,
-      "interactionId": null
-    },
-    {
-      "name": "node-660",
-      "nodeIndex": 660,
-      "meshIndex": 103,
       "interactionId": null
     },
     {
       "name": "node-661",
       "nodeIndex": 661,
+      "meshIndex": 90,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_photo_garments_garment_2",
+      "nodeIndex": 662,
+      "meshIndex": 91,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_photo_garments_garment_3",
+      "nodeIndex": 669,
+      "meshIndex": 92,
+      "interactionId": null
+    },
+    {
+      "name": "node-675",
+      "nodeIndex": 675,
+      "meshIndex": 93,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_photo_garments_garment_4",
+      "nodeIndex": 676,
+      "meshIndex": 94,
+      "interactionId": null
+    },
+    {
+      "name": "SDT_photo_garments_garment_5",
+      "nodeIndex": 682,
+      "meshIndex": 95,
+      "interactionId": null
+    },
+    {
+      "name": "node-688",
+      "nodeIndex": 688,
+      "meshIndex": 96,
+      "interactionId": null
+    },
+    {
+      "name": "node-787",
+      "nodeIndex": 787,
+      "meshIndex": 97,
+      "interactionId": null
+    },
+    {
+      "name": "node-788",
+      "nodeIndex": 788,
+      "meshIndex": 98,
+      "interactionId": null
+    },
+    {
+      "name": "node-790",
+      "nodeIndex": 790,
+      "meshIndex": 99,
+      "interactionId": null
+    },
+    {
+      "name": "node-796",
+      "nodeIndex": 796,
+      "meshIndex": 100,
+      "interactionId": null
+    },
+    {
+      "name": "node-797",
+      "nodeIndex": 797,
+      "meshIndex": 101,
+      "interactionId": null
+    },
+    {
+      "name": "node-798",
+      "nodeIndex": 798,
+      "meshIndex": 102,
+      "interactionId": null
+    },
+    {
+      "name": "node-799",
+      "nodeIndex": 799,
+      "meshIndex": 131,
+      "interactionId": null
+    },
+    {
+      "name": "node-820",
+      "nodeIndex": 820,
+      "meshIndex": 103,
+      "interactionId": null
+    },
+    {
+      "name": "node-823",
+      "nodeIndex": 823,
       "meshIndex": 104,
       "interactionId": null
     },
     {
-      "name": "node-682",
-      "nodeIndex": 682,
+      "name": "node-824",
+      "nodeIndex": 824,
       "meshIndex": 105,
       "interactionId": null
     },
     {
-      "name": "node-683",
-      "nodeIndex": 683,
+      "name": "node-840",
+      "nodeIndex": 840,
       "meshIndex": 106,
       "interactionId": null
     },
     {
-      "name": "node-685",
-      "nodeIndex": 685,
+      "name": "node-851",
+      "nodeIndex": 851,
+      "meshIndex": 132,
+      "interactionId": null
+    },
+    {
+      "name": "node-860",
+      "nodeIndex": 860,
       "meshIndex": 107,
       "interactionId": null
     },
     {
-      "name": "node-686",
-      "nodeIndex": 686,
-      "meshIndex": 108,
-      "interactionId": null
-    },
-    {
-      "name": "node-702",
-      "nodeIndex": 702,
-      "meshIndex": 109,
-      "interactionId": null
-    },
-    {
-      "name": "node-713",
-      "nodeIndex": 713,
-      "meshIndex": 110,
-      "interactionId": null
-    },
-    {
-      "name": "node-722",
-      "nodeIndex": 722,
-      "meshIndex": 111,
-      "interactionId": null
-    },
-    {
       "name": "SDT_right_wall",
-      "nodeIndex": 723,
-      "meshIndex": 112,
+      "nodeIndex": 861,
+      "meshIndex": 108,
       "interactionId": "studio.artists-wall"
     },
     {
       "name": "studio.artist-slot-001",
-      "nodeIndex": 724,
-      "meshIndex": 113,
+      "nodeIndex": 862,
+      "meshIndex": 109,
       "interactionId": "studio.artist-slot-001"
     },
     {
       "name": "SDT_right_artist_slot_001_blank",
-      "nodeIndex": 725,
-      "meshIndex": 114,
+      "nodeIndex": 863,
+      "meshIndex": 110,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-002",
-      "nodeIndex": 727,
-      "meshIndex": 115,
+      "nodeIndex": 865,
+      "meshIndex": 111,
       "interactionId": "studio.artist-slot-002"
     },
     {
       "name": "SDT_right_artist_slot_002_blank",
-      "nodeIndex": 728,
-      "meshIndex": 116,
+      "nodeIndex": 866,
+      "meshIndex": 112,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-003",
-      "nodeIndex": 730,
-      "meshIndex": 117,
+      "nodeIndex": 868,
+      "meshIndex": 113,
       "interactionId": "studio.artist-slot-003"
     },
     {
       "name": "SDT_right_artist_slot_003_blank",
-      "nodeIndex": 731,
-      "meshIndex": 116,
+      "nodeIndex": 869,
+      "meshIndex": 112,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-004",
-      "nodeIndex": 733,
-      "meshIndex": 118,
+      "nodeIndex": 871,
+      "meshIndex": 114,
       "interactionId": "studio.artist-slot-004"
     },
     {
       "name": "SDT_right_artist_slot_004_blank",
-      "nodeIndex": 734,
-      "meshIndex": 116,
+      "nodeIndex": 872,
+      "meshIndex": 112,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-005",
-      "nodeIndex": 736,
-      "meshIndex": 119,
+      "nodeIndex": 874,
+      "meshIndex": 115,
       "interactionId": "studio.artist-slot-005"
     },
     {
       "name": "SDT_right_artist_slot_005_blank",
-      "nodeIndex": 737,
-      "meshIndex": 116,
+      "nodeIndex": 875,
+      "meshIndex": 112,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-006",
-      "nodeIndex": 739,
-      "meshIndex": 120,
+      "nodeIndex": 877,
+      "meshIndex": 116,
       "interactionId": "studio.artist-slot-006"
     },
     {
       "name": "SDT_right_artist_slot_006_blank",
-      "nodeIndex": 740,
-      "meshIndex": 116,
+      "nodeIndex": 878,
+      "meshIndex": 112,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-007",
-      "nodeIndex": 742,
-      "meshIndex": 121,
+      "nodeIndex": 880,
+      "meshIndex": 117,
       "interactionId": "studio.artist-slot-007"
     },
     {
       "name": "SDT_right_artist_slot_007_blank",
-      "nodeIndex": 743,
-      "meshIndex": 116,
+      "nodeIndex": 881,
+      "meshIndex": 112,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-008",
-      "nodeIndex": 745,
-      "meshIndex": 122,
+      "nodeIndex": 883,
+      "meshIndex": 118,
       "interactionId": "studio.artist-slot-008"
     },
     {
       "name": "SDT_right_artist_slot_008_blank",
-      "nodeIndex": 746,
-      "meshIndex": 116,
+      "nodeIndex": 884,
+      "meshIndex": 112,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-009",
-      "nodeIndex": 748,
-      "meshIndex": 123,
+      "nodeIndex": 886,
+      "meshIndex": 119,
       "interactionId": "studio.artist-slot-009"
     },
     {
       "name": "SDT_right_artist_slot_009_blank",
-      "nodeIndex": 749,
-      "meshIndex": 116,
+      "nodeIndex": 887,
+      "meshIndex": 112,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-010",
-      "nodeIndex": 751,
-      "meshIndex": 124,
+      "nodeIndex": 889,
+      "meshIndex": 120,
       "interactionId": "studio.artist-slot-010"
     },
     {
       "name": "SDT_right_artist_slot_010_blank",
-      "nodeIndex": 752,
-      "meshIndex": 116,
+      "nodeIndex": 890,
+      "meshIndex": 112,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-011",
-      "nodeIndex": 754,
-      "meshIndex": 125,
+      "nodeIndex": 892,
+      "meshIndex": 121,
       "interactionId": "studio.artist-slot-011"
     },
     {
       "name": "SDT_right_artist_slot_011_blank",
-      "nodeIndex": 755,
-      "meshIndex": 116,
+      "nodeIndex": 893,
+      "meshIndex": 112,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-012",
-      "nodeIndex": 757,
-      "meshIndex": 126,
+      "nodeIndex": 895,
+      "meshIndex": 122,
       "interactionId": "studio.artist-slot-012"
     },
     {
       "name": "SDT_right_artist_slot_012_blank",
-      "nodeIndex": 758,
-      "meshIndex": 116,
+      "nodeIndex": 896,
+      "meshIndex": 112,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-013",
-      "nodeIndex": 760,
-      "meshIndex": 127,
+      "nodeIndex": 898,
+      "meshIndex": 123,
       "interactionId": "studio.artist-slot-013"
     },
     {
       "name": "SDT_right_artist_slot_013_blank",
-      "nodeIndex": 761,
-      "meshIndex": 116,
+      "nodeIndex": 899,
+      "meshIndex": 112,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-014",
-      "nodeIndex": 763,
-      "meshIndex": 128,
+      "nodeIndex": 901,
+      "meshIndex": 124,
       "interactionId": "studio.artist-slot-014"
     },
     {
       "name": "SDT_right_artist_slot_014_blank",
-      "nodeIndex": 764,
-      "meshIndex": 116,
+      "nodeIndex": 902,
+      "meshIndex": 112,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-015",
-      "nodeIndex": 766,
-      "meshIndex": 129,
+      "nodeIndex": 904,
+      "meshIndex": 125,
       "interactionId": "studio.artist-slot-015"
     },
     {
       "name": "SDT_right_artist_slot_015_blank",
-      "nodeIndex": 767,
-      "meshIndex": 116,
+      "nodeIndex": 905,
+      "meshIndex": 112,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-016",
-      "nodeIndex": 769,
-      "meshIndex": 130,
+      "nodeIndex": 907,
+      "meshIndex": 126,
       "interactionId": "studio.artist-slot-016"
     },
     {
       "name": "SDT_right_artist_slot_016_blank",
-      "nodeIndex": 770,
-      "meshIndex": 116,
+      "nodeIndex": 908,
+      "meshIndex": 112,
       "interactionId": null
     },
     {
       "name": "studio.artist-slot-017",
-      "nodeIndex": 772,
-      "meshIndex": 131,
+      "nodeIndex": 910,
+      "meshIndex": 127,
       "interactionId": "studio.artist-slot-017"
     },
     {
       "name": "SDT_right_artist_slot_017_blank",
-      "nodeIndex": 773,
-      "meshIndex": 116,
+      "nodeIndex": 911,
+      "meshIndex": 112,
       "interactionId": null
     }
   ],
@@ -1255,14 +1275,14 @@
   },
   "auditUpdatedAt": "2026-10-12",
   "frontendDelivery": {
-    "generatedAt": "2026-10-15T06:35:39.253Z",
+    "generatedAt": "2026-10-15T11:14:47.061Z",
     "sourceGlb": "art/out/optimized/xoyens-studio.high.glb",
     "canonicalUrl": "/models/camping/xoyens-studio.glb",
     "hashAlgorithm": "SHA-256",
-    "sha256": "761257c066466749996b541c31d1f249d2d0837b8dac227a5248c665380313b9",
-    "bytes": 13246780,
+    "sha256": "fcbacc0c897c02a6b0a70837cd8e65f02883919d8f453032bfb217fd4c30b169",
+    "bytes": 13524856,
     "browserLoader": "GLTFLoader + KTX2Loader + MeshoptDecoder"
   },
   "surfacePhase": 7,
-  "productionPhase": 8
+  "productionPhase": 9
 }
