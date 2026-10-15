@@ -1,12 +1,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { phasePrerequisiteFailures, requiredFilesForPhase } from "./pack-delivery.mjs";
 
 test("Phases before 07 do not require future-phase evidence", () => {
+  const phase5 = new Set(requiredFilesForPhase(5));
   const phase6 = new Set(requiredFilesForPhase(6));
+  assert.equal(phase5.has("art/out/optimized/xoyens-studio.high.glb"), false);
+  assert.equal(phase6.has("art/out/optimized/xoyens-studio.high.glb"), true);
+  assert.equal(new Set(requiredFilesForPhase(7)).has("art/out/optimized/xoyens-studio.high.glb"), true);
+  assert.equal(new Set(requiredFilesForPhase(8)).has("art/out/optimized/xoyens-studio.high.glb"), true);
+  assert.equal(new Set(requiredFilesForPhase(9)).has("art/out/optimized/xoyens-studio.high.glb"), true);
   assert.equal(phase6.has("art/out/phase07-surfaces.json"), false);
   assert.equal(phase6.has("art/xoyens-studio.phase07.report.json"), false);
   assert.equal(phase6.has("art/xoyens-studio.phase08.report.json"), false);
@@ -33,6 +39,22 @@ test("Phase 08 requires certified Phase 07 and Phase 08 evidence without prematu
   assert.equal(required.has("public/models/camping/xoyens-studio.colliders.glb"), false);
 });
 
+test("Phase 06 rejects a canonical GLB that differs from its optimized high-tier source", () => {
+  const root = mkdtempSync(join(tmpdir(), "camping-optimized-public-mismatch-"));
+  try {
+    const optimizedDir = join(root, "art/out/optimized");
+    const publicDir = join(root, "public/models/camping");
+    mkdirSync(optimizedDir, { recursive: true });
+    mkdirSync(publicDir, { recursive: true });
+    writeFileSync(join(optimizedDir, "xoyens-studio.high.glb"), Buffer.from("optimized-high-tier-glb"));
+    writeFileSync(join(publicDir, "xoyens-studio.glb"), Buffer.from("stale-public-glb"));
+    const failures = phasePrerequisiteFailures(root, 6);
+    assert.ok(failures.some((failure) => failure.includes("Optimized high-tier GLB and canonical frontend GLB differ")));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("Phase 08 is rejected when Phase 07 source evidence is missing", () => {
   const root = mkdtempSync(join(tmpdir(), "camping-phase-gate-"));
   try {
@@ -53,6 +75,7 @@ test("Phase 09 requires photo source report, official brand assets and canonical
   assert.equal(required.has("art/xoyens-studio.phase09.report.json"), true);
   assert.equal(required.has("art/textures/brand/sindicato-selo.png"), true);
   assert.equal(required.has("art/textures/brand/xoyens.png"), true);
+  assert.equal(required.has("art/out/optimized/xoyens-studio.high.glb"), true);
   assert.equal(required.has("public/models/camping/xoyens-studio.glb"), true);
   assert.equal(required.has("public/models/camping/xoyens-studio.model.json"), true);
   assert.equal(required.has("public/models/camping/xoyens-studio.colliders.glb"), false);
