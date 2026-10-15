@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import type { GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader.js";
 import { MeshoptDecoder } from "meshoptimizer";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
@@ -267,6 +268,64 @@ const WALK_SPEED = 2.05;
 const LOOK_SENSITIVITY = 0.0027;
 const CAM_HEIGHT = 1.62;
 const STUDIO_URL = "/models/camping/xoyens-studio.glb";
+const STUDIO_METADATA_URL = "/models/camping/xoyens-studio.model.json";
+
+type CampingModelMetadata = {
+  version: number;
+  phase: number;
+  productionPhase: number;
+  surfacePhase: number;
+  status: string;
+  model: string;
+  geometry: { sha256: string; bytes: number };
+  frontendDelivery: { canonicalUrl: string; sha256: string; bytes: number };
+};
+
+/** Reject old or internally inconsistent model metadata before issuing the GLB request. */
+export function assertCampingModelMetadata(value: unknown): asserts value is CampingModelMetadata {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("CAMPING model metadata is missing or malformed; refusing to load an uncertified model.");
+  }
+  const metadata = value as Partial<CampingModelMetadata>;
+  if (
+    metadata.version !== 3 ||
+    !Number.isInteger(metadata.phase) || metadata.phase! < 9 || metadata.phase! > 22 ||
+    metadata.productionPhase !== metadata.phase ||
+    metadata.surfacePhase !== 7 ||
+    metadata.status !== "blender-v3-published" ||
+    metadata.model !== STUDIO_URL ||
+    metadata.frontendDelivery?.canonicalUrl !== STUDIO_URL
+  ) {
+    throw new Error(
+      "CAMPING is refusing a stale public model: expected certified Phase 09+ metadata at " + STUDIO_URL + ".",
+    );
+  }
+
+  const digest = metadata.geometry?.sha256;
+  const bytes = metadata.geometry?.bytes;
+  if (
+    typeof digest !== "string" || !/^[a-f0-9]{64}$/i.test(digest) ||
+    metadata.frontendDelivery?.sha256 !== digest ||
+    !Number.isSafeInteger(bytes) || bytes! <= 0 ||
+    metadata.frontendDelivery?.bytes !== bytes
+  ) {
+    throw new Error("CAMPING public model metadata has inconsistent SHA-256 or byte counts; refusing to load it.");
+  }
+}
+
+/** Prove that the fetched canonical URL returned the exact model recorded in metadata. */
+export function assertCampingModelBytesMatchMetadata(
+  metadata: CampingModelMetadata,
+  byteLength: number,
+  digest: string,
+): void {
+  if (
+    byteLength !== metadata.geometry.bytes || byteLength !== metadata.frontendDelivery.bytes ||
+    digest !== metadata.geometry.sha256 || digest !== metadata.frontendDelivery.sha256
+  ) {
+    throw new Error("CAMPING served GLB is stale or differs from its certified SHA-256 metadata; refusing to render it.");
+  }
+}
 
 export type CampingRenderProfile = {
   tier: "high";
@@ -1912,6 +1971,44 @@ export class CampingStudioEngine {
     root.updateMatrixWorld(true);
   }
 
+  private async loadVerifiedStudio(loader: GLTFLoader): Promise<GLTF> {
+    const headers = {
+      "Cache-Control": "no-cache, no-store, max-age=0",
+      Pragma: "no-cache",
+    };
+    const metadataUrl = new URL(STUDIO_METADATA_URL, window.location.origin);
+    metadataUrl.searchParams.set("_sdt_runtime", String(Date.now()));
+    const metadataResponse = await fetch(metadataUrl.toString(), { cache: "no-store", headers });
+    if (!metadataResponse.ok) {
+      throw new Error("CAMPING model metadata returned HTTP " + metadataResponse.status + ".");
+    }
+    const metadataValue: unknown = await metadataResponse.json();
+    assertCampingModelMetadata(metadataValue);
+
+    // Tie the CDN cache key to the digest that will be checked below. A stale
+    // object at the canonical route cannot pass validation just because its URL is unchanged.
+    const modelUrl = new URL(STUDIO_URL, window.location.origin);
+    modelUrl.searchParams.set("_sdt_sha256", metadataValue.geometry.sha256);
+    const modelResponse = await fetch(modelUrl.toString(), { cache: "no-store", headers });
+    if (!modelResponse.ok) {
+      throw new Error("CAMPING canonical GLB returned HTTP " + modelResponse.status + ".");
+    }
+    const bytes = await modelResponse.arrayBuffer();
+    const digestBuffer = await crypto.subtle.digest("SHA-256", bytes);
+    const digest = Array.from(new Uint8Array(digestBuffer), (byte) => byte.toString(16).padStart(2, "0")).join("");
+    assertCampingModelBytesMatchMetadata(metadataValue, bytes.byteLength, digest);
+
+    if (this.canvas) {
+      this.canvas.dataset.campingModelPhase = String(metadataValue.phase);
+      this.canvas.dataset.campingModelSha256 = digest;
+      this.canvas.dataset.campingModelCacheVerified = "true";
+    }
+
+    return await new Promise<GLTF>((resolve, reject) => {
+      loader.parse(bytes, new URL("/models/camping/", window.location.origin).toString(), resolve, reject);
+    });
+  }
+
   private loadStudio(): void {
     if (this.studioLoaded || this.loader || this.disposed) return;
     this.callbacks.onAssetState("loading");
@@ -1921,8 +2018,8 @@ export class CampingStudioEngine {
       this.loader.setKTX2Loader(this.ktx2Loader);
     }
     this.loader.setMeshoptDecoder(MeshoptDecoder);
-    this.loader.load(
-      STUDIO_URL,
+    const loader = this.loader;
+    void this.loadVerifiedStudio(loader).then(
       (gltf) => {
         if (this.disposed) {
           gltf.scene.traverse((object) => {
@@ -2089,11 +2186,10 @@ export class CampingStudioEngine {
           }
         });
       },
-      undefined,
-      (error) => {
+      (error: unknown) => {
         if (this.disposed) return;
         this.loader = null;
-        const reason = error instanceof Error ? error.message : "Não foi possível carregar o modelo 3D.";
+        const reason = error instanceof Error ? error.message : "Não foi possível verificar ou carregar o modelo 3D.";
         this.dispatch({ type: "LOAD_ERROR", message: "MODEL LOAD FAILED" });
         this.callbacks.onWebGLFailure(reason);
       },
