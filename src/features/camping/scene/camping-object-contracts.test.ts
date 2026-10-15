@@ -1,10 +1,51 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { createCampingMaxQualityProfile, getCampingMaterialRenderPolicy, getCampingShadowPolicy, resolveCampingEffectivePixelRatio } from "./CampingStudioEngine";
+import {
+  assertCampingModelBytesMatchMetadata,
+  assertCampingModelMetadata,
+  createCampingMaxQualityProfile,
+  getCampingMaterialRenderPolicy,
+  getCampingShadowPolicy,
+  resolveCampingEffectivePixelRatio,
+} from "./CampingStudioEngine";
 import { ARTISTS } from "@/lib/artists";
 import { buildCampingArtistPortraitBindings } from "./camping-visual-contracts";
 import { canReserveLiveProduct, getArtistSlotIndex, getCampingObjectSection, getRoomTransitionTarget, roomRequiresBackendAuthorization } from "./camping-object-contracts";
+
+describe("CAMPING public model cache and integrity contract", () => {
+  const validMetadata = () => {
+    const sha256 = "a".repeat(64);
+    return {
+      version: 3,
+      phase: 9,
+      productionPhase: 9,
+      surfacePhase: 7,
+      status: "blender-v3-published",
+      model: "/models/camping/xoyens-studio.glb",
+      geometry: { sha256, bytes: 120 },
+      frontendDelivery: {
+        canonicalUrl: "/models/camping/xoyens-studio.glb",
+        sha256,
+        bytes: 120,
+      },
+    };
+  };
+
+  it("accepts only fully certified Phase 09+ public model metadata", () => {
+    expect(() => assertCampingModelMetadata(validMetadata())).not.toThrow();
+    expect(() => assertCampingModelMetadata({
+      ...validMetadata(), phase: 8, productionPhase: 8,
+    })).toThrow(/refusing a stale public model/i);
+  });
+
+  it("rejects a served GLB when byte count or SHA-256 differs from its metadata", () => {
+    const metadata = validMetadata();
+    expect(() => assertCampingModelBytesMatchMetadata(metadata, 120, "a".repeat(64))).not.toThrow();
+    expect(() => assertCampingModelBytesMatchMetadata(metadata, 119, "a".repeat(64))).toThrow(/stale or differs/i);
+    expect(() => assertCampingModelBytesMatchMetadata(metadata, 120, "b".repeat(64))).toThrow(/stale or differs/i);
+  });
+});
 
 describe("CAMPING object interaction contracts", () => {
   it("maps each model interaction to the correct content surface", () => {
