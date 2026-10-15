@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { phasePrerequisiteFailures } from "./pack-delivery.mjs";
 
 export function parseGlb(b) {
   if (b.length < 20 || b.toString("ascii", 0, 4) !== "glTF") throw new Error("not a GLB");
@@ -31,7 +32,7 @@ export function blendKind(b) {
   return "unknown";
 }
 
-export function glbContract(j, bible, { requirePhase8 = false } = {}) {
+export function glbContract(j, bible, { requirePhase7 = true, requirePhase8 = false } = {}) {
   const out = [];
   const check = (name, pass, detail = "") => out.push({ name, pass, detail });
   const nodes = j.nodes ?? [];
@@ -59,42 +60,44 @@ export function glbContract(j, bible, { requirePhase8 = false } = {}) {
   check("extras zone and lmGroup", extras.some((extra) => extra.zone) && extras.some((extra) => extra.lmGroup));
   check("visual GLB excludes COL_* collision nodes", !nodes.some((node) => String(node.name ?? "").startsWith("COL_")));
 
-  const findPhaseNode = (elementId, namePattern) =>
-    nodes.find((node) => node.extras?.elementId === elementId && node.extras?.surfacePhase === 7) ??
-    nodes.find((node) => namePattern.test(String(node.name ?? "")) && node.extras?.surfacePhase === 7);
-  const floorNode = findPhaseNode("floor.wood", /floor_wood_hero/i);
-  const vinylNode = findPhaseNode("floor.vinyl_sweep", /vinyl_sweep_hero/i);
-  const bambooNode = findPhaseNode("arch.vault_ceiling", /vault_ceiling/i);
-  const paperWallNode = nodes.find((node) => /paper_cyclorama_wall/i.test(String(node.name ?? "")) && node.extras?.surfacePhase === 7);
-  const paperCurveNode = nodes.find((node) => /paper_cyclorama_curve/i.test(String(node.name ?? "")) && node.extras?.surfacePhase === 7);
-  check("Phase 07 floor is a 100+ board running-bond mesh",
-    Boolean(floorNode && Number.isInteger(floorNode.extras?.phase7BoardCount) && floorNode.extras.phase7BoardCount >= 100),
-    String(floorNode?.extras?.phase7BoardCount ?? "missing"));
-  const floorPrimitives = Number.isInteger(floorNode?.mesh) ? (j.meshes?.[floorNode.mesh]?.primitives ?? []) : [];
-  check("Phase 07 floor COLOR_0, UV0 and UV1 retained",
-    floorPrimitives.length > 0 && floorPrimitives.every((primitive) =>
-      primitive.attributes?.COLOR_0 !== undefined &&
-      primitive.attributes?.TEXCOORD_0 !== undefined &&
-      primitive.attributes?.TEXCOORD_1 !== undefined),
-    floorPrimitives.length + " floor primitives");
-  check("Phase 07 vinyl radius, thickness and edge lift",
-    Boolean(vinylNode) &&
-      Math.abs(Number(vinylNode?.extras?.phase7VinylRadiusM) - 2.3) <= 0.003 &&
-      Math.abs(Number(vinylNode?.extras?.phase7VinylThicknessM) - 0.0012) <= 0.0001 &&
-      Math.abs(Number(vinylNode?.extras?.phase7VinylEdgeLiftM) - 0.004) <= 0.0001,
-    vinylNode ? JSON.stringify({
-      radiusM: vinylNode.extras?.phase7VinylRadiusM,
-      thicknessM: vinylNode.extras?.phase7VinylThicknessM,
-      edgeLiftM: vinylNode.extras?.phase7VinylEdgeLiftM,
-    }) : "missing");
-  check("Phase 07 bamboo tile length is 1.2 m",
-    Boolean(bambooNode) && Math.abs(Number(bambooNode?.extras?.phase7BambooTileMeters) - 1.2) <= 0.0001,
-    String(bambooNode?.extras?.phase7BambooTileMeters ?? "missing"));
-  check("Phase 07 continuous black-paper cyclorama",
-    Boolean(paperWallNode && paperCurveNode) &&
-      Math.abs(Number(paperCurveNode?.extras?.phase7CycloramaRadiusM) - 0.35) <= 0.0001 &&
-      paperCurveNode?.extras?.phase7PaperContinuousToFloor === true,
-    paperWallNode && paperCurveNode ? "wall + curve connected contract" : "missing wall or curve");
+  if (requirePhase7) {
+    const findPhaseNode = (elementId, namePattern) =>
+      nodes.find((node) => node.extras?.elementId === elementId && node.extras?.surfacePhase === 7) ??
+      nodes.find((node) => namePattern.test(String(node.name ?? "")) && node.extras?.surfacePhase === 7);
+    const floorNode = findPhaseNode("floor.wood", /floor_wood_hero/i);
+    const vinylNode = findPhaseNode("floor.vinyl_sweep", /vinyl_sweep_hero/i);
+    const bambooNode = findPhaseNode("arch.vault_ceiling", /vault_ceiling/i);
+    const paperWallNode = nodes.find((node) => /paper_cyclorama_wall/i.test(String(node.name ?? "")) && node.extras?.surfacePhase === 7);
+    const paperCurveNode = nodes.find((node) => /paper_cyclorama_curve/i.test(String(node.name ?? "")) && node.extras?.surfacePhase === 7);
+    check("Phase 07 floor is a 100+ board running-bond mesh",
+      Boolean(floorNode && Number.isInteger(floorNode.extras?.phase7BoardCount) && floorNode.extras.phase7BoardCount >= 100),
+      String(floorNode?.extras?.phase7BoardCount ?? "missing"));
+    const floorPrimitives = Number.isInteger(floorNode?.mesh) ? (j.meshes?.[floorNode.mesh]?.primitives ?? []) : [];
+    check("Phase 07 floor COLOR_0, UV0 and UV1 retained",
+      floorPrimitives.length > 0 && floorPrimitives.every((primitive) =>
+        primitive.attributes?.COLOR_0 !== undefined &&
+        primitive.attributes?.TEXCOORD_0 !== undefined &&
+        primitive.attributes?.TEXCOORD_1 !== undefined),
+      floorPrimitives.length + " floor primitives");
+    check("Phase 07 vinyl radius, thickness and edge lift",
+      Boolean(vinylNode) &&
+        Math.abs(Number(vinylNode?.extras?.phase7VinylRadiusM) - 2.3) <= 0.003 &&
+        Math.abs(Number(vinylNode?.extras?.phase7VinylThicknessM) - 0.0012) <= 0.0001 &&
+        Math.abs(Number(vinylNode?.extras?.phase7VinylEdgeLiftM) - 0.004) <= 0.0001,
+      vinylNode ? JSON.stringify({
+        radiusM: vinylNode.extras?.phase7VinylRadiusM,
+        thicknessM: vinylNode.extras?.phase7VinylThicknessM,
+        edgeLiftM: vinylNode.extras?.phase7VinylEdgeLiftM,
+      }) : "missing");
+    check("Phase 07 bamboo tile length is 1.2 m",
+      Boolean(bambooNode) && Math.abs(Number(bambooNode?.extras?.phase7BambooTileMeters) - 1.2) <= 0.0001,
+      String(bambooNode?.extras?.phase7BambooTileMeters ?? "missing"));
+    check("Phase 07 continuous black-paper cyclorama",
+      Boolean(paperWallNode && paperCurveNode) &&
+        Math.abs(Number(paperCurveNode?.extras?.phase7CycloramaRadiusM) - 0.35) <= 0.0001 &&
+        paperCurveNode?.extras?.phase7PaperContinuousToFloor === true,
+      paperWallNode && paperCurveNode ? "wall + curve connected contract" : "missing wall or curve");
+  }
   if (requirePhase8) {
     const phase8Materials = new Set((j.materials ?? []).map((material) => material.name).filter(Boolean));
     for (const materialName of ["ceramic_red", "glass_mirror", "led_warm_emissive"]) {
@@ -147,6 +150,8 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
   if (!Number.isInteger(currentPhase) || currentPhase < 1 || currentPhase > 22) throw new Error("CAMPING phase must be an integer between 1 and 22");
   add("manifest phase matches requested phase", Boolean(manifest) && Number(manifest.phase) === currentPhase,
     String(manifest?.phase ?? "missing") + " / expected " + currentPhase);
+  const prerequisiteFailures = phasePrerequisiteFailures(dir, currentPhase);
+  add("phase prerequisites are ordered and certified", prerequisiteFailures.length === 0, prerequisiteFailures.join("; ") || "all prerequisite gates passed");
 
   if (manifest) {
     add("all required files in manifest", (manifest.missing ?? []).length === 0, (manifest.missing ?? []).join(", "));
@@ -181,33 +186,39 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
     add(".blend present", false, "missing");
   }
 
-  const surfaceSourceReportPath = join(dir, "art/out/phase07-surfaces.json");
-  const surfaceValidationReportPath = join(dir, "art/xoyens-studio.phase07.report.json");
-  if (existsSync(surfaceSourceReportPath)) {
-    try {
-      const phase7 = JSON.parse(readFileSync(surfaceSourceReportPath, "utf8"));
-      add("Phase 07 source surface report", phase7.phase === 7 && phase7.floor?.boardCount >= 100 &&
-        phase7.vinyl?.radiusM === 2.3 && phase7.bamboo?.tileMeters === 1.2 && phase7.cyclorama?.continuesToFloor === true,
-        JSON.stringify({ phase: phase7.phase, boardCount: phase7.floor?.boardCount, vinylRadiusM: phase7.vinyl?.radiusM }));
-    } catch (error) {
-      add("Phase 07 source surface report", false, error instanceof Error ? error.message : String(error));
+  if (currentPhase >= 7) {
+    const surfaceSourceReportPath = join(dir, "art/out/phase07-surfaces.json");
+    const surfaceValidationReportPath = join(dir, "art/xoyens-studio.phase07.report.json");
+    if (existsSync(surfaceSourceReportPath)) {
+      try {
+        const phase7 = JSON.parse(readFileSync(surfaceSourceReportPath, "utf8"));
+        add("Phase 07 source surface report", phase7.phase === 7 && phase7.floor?.boardCount >= 100 &&
+          phase7.vinyl?.radiusM === 2.3 && phase7.bamboo?.tileMeters === 1.2 && phase7.cyclorama?.continuesToFloor === true,
+          JSON.stringify({ phase: phase7.phase, boardCount: phase7.floor?.boardCount, vinylRadiusM: phase7.vinyl?.radiusM }));
+      } catch (error) {
+        add("Phase 07 source surface report", false, error instanceof Error ? error.message : String(error));
+      }
+    } else {
+      add("Phase 07 source surface report", false, "missing art/out/phase07-surfaces.json");
     }
-  } else {
-    add("Phase 07 source surface report", false, "missing art/out/phase07-surfaces.json");
-  }
-  if (existsSync(surfaceValidationReportPath)) {
-    try {
-      const phase7 = JSON.parse(readFileSync(surfaceValidationReportPath, "utf8"));
-      add("Phase 07 Blender acceptance report", phase7.phase === 7 && phase7.status === "source-validated" &&
-        phase7.floor?.boards >= 100 && phase7.floor?.verticalRaycastHits === phase7.floor?.boards &&
-        phase7.floor?.roughness?.roughnessRange >= 0.08,
-        JSON.stringify({ phase: phase7.phase, status: phase7.status, boards: phase7.floor?.boards,
-          raycastHits: phase7.floor?.verticalRaycastHits, roughnessRange: phase7.floor?.roughness?.roughnessRange }));
-    } catch (error) {
-      add("Phase 07 Blender acceptance report", false, error instanceof Error ? error.message : String(error));
+    if (existsSync(surfaceValidationReportPath)) {
+      try {
+        const phase7 = JSON.parse(readFileSync(surfaceValidationReportPath, "utf8"));
+        add("Phase 07 Blender acceptance report", phase7.phase === 7 && phase7.status === "source-validated" &&
+          phase7.floor?.boards >= 100 && phase7.floor?.verticalRaycastHits === phase7.floor?.boards &&
+          phase7.floor?.roughness?.roughnessRange >= 0.08,
+          JSON.stringify({ phase: phase7.phase, status: phase7.status, boards: phase7.floor?.boards,
+            raycastHits: phase7.floor?.verticalRaycastHits, roughnessRange: phase7.floor?.roughness?.roughnessRange }));
+      } catch (error) {
+        add("Phase 07 Blender acceptance report", false, error instanceof Error ? error.message : String(error));
+      }
+    } else {
+      add("Phase 07 Blender acceptance report", false, "missing art/xoyens-studio.phase07.report.json");
     }
+
   } else {
-    add("Phase 07 Blender acceptance report", false, "missing art/xoyens-studio.phase07.report.json");
+    add("Phase 07 source surface report", true, "deferred until Phase 07");
+    add("Phase 07 Blender acceptance report", true, "deferred until Phase 07");
   }
 
   const productionReportPath = join(dir, "art/xoyens-studio.phase08.report.json");
@@ -248,7 +259,8 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
   if (existsSync(glb) && bibleExists) {
     try {
       for (const check of glbContract(parseGlb(readFileSync(glb)), JSON.parse(readFileSync(biblePath, "utf8")), {
-        requirePhase8: existsSync(productionReportPath),
+        requirePhase7: currentPhase >= 7,
+        requirePhase8: currentPhase >= 8,
       })) {
         add("GLB: " + check.name, check.pass, check.detail);
       }
@@ -279,7 +291,9 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
         add("frontend metadata points at canonical URL", metadata.model === "/models/camping/xoyens-studio.glb");
         add(
           "frontend metadata certifies Blender V3 Phase 08 production and Phase 07 surfaces",
-          metadata.version === 3 && metadata.phase === currentPhase && metadata.productionPhase === currentPhase && metadata.surfacePhase === 7 && metadata.status === "blender-v3-published",
+          metadata.version === 3 && metadata.phase === currentPhase &&
+            (currentPhase >= 8 ? metadata.productionPhase === currentPhase : metadata.productionPhase == null) &&
+            (currentPhase < 7 || metadata.surfacePhase === 7) && metadata.status === "blender-v3-published",
           JSON.stringify({ version: metadata.version, phase: metadata.phase, productionPhase: metadata.productionPhase, surfacePhase: metadata.surfacePhase, status: metadata.status }),
         );
         add("frontend metadata byte count matches model", metadata.geometry?.bytes === statSync(frontendGlb).size);
@@ -302,14 +316,18 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
         add("frontend metadata materials match GLB", metadata.geometry?.materials === (frontendJson.materials ?? []).length);
         add("frontend metadata images match GLB", metadata.geometry?.embeddedImages === (frontendJson.images ?? []).length);
         const productionZone = metadata.geometry?.productionZone;
-        add("frontend metadata certifies Phase 08 production geometry", productionZone?.requiredElements === 19 &&
-          productionZone?.chairUpholsteryTrianglesSource >= 14000 && productionZone?.chairUpholsteryTrianglesSource <= 18000 &&
-          productionZone?.midiWhiteKeys === 36 && productionZone?.midiBlackKeys === 25 && productionZone?.acousticFabricPanels === 3 &&
-          productionZone?.acousticFoamTiles === 30 && productionZone?.pendants === 4 && productionZone?.edisonBulbs === 4 &&
-          productionZone?.trianglesAddedFromPhase7 > 0,
-          JSON.stringify({ requiredElements: productionZone?.requiredElements, chairTriangles: productionZone?.chairUpholsteryTrianglesSource,
-            triangleDelta: productionZone?.trianglesAddedFromPhase7 }));
-        add("frontend metadata phase 08 report attached", productionZone?.sourceStatus === "source-validated");
+        if (currentPhase >= 8) {
+          add("frontend metadata certifies Phase 08 production geometry", productionZone?.requiredElements === 19 &&
+            productionZone?.chairUpholsteryTrianglesSource >= 14000 && productionZone?.chairUpholsteryTrianglesSource <= 18000 &&
+            productionZone?.midiWhiteKeys === 36 && productionZone?.midiBlackKeys === 25 && productionZone?.acousticFabricPanels === 3 &&
+            productionZone?.acousticFoamTiles === 30 && productionZone?.pendants === 4 && productionZone?.edisonBulbs === 4 &&
+            productionZone?.trianglesAddedFromPhase7 > 0,
+            JSON.stringify({ requiredElements: productionZone?.requiredElements, chairTriangles: productionZone?.chairUpholsteryTrianglesSource,
+              triangleDelta: productionZone?.trianglesAddedFromPhase7 }));
+          add("frontend metadata phase 08 report attached", productionZone?.sourceStatus === "source-validated");
+        } else {
+          add("frontend metadata phase 08 report attached", true, "deferred until Phase 08");
+        }
       } else {
         add("frontend model metadata present", false, "missing file");
       }
