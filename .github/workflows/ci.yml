@@ -127,7 +127,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: CAMPING Blender V3 frontend publication smoke
-        run: npx playwright test tests/radio/camping-entry.spec.ts --grep "serves the optimized Blender V3 model" --project=chromium
+        run: npx playwright test tests/radio/camping-entry.spec.ts --grep "certified optimized Blender V3 model" --project=chromium
 
       - name: Camera browser validation (permissions, photo download and video playback)
         run: npx playwright test tests/radio/camera.spec.ts --project=chromium
