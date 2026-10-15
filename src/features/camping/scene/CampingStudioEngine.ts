@@ -49,6 +49,7 @@ import {
   deriveCampingCameraPoses,
   deriveCampingEntryPoseFromSceneBounds,
   deriveCampingFloorBounds,
+  deriveCampingPoseFloorBounds,
   inspectCampingFloorGeometry,
   type CampingCameraPose,
   type CampingCameraPoseName,
@@ -1329,9 +1330,19 @@ export class CampingStudioEngine {
         ? deriveCampingCameraPoses(this.studioRoot, CAM_HEIGHT)?.[id]
         : null;
       if (resolved) {
+        const poseFloorBounds = this.studioRoot ? deriveCampingPoseFloorBounds(this.studioRoot) : null;
+        if (id === "entrada") this.cameraEyeHeight = resolved.position[1];
         if (this.canvas) {
-          this.canvas.dataset.campingCameraPoseSource = "blender-v3-scene";
-          delete this.canvas.dataset.campingCameraPoseFallback;
+          const isRoomEnvelopeFallback = poseFloorBounds?.source === "room-envelope";
+          this.canvas.dataset.campingCameraPoseSource = isRoomEnvelopeFallback
+            ? "blender-v3-room-envelope"
+            : "blender-v3-scene";
+          if (isRoomEnvelopeFallback) {
+            this.canvas.dataset.campingCameraPoseFallback = "room-envelope-derived";
+            this.canvas.dataset.campingCameraGeometryStatus = "room-envelope-pose-fallback";
+          } else {
+            delete this.canvas.dataset.campingCameraPoseFallback;
+          }
         }
         return resolved;
       }
@@ -2360,17 +2371,26 @@ export class CampingStudioEngine {
           const floorDiagnostics = inspectCampingFloorGeometry(root);
           this.canvas.dataset.campingModelRootBounds = JSON.stringify(floorDiagnostics.rootBounds);
           this.canvas.dataset.campingFloorGeometryDiagnostics = JSON.stringify(floorDiagnostics.candidates);
-          const floorBounds = deriveCampingFloorBounds(root);
-          if (floorBounds) {
-            this.cameraEyeHeight = floorBounds.maxY + CAM_HEIGHT;
+          const physicalFloorBounds = deriveCampingFloorBounds(root);
+          const poseFloorBounds = deriveCampingPoseFloorBounds(root);
+          if (physicalFloorBounds) {
+            this.collision = createCampingV3CollisionConfig(root) ?? createStudioCollisionConfig();
+          } else {
+            // Do not fabricate colliders from the room envelope. Keep the established,
+            // bounded collision contract until a genuine flat floor mesh is identifiable.
+            this.collision = createStudioCollisionConfig();
+          }
+          if (poseFloorBounds) {
+            this.cameraEyeHeight = poseFloorBounds.maxY + CAM_HEIGHT;
             this.canvas.dataset.campingModelFloorBounds = JSON.stringify([
-              floorBounds.minX, floorBounds.minZ, floorBounds.maxX, floorBounds.maxZ,
+              poseFloorBounds.minX, poseFloorBounds.minZ, poseFloorBounds.maxX, poseFloorBounds.maxZ,
             ]);
-            this.canvas.dataset.campingModelFloorBoundsSource = floorBounds.source;
-            this.canvas.dataset.campingModelFloorSize = JSON.stringify([floorBounds.width, floorBounds.depth]);
-            this.canvas.dataset.campingModelFloorY = JSON.stringify([floorBounds.minY, floorBounds.maxY]);
+            this.canvas.dataset.campingModelFloorBoundsSource = poseFloorBounds.source;
+            this.canvas.dataset.campingModelFloorSize = JSON.stringify([poseFloorBounds.width, poseFloorBounds.depth]);
+            this.canvas.dataset.campingModelFloorY = JSON.stringify([poseFloorBounds.minY, poseFloorBounds.maxY]);
             this.canvas.dataset.campingCameraEyeY = String(this.cameraEyeHeight);
-            this.canvas.dataset.campingCameraFloorHeight = String(floorBounds.maxY - floorBounds.minY);
+            this.canvas.dataset.campingCameraFloorHeight = String(poseFloorBounds.maxY - poseFloorBounds.minY);
+            this.canvas.dataset.campingCameraGeometryStatus = physicalFloorBounds ? "floor-mesh-ready" : "room-envelope-pose-fallback";
           } else {
             this.canvas.dataset.campingCameraGeometryStatus = "invalid-floor-bounds";
           }
