@@ -174,7 +174,11 @@ function getStructuralRoomEnvelope(root: THREE.Object3D): StructuralRoomEnvelope
     if (/vault|ceiling/i.test(mesh.name)) ceilingCount += 1;
   });
 
-  if (bounds.isEmpty() || meshCount < 3 || wallCount < 2 || ceilingCount < 1) return null;
+  // The certified GLB preserves a named back-wall mesh, while other shell
+  // pieces may be unnamed or merged by the export pipeline. One measured wall
+  // bottom is enough as ground datum when combined with the vaulted ceiling,
+  // multiple shell meshes, and the strict architectural envelope checks below.
+  if (bounds.isEmpty() || meshCount < 3 || wallCount < 1 || ceilingCount < 1) return null;
 
   const width = bounds.max.x - bounds.min.x;
   const depth = bounds.max.z - bounds.min.z;

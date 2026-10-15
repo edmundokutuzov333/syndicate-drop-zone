@@ -234,13 +234,13 @@ describe("CAMPING V3 camera and collision coordinates", () => {
     expect(poses.entrada.look[1]).toBeLessThan(poses.entrada.position[1]);
   });
 
-  it("uses the architectural ground datum for eye-level entry when the floor node is vertically displaced", () => {
+  it("uses the published shell node names and wall ground datum when the floor is vertically displaced", () => {
     const root = new Group();
-    addBox(root, "SDT_shell_wall_left", [0.12, 2.85, 5.6], [-3.8, 1.425, 0]);
-    addBox(root, "SDT_shell_wall_right", [0.12, 2.85, 5.6], [3.8, 1.425, 0]);
-    addBox(root, "SDT_shell_wall_back", [7.6, 2.85, 0.12], [0, 1.425, -2.8]);
-    addBox(root, "SDT_shell_wall_front", [7.6, 2.85, 0.12], [0, 1.425, 2.8]);
+    // These are the real named shell nodes present in xoyens-studio.model.json.
+    // The published export does not retain separate names for every wall piece.
+    addBox(root, "SDT_shell_wall_wall.back_a", [7.6, 2.85, 0.12], [0, 1.425, -2.8]);
     addBox(root, "SDT_shell_vault_ceiling", [7.6, 0.1, 5.6], [0, 3.4, 0]);
+    addBox(root, "SDT_shell_door_main", [0.92, 2.04, 0.1], [0, 1.02, -2.8]);
     addBox(root, "studio.parquet", [7.6, 0.08, 5.6], [0, 3.4, 0]);
     root.updateMatrixWorld(true);
 
@@ -252,7 +252,7 @@ describe("CAMPING V3 camera and collision coordinates", () => {
 
     const pose = deriveCampingEntryPoseFromSceneBounds(root, 1.62);
     expect(pose).not.toBeNull();
-    if (!pose) throw new Error("Expected a human-scale pose from the architectural shell.");
+    if (!pose) throw new Error("Expected a human-scale pose from the published architectural shell names.");
 
     expect(pose.position[1]).toBeCloseTo(1.62, 2);
     expect(pose.look[1]).toBeCloseTo(1.48, 2);
