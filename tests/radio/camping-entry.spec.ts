@@ -571,7 +571,7 @@ test("serves a certified optimized Blender V3 model on the canonical CAMPING URL
     await modelResponseGate;
     await route.continue();
   });
-  await openCamping(page, "", { skipUnlock: true, afterNavigation: () => releaseModelResponse() });
+  await openCamping(page, "", { afterNavigation: () => releaseModelResponse() });
   const canvas = page.locator("canvas.camping-studio__canvas");
   const fallback = page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]');
 
