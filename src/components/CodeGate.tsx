@@ -8,7 +8,7 @@ import logo from "@/assets/brand/sindicato-logo.png.asset.json";
 
 const CODE = "808";
 const buzz = (pattern: number | number[]) => {
-  try { navigator.vibrate?.(pattern); } catch {}
+  try { navigator.vibrate?.(pattern); } catch { /* Optional browser API; continue without this enhancement. */ }
 };
 const KEYS = ["1","2","3","4","5","6","7","8","9","C","0","OK"];
 
@@ -21,8 +21,8 @@ export function CodeGate({ onOpen }: { onOpen: () => void }) {
     if(accepted)return;
     // Sound and analytics are optional enhancements. They must never block
     // the keypad state machine or leave the whole site trapped behind the gate.
-    try { click(); } catch {}
-    try { buzz(12); } catch {}
+    try { click(); } catch { /* Optional browser API; continue without this enhancement. */ }
+    try { buzz(12); } catch { /* Optional browser API; continue without this enhancement. */ }
     setError(false);
     if(key==="C"){setValue("");return;}
     if(key==="OK"){
@@ -32,14 +32,14 @@ export function CodeGate({ onOpen }: { onOpen: () => void }) {
         // Schedule the unlock before any non-critical WebAudio or analytics
         // calls, which can throw synchronously in restricted browser contexts.
         onOpen();
-        try { buzz([60,40,60,40,220]); } catch {}
-        try { kick808(); } catch {}
-        try { track("gate_open"); } catch {}
-        try { hiss(0.6); } catch {}
+        try { buzz([60,40,60,40,220]); } catch { /* Optional browser API; continue without this enhancement. */ }
+        try { kick808(); } catch { /* Optional browser API; continue without this enhancement. */ }
+        try { track("gate_open"); } catch { /* Optional browser API; continue without this enhancement. */ }
+        try { hiss(0.6); } catch { /* Optional browser API; continue without this enhancement. */ }
         // RootComponent starts Frequência 808 when the global gate opens.
         // Avoid a second concurrent start here; it can race the parent lifecycle.
       }else{
-        try { buzz([180,60,180]); } catch {}
+        try { buzz([180,60,180]); } catch { /* Optional browser API; continue without this enhancement. */ }
         setError(true); setValue("");
       }
       return;
