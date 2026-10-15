@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@tanstack/react-router", () => ({
   createFileRoute: () => (route: unknown) => route,
-  Link: (props: any) => <a href={String(props.to ?? "/")}>{props.children}</a>,
+  Link: (props: { to?: unknown; children?: import("react").ReactNode }) => <a href={String(props.to ?? "/")}>{props.children}</a>,
 }));
 vi.mock("@/lib/fan-membership", () => ({
   fanPublic: vi.fn(),
