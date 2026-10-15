@@ -131,7 +131,7 @@ jobs:
       - name: CAMPING production frontend smoke
         env:
           CAMPING_BASE_URL: https://syndicate-do-trap.lovable.app
-        run: npx playwright test tests/radio/camping-entry.spec.ts --grep "mounts the 3D entry|accepts 808 and enters the loaded studio|certified optimized Blender V3 model" --project=chromium
+        run: npx playwright test tests/radio/camping-entry.spec.ts --grep "mounts the 3D entry|accepts 808 and enters the loaded studio|captures the seven deterministic baseline poses|certified optimized Blender V3 model" --project=chromium
 
       - name: Camera browser validation (permissions, photo download and video playback)
         run: npx playwright test tests/radio/camera.spec.ts --project=chromium

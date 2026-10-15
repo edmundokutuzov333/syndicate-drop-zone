@@ -69,7 +69,20 @@ async function openCamping(page: import("@playwright/test").Page, query = "", op
 
   await page.goto("/camping" + query);
   if (!options.skipUnlock) {
-    await unlockSite(page);
+    // The site keypad has its own real-interaction/session tests above and in
+    // the shared radio suite. These scene tests target the inner CAMPING 808
+    // gate and the WebGL result. Persist the session only after the first SSR
+    // response, then reload so GATE_BOOT restores it before hydration. This
+    // avoids making a software-WebGL render compete with outer-keypad clicks.
+    const siteGate = page.locator('[data-site-gate="locked"]');
+    if (await siteGate.isVisible().catch(() => false)) {
+      await page.evaluate(() => {
+        try { window.sessionStorage.setItem("sdt-open", "1"); } catch { /* Browser policy may disable storage. */ }
+      });
+      await page.reload();
+      await expect(page.locator("html")).toHaveAttribute("data-gate", "open", { timeout: 15_000 });
+      await expect(siteGate).toHaveCount(0, { timeout: 15_000 });
+    }
     options.afterNavigation?.();
     await expect(page.locator("main.camping-studio-route")).toBeVisible();
   } else {
