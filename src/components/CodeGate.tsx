@@ -36,7 +36,8 @@ export function CodeGate({ onOpen }: { onOpen: () => void }) {
         try { kick808(); } catch {}
         try { track("gate_open"); } catch {}
         try { hiss(0.6); } catch {}
-        try { void frequency.start(); } catch {}
+        // RootComponent starts Frequência 808 when the global gate opens.
+        // Avoid a second concurrent start here; it can race the parent lifecycle.
       }else{
         try { buzz([180,60,180]); } catch {}
         setError(true); setValue("");
