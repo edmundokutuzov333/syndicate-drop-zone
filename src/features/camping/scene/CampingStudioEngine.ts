@@ -2101,18 +2101,55 @@ export class CampingStudioEngine {
 
     stage("gltf-parse");
     return await new Promise<GLTF>((resolve, reject) => {
-      loader.parse(
-        bytes,
-        new URL("/models/camping/", window.location.origin).toString(),
-        (gltf) => {
-          stage("gltf-parsed");
-          resolve(gltf);
-        },
-        (error) => {
-          stage("gltf-parse-failed");
-          reject(error);
-        },
-      );
+      let settled = false;
+      const parseTimer = window.setTimeout(() => {
+        settled = true;
+        stage("gltf-parse-timeout");
+        reject(new Error("CAMPING GLB decode/KTX2 transcode timed out after 45 seconds."));
+      }, 45_000);
+
+      const disposeLateResult = (gltf: GLTF) => {
+        gltf.scene.traverse((object) => {
+          const mesh = object as THREE.Mesh;
+          if (!mesh.isMesh) return;
+          mesh.geometry?.dispose();
+          const materials = Array.isArray(mesh.material)
+            ? mesh.material
+            : mesh.material
+              ? [mesh.material]
+              : [];
+          materials.forEach(safeDisposeMaterial);
+        });
+      };
+
+      try {
+        loader.parse(
+          bytes,
+          new URL("/models/camping/", window.location.origin).toString(),
+          (gltf) => {
+            if (settled) {
+              disposeLateResult(gltf);
+              return;
+            }
+            settled = true;
+            window.clearTimeout(parseTimer);
+            stage("gltf-parsed");
+            resolve(gltf);
+          },
+          (error) => {
+            if (settled) return;
+            settled = true;
+            window.clearTimeout(parseTimer);
+            stage("gltf-parse-failed");
+            reject(error);
+          },
+        );
+      } catch (error) {
+        settled = true;
+        window.clearTimeout(parseTimer);
+        stage("gltf-parse-failed");
+        reject(error);
+      }
     });
   }
 
