@@ -57,7 +57,8 @@ try {
     // The Phase 08 furniture adds real upholstery, panel and audio geometry. The
     // medium/low tiers use stronger geometric reduction while keeping the same
     // checked budgets and all named interaction anchors.
-    { name: "mid", maxTex: 1024, colorTex: 512, dataTex: 256, ratio: 0.27, error: 0.003 },
+    // The 2026-10-15 runner measured 140,568 triangles at 0.27, exceeding the 140,000 mid-tier budget by 568. Increase the reduction slightly; never relax the budget.
+    { name: "mid", maxTex: 1024, colorTex: 512, dataTex: 256, ratio: 0.25, error: 0.003 },
     { name: "low", maxTex: 512, colorTex: 256, dataTex: 128, ratio: 0.10, error: 0.010 }
   ];
 
