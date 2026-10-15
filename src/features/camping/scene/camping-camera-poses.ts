@@ -116,6 +116,97 @@ export function deriveCampingFloorBounds(root: THREE.Object3D): CampingFloorBoun
   return getFloorBounds(root);
 }
 
+
+/**
+ * Emergency entry framing for a SHA-verified, certified Blender room when the
+ * exported floor node/extras cannot be resolved. This does not claim the root
+ * bounds are the floor: it uses the root's lowest world-space Y only to recover
+ * eye height, and accepts only the documented metric or legacy room envelope.
+ * Guided poses and movement colliders still require real floor bounds.
+ */
+export function deriveCampingEntryPoseFromSceneBounds(
+  root: THREE.Object3D,
+  cameraHeight = 1.62,
+): CampingCameraPose | null {
+  root.updateMatrixWorld(true);
+  const bounds = new THREE.Box3().setFromObject(root);
+  if (bounds.isEmpty()) return null;
+
+  const width = bounds.max.x - bounds.min.x;
+  const depth = bounds.max.z - bounds.min.z;
+  const verticalSpan = bounds.max.y - bounds.min.y;
+  const footprintArea = width * depth;
+  if (
+    !Number.isFinite(width) || !Number.isFinite(depth) || !Number.isFinite(verticalSpan) ||
+    width < 3.8 || width > 16 || depth < 3.8 || depth > 16 ||
+    footprintArea < 30 || footprintArea > 180 ||
+    verticalSpan < 1.8 || verticalSpan > 6.5
+  ) return null;
+
+  const groundY = bounds.min.y;
+  const centerX = (bounds.min.x + bounds.max.x) / 2;
+  const centerZ = (bounds.min.z + bounds.max.z) / 2;
+  const zMargin = Math.min(0.35, depth * 0.05);
+  const positionInset = Math.min(1.15, depth * 0.22);
+  const lookInset = Math.min(1.65, depth * 0.28);
+  const positionZ = clamp(centerZ + positionInset, bounds.min.z + zMargin, bounds.max.z - zMargin);
+  const lookZ = clamp(centerZ - lookInset, bounds.min.z + zMargin, bounds.max.z - zMargin);
+  if (positionZ <= centerZ || lookZ >= centerZ) return null;
+
+  return {
+    position: [centerX, groundY + cameraHeight, positionZ],
+    look: [centerX, groundY + 1.48, lookZ],
+  };
+}
+
+/** Small, safe-to-publish measurements for diagnosing why a floor candidate was rejected. */
+export function inspectCampingFloorGeometry(root: THREE.Object3D): {
+  rootBounds: [number, number, number, number, number, number] | null;
+  candidates: Array<{
+    name: string;
+    elementId: string | null;
+    isMesh: boolean;
+    visible: boolean;
+    bounds: [number, number, number, number, number, number] | null;
+    size: [number, number, number] | null;
+  }>;
+} {
+  root.updateMatrixWorld(true);
+  const tuple = (box: THREE.Box3): [number, number, number, number, number, number] => [
+    box.min.x, box.max.x, box.min.y, box.max.y, box.min.z, box.max.z,
+  ];
+  const rootBox = new THREE.Box3().setFromObject(root);
+  const candidates: Array<{
+    name: string;
+    elementId: string | null;
+    isMesh: boolean;
+    visible: boolean;
+    bounds: [number, number, number, number, number, number] | null;
+    size: [number, number, number] | null;
+  }> = [];
+
+  root.traverse((object) => {
+    const userData = (object as THREE.Object3D & { userData?: Record<string, unknown> }).userData;
+    const elementId = typeof userData?.elementId === "string" ? userData.elementId : null;
+    if (elementId !== "floor.wood" && !/floor|parquet|wood|vinyl/i.test(object.name)) return;
+    const box = new THREE.Box3().setFromObject(object);
+    const empty = box.isEmpty();
+    candidates.push({
+      name: object.name,
+      elementId,
+      isMesh: Boolean((object as THREE.Mesh).isMesh),
+      visible: object.visible,
+      bounds: empty ? null : tuple(box),
+      size: empty ? null : [box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z],
+    });
+  });
+
+  return {
+    rootBounds: rootBox.isEmpty() ? null : tuple(rootBox),
+    candidates: candidates.slice(0, 24),
+  };
+}
+
 function getObjectBounds(root: THREE.Object3D, names: readonly string[]): THREE.Box3 | null {
   for (const name of names) {
     const object = root.getObjectByName(name);
