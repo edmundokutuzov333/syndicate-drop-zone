@@ -31,7 +31,7 @@ def main():
     materials={m.name for m in bpy.data.materials}
     for name in ("print_official_seal","print_official_xoyens","led_panel_emissive","led_warm_emissive"):
         if name not in materials: failures.append("material missing: "+name)
-    if len([o for o in mesh if o.name.startswith("SDT_photo_garment_")])<5:
+    if len([o for o in mesh if o.name.startswith("SDT_photo_garments_garment_")])<5:
         failures.append("less than five garment meshes")
     for obj in mesh:
         if str(obj.get("elementId","")).startswith("photo.") and not obj.data.materials:
