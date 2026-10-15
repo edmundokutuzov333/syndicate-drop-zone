@@ -156,7 +156,7 @@ function LightModeToggle() {
     let initial = false;
     try {
       initial = localStorage.getItem("sdt-lite") === "1";
-    } catch {}
+    } catch { /* Storage access is optional in privacy-restricted contexts. */ }
     if (!initial && "connection" in navigator) {
       initial = Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData);
     }
@@ -166,7 +166,7 @@ function LightModeToggle() {
   }, []);
   useEffect(() => {
     document.documentElement.toggleAttribute("data-lite", lite);
-    try { localStorage.setItem("sdt-lite", lite ? "1" : "0"); } catch {}
+    try { localStorage.setItem("sdt-lite", lite ? "1" : "0"); } catch { /* Storage access is optional in privacy-restricted contexts. */ }
   }, [lite]);
   return (
     <button
