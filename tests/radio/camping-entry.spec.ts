@@ -79,7 +79,10 @@ async function openCamping(page: import("@playwright/test").Page, query = "", op
       await page.evaluate(() => {
         try { window.sessionStorage.setItem("sdt-open", "1"); } catch { /* Browser policy may disable storage. */ }
       });
-      await page.reload();
+      // The production page has continuously active audio/media resources.
+      // Waiting for the full load event on reload can stall even after SSR is
+      // available, so use DOMContentLoaded and assert the gate state explicitly.
+      await page.reload({ waitUntil: "domcontentloaded", timeout: 15_000 });
       await expect(page.locator("html")).toHaveAttribute("data-gate", "open", { timeout: 15_000 });
       // GATE_BOOT hides the overlay before hydration; a slow software-WebGL
       // frame loop may delay React's passive unmount. The overlay must be
