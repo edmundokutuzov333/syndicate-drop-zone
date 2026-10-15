@@ -32,19 +32,32 @@ function toFloorBounds(bounds: THREE.Box3, source: CampingFloorBounds["source"])
   const height = bounds.max.y - bounds.min.y;
   const depth = bounds.max.z - bounds.min.z;
 
-  // The published CAMPING V3 contract is 7.6 m × 5.6 m. A scene-root/room
-  // collection can have the same X/Z size but includes the 2.85–3.45 m walls
-  // and roof. Reject it instead of using the roof apex as the camera's floor Y.
-  // Blender/export transforms can swap the world-space X/Z extents even when
-  // the certified room is still 7.6 × 5.6 m. Validate the footprint area and
-  // each plausible room dimension, rather than rejecting that valid rotation.
+  // A floor candidate is accepted only if it is a named floor surface and is thin.
+  // The Scene Bible's runtimeCompatibility explicitly documents two valid footprints:
+  // the not-yet-built 7.6 × 5.6 m target, and the currently published legacy model
+  // (14.2 × 9.2 m outer envelope; 13.1 × 8.26 m interior collision bounds).
+  // Blender exports may swap world X/Z, so compare long/short sides for the legacy
+  // envelope. Do not widen this to scene/root bounds: walls and the vaulted roof
+  // have vertical thickness far above 0.35 m and remain invalid floor candidates.
   const footprintArea = width * depth;
-  const certifiedArea = 7.6 * 5.6;
+  const metricArea = 7.6 * 5.6;
+  const isMetricFootprint =
+    width >= 3.8 && width <= 9.8 &&
+    depth >= 3.8 && depth <= 9.8 &&
+    footprintArea >= metricArea * 0.72 && footprintArea <= metricArea * 1.28;
+
+  const legacyLongSide = Math.max(width, depth);
+  const legacyShortSide = Math.min(width, depth);
+  const isDocumentedLegacyFootprint =
+    legacyLongSide >= 12.5 && legacyLongSide <= 14.8 &&
+    legacyShortSide >= 7.5 && legacyShortSide <= 9.8 &&
+    footprintArea >= 95 && footprintArea <= 135;
+
   if (
     !Number.isFinite(width) || !Number.isFinite(height) || !Number.isFinite(depth) ||
-    width < 3.8 || width > 9.8 || depth < 3.8 || depth > 9.8 ||
-    footprintArea < certifiedArea * 0.72 || footprintArea > certifiedArea * 1.28 ||
-    height < 0 || height > 0.35
+    width <= 0 || depth <= 0 ||
+    height < 0 || height > 0.35 ||
+    (!isMetricFootprint && !isDocumentedLegacyFootprint)
   ) return null;
 
   return {
@@ -78,11 +91,13 @@ function getFloorBounds(root: THREE.Object3D): FloorBounds | null {
     .filter((candidate): candidate is typeof candidate & { bounds: FloorBounds } => candidate.bounds !== null)
     .sort((a, b) => {
       if (a.priority !== b.priority) return a.priority - b.priority;
-      // If multiple floor meshes exist, prefer the one closest to the certified
-      // 7.6 × 5.6 metre footprint, not the largest grouping object.
-      const score = (bounds: FloorBounds) =>
-        Math.abs(Math.log((bounds.width * bounds.depth) / (7.6 * 5.6)));
-      return score(a.bounds) - score(b.bounds);
+      // If there are multiple thin floor surfaces, prefer a footprint that matches
+      // either documented model envelope rather than silently assuming migration is done.
+      const score = (bounds: FloorBounds) => {
+        const area = bounds.width * bounds.depth;
+        const documentedAreas = [7.6 * 5.6, 13.1 * 8.26, 14.2 * 9.2];
+        return Math.min(...documentedAreas.map((expected) => Math.abs(Math.log(area / expected))));
+      };
     });
 
   // Never substitute the full scene bounds for floor bounds. That is how a
@@ -135,18 +150,16 @@ export function deriveCampingCameraPoses(root: THREE.Object3D, cameraHeight = 1.
     return serializePose(camera, new THREE.Vector3(target.x, targetY, target.z));
   };
 
-  // Spawn well inside the measured room footprint, not directly behind the
-  // door leaf. This prevents the entrance panel from filling the entire frame.
-  // Keep the eye height metric and aim at the room centre at eye level so the
-  // first rendered view shows the studio, not the ceiling or the floor.
-  const entryPosition = position(
-    center.x,
-    center.z + Math.min(0.65, floor.depth * 0.1),
-  );
+  // Enter from the contractually defined +Z side, but keep the camera away from
+  // the door leaf and frame the usable interior. The bounded offsets maintain a
+  // human first-person composition for both the metric target and current legacy room.
+  const entryPositionInset = Math.min(1.15, floor.depth * 0.22);
+  const entryLookInset = Math.min(1.65, floor.depth * 0.28);
+  const entryPosition = position(center.x, center.z + entryPositionInset);
   const entryLook = new THREE.Vector3(
     center.x,
     floorY + 1.48,
-    center.z - Math.min(1.1, floor.depth * 0.2),
+    clamp(center.z - entryLookInset, minZ, maxZ),
   );
   const production = targetPose(["studio.production-desk", "studio.imac"], Math.min(1.65, floor.depth * 0.3));
   const photography = targetPose(["studio.photo-backdrop"], Math.min(1.55, floor.depth * 0.28));
