@@ -7,6 +7,28 @@ const MODEL_PATH = "public/models/camping/xoyens-studio.glb";
 const METADATA_PATH = "public/models/camping/xoyens-studio.model.json";
 const MAX_BYTES = 16 * 1024 * 1024;
 const REQUIRED_EXTENSIONS = ["KHR_texture_basisu", "EXT_meshopt_compression"];
+type GlbPrimitive = {
+  attributes?: Record<string, number>;
+  indices?: number;
+  mode?: number;
+  material?: number;
+};
+type GlbNode = { name?: string; mesh?: number; extras?: Record<string, unknown> };
+type GlbMaterial = {
+  name?: string;
+  pbrMetallicRoughness?: { baseColorTexture?: { index?: number } };
+  normalTexture?: unknown;
+};
+type GlbDocument = {
+  asset?: { version?: string };
+  accessors?: Array<{ count?: number }>;
+  meshes?: Array<{ primitives?: GlbPrimitive[] }>;
+  nodes?: GlbNode[];
+  materials?: GlbMaterial[];
+  extensionsUsed?: string[];
+  images?: unknown[];
+};
+
 const REQUIRED_INTERACTIONS = [
   "studio.imac",
   "studio.artists-wall",
@@ -17,7 +39,7 @@ const REQUIRED_INTERACTIONS = [
   "studio.inner-door",
 ];
 
-function readGlb(bytes: Buffer): Record<string, any> {
+function readGlb(bytes: Buffer): GlbDocument {
   if (bytes.length < 20 || bytes.toString("ascii", 0, 4) !== "glTF") {
     throw new Error("canonical asset is not a binary glTF file");
   }
@@ -26,7 +48,7 @@ function readGlb(bytes: Buffer): Record<string, any> {
   }
 
   let offset = 12;
-  let json: Record<string, any> | null = null;
+  let json: GlbDocument | null = null;
   while (offset + 8 <= bytes.length) {
     const length = bytes.readUInt32LE(offset);
     const type = bytes.readUInt32LE(offset + 4);
@@ -43,14 +65,14 @@ function readGlb(bytes: Buffer): Record<string, any> {
   return json;
 }
 
-function countPrimitives(gltf: Record<string, any>): number {
+function countPrimitives(gltf: GlbDocument): number {
   return (gltf.meshes ?? []).reduce(
     (sum: number, mesh: { primitives?: unknown[] }) => sum + (mesh.primitives?.length ?? 0),
     0,
   );
 }
 
-function countTriangles(gltf: Record<string, any>): number {
+function countTriangles(gltf: GlbDocument): number {
   let total = 0;
   for (const mesh of gltf.meshes ?? []) {
     for (const primitive of mesh.primitives ?? []) {
