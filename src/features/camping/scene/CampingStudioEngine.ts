@@ -2690,7 +2690,7 @@ export class CampingStudioEngine {
     if (this.webglFailed) return;
     this.updatePointerFromEvent(event);
     if (event.pointerType !== "touch") {
-      try { this.canvas?.focus({ preventScroll: true }); } catch {}
+      try { this.canvas?.focus({ preventScroll: true }); } catch { /* Pointer and browser APIs may be unavailable in embedded contexts. */ }
     }
     this.dragPointerId = event.pointerId;
     this.dragStart = { x: event.clientX, y: event.clientY };
@@ -2699,7 +2699,7 @@ export class CampingStudioEngine {
     this.isLooking = false;
     try {
       this.canvas?.setPointerCapture(event.pointerId);
-    } catch {}
+    } catch { /* Pointer and browser APIs may be unavailable in embedded contexts. */ }
   }
 
   private handlePointerMove(event: PointerEvent): void {
@@ -2730,7 +2730,7 @@ export class CampingStudioEngine {
     this.dragPointerId = null;
     try {
       this.canvas?.releasePointerCapture(event.pointerId);
-    } catch {}
+    } catch { /* Pointer and browser APIs may be unavailable in embedded contexts. */ }
     if (wasClick) this.activatePointerTarget();
     this.isLooking = false;
     this.dragDistance = 0;
