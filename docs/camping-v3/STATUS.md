@@ -145,3 +145,21 @@ A validação Blender da Fase 09 foi reforçada para inspeccionar todas as malha
 Commits de endurecimento: `d68212f` (Vite fail-closed fase 09+), `8f2b8c6` (verificador de produção), `104f38b` e `38004d0` (validação geométrica/material da fotografia), `87af35c` (lint/test/build pré-publicação), `2146d80` (verificação da rota pública após promoção).
 
 **Limite de evidência:** o código e os gates estão na `main`; o modelo canónico existente não se transforma em fase 9 até o job Blender gerar, optimizar e promover o novo GLB. Não declarar o frontend actualizado só porque o commit de código foi aceite pelo GitHub ou porque um deployment de código ficou `READY`.
+
+## Certificação concluída da Fase 09 e promoção frontend · 2026-10-15
+
+**Estado actual: PUBLICADO E VERIFICADO EM PRODUÇÃO.** Esta secção substitui as notas de validação pendente acima, que reflectiam o estado antes da execução certificada.
+
+- Commit de correcção de código: `fc12124fbb827d923b73616be2adb67ece2021b9` (gate de cinco roupas e manifesto de entrega estável).
+- Commit do fluxo CI: `f4f31ef5e6c58cba3dba896041f95ce78586dca9` (evita a corrida de build do frontend antes da promoção).
+- Commit da entrega Blender/GLB na `main`: `54394e8c3d512644bf3cb9ff1284d5be7678d0e6`, publicação através de Git LFS.
+- Workflow `Build CAMPING 3D - Blender + frontend V3`, execução [#38724630207](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38724630207): **success**. Compilação Blender, reabertura, verificações do modelo, lint, testes, build frontend e capturas das Fases 06, 08 e 09 passaram.
+- Verificação independente de produção na execução de publicação: **success**. A rota `https://syndicate-do-trap.lovable.app/models/camping/xoyens-studio.glb` serviu o modelo certificado e os metadados de Fase 09.
+- Metadados canónicos: `version=3`, `phase=9`, `productionPhase=9`, `surfacePhase=7`, `status=blender-v3-published`.
+- GLB canónico `public/models/camping/xoyens-studio.glb`: **13.524.856 bytes**; SHA-256 `fcbacc0c897c02a6b0a70837cd8e65f02883919d8f453032bfb217fd4c30b169`. O hash e o tamanho coincidem entre o GLB optimizado, o ficheiro público e os metadados.
+- Runtime: `GLTFLoader + KTX2Loader + MeshoptDecoder`; `KHR_texture_basisu` e `EXT_meshopt_compression` presentes e validados.
+- Compatibilidade preservada: 17 slots de artistas; nenhum slot 018; interacções `studio.inner-door`, `studio.production-desk`, `studio.imac`, `studio.audio-system`, `studio.photo-backdrop`, `studio.merch-rack` e `studio.artists-wall`.
+- Zona de produção: 19/19 elementos e materiais PBR requeridos. Zona fotográfica: 9/9 elementos, cinco malhas de roupa, selo de 2,2 m e duas capturas verificadas por SHA-256.
+- O teste regressivo `delivery manifest excludes mutable run logs and exit codes from file checksums` passou; os logs/códigos mutáveis já não invalidam o manifesto de entrega.
+
+A regra continua fail-closed: qualquer artefacto público com fase anterior, hash/tamanho divergente ou contrato de compatibilidade inválido é rejeitado pelo build ou pelo runtime. Não houve alteração estética adicional nem edição manual do GLB/metadados certificados.
