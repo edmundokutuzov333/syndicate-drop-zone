@@ -1326,58 +1326,65 @@ export class CampingStudioEngine {
 
   private resolveCameraPose(id: CampingCameraPoseName): CampingCameraPose | null {
     if (this.modelSource === "blender-v3") {
-      const resolved = this.studioRoot
-        ? deriveCampingCameraPoses(this.studioRoot, CAM_HEIGHT)?.[id]
+      // The entry view must be based on the architectural shell, not a floor
+      // candidate whose exported transform may be stale or vertically offset.
+      // Wall bottoms provide the ground datum; CAM_HEIGHT then guarantees an
+      // eye-level first-person view while +Z remains the declared entry axis.
+      const architecturalEntry = id === "entrada" && this.studioRoot
+        ? deriveCampingEntryPoseFromSceneBounds(this.studioRoot, CAM_HEIGHT)
         : null;
+      const resolved = architecturalEntry ?? (this.studioRoot
+        ? deriveCampingCameraPoses(this.studioRoot, CAM_HEIGHT)?.[id]
+        : null);
+
       if (resolved) {
         const poseFloorBounds = this.studioRoot ? deriveCampingPoseFloorBounds(this.studioRoot) : null;
         if (id === "entrada") this.cameraEyeHeight = resolved.position[1];
+
+        const eye = new THREE.Vector3(
+          resolved.position[0],
+          id === "entrada" ? this.cameraEyeHeight : resolved.position[1],
+          resolved.position[2],
+        );
+        const look = new THREE.Vector3(...resolved.look);
+        const direction = look.clone().sub(eye).normalize();
+        const pitchDegrees = THREE.MathUtils.radToDeg(Math.atan2(
+          look.y - eye.y,
+          Math.hypot(look.x - eye.x, look.z - eye.z),
+        ));
+
         if (this.canvas) {
-          const isRoomEnvelopeFallback = poseFloorBounds?.source === "room-envelope";
-          this.canvas.dataset.campingCameraPoseSource = isRoomEnvelopeFallback
-            ? "blender-v3-room-envelope"
-            : "blender-v3-scene";
-          if (isRoomEnvelopeFallback) {
-            this.canvas.dataset.campingCameraPoseFallback = "room-envelope-derived";
-            this.canvas.dataset.campingCameraGeometryStatus = "room-envelope-pose-fallback";
-          } else {
+          if (architecturalEntry) {
+            this.canvas.dataset.campingCameraPoseSource = "blender-v3-architectural-envelope";
+            this.canvas.dataset.campingCameraGeometryStatus = "architectural-envelope-entry";
             delete this.canvas.dataset.campingCameraPoseFallback;
+          } else {
+            const isRoomEnvelopeFallback = poseFloorBounds?.source === "room-envelope";
+            this.canvas.dataset.campingCameraPoseSource = isRoomEnvelopeFallback
+              ? "blender-v3-room-envelope"
+              : "blender-v3-scene";
+            if (isRoomEnvelopeFallback) {
+              this.canvas.dataset.campingCameraPoseFallback = "room-envelope-derived";
+              this.canvas.dataset.campingCameraGeometryStatus = "room-envelope-pose-fallback";
+            } else {
+              delete this.canvas.dataset.campingCameraPoseFallback;
+            }
           }
+
+          // Keep camera diagnostics tied to the exact position/target used by the tween.
+          this.canvas.dataset.campingCameraPosition = JSON.stringify([eye.x, eye.y, eye.z]);
+          this.canvas.dataset.campingCameraLookTarget = JSON.stringify(resolved.look);
+          this.canvas.dataset.campingCameraPitchDeg = pitchDegrees.toFixed(2);
+          this.canvas.dataset.campingCameraYawRad = Math.atan2(-direction.x, -direction.z).toFixed(3);
         }
         return resolved;
       }
 
-      // The GLB itself has already passed the canonical SHA-256/byte contract.
-      // If Blender renamed or omitted the floor extras, do not strand the visitor
-      // behind the 808 door. Derive an entry-only pose from the measured root
-      // envelope; movement colliders and guided views still require real floor bounds.
-      if (id === "entrada" && this.studioRoot) {
-        const fallback = deriveCampingEntryPoseFromSceneBounds(this.studioRoot, CAM_HEIGHT);
-        if (fallback) {
-          this.cameraEyeHeight = fallback.position[1];
-          if (this.canvas) {
-            this.canvas.dataset.campingCameraPoseSource = "blender-v3-root-bounds-entry-fallback";
-            this.canvas.dataset.campingCameraGeometryStatus = "entry-root-bounds-fallback";
-            this.canvas.dataset.campingCameraPoseFallback = "root-bounds-derived";
-            this.canvas.dataset.campingCameraPosition = JSON.stringify(fallback.position);
-            this.canvas.dataset.campingCameraLookTarget = JSON.stringify(fallback.look);
-            this.canvas.dataset.campingCameraPitchDeg = (
-              Math.atan2(
-                fallback.look[1] - fallback.position[1],
-                Math.hypot(
-                  fallback.look[0] - fallback.position[0],
-                  fallback.look[2] - fallback.position[2],
-                ),
-              ) * 180 / Math.PI
-            ).toFixed(2);
-          }
-          return fallback;
-        }
-      }
       if (this.canvas) this.canvas.dataset.campingCameraPoseSource = "blender-v3-invalid-geometry";
       // No guessed legacy coordinates: invalid room envelopes still fail closed.
       return null;
     }
+
     const legacyPose = (CAMPING_DEBUG_POSES as Partial<Record<CampingCameraPoseName, CampingCameraPose>>)[id];
     if (!legacyPose) return null;
     return {
@@ -3347,14 +3354,24 @@ export class CampingStudioEngine {
     this.camera.lookAt(look);
     if (raw >= 1) {
       this.tween = null;
-      const direction = current.toLook.clone().sub(current.toPosition).normalize();
+      // Use the actual final eye position after height and movement constraints,
+      // not the requested tween vector. This keeps yaw/pitch in sync with the rendered camera.
+      const direction = current.toLook.clone().sub(this.camera.position).normalize();
       this.yaw = Math.atan2(-direction.x, -direction.z);
       this.pitch = THREE.MathUtils.clamp(
         Math.asin(THREE.MathUtils.clamp(direction.y, -1, 1)),
         THREE.MathUtils.degToRad(-18),
         THREE.MathUtils.degToRad(8),
       );
-      if (this.canvas) this.canvas.dataset.campingCameraPitchDeg = THREE.MathUtils.radToDeg(this.pitch).toFixed(2);
+      this.camera.rotation.order = "YXZ";
+      this.camera.rotation.set(this.pitch, this.yaw, 0, "YXZ");
+      if (this.canvas) {
+        this.canvas.dataset.campingCameraPitchDeg = THREE.MathUtils.radToDeg(this.pitch).toFixed(2);
+        this.canvas.dataset.campingCameraYawRad = this.yaw.toFixed(3);
+        this.canvas.dataset.campingCameraPosition = JSON.stringify([
+          this.camera.position.x, this.camera.position.y, this.camera.position.z,
+        ]);
+      }
       current.onComplete?.();
     }
   }

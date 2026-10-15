@@ -234,6 +234,42 @@ describe("CAMPING V3 camera and collision coordinates", () => {
     expect(poses.entrada.look[1]).toBeLessThan(poses.entrada.position[1]);
   });
 
+  it("uses the architectural ground datum for eye-level entry when the floor node is vertically displaced", () => {
+    const root = new Group();
+    addBox(root, "SDT_shell_wall_left", [0.12, 2.85, 5.6], [-3.8, 1.425, 0]);
+    addBox(root, "SDT_shell_wall_right", [0.12, 2.85, 5.6], [3.8, 1.425, 0]);
+    addBox(root, "SDT_shell_wall_back", [7.6, 2.85, 0.12], [0, 1.425, -2.8]);
+    addBox(root, "SDT_shell_wall_front", [7.6, 2.85, 0.12], [0, 1.425, 2.8]);
+    addBox(root, "SDT_shell_vault_ceiling", [7.6, 0.1, 5.6], [0, 3.4, 0]);
+    addBox(root, "studio.parquet", [7.6, 0.08, 5.6], [0, 3.4, 0]);
+    root.updateMatrixWorld(true);
+
+    // A thin floor can pass dimensional validation even if an export transform
+    // places it at roof height. It must not become the entry camera's eye datum.
+    const floor = deriveCampingFloorBounds(root);
+    expect(floor).not.toBeNull();
+    expect(floor!.maxY).toBeGreaterThan(3.3);
+
+    const pose = deriveCampingEntryPoseFromSceneBounds(root, 1.62);
+    expect(pose).not.toBeNull();
+    if (!pose) throw new Error("Expected a human-scale pose from the architectural shell.");
+
+    expect(pose.position[1]).toBeCloseTo(1.62, 2);
+    expect(pose.look[1]).toBeCloseTo(1.48, 2);
+    expect(pose.position[2]).toBeGreaterThan(pose.look[2]);
+
+    const horizontalDistance = Math.hypot(
+      pose.position[0] - pose.look[0],
+      pose.position[2] - pose.look[2],
+    );
+    const pitchDegrees = Math.atan2(
+      pose.look[1] - pose.position[1],
+      horizontalDistance,
+    ) * 180 / Math.PI;
+    expect(pitchDegrees).toBeGreaterThan(-8);
+    expect(pitchDegrees).toBeLessThanOrEqual(0);
+  });
+
   it("keeps the 808 entry usable when a verified room has no resolvable floor node", () => {
     const root = new Group();
     // A certified room shell with walls and a vaulted roof but no floor node.

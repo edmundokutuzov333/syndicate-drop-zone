@@ -311,6 +311,27 @@ test.describe("CAMPING V2 / 808 access", () => {
     await expect(page.locator(".camping-studio__transition")).toBeVisible({ timeout: 5_000 });
     await expectCampingModelReady(page, canvas, 60_000);
     await expect(page.locator(".camping-studio__explore-state")).toContainText("EXPLORATION ACTIVE", { timeout: 30_000 });
+
+    const entryCamera = await canvas.evaluate((element) => ({
+      poseSource: element.getAttribute("data-camping-camera-pose-source"),
+      position: element.getAttribute("data-camping-camera-position"),
+      lookTarget: element.getAttribute("data-camping-camera-look-target"),
+      pitch: element.getAttribute("data-camping-camera-pitch-deg"),
+    }));
+    expect(entryCamera.poseSource).toBe("blender-v3-architectural-envelope");
+    expect(entryCamera.position).not.toBeNull();
+    expect(entryCamera.lookTarget).not.toBeNull();
+    const eye = JSON.parse(entryCamera.position ?? "null") as [number, number, number] | null;
+    const target = JSON.parse(entryCamera.lookTarget ?? "null") as [number, number, number] | null;
+    expect(eye).not.toBeNull();
+    expect(target).not.toBeNull();
+    if (!eye || !target) throw new Error("Entry camera did not publish its final pose diagnostics.");
+    expect(eye[1]).toBeGreaterThan(1.3);
+    expect(eye[1]).toBeLessThan(2.1);
+    expect(eye[2]).toBeGreaterThan(target[2]);
+    expect(Math.abs(eye[1] - target[1])).toBeLessThan(0.25);
+    expect(Number(entryCamera.pitch)).toBeGreaterThan(-8);
+    expect(Number(entryCamera.pitch)).toBeLessThanOrEqual(0);
     await expect(canvas).toHaveAttribute("data-camping-scene-status", "ready");
     await expect(canvas).toHaveAttribute("data-camping-scene-missing-nodes", "");
     await expect(canvas).toHaveAttribute("data-camping-artist-slots", "17");
