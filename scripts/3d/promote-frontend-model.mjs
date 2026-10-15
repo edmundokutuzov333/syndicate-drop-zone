@@ -53,8 +53,10 @@ if (!existsSync(source)) throw new Error("Optimized high-tier source is missing:
 const bytes = readFileSync(source);
 const gltf = parseGlb(bytes);
 const extensions = new Set(gltf.extensionsUsed || []);
-if (!extensions.has("KHR_texture_basisu")) throw new Error("Refusing promotion: frontend GLB has no KTX2/Basis textures");
-if (!extensions.has("EXT_meshopt_compression")) throw new Error("Refusing promotion: frontend GLB has no Meshopt compression");
+if (targetPhase >= 6) {
+  if (!extensions.has("KHR_texture_basisu")) throw new Error("Refusing promotion: frontend GLB has no KTX2/Basis textures from Phase 06");
+  if (!extensions.has("EXT_meshopt_compression")) throw new Error("Refusing promotion: frontend GLB has no Meshopt compression from Phase 06");
+}
 
 const nodes = gltf.nodes || [];
 const interactions = new Set(nodes.map((node) => node.extras && node.extras.interactionId).filter((value) => typeof value === "string" && value));
@@ -82,51 +84,54 @@ if (missingSlots.length || slotContracts.has("studio.artist-slot-018")) {
   }));
 }
 
-function findPhaseNode(elementId, namePattern) {
-  return nodes.find((node) => node.extras?.elementId === elementId && node.extras?.surfacePhase === 7) ||
-    nodes.find((node) => namePattern.test(String(node.name || "")) && node.extras?.surfacePhase === 7);
-}
-const floorNode = findPhaseNode("floor.wood", /floor_wood_hero/i);
-const vinylNode = findPhaseNode("floor.vinyl_sweep", /vinyl_sweep_hero/i);
-const bambooNode = findPhaseNode("arch.vault_ceiling", /vault_ceiling/i);
-const paperWallNode = nodes.find((node) => /paper_cyclorama_wall/i.test(String(node.name || "")) && node.extras?.surfacePhase === 7);
-const paperCurveNode = nodes.find((node) => /paper_cyclorama_curve/i.test(String(node.name || "")) && node.extras?.surfacePhase === 7);
-if (!floorNode || !Number.isInteger(floorNode.extras?.phase7BoardCount) || floorNode.extras.phase7BoardCount < 100) {
-  throw new Error("Refusing promotion: Phase 07 floor plank contract missing or has fewer than 100 physical boards");
-}
-const floorPrimitives = (gltf.meshes?.[floorNode.mesh]?.primitives) || [];
-if (!floorPrimitives.length || !floorPrimitives.every((primitive) => primitive.attributes?.COLOR_0 !== undefined)) {
-  throw new Error("Refusing promotion: floor mesh must export COLOR_0 per-plank tonal variation on every primitive");
-}
-if (!floorPrimitives.every((primitive) => primitive.attributes?.TEXCOORD_0 !== undefined && primitive.attributes?.TEXCOORD_1 !== undefined)) {
-  throw new Error("Refusing promotion: floor mesh must preserve both UVMap and UV_Lightmap");
-}
-if (!vinylNode || Math.abs(Number(vinylNode.extras?.phase7VinylRadiusM) - 2.3) > 0.003 ||
-    Math.abs(Number(vinylNode.extras?.phase7VinylThicknessM) - 0.0012) > 0.0001 ||
-    Math.abs(Number(vinylNode.extras?.phase7VinylEdgeLiftM) - 0.004) > 0.0001) {
-  throw new Error("Refusing promotion: Phase 07 circular vinyl dimensions/rim contract missing");
-}
-if (!bambooNode || Math.abs(Number(bambooNode.extras?.phase7BambooTileMeters) - 1.2) > 0.0001) {
-  throw new Error("Refusing promotion: Phase 07 bamboo ceiling tiling metadata missing");
-}
-if (!paperWallNode || !paperCurveNode ||
-    Math.abs(Number(paperCurveNode.extras?.phase7CycloramaRadiusM) - 0.35) > 0.0001 ||
-    paperCurveNode.extras?.phase7PaperContinuousToFloor !== true) {
-  throw new Error("Refusing promotion: Phase 07 black-paper cyclorama contract missing");
-}
-const phase7Surfaces = {
-  floorBoards: floorNode.extras.phase7BoardCount,
-  floorMeshIndex: floorNode.mesh,
-  floorHasColor0: floorPrimitives.every((primitive) => primitive.attributes?.COLOR_0 !== undefined),
-  floorHasUv0Uv1: floorPrimitives.every((primitive) => primitive.attributes?.TEXCOORD_0 !== undefined && primitive.attributes?.TEXCOORD_1 !== undefined),
-  vinylRadiusM: Number(vinylNode.extras.phase7VinylRadiusM),
-  vinylThicknessM: Number(vinylNode.extras.phase7VinylThicknessM),
-  vinylEdgeLiftM: Number(vinylNode.extras.phase7VinylEdgeLiftM),
-  bambooTileMeters: Number(bambooNode.extras.phase7BambooTileMeters),
-  cycloramaRadiusM: Number(paperCurveNode.extras.phase7CycloramaRadiusM),
-  cycloramaContinuousToFloor: paperCurveNode.extras.phase7PaperContinuousToFloor,
-};
+let phase7Surfaces = null;
+if (targetPhase >= 7) {
+  function findPhaseNode(elementId, namePattern) {
+    return nodes.find((node) => node.extras?.elementId === elementId && node.extras?.surfacePhase === 7) ||
+      nodes.find((node) => namePattern.test(String(node.name || "")) && node.extras?.surfacePhase === 7);
+  }
+  const floorNode = findPhaseNode("floor.wood", /floor_wood_hero/i);
+  const vinylNode = findPhaseNode("floor.vinyl_sweep", /vinyl_sweep_hero/i);
+  const bambooNode = findPhaseNode("arch.vault_ceiling", /vault_ceiling/i);
+  const paperWallNode = nodes.find((node) => /paper_cyclorama_wall/i.test(String(node.name || "")) && node.extras?.surfacePhase === 7);
+  const paperCurveNode = nodes.find((node) => /paper_cyclorama_curve/i.test(String(node.name || "")) && node.extras?.surfacePhase === 7);
+  if (!floorNode || !Number.isInteger(floorNode.extras?.phase7BoardCount) || floorNode.extras.phase7BoardCount < 100) {
+    throw new Error("Refusing promotion: Phase 07 floor plank contract missing or has fewer than 100 physical boards");
+  }
+  const floorPrimitives = (gltf.meshes?.[floorNode.mesh]?.primitives) || [];
+  if (!floorPrimitives.length || !floorPrimitives.every((primitive) => primitive.attributes?.COLOR_0 !== undefined)) {
+    throw new Error("Refusing promotion: floor mesh must export COLOR_0 per-plank tonal variation on every primitive");
+  }
+  if (!floorPrimitives.every((primitive) => primitive.attributes?.TEXCOORD_0 !== undefined && primitive.attributes?.TEXCOORD_1 !== undefined)) {
+    throw new Error("Refusing promotion: floor mesh must preserve both UVMap and UV_Lightmap");
+  }
+  if (!vinylNode || Math.abs(Number(vinylNode.extras?.phase7VinylRadiusM) - 2.3) > 0.003 ||
+      Math.abs(Number(vinylNode.extras?.phase7VinylThicknessM) - 0.0012) > 0.0001 ||
+      Math.abs(Number(vinylNode.extras?.phase7VinylEdgeLiftM) - 0.004) > 0.0001) {
+    throw new Error("Refusing promotion: Phase 07 circular vinyl dimensions/rim contract missing");
+  }
+  if (!bambooNode || Math.abs(Number(bambooNode.extras?.phase7BambooTileMeters) - 1.2) > 0.0001) {
+    throw new Error("Refusing promotion: Phase 07 bamboo ceiling tiling metadata missing");
+  }
+  if (!paperWallNode || !paperCurveNode ||
+      Math.abs(Number(paperCurveNode.extras?.phase7CycloramaRadiusM) - 0.35) > 0.0001 ||
+      paperCurveNode.extras?.phase7PaperContinuousToFloor !== true) {
+    throw new Error("Refusing promotion: Phase 07 black-paper cyclorama contract missing");
+  }
+  phase7Surfaces = {
+    floorBoards: floorNode.extras.phase7BoardCount,
+    floorMeshIndex: floorNode.mesh,
+    floorHasColor0: floorPrimitives.every((primitive) => primitive.attributes?.COLOR_0 !== undefined),
+    floorHasUv0Uv1: floorPrimitives.every((primitive) => primitive.attributes?.TEXCOORD_0 !== undefined && primitive.attributes?.TEXCOORD_1 !== undefined),
+    vinylRadiusM: Number(vinylNode.extras.phase7VinylRadiusM),
+    vinylThicknessM: Number(vinylNode.extras.phase7VinylThicknessM),
+    vinylEdgeLiftM: Number(vinylNode.extras.phase7VinylEdgeLiftM),
+    bambooTileMeters: Number(bambooNode.extras.phase7BambooTileMeters),
+    cycloramaRadiusM: Number(paperCurveNode.extras.phase7CycloramaRadiusM),
+    cycloramaContinuousToFloor: paperCurveNode.extras.phase7PaperContinuousToFloor,
+  };
 
+}
 
 let phase8Production = null;
 if (targetPhase >= 8) {
@@ -233,11 +238,11 @@ const updated = {
   version: 3,
   phase: targetPhase,
   productionPhase: targetPhase >= 8 ? targetPhase : null,
-  surfacePhase: 7,
+  surfacePhase: targetPhase >= 7 ? 7 : null,
   status: "blender-v3-published",
   model: "/models/camping/xoyens-studio.glb",
   sourceCommit: process.env.GITHUB_SHA || gitCommit(),
-  format: "glTF 2.0 binary · KTX2/Basis + Meshopt",
+  format: targetPhase >= 6 ? "glTF 2.0 binary · KTX2/Basis + Meshopt" : "glTF 2.0 binary",
   units: "metres",
   boundsMeters: {
     width: Number(room.clearWidthM),
