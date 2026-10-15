@@ -14,23 +14,58 @@ export type CampingCameraPose = {
   look: [number, number, number];
 };
 export type CampingCameraPoseMap = Record<CampingCameraPoseName, CampingCameraPose>;
-type FloorBounds = { minX: number; maxX: number; minZ: number; maxZ: number; width: number; depth: number };
+export type CampingFloorBounds = {
+  minX: number; maxX: number; minZ: number; maxZ: number;
+  width: number; depth: number;
+  source: "floor-node" | "floor-element" | "scene-root-fallback";
+};
+type FloorBounds = CampingFloorBounds;
 
 function clamp(value: number, minimum: number, maximum: number): number {
   if (maximum < minimum) return (minimum + maximum) / 2;
   return Math.max(minimum, Math.min(maximum, value));
 }
 
-function getFloorBounds(root: THREE.Object3D): FloorBounds | null {
-  root.updateMatrixWorld(true);
-  const floor = root.getObjectByName("studio.floor") ?? root.getObjectByName("studio.parquet");
-  if (!floor) return null;
-  const bounds = new THREE.Box3().setFromObject(floor);
+function toFloorBounds(bounds: THREE.Box3, source: CampingFloorBounds["source"]): FloorBounds | null {
   if (bounds.isEmpty()) return null;
   const width = bounds.max.x - bounds.min.x;
   const depth = bounds.max.z - bounds.min.z;
   if (!Number.isFinite(width) || !Number.isFinite(depth) || width < 1.5 || depth < 1.5) return null;
-  return { minX: bounds.min.x, maxX: bounds.max.x, minZ: bounds.min.z, maxZ: bounds.max.z, width, depth };
+  return {
+    minX: bounds.min.x, maxX: bounds.max.x,
+    minZ: bounds.min.z, maxZ: bounds.max.z,
+    width, depth, source,
+  };
+}
+
+function getFloorBounds(root: THREE.Object3D): FloorBounds | null {
+  root.updateMatrixWorld(true);
+  const preferred = root.getObjectByName("studio.floor") ?? root.getObjectByName("studio.parquet");
+  if (preferred) {
+    const bounds = toFloorBounds(new THREE.Box3().setFromObject(preferred), "floor-node");
+    if (bounds) return bounds;
+  }
+
+  // Some GLTF exports assign the runtime alias to a thin proxy. Prefer an
+  // explicitly tagged merged floor mesh before the whole-scene fallback.
+  const candidates: THREE.Object3D[] = [];
+  root.traverse((object) => {
+    const userData = (object as THREE.Object3D & { userData?: Record<string, unknown> }).userData;
+    if (userData?.elementId === "floor.wood" || /SDT_shell_floor_wood_hero/i.test(object.name)) {
+      candidates.push(object);
+    }
+  });
+  const valid = candidates
+    .map((object) => toFloorBounds(new THREE.Box3().setFromObject(object), "floor-element"))
+    .filter((item): item is FloorBounds => item !== null)
+    .sort((a, b) => b.width * b.depth - a.width * a.depth);
+  if (valid.length) return valid[0]!;
+
+  return toFloorBounds(new THREE.Box3().setFromObject(root), "scene-root-fallback");
+}
+
+export function deriveCampingFloorBounds(root: THREE.Object3D): CampingFloorBounds | null {
+  return getFloorBounds(root);
 }
 
 function getObjectBounds(root: THREE.Object3D, names: readonly string[]): THREE.Box3 | null {
@@ -49,7 +84,7 @@ function serializePose(position: THREE.Vector3, look: THREE.Vector3): CampingCam
 
 /** Resolve V3 views against its metric floor, not stale coordinates from the wider legacy studio. */
 export function deriveCampingCameraPoses(root: THREE.Object3D, cameraHeight = 1.62): CampingCameraPoseMap | null {
-  const floor = getFloorBounds(root);
+  const floor = deriveCampingFloorBounds(root);
   if (!floor) return null;
   const allBounds = new THREE.Box3().setFromObject(root);
   if (allBounds.isEmpty()) return null;
@@ -118,7 +153,7 @@ export function deriveCampingCameraPoses(root: THREE.Object3D, cameraHeight = 1.
 
 /** Replace legacy collision rectangles with furniture bounds from the V3 model. */
 export function createCampingV3CollisionConfig(root: THREE.Object3D): StudioCollisionConfig | null {
-  const floor = getFloorBounds(root);
+  const floor = deriveCampingFloorBounds(root);
   if (!floor) return null;
   const marginX = Math.min(0.38, floor.width * 0.07);
   const marginZ = Math.min(0.36, floor.depth * 0.08);

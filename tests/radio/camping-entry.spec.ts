@@ -366,9 +366,15 @@ test.describe("CAMPING V2 / 808 access", () => {
       const cameraBounds = await canvas.evaluate((element) => ({
         position: element.getAttribute("data-camping-camera-position"),
         bounds: element.getAttribute("data-camping-model-floor-bounds"),
+        source: element.getAttribute("data-camping-model-source"),
+        poseSource: element.getAttribute("data-camping-camera-pose-source"),
+        floorBoundsSource: element.getAttribute("data-camping-model-floor-bounds-source"),
+        floorSize: element.getAttribute("data-camping-model-floor-size"),
       }));
       expect(cameraBounds.position, "camera position diagnostics for " + pose).not.toBeNull();
       expect(cameraBounds.bounds, "model floor bounds diagnostics for " + pose).not.toBeNull();
+      expect(cameraBounds.source, "production GLB should be classified as Blender V3").toBe("blender-v3");
+      expect(cameraBounds.poseSource, "camera should use a model-derived pose for " + pose).toBe("blender-v3-scene");
       const cameraPosition = JSON.parse(cameraBounds.position!) as [number, number, number];
       const floorBounds = JSON.parse(cameraBounds.bounds!) as [number, number, number, number];
       expect(cameraPosition[0], pose + " camera x inside floor").toBeGreaterThan(floorBounds[0]);

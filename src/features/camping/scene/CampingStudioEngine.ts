@@ -47,6 +47,7 @@ import { normalizeCampingModel } from "./camping-model-compatibility";
 import {
   createCampingV3CollisionConfig,
   deriveCampingCameraPoses,
+  deriveCampingFloorBounds,
   type CampingCameraPose,
   type CampingCameraPoseName,
 } from "./camping-camera-poses";
@@ -1322,7 +1323,11 @@ export class CampingStudioEngine {
   private resolveCameraPose(id: CampingCameraPoseName): CampingCameraPose | null {
     if (this.modelSource === "blender-v3" && this.studioRoot) {
       const resolved = deriveCampingCameraPoses(this.studioRoot, CAM_HEIGHT)?.[id];
-      if (resolved) return resolved;
+      if (resolved) {
+        if (this.canvas) this.canvas.dataset.campingCameraPoseSource = "blender-v3-scene";
+        return resolved;
+      }
+      if (this.canvas) this.canvas.dataset.campingCameraPoseSource = "blender-v3-fallback";
     }
     const legacyPose = (CAMPING_DEBUG_POSES as Partial<Record<CampingCameraPoseName, CampingCameraPose>>)[id];
     if (!legacyPose) return null;
@@ -2072,6 +2077,7 @@ export class CampingStudioEngine {
         root.visible = this.phase !== "LOCKED" && this.phase !== "CODE_ENTRY" && this.phase !== "ACCESS_GRANTED";
         const modelSource = normalizeCampingModel(root);
         this.modelSource = modelSource;
+        if (this.canvas) this.canvas.dataset.campingModelSource = modelSource;
         this.collision = modelSource === "blender-v3"
           ? createCampingV3CollisionConfig(root) ?? createStudioCollisionConfig()
           : createStudioCollisionConfig();
@@ -2200,14 +2206,13 @@ export class CampingStudioEngine {
         });
         this.studioRoot = root;
         if (this.canvas) {
-          const floorNode = root.getObjectByName("studio.floor") ?? root.getObjectByName("studio.parquet");
-          if (floorNode) {
-            const floorBounds = new THREE.Box3().setFromObject(floorNode);
-            if (!floorBounds.isEmpty()) {
-              this.canvas.dataset.campingModelFloorBounds = JSON.stringify([
-                floorBounds.min.x, floorBounds.min.z, floorBounds.max.x, floorBounds.max.z,
-              ]);
-            }
+          const floorBounds = deriveCampingFloorBounds(root);
+          if (floorBounds) {
+            this.canvas.dataset.campingModelFloorBounds = JSON.stringify([
+              floorBounds.minX, floorBounds.minZ, floorBounds.maxX, floorBounds.maxZ,
+            ]);
+            this.canvas.dataset.campingModelFloorBoundsSource = floorBounds.source;
+            this.canvas.dataset.campingModelFloorSize = JSON.stringify([floorBounds.width, floorBounds.depth]);
           }
         }
         this.studioRoot.visible = this.phase !== "LOCKED" && this.phase !== "CODE_ENTRY" && this.phase !== "ACCESS_GRANTED";
