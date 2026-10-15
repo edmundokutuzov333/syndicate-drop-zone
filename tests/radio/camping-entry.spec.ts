@@ -75,9 +75,14 @@ async function expectCampingModelReady(page: Page, canvas: Locator, timeout = 60
       cameraPoseError: element.getAttribute("data-camping-camera-pose-error"),
       cameraPoseFallback: element.getAttribute("data-camping-camera-pose-fallback"),
       cameraEyeY: element.getAttribute("data-camping-camera-eye-y"),
-      floorBoundsSource: element.getAttribute("data-camping-model-floor-bounds-source"),
-      floorSize: element.getAttribute("data-camping-model-floor-size"),
-      floorY: element.getAttribute("data-camping-model-floor-y"),
+      physicalFloorBoundsSource: element.getAttribute("data-camping-model-floor-bounds-source"),
+      physicalFloorSize: element.getAttribute("data-camping-model-floor-size"),
+      physicalFloorY: element.getAttribute("data-camping-model-floor-y"),
+      cameraPoseBounds: element.getAttribute("data-camping-camera-pose-bounds"),
+      cameraPoseBoundsSource: element.getAttribute("data-camping-camera-pose-bounds-source"),
+      cameraPoseBoundsSize: element.getAttribute("data-camping-camera-pose-bounds-size"),
+      cameraPoseBoundsY: element.getAttribute("data-camping-camera-pose-bounds-y"),
+      cameraPoseFloorHeight: element.getAttribute("data-camping-camera-pose-floor-height"),
       modelRootBounds: element.getAttribute("data-camping-model-root-bounds"),
       floorGeometryDiagnostics: element.getAttribute("data-camping-floor-geometry-diagnostics"),
     }));
@@ -396,23 +401,34 @@ test.describe("CAMPING V2 / 808 access", () => {
       const cameraBounds = await canvas.evaluate((element) => ({
         position: element.getAttribute("data-camping-camera-position"),
         look: element.getAttribute("data-camping-camera-look-target"),
-        bounds: element.getAttribute("data-camping-model-floor-bounds"),
+        bounds: element.getAttribute("data-camping-camera-pose-bounds"),
         source: element.getAttribute("data-camping-model-source"),
         poseSource: element.getAttribute("data-camping-camera-pose-source"),
-        floorBoundsSource: element.getAttribute("data-camping-model-floor-bounds-source"),
-        floorSize: element.getAttribute("data-camping-model-floor-size"),
-        floorY: element.getAttribute("data-camping-model-floor-y"),
+        physicalFloorBoundsSource: element.getAttribute("data-camping-model-floor-bounds-source"),
+        poseBoundsSource: element.getAttribute("data-camping-camera-pose-bounds-source"),
+        floorSize: element.getAttribute("data-camping-camera-pose-bounds-size"),
+        floorY: element.getAttribute("data-camping-camera-pose-bounds-y"),
         eyeY: element.getAttribute("data-camping-camera-eye-y"),
-        floorHeight: element.getAttribute("data-camping-camera-floor-height"),
+        floorHeight: element.getAttribute("data-camping-camera-pose-floor-height"),
         geometryStatus: element.getAttribute("data-camping-camera-geometry-status"),
         pitch: element.getAttribute("data-camping-camera-pitch-deg"),
       }));
       expect(cameraBounds.position, "camera position diagnostics for " + pose).not.toBeNull();
       expect(cameraBounds.bounds, "model floor bounds diagnostics for " + pose).not.toBeNull();
       expect(cameraBounds.source, "production GLB should be classified as Blender V3").toBe("blender-v3");
-      expect(cameraBounds.geometryStatus, "a real flat floor must be identified before camera framing").not.toBe("invalid-floor-bounds");
-      expect(Number(cameraBounds.floorHeight), "floor bounds must be thin, not the whole room/roof").toBeLessThanOrEqual(0.35);
-      expect(cameraBounds.poseSource, "camera should use a model-derived pose for " + pose).toBe("blender-v3-scene");
+      expect(cameraBounds.geometryStatus, "entry and guided views must not be blocked by missing floor tags").not.toBe("invalid-floor-bounds");
+      expect(Number(cameraBounds.floorHeight), "camera pose ground plane must be thin, not the whole room/roof").toBeLessThanOrEqual(0.35);
+      expect(["floor-node", "floor-element", "floor-inferred", "room-envelope"]).toContain(cameraBounds.poseBoundsSource);
+      expect(["blender-v3-scene", "blender-v3-room-envelope"]).toContain(cameraBounds.poseSource);
+      if (cameraBounds.poseBoundsSource === "room-envelope") {
+        expect(cameraBounds.physicalFloorBoundsSource, "room-envelope pose recovery must not claim a physical floor mesh").toBeNull();
+        expect(cameraBounds.geometryStatus).toBe("room-envelope-pose-fallback");
+        expect(cameraBounds.poseSource).toBe("blender-v3-room-envelope");
+      } else {
+        expect(cameraBounds.physicalFloorBoundsSource).not.toBeNull();
+        expect(cameraBounds.geometryStatus).toBe("floor-mesh-ready");
+        expect(cameraBounds.poseSource).toBe("blender-v3-scene");
+      }
       expect(cameraBounds.pitch, "camera pitch diagnostics for " + pose).not.toBeNull();
       if (pose !== "tecto" && pose !== "chao") {
         const pitchDegrees = Number(cameraBounds.pitch);
