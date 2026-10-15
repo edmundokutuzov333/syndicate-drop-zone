@@ -60,13 +60,13 @@ def _image_material(name, filepath, base=(1,1,1,1)):
     m["officialAssetPath"] = filepath
     return m
 
-def _plane(element, ctx, name, center, width, height, material_name, uv=True, tag_element=True):
-    # Wall plane normal points into the room (+X). Horizontal image axis follows room Z.
+def _plane(element, ctx, name, center, width, height, material_name, uv=True, tag_element=True, normal_sign=1):
+    # Horizontal image axis follows room Z. normal_sign=+1 faces into the room; -1 faces the backdrop wall.
     x, y, z = center
     verts = [(x, y-height/2, z-width/2), (x, y-height/2, z+width/2),
              (x, y+height/2, z+width/2), (x, y+height/2, z-width/2)]
     mesh = bpy.data.meshes.new(name + "_mesh")
-    mesh.from_pydata(verts, [], [(0,1,2,3)])
+    mesh.from_pydata(verts, [], [(0,3,2,1)] if normal_sign > 0 else [(0,1,2,3)])
     mesh.materials.append(material_name if isinstance(material_name, bpy.types.Material) else material(material_name))
     mesh.update()
     obj = bpy.data.objects.new(name, mesh)
@@ -74,8 +74,9 @@ def _plane(element, ctx, name, center, width, height, material_name, uv=True, ta
     finish_mesh(obj, [], element=element if tag_element else None, collider="none", zone="photo", lm_group="photo", bevel=0)
     if uv:
         layer = mesh.uv_layers.get("UVMap") or mesh.uv_layers.new(name="UVMap")
-        for loop, uvco in zip(layer.data, ((0,0),(1,0),(1,1),(0,1))):
-            loop.uv = uvco
+        uv_by_vertex = {0: (0,0), 1: (1,0), 2: (1,1), 3: (0,1)}
+        for loop_index, loop in enumerate(layer.data):
+            loop.uv = uv_by_vertex[mesh.loops[loop_index].vertex_index]
     return obj
 
 def _tube_between(name, a, b, radius, mat, col):
@@ -174,7 +175,7 @@ def _light_stand(element,ctx,center,panel_dims,kind):
     # Diffuser/emitter surface facing into the set, plus a deep rim and four barn doors.
     face_x=x+panel_dims[0]*0.55
     face_mat=material("led_panel_emissive",colour=(0.82,0.88,1.0,1),roughness=0.45,metallic=0.0,emission_strength=2.0)
-    _plane(element,ctx,_name(element,"emitter"),(face_x,y+0.52,z),panel_dims[2]*0.82,panel_dims[1]*0.82,face_mat,uv=False)
+    _plane(element,ctx,_name(element,"emitter"),(face_x,y+0.52,z),panel_dims[2]*0.82,panel_dims[1]*0.82,face_mat,uv=False,normal_sign=-1)
     if kind=="softbox":
         # Octagonal rim approximated by eight real steel bars, not a flat rectangle.
         points=[]
