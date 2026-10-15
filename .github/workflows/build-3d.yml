@@ -19,6 +19,7 @@ on:
       - "public/models/camping/xoyens-studio.model.json"
       - "scripts/install-3d-toolchain.sh"
       - "scripts/verify-glb-contract.mjs"
+      - "scripts/verify-deployed-camping-model.mjs"
       - "docs/camping-v3/scene-bible.json"
       - "package.json"
       - "docker/blender-ci/Dockerfile"
@@ -379,12 +380,12 @@ jobs:
           echo "PUBLISHED_BLEND_BYTES=$BLEND_SIZE"
           echo "REMOTE_MAIN=$REMOTE_MAIN"
 
-      # Vercel deployment verification is opt-in while execution is scoped to GitHub/Lovable.
-      # The GitHub build, GLB contracts, hashes, LFS checks and forward-only main publication remain mandatory.
-      - name: Verify Phase 09 model served by the production alias
-        if: ${{ vars.CAMPING_VERIFY_PRODUCTION == 'true' }}
+      # Publication is not certified until Lovable's public alias serves the exact
+      # optimized Phase 09 GLB whose digest is recorded in the public metadata.
+      # Cache-busting and SHA-256 checks reject stale CDN objects at the canonical URL.
+      - name: Verify Phase 09 model served by Lovable production
         env:
           CAMPING_EXPECTED_MODEL_PHASE: "9"
-          CAMPING_PRODUCTION_URL: "https://syndicate-drop-zone.vercel.app"
+          CAMPING_PRODUCTION_URL: "https://syndicate-do-trap.lovable.app"
           CAMPING_PRODUCTION_VERIFY_TIMEOUT_MS: "300000"
         run: node scripts/verify-deployed-camping-model.mjs
