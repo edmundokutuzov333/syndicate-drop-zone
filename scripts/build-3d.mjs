@@ -61,7 +61,8 @@ try {
     { name: "mid", maxTex: 1024, colorTex: 512, dataTex: 256, ratio: 0.15, error: 0.01 },
     // Measured 2026-10-15: ratio 0.10 / error 0.010 yielded 93,040 triangles and 131 primitives vs budgets of 70,000 / 130.
     // Increase low-tier simplification tolerance without relaxing either budget.
-    { name: "low", maxTex: 512, colorTex: 256, dataTex: 128, ratio: 0.08, error: 0.025 }
+    // Low-tier measurement was 77,274 triangles at ratio 0.08; increase LOD reduction to meet the fixed 70k triangle budget.
+    { name: "low", maxTex: 512, colorTex: 256, dataTex: 128, ratio: 0.035, error: 0.04 }
   ];
 
   function descendantNodes(node) {
@@ -237,7 +238,7 @@ try {
       "prod.desk_l", "prod.monitor_daw", "prod.monitors_pair",
       "prod.imac", "photo.backdrop_seal", "photo.garments", "photo.rack",
     ]);
-    const protectedName = /camping-contract|studio\.|artist_slot_\d{3}|artists_wall|door_main_(stile_|rail_|handle_plate|lever|lock_cylinder|hinge_)|door_left_(stile_|rail_|handle_plate|lever|lock_cylinder|hinge_)|vault_ceiling|vault_rib_|monitor_daw_screen|photo_backdrop|garment/i;
+    const protectedName = /camping-contract|studio\.|artist_slot_\d{3}|artists_wall|door_main_(stile_|rail_|handle_plate|lever|lock_cylinder|hinge_)|door_left_(stile_|rail_|handle_plate|lever|lock_cylinder|hinge_)|vault_ceiling|vault_rib_|monitor_daw_screen|photo_backdrop_seal|SDT_photo_garments_garment_[1-5]$/i;
     const nodes = document.getRoot().listNodes();
     const keepNode = (node) => {
       const extras = node.getExtras() ?? {};
