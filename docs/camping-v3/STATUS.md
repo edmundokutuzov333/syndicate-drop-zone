@@ -19,7 +19,7 @@ Issues de execução: fases 01–17 em [#33–#49](https://github.com/edmundokut
 | 07 | Superfícies-herói | Em validação | malha de tábuas reais, variação COLOR_0, vinil circular, cyclorama contínuo, UVs físicos do bambu e gate Blender/GLB/deploy em execução |
 | 08 | Zona de produção | Em validação | geometria no modelo V3 de fase 08; capturas A/B, gate visual e CI final ainda por certificar |
 | 09 | Zona fotográfica | Em validação | build Blender + captura/checksums + GLB optimizado promovido para a URL canónica + gate Vite fase 09+ + confirmação HTTP do modelo servido em produção |
-| 10 | Zonas esquerda e direita | Pendente | mural, sofá, bandeira, estante e quadro |
+| 10 | Zonas esquerda e direita | Implementação iniciada, não certificada | validator dedicado adicionado; falta execução Blender, capturas e CI de fase |
 | 11 | Props orgânicos, IA e trilho de splats | Pendente | guitarra, plantas e gate de splats |
 | 12 | UV2 e orçamento de lightmaps | Pendente | UV2 validado e atlas por zona |
 | 13 | Luz em Blender e bake | Pendente | bake reproduzível, denoise e mapas sRGB |
@@ -192,3 +192,8 @@ A build [#38778515982](https://github.com/edmundokutuzov333/syndicate-drop-zone/
 A auditoria dos logs encontrou um falso positivo no verificador de produção: este aceitou a versão pública antiga porque comparava o GLB servido apenas com o manifesto servido pelo mesmo domínio. O endpoint devolveu SHA-256 `5a6180c1a355a8e8d63342cd1edbe2d64354859f1e88927e017e3ec7f9cec69d` e 13 524 620 bytes, diferentes do artefacto actual da main, apesar de o log ter escrito `CAMPING PRODUCTION MODEL CERTIFIED`.
 
 A verificação foi reforçada para validar primeiro o GLB e o manifesto do checkout, e depois exigir que a metadata pública coincida com esse SHA-256, tamanho, fase e sourceCommit antes de descarregar/validar o modelo servido. Foi acrescentado um teste que reproduz o falso positivo anterior. A Fase 09 permanece aberta até o endpoint público servir exactamente o artefacto actual e os testes Playwright da entrada/porta passarem.
+
+
+## Execução da Fase 10 · 2026-10-16
+
+A Fase 10 foi aberta sem esperar pela certificação da Fase 09, conforme a ordem de execução. O construtor genérico `scripts/blender/build_sides.py` já processa os elementos `left.*`, `right.*` e `artists.wall` declarados na Scene Bible. Foi acrescentado um validador dedicado para verificar a presença de mural, rolo branco, bandeira Xoyens, sofá, estante e quadro no ficheiro Blender produzido. Este commit não declara a geometria certificada: a validação só passa a ser evidência depois de o script correr num Blender real e o relatório ser inspeccionado. A Fase 09 continua em validação devido à divergência real dos metadados/bytes/hash servidos pelo Lovable e às falhas dos testes públicos.
