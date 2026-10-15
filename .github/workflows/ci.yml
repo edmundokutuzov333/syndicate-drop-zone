@@ -135,7 +135,9 @@ jobs:
       - name: Radio browser smoke tests
         run: npm run test:e2e
 
+      # Production alias verification is opt-in while the current delivery scope is GitHub/Lovable.
       - name: Verify the actual production CAMPING model served by Vercel
+        if: ${{ vars.CAMPING_VERIFY_PRODUCTION == 'true' }}
         env:
           CAMPING_PRODUCTION_URL: https://syndicate-drop-zone.vercel.app
           CAMPING_PRODUCTION_VERIFY_TIMEOUT_MS: "300000"
