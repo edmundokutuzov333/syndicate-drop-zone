@@ -2030,34 +2030,68 @@ export class CampingStudioEngine {
   }
 
   private async loadVerifiedStudio(loader: GLTFLoader): Promise<GLTF> {
+    const stage = (value: string) => {
+      if (this.canvas) {
+        this.canvas.dataset.campingModelLoadStage = value;
+        this.canvas.dataset.campingModelLoadStageAt = String(Math.round(performance.now()));
+      }
+    };
     const headers = {
       "Cache-Control": "no-cache, no-store, max-age=0",
       Pragma: "no-cache",
     };
+    stage("metadata-request");
     const metadataUrl = new URL(STUDIO_METADATA_URL, window.location.origin);
     metadataUrl.searchParams.set("_sdt_runtime", String(Date.now()));
-    const metadataResponse = await fetch(metadataUrl.toString(), { cache: "no-store", headers });
+    const metadataController = new AbortController();
+    const metadataTimer = window.setTimeout(() => metadataController.abort(), 15_000);
+    let metadataResponse: Response;
+    try {
+      metadataResponse = await fetch(metadataUrl.toString(), { cache: "no-store", headers, signal: metadataController.signal });
+    } catch (error) {
+      if (metadataController.signal.aborted) throw new Error("CAMPING metadata request timed out after 15 seconds.");
+      throw error;
+    } finally {
+      window.clearTimeout(metadataTimer);
+    }
     if (!metadataResponse.ok) {
       throw new Error("CAMPING model metadata returned HTTP " + metadataResponse.status + ".");
     }
     const metadataValue: unknown = await metadataResponse.json();
     assertCampingModelMetadata(metadataValue);
+    stage("metadata-validated");
 
     // Tie the CDN cache key to the digest that will be checked below. A stale
     // object at the canonical route cannot pass validation just because its URL is unchanged.
     const modelUrl = new URL(STUDIO_URL, window.location.origin);
     modelUrl.searchParams.set("_sdt_sha256", metadataValue.geometry.sha256);
-    const modelResponse = await fetch(modelUrl.toString(), { cache: "no-store", headers });
-    if (!modelResponse.ok) {
-      throw new Error("CAMPING canonical GLB returned HTTP " + modelResponse.status + ".");
+    stage("glb-request");
+    const modelController = new AbortController();
+    const modelTimer = window.setTimeout(() => modelController.abort(), 45_000);
+    let modelResponse: Response;
+    let bytes: ArrayBuffer;
+    try {
+      modelResponse = await fetch(modelUrl.toString(), { cache: "no-store", headers, signal: modelController.signal });
+      if (!modelResponse.ok) {
+        throw new Error("CAMPING canonical GLB returned HTTP " + modelResponse.status + ".");
+      }
+      stage("glb-body");
+      bytes = await modelResponse.arrayBuffer();
+    } catch (error) {
+      if (modelController.signal.aborted) throw new Error("CAMPING canonical GLB download timed out after 45 seconds.");
+      throw error;
+    } finally {
+      window.clearTimeout(modelTimer);
     }
-    const bytes = await modelResponse.arrayBuffer();
+    stage("glb-downloaded");
     if (bytes.byteLength === 0 || bytes.byteLength > 16 * 1024 * 1024) {
       throw new Error("CAMPING canonical GLB is empty or exceeds the 16 MiB transfer budget.");
     }
+    stage("hashing");
     const digestBuffer = await crypto.subtle.digest("SHA-256", bytes);
     const digest = Array.from(new Uint8Array(digestBuffer), (byte) => byte.toString(16).padStart(2, "0")).join("");
     assertCampingModelBytesMatchMetadata(metadataValue, bytes.byteLength, digest);
+    stage("hash-verified");
 
     if (this.canvas) {
       this.canvas.dataset.campingModelPhase = String(metadataValue.phase);
@@ -2065,8 +2099,20 @@ export class CampingStudioEngine {
       this.canvas.dataset.campingModelCacheVerified = "true";
     }
 
+    stage("gltf-parse");
     return await new Promise<GLTF>((resolve, reject) => {
-      loader.parse(bytes, new URL("/models/camping/", window.location.origin).toString(), resolve, reject);
+      loader.parse(
+        bytes,
+        new URL("/models/camping/", window.location.origin).toString(),
+        (gltf) => {
+          stage("gltf-parsed");
+          resolve(gltf);
+        },
+        (error) => {
+          stage("gltf-parse-failed");
+          reject(error);
+        },
+      );
     });
   }
 
@@ -2248,6 +2294,7 @@ export class CampingStudioEngine {
           if (this.disposed || this.studioRoot !== root) return;
           this.studioLoaded = true;
           this.loader = null;
+          if (this.canvas) this.canvas.dataset.campingModelLoadStage = "ready";
           this.callbacks.onAssetState("ready");
           if (requested > 0 && loaded < requested) {
             this.setTransientMessage("PORTRAIT ASSETS / " + loaded + " OF " + requested, "danger", 3200);
@@ -2260,6 +2307,7 @@ export class CampingStudioEngine {
           if (this.disposed || this.studioRoot !== root) return;
           this.studioLoaded = true;
           this.loader = null;
+          if (this.canvas) this.canvas.dataset.campingModelLoadStage = "ready-with-portrait-errors";
           this.callbacks.onAssetState("ready");
           this.setTransientMessage("PORTRAIT ASSETS PARTIAL", "danger", 3200);
           if (this.phase === "DOOR_OPENING" && performance.now() - this.phaseStartedAt >= 1450) {
@@ -2272,6 +2320,10 @@ export class CampingStudioEngine {
         if (this.disposed) return;
         this.loader = null;
         const reason = error instanceof Error ? error.message : "Não foi possível verificar ou carregar o modelo 3D.";
+        if (this.canvas) {
+          this.canvas.dataset.campingModelLoadStage = "failed";
+          this.canvas.dataset.campingModelLoadError = reason.slice(0, 300);
+        }
         this.dispatch({ type: "LOAD_ERROR", message: "MODEL LOAD FAILED" });
         this.callbacks.onWebGLFailure(reason);
       },

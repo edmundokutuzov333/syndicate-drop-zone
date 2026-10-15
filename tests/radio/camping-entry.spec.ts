@@ -230,7 +230,7 @@ test.describe("CAMPING V2 / 808 access", () => {
   });
 
   test("accepts 808 and enters the loaded studio when WebGL is available", async ({ page }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     await page.setViewportSize({ width: 1774, height: 887 });
     await openCamping(page);
     if (await page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]').isVisible()) {
@@ -265,8 +265,8 @@ test.describe("CAMPING V2 / 808 access", () => {
     await expect(codeSlots).toHaveAttribute("aria-label", "Código introduzido: 80");
     await page.keyboard.press("8");
     await expect(page.locator(".camping-studio__transition")).toBeVisible({ timeout: 5_000 });
-    await expect(page.locator(".camping-studio__asset-state")).toContainText("MODEL / READY", { timeout: 25_000 });
-    await expect(page.locator(".camping-studio__explore-state")).toContainText("EXPLORATION ACTIVE", { timeout: 20_000 });
+    await expect(page.locator(".camping-studio__asset-state")).toContainText("MODEL / READY", { timeout: 60_000 });
+    await expect(page.locator(".camping-studio__explore-state")).toContainText("EXPLORATION ACTIVE", { timeout: 30_000 });
     const canvas = page.locator("canvas.camping-studio__canvas");
     await expect(canvas).toHaveAttribute("data-camping-scene-status", "ready");
     await expect(canvas).toHaveAttribute("data-camping-scene-missing-nodes", "");
@@ -320,7 +320,7 @@ test.describe("CAMPING V2 / 808 access", () => {
   });
 
   test("captures the seven deterministic baseline poses and renderer fidelity metrics", async ({ page }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     await page.setViewportSize({ width: 1774, height: 887 });
     await openCamping(page, "?debug3d=1&pose=entrada&still=1");
     const canvas = page.locator("canvas.camping-studio__canvas");
@@ -330,6 +330,7 @@ test.describe("CAMPING V2 / 808 access", () => {
 
     // The explicit debug flag intentionally performs the 808 access sequence
     // after renderer startup so deterministic captures cannot race the keypad.
+    await expect(page.locator(".camping-studio__asset-state")).toContainText("MODEL / READY", { timeout: 60_000 });
     await expect(page.locator(".camping-studio__explore-state")).toContainText("EXPLORATION ACTIVE", { timeout: 30_000 });
     await expect.poll(() => page.evaluate(() => window.__SDT3D__?.ready ?? false), { timeout: 30_000 }).toBe(true);
 
@@ -453,7 +454,7 @@ test.describe("CAMPING V2 / 808 access", () => {
 
 
 test("serves a certified optimized Blender V3 model on the canonical CAMPING URL", async ({ page }) => {
-  test.setTimeout(120_000);
+  test.setTimeout(180_000);
   // Validate the files served by the app before trying WebGL. This must never
   // be skipped because the CI browser lacks a GPU/WebGL implementation.
   const metadataResponse = await page.request.get("/models/camping/xoyens-studio.model.json", {
@@ -634,6 +635,17 @@ test("serves a certified optimized Blender V3 model on the canonical CAMPING URL
   const canvas = page.locator("canvas.camping-studio__canvas");
   const fallback = page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]');
 
+  // The canonical GLB is requested only after the inner 808 gate is granted.
+  // Complete that real interaction before waiting for model-source diagnostics.
+  const codeSlots = page.locator(".camping-studio__code-slots");
+  await canvas.focus();
+  await page.keyboard.press("8");
+  await expect(codeSlots).toHaveAttribute("aria-label", "Código introduzido: 8");
+  await page.keyboard.press("0");
+  await expect(codeSlots).toHaveAttribute("aria-label", "Código introduzido: 80");
+  await page.keyboard.press("8");
+  await expect(page.locator(".camping-studio__transition")).toBeVisible({ timeout: 5_000 });
+
   // In Chromium CI the scene sits behind the global access overlay. Inspect
   // its non-sensitive renderer diagnostics without treating the hidden route as
   // a visibility failure. On machines without WebGL, the accessible fallback
@@ -641,12 +653,19 @@ test("serves a certified optimized Blender V3 model on the canonical CAMPING URL
   await expect.poll(async () => {
     const modelSource = await canvas.getAttribute("data-camping-model-source");
     const webglStatus = await canvas.getAttribute("data-camping-webgl-status");
+    const loadStage = await canvas.getAttribute("data-camping-model-load-stage");
     return modelSource === "blender-v3" ||
       webglStatus === "startup-error" ||
-      (await fallback.count()) > 0;
-  }, { timeout: 60_000 }).toBe(true);
+      (await fallback.count()) > 0 ||
+      loadStage === "failed";
+  }, { timeout: 75_000 }).toBe(true);
 
   const webglStatus = await canvas.getAttribute("data-camping-webgl-status");
+  const modelLoadStage = await canvas.getAttribute("data-camping-model-load-stage");
+  const modelLoadError = await canvas.getAttribute("data-camping-model-load-error");
+  if (modelLoadStage === "failed") {
+    throw new Error("CAMPING model load failed at " + modelLoadStage + ": " + (modelLoadError ?? "no error detail"));
+  }
   if (webglStatus === "startup-error" || await fallback.count() > 0) return;
 
   await expect(canvas).toHaveAttribute("data-camping-model-source", "blender-v3", { timeout: 60_000 });
