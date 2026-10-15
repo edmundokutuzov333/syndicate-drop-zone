@@ -134,9 +134,13 @@ try {
       fabric_black_flag: "cotton_black",
       fabric_black_softbox: "cotton_black",
       steel_black_tube: "steel_black",
-      // Low tier only: merge two reclaimed-wood variants with matching base colour.
-      // Their warm brown albedo and non-metallic PBR preserve the scene identity at 256px.
-      ...(tierName === "low" ? { wood_reclaimed_top: "wood_reclaimed_planks" } : {}),
+      // Low tier only: consolidate similar reclaimed wood and black leather variants.
+      // Wood has the same warm brown base colour; the leather variants both use nearly identical black albedo/roughness.
+      // Keep these approximations out of high/mid so hero materials and close-up detail stay intact.
+      ...(tierName === "low" ? {
+        wood_reclaimed_top: "wood_reclaimed_planks",
+        leather_black_tufted: "leather_black_quilted",
+      } : {}),
     };
     const resolved = new Map();
     for (const [sourceName, targetName] of Object.entries(redirects)) {
