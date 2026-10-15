@@ -2223,6 +2223,9 @@ export class CampingStudioEngine {
             this.canvas.dataset.campingModelFloorSize = JSON.stringify([floorBounds.width, floorBounds.depth]);
             this.canvas.dataset.campingModelFloorY = JSON.stringify([floorBounds.minY, floorBounds.maxY]);
             this.canvas.dataset.campingCameraEyeY = String(this.cameraEyeHeight);
+            this.canvas.dataset.campingCameraFloorHeight = String(floorBounds.maxY - floorBounds.minY);
+          } else {
+            this.canvas.dataset.campingCameraGeometryStatus = "invalid-floor-bounds";
           }
         }
         this.studioRoot.visible = this.phase !== "LOCKED" && this.phase !== "CODE_ENTRY" && this.phase !== "ACCESS_GRANTED";

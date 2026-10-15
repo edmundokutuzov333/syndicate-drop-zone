@@ -1,7 +1,7 @@
 import { Box3, BoxGeometry, Group, Mesh, MeshBasicMaterial } from "three";
 import { describe, expect, it } from "vitest";
 import { canOccupyStudio } from "../camera/camping-collision";
-import { createCampingV3CollisionConfig, deriveCampingCameraPoses } from "./camping-camera-poses";
+import { createCampingV3CollisionConfig, deriveCampingCameraPoses, deriveCampingFloorBounds } from "./camping-camera-poses";
 
 function addBox(root: Group, name: string, size: [number, number, number], position: [number, number, number]): Mesh {
   const mesh = new Mesh(new BoxGeometry(...size), new MeshBasicMaterial());
@@ -23,6 +23,34 @@ function makeMetricStudio(): { root: Group; floor: Mesh } {
 }
 
 describe("CAMPING V3 camera and collision coordinates", () => {
+  it("ignores a full-height floor alias and selects a flat parquet surface", () => {
+    const root = new Group();
+    addBox(root, "studio.floor", [7.6, 3.45, 5.6], [0, 1.7, 0]);
+    const parquet = addBox(root, "studio.parquet", [7.6, 0.1, 5.6], [0, 0, 0]);
+    root.updateMatrixWorld(true);
+
+    const bounds = deriveCampingFloorBounds(root);
+    expect(bounds).not.toBeNull();
+    expect(bounds?.source).toBe("floor-node");
+    expect(bounds?.maxY).toBeCloseTo(0.05, 3);
+    expect(bounds?.maxY! - bounds?.minY!).toBeLessThan(0.35);
+
+    const poses = deriveCampingCameraPoses(root, 1.62);
+    expect(poses).not.toBeNull();
+    expect(poses?.entrada.position[1]).toBeCloseTo(1.67, 2);
+    expect(poses?.entrada.position[1]).toBeLessThan(2);
+    expect(poses?.entrada.look[1]).toBeCloseTo(1.48, 2);
+    expect(new Box3().setFromObject(parquet).max.y).toBeCloseTo(0.05, 3);
+  });
+
+  it("does not fall back to the complete room envelope when no flat floor exists", () => {
+    const root = new Group();
+    addBox(root, "studio.floor", [7.6, 3.45, 5.6], [0, 1.7, 0]);
+    root.updateMatrixWorld(true);
+    expect(deriveCampingFloorBounds(root)).toBeNull();
+    expect(deriveCampingCameraPoses(root)).toBeNull();
+  });
+
   it("keeps the entry and guided camera positions inside the actual floor bounds", () => {
     const { root, floor } = makeMetricStudio();
     const poses = deriveCampingCameraPoses(root, 1.62);

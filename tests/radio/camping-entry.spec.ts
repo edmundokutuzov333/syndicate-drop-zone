@@ -363,11 +363,15 @@ test.describe("CAMPING V2 / 808 access", () => {
         floorSize: element.getAttribute("data-camping-model-floor-size"),
         floorY: element.getAttribute("data-camping-model-floor-y"),
         eyeY: element.getAttribute("data-camping-camera-eye-y"),
+        floorHeight: element.getAttribute("data-camping-camera-floor-height"),
+        geometryStatus: element.getAttribute("data-camping-camera-geometry-status"),
         pitch: element.getAttribute("data-camping-camera-pitch-deg"),
       }));
       expect(cameraBounds.position, "camera position diagnostics for " + pose).not.toBeNull();
       expect(cameraBounds.bounds, "model floor bounds diagnostics for " + pose).not.toBeNull();
       expect(cameraBounds.source, "production GLB should be classified as Blender V3").toBe("blender-v3");
+      expect(cameraBounds.geometryStatus, "a real flat floor must be identified before camera framing").not.toBe("invalid-floor-bounds");
+      expect(Number(cameraBounds.floorHeight), "floor bounds must be thin, not the whole room/roof").toBeLessThanOrEqual(0.35);
       expect(cameraBounds.poseSource, "camera should use a model-derived pose for " + pose).toBe("blender-v3-scene");
       expect(cameraBounds.pitch, "camera pitch diagnostics for " + pose).not.toBeNull();
       if (pose !== "tecto" && pose !== "chao") {

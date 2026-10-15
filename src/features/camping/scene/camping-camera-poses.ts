@@ -17,7 +17,7 @@ export type CampingCameraPoseMap = Record<CampingCameraPoseName, CampingCameraPo
 export type CampingFloorBounds = {
   minX: number; maxX: number; minY: number; maxY: number; minZ: number; maxZ: number;
   width: number; depth: number;
-  source: "floor-node" | "floor-element" | "scene-root-fallback";
+  source: "floor-node" | "floor-element";
 };
 type FloorBounds = CampingFloorBounds;
 
@@ -29,8 +29,18 @@ function clamp(value: number, minimum: number, maximum: number): number {
 function toFloorBounds(bounds: THREE.Box3, source: CampingFloorBounds["source"]): FloorBounds | null {
   if (bounds.isEmpty()) return null;
   const width = bounds.max.x - bounds.min.x;
+  const height = bounds.max.y - bounds.min.y;
   const depth = bounds.max.z - bounds.min.z;
-  if (!Number.isFinite(width) || !Number.isFinite(depth) || width < 1.5 || depth < 1.5) return null;
+
+  // The published CAMPING V3 contract is 7.6 m × 5.6 m. A scene-root/room
+  // collection can have the same X/Z size but includes the 2.85–3.45 m walls
+  // and roof. Reject it instead of using the roof apex as the camera's floor Y.
+  if (
+    !Number.isFinite(width) || !Number.isFinite(height) || !Number.isFinite(depth) ||
+    width < 5.2 || width > 9.8 || depth < 3.8 || depth > 7.4 ||
+    height < 0 || height > 0.35
+  ) return null;
+
   return {
     minX: bounds.min.x, maxX: bounds.max.x,
     minY: bounds.min.y, maxY: bounds.max.y,
@@ -41,28 +51,37 @@ function toFloorBounds(bounds: THREE.Box3, source: CampingFloorBounds["source"])
 
 function getFloorBounds(root: THREE.Object3D): FloorBounds | null {
   root.updateMatrixWorld(true);
-  const preferred = root.getObjectByName("studio.floor") ?? root.getObjectByName("studio.parquet");
-  if (preferred) {
-    const bounds = toFloorBounds(new THREE.Box3().setFromObject(preferred), "floor-node");
-    if (bounds) return bounds;
-  }
+  const candidates: Array<{ object: THREE.Object3D; source: CampingFloorBounds["source"]; priority: number }> = [];
+  const parquet = root.getObjectByName("studio.parquet");
+  const floor = root.getObjectByName("studio.floor");
+  if (parquet) candidates.push({ object: parquet, source: "floor-node", priority: 0 });
+  if (floor) candidates.push({ object: floor, source: "floor-node", priority: 1 });
 
-  // Some GLTF exports assign the runtime alias to a thin proxy. Prefer an
-  // explicitly tagged merged floor mesh before the whole-scene fallback.
-  const candidates: THREE.Object3D[] = [];
   root.traverse((object) => {
     const userData = (object as THREE.Object3D & { userData?: Record<string, unknown> }).userData;
     if (userData?.elementId === "floor.wood" || /SDT_shell_floor_wood_hero/i.test(object.name)) {
-      candidates.push(object);
+      candidates.push({ object, source: "floor-element", priority: 2 });
     }
   });
-  const valid = candidates
-    .map((object) => toFloorBounds(new THREE.Box3().setFromObject(object), "floor-element"))
-    .filter((item): item is FloorBounds => item !== null)
-    .sort((a, b) => b.width * b.depth - a.width * a.depth);
-  if (valid.length) return valid[0]!;
 
-  return toFloorBounds(new THREE.Box3().setFromObject(root), "scene-root-fallback");
+  const valid = candidates
+    .map((candidate) => ({
+      ...candidate,
+      bounds: toFloorBounds(new THREE.Box3().setFromObject(candidate.object), candidate.source),
+    }))
+    .filter((candidate): candidate is typeof candidate & { bounds: FloorBounds } => candidate.bounds !== null)
+    .sort((a, b) => {
+      if (a.priority !== b.priority) return a.priority - b.priority;
+      // If multiple floor meshes exist, prefer the one closest to the certified
+      // 7.6 × 5.6 metre footprint, not the largest grouping object.
+      const score = (bounds: FloorBounds) =>
+        Math.abs(Math.log((bounds.width * bounds.depth) / (7.6 * 5.6)));
+      return score(a.bounds) - score(b.bounds);
+    });
+
+  // Never substitute the full scene bounds for floor bounds. That is how a
+  // ceiling apex can be mistaken for ground level and place the camera above the room.
+  return valid[0]?.bounds ?? null;
 }
 
 export function deriveCampingFloorBounds(root: THREE.Object3D): CampingFloorBounds | null {
@@ -141,9 +160,9 @@ export function deriveCampingCameraPoses(root: THREE.Object3D, cameraHeight = 1.
 
   const leftPosition = position(floor.minX + floor.width * 0.22, center.z + floor.depth * 0.08);
   const rightPosition = position(floor.maxX - floor.width * 0.22, center.z + floor.depth * 0.08);
-  const leftTarget = new THREE.Vector3(floor.minX + floor.width * 0.4, cameraHeight, center.z - floor.depth * 0.08);
-  const rightTarget = new THREE.Vector3(floor.maxX - floor.width * 0.4, cameraHeight, center.z - floor.depth * 0.08);
-  const centerLook = new THREE.Vector3(center.x, cameraHeight, center.z);
+  const leftTarget = new THREE.Vector3(floor.minX + floor.width * 0.4, eyeY, center.z - floor.depth * 0.08);
+  const rightTarget = new THREE.Vector3(floor.maxX - floor.width * 0.4, eyeY, center.z - floor.depth * 0.08);
+  const centerLook = new THREE.Vector3(center.x, eyeY, center.z);
   return {
     entrada: serializePose(entryPosition, entryLook),
     producao: production ?? serializePose(position(center.x, center.z + floor.depth * 0.18), centerLook),
