@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const PHASE_DEFAULT = Number(process.env.CAMPING_PHASE || 8);
+const PHASE_DEFAULT = Number(process.env.CAMPING_PHASE || 9);
 const CORE_REQUIRED = [
   "art/xoyens-studio.blend",
   "art/xoyens-studio.report.json",
