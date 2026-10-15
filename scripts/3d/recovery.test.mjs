@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { classify } from "../ci/read-run-annotations.mjs";
 import { blendKind, colliderGlbContract, glbContract } from "./verify-delivery.mjs";
+import { certifiedPhase7BaselineTriangles } from "./promote-frontend-model.mjs";
 
 test("annotation classifier identifies known causes only from annotation text", () => {
   assert.equal(classify(["The job was not started because recent account payments have failed"]).cause, "BILLING_BLOCK");
@@ -98,4 +99,58 @@ test("PBR material helper contracts are deterministic", async () => {
   assert.deepEqual(pngDimensions(png), { width: 2048, height: 2048 });
   assert.equal(isLfsPointer(Buffer.from("version https://git-lfs.github.com/spec/v1\\n")), true);
   assert.ok(renderLicenseRows([{ material: "wood", sourceAsset: { id: "test_asset", url: "https://polyhaven.com/a/test_asset", authors: ["Test Author"] } }]).includes("CC0 1.0"));
+});
+
+test("Phase 08 promotion accepts a SHA-verified Phase 07 checkpoint or a rerun from certified Phase 08 metadata", () => {
+  const heroSurfaces = {
+    floorBoards: 117,
+    floorHasColor0: true,
+    floorHasUv0Uv1: true,
+    vinylRadiusM: 2.3,
+    vinylThicknessM: 0.0012,
+    vinylEdgeLiftM: 0.004,
+    bambooTileMeters: 1.2,
+    cycloramaRadiusM: 0.35,
+    cycloramaContinuousToFloor: true,
+  };
+  const phase7 = {
+    version: 3, phase: 7, productionPhase: null, surfacePhase: 7,
+    status: "blender-v3-published", model: "/models/camping/xoyens-studio.glb",
+    geometry: { triangles: 113556, heroSurfaces },
+  };
+  assert.equal(certifiedPhase7BaselineTriangles(phase7), 113556);
+
+  const phase8 = {
+    ...phase7,
+    phase: 8,
+    productionPhase: 8,
+    geometry: {
+      triangles: 263332,
+      heroSurfaces,
+      productionZone: {
+        sourceStatus: "source-validated",
+        requiredElements: 19,
+        chairUpholsteryTrianglesSource: 14768,
+        midiWhiteKeys: 36,
+        midiBlackKeys: 25,
+        acousticFabricPanels: 3,
+        acousticFoamTiles: 30,
+        pendants: 4,
+        edisonBulbs: 4,
+        requiredInteractionsPreserved: ["studio.production-desk", "studio.imac", "studio.audio-system"],
+        baselineTriangles: 113556,
+        publishedTriangles: 263332,
+        trianglesAddedFromPhase7: 149776,
+      },
+    },
+  };
+  assert.equal(certifiedPhase7BaselineTriangles(phase8), 113556);
+  assert.throws(() => certifiedPhase7BaselineTriangles({ ...phase8, geometry: {
+    ...phase8.geometry,
+    productionZone: { ...phase8.geometry.productionZone, trianglesAddedFromPhase7: 12 },
+  } }), /internally consistent Phase 07 baseline evidence/);
+  assert.throws(() => certifiedPhase7BaselineTriangles({ ...phase8, geometry: {
+    ...phase8.geometry,
+    heroSurfaces: { ...heroSurfaces, floorBoards: 3 },
+  } }), /certified Phase 07 hero surfaces/);
 });
