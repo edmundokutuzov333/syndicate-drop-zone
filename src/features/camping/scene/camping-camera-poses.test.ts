@@ -116,6 +116,77 @@ describe("CAMPING V3 camera and collision coordinates", () => {
     expect(poses.artistas.position[0]).toBeLessThan(poses.artistas.look[0]);
   });
 
+  it("accepts the documented Phase 09 legacy floor in either X/Z orientation and derives a normal entry view", () => {
+    const legacyFloorSizes = [
+      [13.1, 0.02, 8.26],
+      [8.26, 0.02, 13.1],
+    ] as const;
+
+    for (const [width, thickness, depth] of legacyFloorSizes) {
+      const root = new Group();
+      const floor = addBox(root, "studio.parquet", [width, thickness, depth], [0, -thickness / 2, 0]);
+      root.updateMatrixWorld(true);
+
+      const bounds = deriveCampingFloorBounds(root);
+      expect(bounds, "documented legacy floor should be accepted").not.toBeNull();
+      if (!bounds) throw new Error("Expected documented legacy floor bounds.");
+
+      expect(bounds.maxY).toBeCloseTo(0, 3);
+      expect(bounds.maxY - bounds.minY).toBeLessThanOrEqual(0.35);
+      expect(Math.max(bounds.width, bounds.depth)).toBeGreaterThanOrEqual(12.5);
+      expect(Math.min(bounds.width, bounds.depth)).toBeGreaterThanOrEqual(7.5);
+
+      const poses = deriveCampingCameraPoses(root, 1.62);
+      expect(poses, "legacy model must not block the 808 door transition").not.toBeNull();
+      if (!poses) throw new Error("Expected a camera pose from documented legacy floor bounds.");
+
+      const entry = poses.entrada;
+      const floorBounds = new Box3().setFromObject(floor);
+      const centerZ = (bounds.minZ + bounds.maxZ) / 2;
+      expect(entry.position[1] - bounds.maxY).toBeCloseTo(1.62, 2);
+      expect(entry.look[1] - bounds.maxY).toBeCloseTo(1.48, 2);
+      expect(entry.position[0]).toBeGreaterThan(floorBounds.min.x);
+      expect(entry.position[0]).toBeLessThan(floorBounds.max.x);
+      expect(entry.position[2]).toBeGreaterThan(floorBounds.min.z);
+      expect(entry.position[2]).toBeLessThan(floorBounds.max.z);
+      expect(entry.position[2], "entry is inside the room on the +Z side").toBeGreaterThan(centerZ);
+      expect(entry.look[2], "camera looks into the room towards -Z").toBeLessThan(centerZ);
+
+      const horizontalDistance = Math.hypot(
+        entry.position[0] - entry.look[0],
+        entry.position[2] - entry.look[2],
+      );
+      expect(horizontalDistance).toBeGreaterThan(2.4);
+      expect(horizontalDistance).toBeLessThan(5.2);
+
+      const pitchDegrees = Math.atan2(
+        entry.look[1] - entry.position[1],
+        horizontalDistance,
+      ) * 180 / Math.PI;
+      expect(pitchDegrees).toBeGreaterThan(-12);
+      expect(pitchDegrees).toBeLessThanOrEqual(0);
+      expect(createCampingV3CollisionConfig(root)).not.toBeNull();
+    }
+  });
+
+  it("rejects a legacy-sized vaulted room envelope instead of treating the roof as floor", () => {
+    const root = new Group();
+    addBox(root, "studio.parquet", [14.2, 3.45, 9.2], [0, 1.725, 0]);
+    root.updateMatrixWorld(true);
+
+    expect(deriveCampingFloorBounds(root)).toBeNull();
+    expect(deriveCampingCameraPoses(root)).toBeNull();
+  });
+
+  it("rejects a flat surface outside both documented CAMPING footprints", () => {
+    const root = new Group();
+    addBox(root, "studio.parquet", [20, 0.02, 15], [0, -0.01, 0]);
+    root.updateMatrixWorld(true);
+
+    expect(deriveCampingFloorBounds(root)).toBeNull();
+    expect(deriveCampingCameraPoses(root)).toBeNull();
+  });
+
   it("builds collision bounds and obstacle boxes from the metric V3 floor", () => {
     const { root, floor } = makeMetricStudio();
     const config = createCampingV3CollisionConfig(root);
