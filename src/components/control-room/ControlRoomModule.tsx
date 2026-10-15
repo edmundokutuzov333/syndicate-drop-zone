@@ -182,9 +182,12 @@ function canEditDefinition(definition: ModuleDefinition, role: ControlRoomRole |
 
 export function ControlRoomModule({ module }: { module: keyof typeof MODULE_CONFIG }) {
   if (module === "media") return <MediaManager />;
+  return <ControlRoomDataModule module={module} />;
+}
+
+function ControlRoomDataModule({ module }: { module: keyof typeof MODULE_CONFIG }) {
   const config = MODULE_CONFIG[module];
   const [role, setRole] = useState<ControlRoomRole | null>(null);
-  if (!config) return null;
   const [previewMode, setPreviewMode] = useState(false);
   const [activeTable, setActiveTable] = useState(config.tables[0] ?? "");
   const [rowsByTable, setRowsByTable] = useState<Record<string, RowData[]>>({});
