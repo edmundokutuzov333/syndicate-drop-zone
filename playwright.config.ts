@@ -19,7 +19,10 @@ export default defineConfig({
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
   ],
   webServer: {
-    command: "npm run dev -- --host 127.0.0.1 --port 4173",
+    // The workflow builds production before browser smoke tests. Serve that build
+    // instead of recompiling the full 3D application in Vite dev mode, which can
+    // stall the Playwright webServer readiness gate.
+    command: "npm run preview -- --host 127.0.0.1 --port 4173",
     url: "http://127.0.0.1:4173",
     reuseExistingServer: false,
     timeout: 120_000,
