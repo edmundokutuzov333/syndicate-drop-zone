@@ -187,6 +187,46 @@ describe("CAMPING V3 camera and collision coordinates", () => {
     expect(deriveCampingCameraPoses(root)).toBeNull();
   });
 
+  it("accepts a thin, explicitly named floor whose exported footprint differs from stale plan dimensions", () => {
+    const root = new Group();
+    const floor = addBox(root, "studio.parquet", [11.4, 0.02, 8.4], [0, -0.01, 0]);
+    root.updateMatrixWorld(true);
+
+    const bounds = deriveCampingFloorBounds(root);
+    expect(bounds).not.toBeNull();
+    expect(bounds?.source).toBe("floor-node");
+    expect(bounds?.width).toBeCloseTo(11.4, 2);
+    expect(bounds?.depth).toBeCloseTo(8.4, 2);
+    expect(bounds?.maxY).toBeCloseTo(0, 2);
+
+    const poses = deriveCampingCameraPoses(root, 1.62);
+    expect(poses).not.toBeNull();
+    if (!poses || !bounds) throw new Error("Expected pose from the measured named floor.");
+    expect(poses.entrada.position[1] - bounds.maxY).toBeCloseTo(1.62, 2);
+    expect(poses.entrada.position[2]).toBeGreaterThan((bounds.minZ + bounds.maxZ) / 2);
+    expect(poses.entrada.look[2]).toBeLessThan((bounds.minZ + bounds.maxZ) / 2);
+    expect(new Box3().setFromObject(floor).max.y).toBeCloseTo(0, 2);
+  });
+
+  it("infers the actual lowest floor plane when the exporter omits the floor node name and extras", () => {
+    const root = new Group();
+    addBox(root, "unlabelled-floor-mesh", [11.4, 0.02, 8.4], [0, -0.01, 0]);
+    addBox(root, "studio.vaulted-timber-ceiling", [11.4, 0.1, 8.4], [0, 3.4, 0]);
+    root.updateMatrixWorld(true);
+
+    const bounds = deriveCampingFloorBounds(root);
+    expect(bounds).not.toBeNull();
+    expect(bounds?.source).toBe("floor-inferred");
+    expect(bounds?.maxY).toBeCloseTo(0, 2);
+
+    const poses = deriveCampingCameraPoses(root, 1.62);
+    expect(poses).not.toBeNull();
+    if (!poses || !bounds) throw new Error("Expected an inferred entry pose.");
+    expect(poses.entrada.position[1] - bounds.maxY).toBeCloseTo(1.62, 2);
+    expect(poses.entrada.look[1] - bounds.maxY).toBeCloseTo(1.48, 2);
+    expect(poses.entrada.look[1]).toBeLessThan(poses.entrada.position[1]);
+  });
+
   it("builds collision bounds and obstacle boxes from the metric V3 floor", () => {
     const { root, floor } = makeMetricStudio();
     const config = createCampingV3CollisionConfig(root);
