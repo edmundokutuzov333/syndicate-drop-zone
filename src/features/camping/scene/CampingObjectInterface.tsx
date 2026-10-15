@@ -140,7 +140,7 @@ export function CampingObjectInterface({ focusedId, onClose, onEnterRoom }: Prop
   }, [focusedId]);
 
   useEffect(() => {
-    try { window.localStorage.setItem("sdt-camping-cart", JSON.stringify(cart)); } catch {}
+    try { window.localStorage.setItem("sdt-camping-cart", JSON.stringify(cart)); } catch { /* Local storage is optional in restricted browser contexts. */ }
   }, [cart]);
 
   useEffect(() => {
