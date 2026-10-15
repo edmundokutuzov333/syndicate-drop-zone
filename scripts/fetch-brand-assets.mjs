@@ -1,23 +1,66 @@
 #!/usr/bin/env node
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 
-const base = process.env.CAMPING_BRAND_ASSET_BASE_URL || "https://syndicate-drop-zone.vercel.app";
+const projectId = "67a20cf5-03a6-4c64-ab1e-c6089a5ecca0";
 const assets = [
-  { name: "sindicato-selo.png", path: "/__l5e/assets-v1/1fa67bdd-f452-442e-a0d5-a9fb482388de/sindicato-selo.png", minBytes: 10000 },
-  { name: "xoyens.png", path: "/__l5e/assets-v1/b0478989-7ffd-43dd-92e0-a801662907ae/xoyens.png", minBytes: 5000 },
+  { manifest: "src/assets/brand/sindicato-selo.png.asset.json", output: "sindicato-selo.png" },
+  { manifest: "src/assets/brand/xoyens.png.asset.json", output: "xoyens.png" },
 ];
 const out = "art/textures/brand";
 await mkdir(out, { recursive: true });
-for (const asset of assets) {
-  const response = await fetch(new URL(asset.path, base), { cache: "no-store" });
-  if (!response.ok) throw new Error("Official brand asset request failed: " + asset.path + " HTTP " + response.status);
-  const bytes = Buffer.from(await response.arrayBuffer());
-  if (bytes.length < asset.minBytes || bytes.toString("hex", 0, 8) !== "89504e470d0a1a0a") {
-    throw new Error("Official brand asset is not a valid PNG: " + asset.name + " (" + bytes.length + " bytes)");
+for (const item of assets) {
+  const manifest = JSON.parse(await readFile(item.manifest, "utf8"));
+  if (manifest.content_type !== "image/png" || !manifest.url || !manifest.asset_id || !manifest.size) {
+    throw new Error("Official brand asset manifest is incomplete: " + item.manifest);
   }
-  const path = join(out, asset.name);
+  const previewOrigin = "https://id-preview--" + projectId + ".lovable.app";
+  const origins = [...new Set([
+    process.env.CAMPING_BRAND_ASSET_BASE_URL?.trim(),
+    previewOrigin,
+    "https://sindicato-do-trap.lovable.app",
+    "https://syndicate-drop-zone.vercel.app",
+  ].filter(Boolean))];
+  const failures = [];
+  let bytes = null;
+  let source = "";
+  for (const origin of origins) {
+    const url = new URL(manifest.url, origin);
+    try {
+      const response = await fetch(url, { cache: "no-store", redirect: "follow" });
+      if (!response.ok) {
+        failures.push(origin + " -> HTTP " + response.status);
+        continue;
+      }
+      const candidate = Buffer.from(await response.arrayBuffer());
+      if (candidate.length !== Number(manifest.size)) {
+        failures.push(origin + " -> byte count " + candidate.length + ", expected " + manifest.size);
+        continue;
+      }
+      if (candidate.toString("hex", 0, 8) !== "89504e470d0a1a0a") {
+        failures.push(origin + " -> response is not a PNG");
+        continue;
+      }
+      bytes = candidate;
+      source = url.href;
+      break;
+    } catch (error) {
+      failures.push(origin + " -> " + (error instanceof Error ? error.message : String(error)));
+    }
+  }
+  if (!bytes) {
+    throw new Error("Could not retrieve official asset " + item.output + " from any registered origin: " + failures.join(" | "));
+  }
+  const path = join(out, item.output);
   await writeFile(path, bytes);
-  console.log(JSON.stringify({ asset: asset.name, path, bytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex"), source: new URL(asset.path, base).href }));
+  console.log(JSON.stringify({
+    asset: item.output,
+    assetId: manifest.asset_id,
+    path,
+    bytes: bytes.length,
+    sha256: createHash("sha256").update(bytes).digest("hex"),
+    source,
+    manifestUrl: manifest.url,
+  }));
 }
