@@ -18,7 +18,7 @@ export async function unlockSite(page: Page): Promise<void> {
   ];
 
   for (const step of sequence) {
-    await page.getByRole("button", { name: step.digit, exact: true }).click();
+    await siteGate.getByRole("button", { name: step.digit, exact: true }).click();
     await expect(display).toHaveText(step.expected);
   }
 
