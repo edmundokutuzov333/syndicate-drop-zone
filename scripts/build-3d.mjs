@@ -54,8 +54,11 @@ try {
     // Preserve sharp base-colour textures while reducing costly PBR data maps.
     // These sizes are balanced against the transfer budgets in perf-budgets.json.
     { name: "high", maxTex: 2048, colorTex: 1024, dataTex: 512, ratio: 1.0, error: 0.0005 },
-    { name: "mid", maxTex: 1024, colorTex: 512, dataTex: 256, ratio: 0.5, error: 0.002 },
-    { name: "low", maxTex: 512, colorTex: 256, dataTex: 128, ratio: 0.25, error: 0.006 }
+    // The Phase 08 furniture adds real upholstery, panel and audio geometry. The
+    // medium/low tiers use stronger geometric reduction while keeping the same
+    // checked budgets and all named interaction anchors.
+    { name: "mid", maxTex: 1024, colorTex: 512, dataTex: 256, ratio: 0.30, error: 0.003 },
+    { name: "low", maxTex: 512, colorTex: 256, dataTex: 128, ratio: 0.10, error: 0.010 }
   ];
 
   function descendantNodes(node) {
@@ -121,8 +124,68 @@ try {
     }
   }
 
+  function mergeLowTierMaterials(document) {
+    const root = document.getRoot();
+    const materials = new Map(root.listMaterials().map((material) => [material.getName(), material]));
+    const redirects = {
+      fabric_black_flag: "cotton_black",
+      fabric_black_softbox: "cotton_black",
+      steel_black_tube: "steel_black",
+    };
+    const resolved = new Map();
+    for (const [sourceName, targetName] of Object.entries(redirects)) {
+      const sourceMaterial = materials.get(sourceName);
+      const targetMaterial = materials.get(targetName);
+      if (!sourceMaterial) continue;
+      if (!targetMaterial) throw new Error("LOD material palette is missing canonical material " + targetName);
+      resolved.set(sourceMaterial, targetMaterial);
+    }
+    let reassigned = 0;
+    for (const mesh of root.listMeshes()) {
+      for (const primitive of mesh.listPrimitives()) {
+        const material = primitive.getMaterial();
+        const target = material ? resolved.get(material) : undefined;
+        if (target && target !== material) {
+          primitive.setMaterial(target);
+          reassigned += 1;
+        }
+      }
+    }
+    console.log("[LOD material palette] " + tierSafeName(document) + " redirected primitives=" + reassigned);
+  }
+
   for (const tier of tiers) {
     const document = await io.read(src);
+    if (tier.name !== "high") {
+      const beforeMaterials = document.getRoot().listMaterials().length;
+      const materials = new Map(document.getRoot().listMaterials().map((material) => [material.getName(), material]));
+      const redirects = {
+        fabric_black_flag: "cotton_black",
+        fabric_black_softbox: "cotton_black",
+        steel_black_tube: "steel_black",
+      };
+      const resolved = new Map();
+      for (const [sourceName, targetName] of Object.entries(redirects)) {
+        const sourceMaterial = materials.get(sourceName);
+        const targetMaterial = materials.get(targetName);
+        if (!sourceMaterial) continue;
+        if (!targetMaterial) throw new Error("LOD material palette is missing canonical material " + targetName);
+        resolved.set(sourceMaterial, targetMaterial);
+      }
+      let reassigned = 0;
+      for (const mesh of document.getRoot().listMeshes()) {
+        for (const primitive of mesh.listPrimitives()) {
+          const material = primitive.getMaterial();
+          const target = material ? resolved.get(material) : undefined;
+          if (target && target !== material) {
+            primitive.setMaterial(target);
+            reassigned += 1;
+          }
+        }
+      }
+      console.log("[LOD material palette] " + tier.name + " reassigned primitives=" + reassigned +
+        "; source materials=" + beforeMaterials + "; redirects=" + resolved.size);
+    }
     preserveContractMetadata(document);
 
     // Keep UV1 for lightmap workflows even when core glTF materials do not
