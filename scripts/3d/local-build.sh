@@ -15,9 +15,9 @@ step npm-install npm install --legacy-peer-deps --no-audit --no-fund
 step recovery-tests node --test scripts/3d/recovery.test.mjs
 step py-compile python3 -m py_compile scripts/blender/*.py
 step validate npm run 3d:validate
-if [ "${CAMPING_PHASE:-8}" -ge 9 ]; then step brand-assets node scripts/fetch-brand-assets.mjs; fi
+if [ "${CAMPING_PHASE:-9}" -ge 9 ]; then step brand-assets node scripts/fetch-brand-assets.mjs; fi
 step blend npm run 3d:blend
-if [ "${CAMPING_PHASE:-8}" -ge 9 ]; then
+if [ "${CAMPING_PHASE:-9}" -ge 9 ]; then
   BLENDER_BIN="${BLENDER_BIN:-$(command -v blender)}"
   step phase09-check "$BLENDER_BIN" -b art/xoyens-studio.blend --python-exit-code 1 -P scripts/blender/validate_phase09.py -- art/xoyens-studio.phase09.report.json
   step phase09-capture env LIBGL_ALWAYS_SOFTWARE=1 "$BLENDER_BIN" -b art/xoyens-studio.blend --python-exit-code 1 -P scripts/blender/capture_phase09.py -- art/_delivery/phase-09
@@ -29,11 +29,11 @@ step frontend-model bash scripts/3d/build-frontend-model.sh
 step frontend-lint npm run lint
 step frontend-tests npm run test
 step frontend-build npm run build
-node scripts/3d/pack-delivery.mjs --phase="${CAMPING_PHASE:-8}" || true
-step verify node scripts/3d/verify-delivery.mjs . docs/camping-v3/scene-bible.json --phase="${CAMPING_PHASE:-8}"
-node scripts/3d/pack-delivery.mjs --phase="${CAMPING_PHASE:-8}" || true
+step package node scripts/3d/pack-delivery.mjs --phase="${CAMPING_PHASE:-9}"
+step verify node scripts/3d/verify-delivery.mjs . docs/camping-v3/scene-bible.json --phase="${CAMPING_PHASE:-9}"
+step package node scripts/3d/pack-delivery.mjs --phase="${CAMPING_PHASE:-9}"
 FINAL_CODE=0
-node scripts/3d/verify-delivery.mjs . docs/camping-v3/scene-bible.json --phase="${CAMPING_PHASE:-8}" --check-exit-codes || FINAL_CODE=$?
+node scripts/3d/verify-delivery.mjs . docs/camping-v3/scene-bible.json --phase="${CAMPING_PHASE:-9}" --check-exit-codes || FINAL_CODE=$?
 if [ "$FINAL_CODE" -ne 0 ]; then FAILED=$((FAILED+1)); echo "Phase 04 not certified (final verifier exit ${FINAL_CODE})."; fi
 echo "===== EXIT CODES ====="; cat "$OUT/exit-codes.txt"
 find "$OUT" -maxdepth 1 -type f \( -name 'phase04-delivery-*.zip' -o -name 'phase04-delivery-*.tar.gz' -o -name 'phase04-delivery-*.sha256' \) -exec ls -lh {} \; 2>/dev/null || true
