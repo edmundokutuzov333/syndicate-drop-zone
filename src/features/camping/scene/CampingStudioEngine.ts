@@ -47,7 +47,9 @@ import { normalizeCampingModel } from "./camping-model-compatibility";
 import {
   createCampingV3CollisionConfig,
   deriveCampingCameraPoses,
+  deriveCampingEntryPoseFromSceneBounds,
   deriveCampingFloorBounds,
+  inspectCampingFloorGeometry,
   type CampingCameraPose,
   type CampingCameraPoseName,
 } from "./camping-camera-poses";
@@ -1327,11 +1329,42 @@ export class CampingStudioEngine {
         ? deriveCampingCameraPoses(this.studioRoot, CAM_HEIGHT)?.[id]
         : null;
       if (resolved) {
-        if (this.canvas) this.canvas.dataset.campingCameraPoseSource = "blender-v3-scene";
+        if (this.canvas) {
+          this.canvas.dataset.campingCameraPoseSource = "blender-v3-scene";
+          delete this.canvas.dataset.campingCameraPoseFallback;
+        }
         return resolved;
       }
+
+      // The GLB itself has already passed the canonical SHA-256/byte contract.
+      // If Blender renamed or omitted the floor extras, do not strand the visitor
+      // behind the 808 door. Derive an entry-only pose from the measured root
+      // envelope; movement colliders and guided views still require real floor bounds.
+      if (id === "entrada" && this.studioRoot) {
+        const fallback = deriveCampingEntryPoseFromSceneBounds(this.studioRoot, CAM_HEIGHT);
+        if (fallback) {
+          this.cameraEyeHeight = fallback.position[1];
+          if (this.canvas) {
+            this.canvas.dataset.campingCameraPoseSource = "blender-v3-root-bounds-entry-fallback";
+            this.canvas.dataset.campingCameraGeometryStatus = "entry-root-bounds-fallback";
+            this.canvas.dataset.campingCameraPoseFallback = "root-bounds-derived";
+            this.canvas.dataset.campingCameraPosition = JSON.stringify(fallback.position);
+            this.canvas.dataset.campingCameraLookTarget = JSON.stringify(fallback.look);
+            this.canvas.dataset.campingCameraPitchDeg = (
+              Math.atan2(
+                fallback.look[1] - fallback.position[1],
+                Math.hypot(
+                  fallback.look[0] - fallback.position[0],
+                  fallback.look[2] - fallback.position[2],
+                ),
+              ) * 180 / Math.PI
+            ).toFixed(2);
+          }
+          return fallback;
+        }
+      }
       if (this.canvas) this.canvas.dataset.campingCameraPoseSource = "blender-v3-invalid-geometry";
-      // Do not silently reuse legacy coordinates for a metric-authored V3 room.
+      // No guessed legacy coordinates: invalid room envelopes still fail closed.
       return null;
     }
     const legacyPose = (CAMPING_DEBUG_POSES as Partial<Record<CampingCameraPoseName, CampingCameraPose>>)[id];
@@ -2324,6 +2357,9 @@ export class CampingStudioEngine {
         });
         this.studioRoot = root;
         if (this.canvas) {
+          const floorDiagnostics = inspectCampingFloorGeometry(root);
+          this.canvas.dataset.campingModelRootBounds = JSON.stringify(floorDiagnostics.rootBounds);
+          this.canvas.dataset.campingFloorGeometryDiagnostics = JSON.stringify(floorDiagnostics.candidates);
           const floorBounds = deriveCampingFloorBounds(root);
           if (floorBounds) {
             this.cameraEyeHeight = floorBounds.maxY + CAM_HEIGHT;
