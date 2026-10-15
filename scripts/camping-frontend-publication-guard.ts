@@ -74,9 +74,9 @@ export function verifyCampingFrontendPublication(root = process.cwd()): void {
   const bytes = readFileSync(modelPath);
   const metadata = JSON.parse(readFileSync(metadataPath, "utf8"));
   if (bytes.length > MAX_BYTES) throw new Error("frontend GLB exceeds the 16 MiB transfer budget");
-  if (metadata.version !== 3 || metadata.phase !== 8 || metadata.productionPhase !== 8 ||
-      metadata.surfacePhase !== 7 || metadata.status !== "blender-v3-published") {
-    throw new Error("metadata is stale: expected version=3, phase=8, productionPhase=8, surfacePhase=7, status=blender-v3-published");
+  if (metadata.version !== 3 || !Number.isInteger(metadata.phase) || metadata.phase < 8 || metadata.phase > 22 ||
+      metadata.productionPhase !== metadata.phase || metadata.surfacePhase !== 7 || metadata.status !== "blender-v3-published") {
+    throw new Error("metadata is stale: expected version=3, phase=8..22, productionPhase=phase, surfacePhase=7, status=blender-v3-published");
   }
   if (metadata.model !== "/models/camping/xoyens-studio.glb") {
     throw new Error("metadata does not point to the canonical /camping asset URL");
@@ -137,7 +137,7 @@ export function verifyCampingFrontendPublication(root = process.cwd()): void {
   if (slotContracts.has("studio.artist-slot-018")) throw new Error("unexpected artist slot 018 is present");
 
   const productionZone = metadata.geometry?.productionZone;
-  if (metadata.productionPhase !== 8 ||
+  if (metadata.productionPhase < 8 ||
       productionZone?.sourceStatus !== "source-validated" ||
       productionZone?.requiredElements !== 19 ||
       productionZone?.chairUpholsteryTrianglesSource < 14000 ||
@@ -147,6 +147,40 @@ export function verifyCampingFrontendPublication(root = process.cwd()): void {
       productionZone?.pendants !== 4 || productionZone?.edisonBulbs !== 4 ||
       !(productionZone?.trianglesAddedFromPhase7 > 0)) {
     throw new Error("metadata does not certify Phase 08 production geometry");
+  }
+
+  if (metadata.phase >= 9) {
+    const photoZone = metadata.geometry?.photoZone;
+    if (photoZone?.sourceStatus !== "source-validated" ||
+        photoZone?.requiredElements !== 9 || photoZone?.taggedPhotoObjects !== 9 ||
+        photoZone?.garments !== 5 || photoZone?.sealDiameterM !== 2.2 ||
+        photoZone?.rackWidthM !== 1.6 ||
+        !Array.isArray(photoZone?.requiredMaterialsLinked)) {
+      throw new Error("metadata does not certify Phase 09 photography geometry");
+    }
+    const requiredPhotoIds = [
+      "photo.roller_backdrop", "photo.backdrop_seal", "photo.rack", "photo.garments",
+      "photo.softbox_octa", "photo.led_panel_1", "photo.light_grid",
+      "photo.led_panel_barn_doors", "photo.rack_wheels",
+    ];
+    for (const id of requiredPhotoIds) {
+      if (!nodes.some((node: { extras?: Record<string, unknown> }) => node.extras?.elementId === id)) {
+        throw new Error("optimized GLB is missing Phase 09 element " + id);
+      }
+    }
+    for (const materialName of ["print_official_seal", "print_official_xoyens", "led_panel_emissive", "led_warm_emissive"]) {
+      if (!materialNames.has(materialName)) throw new Error("optimized GLB is missing Phase 09 material " + materialName);
+    }
+    const garmentNodes = nodes.filter((node: { name?: unknown; mesh?: unknown }) =>
+      /^SDT_photo_garments_garment_\\d+$/.test(String(node.name ?? "")) && Number.isInteger(node.mesh));
+    if (garmentNodes.length !== 5) {
+      throw new Error("optimized GLB must contain exactly five Phase 09 garment meshes, found " + garmentNodes.length);
+    }
+    for (const id of ["studio.photo-backdrop", "studio.merch-rack"]) {
+      if (!photoZone.requiredInteractionsPreserved?.includes(id)) {
+        throw new Error("Phase 09 metadata does not certify preserved interaction " + id);
+      }
+    }
   }
 
   const findPhaseNode = (elementId: string, namePattern: RegExp) =>
@@ -221,8 +255,8 @@ export function verifyCampingFrontendPublication(root = process.cwd()): void {
       triangles: actual.triangles,
       materials: actual.materials,
       artistSlots: 17,
-      phase: 8,
-      productionPhase: 8,
+      phase: metadata.phase,
+      productionPhase: metadata.productionPhase,
       surfacePhase: 7,
       heroSurfaces: metadata.geometry.heroSurfaces,
       productionZone,
