@@ -98,6 +98,19 @@ if (!nodes.some((node) => node.name === "SDT_production_monitor_daw_screen" && N
 for (const interactionId of ["studio.production-desk", "studio.imac", "studio.audio-system"]) {
   if (!seen.has(interactionId)) throw new Error("Phase 08 production interaction is missing: " + interactionId);
 }
+if (Number(process.env.CAMPING_PHASE || 8) >= 9) {
+  const requiredPhotoIds = ["photo.roller_backdrop", "photo.backdrop_seal", "photo.rack", "photo.garments",
+    "photo.softbox_octa", "photo.led_panel_1", "photo.light_grid", "photo.led_panel_barn_doors", "photo.rack_wheels"];
+  for (const id of requiredPhotoIds) {
+    if (!nodes.some(node => node.extras?.elementId === id)) throw new Error("Phase 09 photo element missing: " + id);
+  }
+  const photoMaterials = new Set((json.materials ?? []).map(material => material.name).filter(Boolean));
+  for (const name of ["print_official_seal", "print_official_xoyens", "led_panel_emissive", "led_warm_emissive"]) {
+    if (!photoMaterials.has(name)) throw new Error("Phase 09 material is not linked to GLB geometry: " + name);
+  }
+  const garmentMeshes = nodes.filter(node => /^SDT_photo_garments_garment_\d+$/.test(String(node.name ?? "")) && Number.isInteger(node.mesh));
+  if (garmentMeshes.length !== 5) throw new Error("Phase 09 requires five garment meshes; found " + garmentMeshes.length);
+}
 let primitives = 0, missingMaterial = 0, missingUv0 = 0, missingUv1 = 0;
 for (const mesh of json.meshes ?? []) for (const primitive of mesh.primitives ?? []) {
   primitives++;

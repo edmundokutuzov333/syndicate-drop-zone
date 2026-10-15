@@ -7,6 +7,7 @@ const METADATA_PATH = "/models/camping/xoyens-studio.model.json";
 const EXPECTED_MODEL_PHASE = Number(process.env.CAMPING_EXPECTED_MODEL_PHASE || process.env.CAMPING_PHASE || 8);
 const REQUIRED_EXTENSIONS = ["KHR_texture_basisu", "EXT_meshopt_compression"];
 const REQUIRED_PHASE08_MATERIALS = ["ceramic_red", "glass_mirror", "led_warm_emissive"];
+const REQUIRED_PHASE09_MATERIALS = ["print_official_seal", "print_official_xoyens", "led_panel_emissive", "led_warm_emissive"];
 const REQUIRED_INTERACTIONS = [
   "studio.imac",
   "studio.artists-wall",
@@ -152,6 +153,25 @@ async function verifyPublishedAsset(metadata) {
       productionZone?.pendants !== 4 || productionZone?.edisonBulbs !== 4 ||
       !(productionZone?.trianglesAddedFromPhase7 > 0)) {
     throw new Error("served model metadata does not certify the complete Phase 08 production zone");
+  }
+
+  let photoZone = null;
+  if (EXPECTED_MODEL_PHASE >= 9) {
+    const photoIds = ["photo.roller_backdrop", "photo.backdrop_seal", "photo.rack", "photo.garments",
+      "photo.softbox_octa", "photo.led_panel_1", "photo.light_grid", "photo.led_panel_barn_doors", "photo.rack_wheels"];
+    for (const id of photoIds) {
+      if (!(gltf.nodes ?? []).some(node => node.extras?.elementId === id)) throw new Error("served GLB is missing Phase 09 element " + id);
+    }
+    const missingPhotoMaterials = REQUIRED_PHASE09_MATERIALS.filter(name => !materialNames.has(name));
+    if (missingPhotoMaterials.length) throw new Error("served GLB is missing Phase 09 materials: " + missingPhotoMaterials.join(", "));
+    const garments = (gltf.nodes ?? []).filter(node => /^SDT_photo_garments_garment_\d+$/.test(String(node.name ?? "")) && Number.isInteger(node.mesh));
+    if (garments.length !== 5) throw new Error("served GLB must contain five Phase 09 garment meshes, found " + garments.length);
+    photoZone = metadata.geometry?.photoZone;
+    if (photoZone?.sourceStatus !== "source-validated" || photoZone?.requiredElements !== 9 ||
+        photoZone?.garments !== 5 || photoZone?.sealDiameterM !== 2.2 ||
+        REQUIRED_PHASE09_MATERIALS.some(name => !(photoZone.requiredMaterialsLinked ?? []).includes(name))) {
+      throw new Error("served model metadata does not certify the complete Phase 09 photo zone");
+    }
   }
 
   const primitives = (gltf.meshes ?? []).reduce((sum, mesh) => sum + (mesh.primitives ?? []).length, 0);
