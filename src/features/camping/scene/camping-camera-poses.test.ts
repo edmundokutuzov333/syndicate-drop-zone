@@ -6,6 +6,7 @@ import {
   deriveCampingCameraPoses,
   deriveCampingEntryPoseFromSceneBounds,
   deriveCampingFloorBounds,
+  deriveCampingPoseFloorBounds,
   inspectCampingFloorGeometry,
 } from "./camping-camera-poses";
 
@@ -268,6 +269,44 @@ describe("CAMPING V3 camera and collision coordinates", () => {
     const pitch = Math.atan2(pose.look[1] - pose.position[1], distance) * 180 / Math.PI;
     expect(pitch).toBeGreaterThan(-12);
     expect(pitch).toBeLessThanOrEqual(0);
+  });
+
+  it("derives guided camera poses from a documented room envelope without inventing a physical floor collider", () => {
+    const root = new Group();
+    addBox(root, "SDT_shell_wall_left", [0.12, 4.35, 9.2], [-7.04, 2.175, 0]);
+    addBox(root, "SDT_shell_wall_right", [0.12, 4.35, 9.2], [7.04, 2.175, 0]);
+    addBox(root, "SDT_shell_wall_back", [14.2, 4.35, 0.12], [0, 2.175, -4.54]);
+    addBox(root, "SDT_shell_wall_front", [14.2, 4.35, 0.12], [0, 2.175, 4.54]);
+    addBox(root, "SDT_shell_vault_ceiling", [14.2, 0.1, 9.2], [0, 4.3, 0]);
+    addBox(root, "SDT_shell_door_main", [1.1, 2.04, 0.12], [0, 1.02, 4.54]);
+    addBox(root, "SDT_shell_vault_rib_primary_01", [0.08, 0.08, 9.2], [-3, 4.0, 0]);
+    addBox(root, "SDT_shell_vault_rib_primary_02", [0.08, 0.08, 9.2], [3, 4.0, 0]);
+    addBox(root, "SDT_shell_door_main_hinge_1", [0.08, 0.15, 0.1], [-0.52, 1.02, 4.5]);
+    root.updateMatrixWorld(true);
+
+    expect(deriveCampingFloorBounds(root)).toBeNull();
+    const poseBounds = deriveCampingPoseFloorBounds(root);
+    expect(poseBounds).not.toBeNull();
+    if (!poseBounds) throw new Error("Expected room-envelope camera bounds.");
+    expect(poseBounds.source).toBe("room-envelope");
+    expect(poseBounds.minY).toBeCloseTo(0, 2);
+    expect(poseBounds.maxY).toBeCloseTo(0, 2);
+
+    const poses = deriveCampingCameraPoses(root, 1.62);
+    expect(poses).not.toBeNull();
+    if (!poses) throw new Error("Expected all guided camera poses from certified room envelope.");
+    for (const id of ["entrada", "producao", "foto", "esquerda", "direita", "tecto", "chao", "vestuario", "artistas"] as const) {
+      expect(poses[id].position.every(Number.isFinite), id + " position").toBe(true);
+      expect(poses[id].look.every(Number.isFinite), id + " look target").toBe(true);
+      expect(poses[id].position[0]).toBeGreaterThan(poseBounds.minX);
+      expect(poses[id].position[0]).toBeLessThan(poseBounds.maxX);
+      expect(poses[id].position[2]).toBeGreaterThan(poseBounds.minZ);
+      expect(poses[id].position[2]).toBeLessThan(poseBounds.maxZ);
+      expect(poses[id].position[1]).toBeCloseTo(1.62, 2);
+    }
+    expect(poses.entrada.position[2]).toBeGreaterThan((poseBounds.minZ + poseBounds.maxZ) / 2);
+    expect(poses.entrada.look[2]).toBeLessThan((poseBounds.minZ + poseBounds.maxZ) / 2);
+    expect(createCampingV3CollisionConfig(root)).toBeNull();
   });
 
   it("builds collision bounds and obstacle boxes from the metric V3 floor", () => {
