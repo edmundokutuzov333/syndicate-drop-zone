@@ -660,6 +660,7 @@ export class CampingStudioEngine {
   private artistDataPromise: ReturnType<typeof getLiveArtistsForSite> | null = null;
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(68, 1, 0.05, 70);
+  private cameraEyeHeight = CAM_HEIGHT;
   private raycaster = new THREE.Raycaster();
   private pointer = new THREE.Vector2(2, 2);
   private interactiveRoots: THREE.Object3D[] = [];
@@ -1346,9 +1347,11 @@ export class CampingStudioEngine {
     this.focusReturn = null;
     this.roomTransitioning = false;
     this.roomDoorMotion = null;
-    this.camera.position.set(...pose.position);
+    this.camera.position.set(pose.position[0], this.cameraEyeHeight, pose.position[2]);
     if (this.canvas) {
-      this.canvas.dataset.campingCameraPosition = JSON.stringify(pose.position);
+      this.canvas.dataset.campingCameraPosition = JSON.stringify([
+        pose.position[0], this.cameraEyeHeight, pose.position[2],
+      ]);
       this.canvas.dataset.campingCameraLookTarget = JSON.stringify(pose.look);
     }
     const direction = new THREE.Vector3(...pose.look).sub(this.camera.position).normalize();
@@ -1394,7 +1397,7 @@ export class CampingStudioEngine {
       }
     }
     this.advanceMovement(delta);
-    this.camera.position.y = CAM_HEIGHT;
+    this.camera.position.y = this.cameraEyeHeight;
     this.camera.rotation.order = "YXZ";
     if (!this.tween && isCampingWalkEnabled(this.phase)) {
       this.camera.rotation.set(this.pitch, this.yaw, 0, "YXZ");
@@ -1921,7 +1924,7 @@ export class CampingStudioEngine {
     }
     if (this.access.phase === "EXPLORATION" && previousPhase !== "EXPLORATION") {
       this.tween = null;
-      this.camera.position.y = CAM_HEIGHT;
+      this.camera.position.y = this.cameraEyeHeight;
       // Keep the camera orientation produced by the door-entry tween.
       this.callbacks.onHoverChange(null);
       this.callbacks.onMessage(null);
@@ -2208,11 +2211,14 @@ export class CampingStudioEngine {
         if (this.canvas) {
           const floorBounds = deriveCampingFloorBounds(root);
           if (floorBounds) {
+            this.cameraEyeHeight = floorBounds.maxY + CAM_HEIGHT;
             this.canvas.dataset.campingModelFloorBounds = JSON.stringify([
               floorBounds.minX, floorBounds.minZ, floorBounds.maxX, floorBounds.maxZ,
             ]);
             this.canvas.dataset.campingModelFloorBoundsSource = floorBounds.source;
             this.canvas.dataset.campingModelFloorSize = JSON.stringify([floorBounds.width, floorBounds.depth]);
+            this.canvas.dataset.campingModelFloorY = JSON.stringify([floorBounds.minY, floorBounds.maxY]);
+            this.canvas.dataset.campingCameraEyeY = String(this.cameraEyeHeight);
           }
         }
         this.studioRoot.visible = this.phase !== "LOCKED" && this.phase !== "CODE_ENTRY" && this.phase !== "ACCESS_GRANTED";
@@ -3142,14 +3148,19 @@ export class CampingStudioEngine {
           this.collision,
         )
       : { x: interpolated.x, z: interpolated.z };
-    this.camera.position.set(constrained.x, CAM_HEIGHT, constrained.z);
+    this.camera.position.set(constrained.x, this.cameraEyeHeight, constrained.z);
     const look = current.fromLook.clone().lerp(current.toLook, t);
     this.camera.lookAt(look);
     if (raw >= 1) {
       this.tween = null;
       const direction = current.toLook.clone().sub(current.toPosition).normalize();
       this.yaw = Math.atan2(-direction.x, -direction.z);
-      this.pitch = Math.asin(THREE.MathUtils.clamp(direction.y, -1, 1));
+      this.pitch = THREE.MathUtils.clamp(
+        Math.asin(THREE.MathUtils.clamp(direction.y, -1, 1)),
+        THREE.MathUtils.degToRad(-18),
+        THREE.MathUtils.degToRad(8),
+      );
+      if (this.canvas) this.canvas.dataset.campingCameraPitchDeg = THREE.MathUtils.radToDeg(this.pitch).toFixed(2);
       current.onComplete?.();
     }
   }

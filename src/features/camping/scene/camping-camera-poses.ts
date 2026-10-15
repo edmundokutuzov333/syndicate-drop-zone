@@ -15,7 +15,7 @@ export type CampingCameraPose = {
 };
 export type CampingCameraPoseMap = Record<CampingCameraPoseName, CampingCameraPose>;
 export type CampingFloorBounds = {
-  minX: number; maxX: number; minZ: number; maxZ: number;
+  minX: number; maxX: number; minY: number; maxY: number; minZ: number; maxZ: number;
   width: number; depth: number;
   source: "floor-node" | "floor-element" | "scene-root-fallback";
 };
@@ -33,6 +33,7 @@ function toFloorBounds(bounds: THREE.Box3, source: CampingFloorBounds["source"])
   if (!Number.isFinite(width) || !Number.isFinite(depth) || width < 1.5 || depth < 1.5) return null;
   return {
     minX: bounds.min.x, maxX: bounds.max.x,
+    minY: bounds.min.y, maxY: bounds.max.y,
     minZ: bounds.min.z, maxZ: bounds.max.z,
     width, depth, source,
   };
@@ -89,29 +90,33 @@ export function deriveCampingCameraPoses(root: THREE.Object3D, cameraHeight = 1.
   const allBounds = new THREE.Box3().setFromObject(root);
   if (allBounds.isEmpty()) return null;
 
-  const center = new THREE.Vector3((floor.minX + floor.maxX) / 2, 0, (floor.minZ + floor.maxZ) / 2);
+  const floorY = floor.maxY;
+  const eyeY = floorY + cameraHeight;
+  const center = new THREE.Vector3((floor.minX + floor.maxX) / 2, floorY, (floor.minZ + floor.maxZ) / 2);
   const marginX = Math.min(0.35, floor.width * 0.06);
   const marginZ = Math.min(0.32, floor.depth * 0.07);
   const minX = floor.minX + marginX, maxX = floor.maxX - marginX;
   const minZ = floor.minZ + marginZ, maxZ = floor.maxZ - marginZ;
-  const floorY = allBounds.min.y, roofY = allBounds.max.y;
+  const roofY = allBounds.max.y;
   const position = (x: number, z: number) =>
-    new THREE.Vector3(clamp(x, minX, maxX), cameraHeight, clamp(z, minZ, maxZ));
+    new THREE.Vector3(clamp(x, minX, maxX), eyeY, clamp(z, minZ, maxZ));
 
   const targetPose = (names: readonly string[], distance: number, lateral = 0): CampingCameraPose | null => {
     const bounds = getObjectBounds(root, names);
     if (!bounds) return null;
     const target = bounds.getCenter(new THREE.Vector3());
     const camera = position(target.x + lateral, target.z + distance);
-    const targetY = clamp(target.y, floorY + 0.75, roofY - 0.25);
+    const targetY = clamp(target.y, floorY + 0.9, Math.min(floorY + 1.8, roofY - 0.35));
     return serializePose(camera, new THREE.Vector3(target.x, targetY, target.z));
   };
 
-  const entryPosition = position(center.x, floor.maxZ - Math.min(0.9, floor.depth * 0.18));
+  // Start just inside the +Z doorway and look diagonally through the room.
+  // The eye-level target is deliberately separated from the ceiling geometry.
+  const entryPosition = position(center.x, floor.maxZ - Math.min(0.45, floor.depth * 0.08));
   const entryLook = new THREE.Vector3(
-    center.x,
-    clamp(cameraHeight - 0.05, floorY + 0.9, roofY - 0.35),
-    clamp(center.z - floor.depth * 0.12, minZ, maxZ - 0.15),
+    clamp(center.x - floor.width * 0.12, minX, maxX),
+    floorY + 1.42,
+    clamp(center.z - floor.depth * 0.3, minZ, maxZ),
   );
   const production = targetPose(["studio.production-desk", "studio.imac"], Math.min(1.65, floor.depth * 0.3));
   const photography = targetPose(["studio.photo-backdrop"], Math.min(1.55, floor.depth * 0.28));
@@ -129,7 +134,7 @@ export function deriveCampingCameraPoses(root: THREE.Object3D, cameraHeight = 1.
     const wall = artistsBounds.getCenter(new THREE.Vector3());
     const directionIntoRoom = wall.x >= center.x ? -1 : 1;
     const camera = position(wall.x + directionIntoRoom * Math.min(1.2, floor.width * 0.18), wall.z);
-    const targetY = clamp(wall.y, floorY + 0.75, roofY - 0.25);
+    const targetY = clamp(wall.y, floorY + 0.9, Math.min(floorY + 1.8, roofY - 0.35));
     artists = serializePose(camera, new THREE.Vector3(wall.x, targetY, wall.z));
   }
 
