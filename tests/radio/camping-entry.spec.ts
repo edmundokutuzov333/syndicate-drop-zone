@@ -356,6 +356,7 @@ test.describe("CAMPING V2 / 808 access", () => {
       await expect(canvas).toHaveAttribute("data-camping-debug-frozen", "true");
       const cameraBounds = await canvas.evaluate((element) => ({
         position: element.getAttribute("data-camping-camera-position"),
+        look: element.getAttribute("data-camping-camera-look-target"),
         bounds: element.getAttribute("data-camping-model-floor-bounds"),
         source: element.getAttribute("data-camping-model-source"),
         poseSource: element.getAttribute("data-camping-camera-pose-source"),
@@ -381,10 +382,16 @@ test.describe("CAMPING V2 / 808 access", () => {
       }
       const cameraPosition = JSON.parse(cameraBounds.position!) as [number, number, number];
       const floorBounds = JSON.parse(cameraBounds.bounds!) as [number, number, number, number];
+      const lookTarget = JSON.parse(cameraBounds.look!) as [number, number, number];
       expect(cameraPosition[0], pose + " camera x inside floor").toBeGreaterThan(floorBounds[0]);
       expect(cameraPosition[0], pose + " camera x inside floor").toBeLessThan(floorBounds[2]);
       expect(cameraPosition[2], pose + " camera z inside floor").toBeGreaterThan(floorBounds[1]);
       expect(cameraPosition[2], pose + " camera z inside floor").toBeLessThan(floorBounds[3]);
+      if (pose === "entrada") {
+        const roomCenterZ = (floorBounds[1] + floorBounds[3]) / 2;
+        expect(cameraPosition[2], "entry starts at the declared +Z entrance").toBeGreaterThan(roomCenterZ);
+        expect(lookTarget[2], "entry view must face into the room along -Z").toBeLessThan(roomCenterZ);
+      }
       if (pose === "entrada") {
         const floorSize = JSON.parse(cameraBounds.floorSize!) as [number, number];
         const lookTarget = JSON.parse(

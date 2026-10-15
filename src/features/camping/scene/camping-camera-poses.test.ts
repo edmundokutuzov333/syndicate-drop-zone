@@ -18,6 +18,10 @@ function makeMetricStudio(): { root: Group; floor: Mesh } {
   addBox(root, "studio.photo-backdrop", [2.5, 2.8, 0.08], [2, 1.4, -2.45]);
   addBox(root, "studio.merch-rack", [0.8, 1.7, 0.6], [2.4, 0.95, -0.55]);
   addBox(root, "studio.artists-wall", [0.12, 2.4, 2.0], [3.45, 1.2, 0]);
+  // This door-like interaction is intentionally on the back wall. Camera
+  // framing must follow the declared +Z entry axis, not whichever named object
+  // happens to be returned first by getObjectByName().
+  addBox(root, "studio.inner-door", [0.3, 2.2, 0.12], [0, 1.1, -2.7]);
   root.updateMatrixWorld(true);
   return { root, floor };
 }
@@ -65,6 +69,9 @@ describe("CAMPING V3 camera and collision coordinates", () => {
       expect(pose.position[2], id + " camera z").toBeLessThan(bounds.max.z);
       expect(pose.look.every(Number.isFinite), id + " look target").toBe(true);
     }
+    const roomCenterZ = (bounds.min.z + bounds.max.z) / 2;
+    expect(poses.entrada.position[2], "entry camera must be on the declared +Z side").toBeGreaterThan(roomCenterZ);
+    expect(poses.entrada.look[2], "entry camera must look into the room toward -Z").toBeLessThan(roomCenterZ);
     expect(Math.hypot(
       poses.entrada.position[0] - poses.entrada.look[0],
       poses.entrada.position[2] - poses.entrada.look[2],

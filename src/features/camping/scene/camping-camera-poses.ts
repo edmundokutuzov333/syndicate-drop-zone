@@ -129,31 +129,19 @@ export function deriveCampingCameraPoses(root: THREE.Object3D, cameraHeight = 1.
     return serializePose(camera, new THREE.Vector3(target.x, targetY, target.z));
   };
 
-  // Infer the doorway's actual wall from the measured door and floor bounds.
-  // Do not assume +Z: a reversed axis places the camera facing the door leaf.
-  const doorBounds = getObjectBounds(root, ["studio.inner-door", "studio.entry-door"]);
-  const doorCenter = doorBounds?.getCenter(new THREE.Vector3());
-  const edgeDistances = doorCenter ? [
-    { edge: "minX", distance: Math.abs(doorCenter.x - floor.minX) },
-    { edge: "maxX", distance: Math.abs(floor.maxX - doorCenter.x) },
-    { edge: "minZ", distance: Math.abs(doorCenter.z - floor.minZ) },
-    { edge: "maxZ", distance: Math.abs(floor.maxZ - doorCenter.z) },
-  ] : [];
-  edgeDistances.sort((a, b) => a.distance - b.distance);
-  const doorwayEdge = edgeDistances[0]?.edge ?? "maxZ";
-  const entryPositionXZ = doorCenter ? {
-    x: doorwayEdge === "minX" ? floor.minX + Math.min(1.15, floor.width * 0.18)
-      : doorwayEdge === "maxX" ? floor.maxX - Math.min(1.15, floor.width * 0.18)
-      : clamp(doorCenter.x, minX, maxX),
-    z: doorwayEdge === "minZ" ? floor.minZ + Math.min(1.15, floor.depth * 0.2)
-      : doorwayEdge === "maxZ" ? floor.maxZ - Math.min(1.15, floor.depth * 0.2)
-      : clamp(doorCenter.z, minZ, maxZ),
-  } : { x: center.x, z: center.z + floor.depth * 0.1 };
-  const entryPosition = position(entryPositionXZ.x, entryPositionXZ.z);
+  // The certified model manifest defines the entry axis: visitors enter from +Z
+  // and look into the room toward -Z. Do not infer this from studio.inner-door:
+  // that interaction ID is shared by door components and can resolve to a leaf,
+  // handle, or interior-door object instead of the actual entrance.
+  const entryInset = Math.min(1.15, floor.depth * 0.22);
+  const entryPosition = position(
+    clamp(center.x, minX, maxX),
+    floor.maxZ - entryInset,
+  );
   const entryLook = new THREE.Vector3(
     clamp(center.x, minX, maxX),
     floorY + 1.48,
-    doorCenter ? clamp(center.z, minZ, maxZ) : clamp(center.z - floor.depth * 0.36, minZ, maxZ),
+    clamp(center.z - floor.depth * 0.22, minZ, maxZ),
   );
   const production = targetPose(["studio.production-desk", "studio.imac"], Math.min(1.65, floor.depth * 0.3));
   const photography = targetPose(["studio.photo-backdrop"], Math.min(1.55, floor.depth * 0.28));
