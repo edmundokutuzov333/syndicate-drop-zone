@@ -24,6 +24,11 @@ if [ "${CAMPING_PHASE:-8}" -ge 9 ]; then
 fi
 step blend-check npm run 3d:blend:validate
 step frontend-model bash scripts/3d/build-frontend-model.sh
+# The optimized candidate is now at the canonical public URL. Run the same
+# frontend gates required by the superprompt before the publish job can commit it.
+step frontend-lint npm run lint
+step frontend-tests npm run test
+step frontend-build npm run build
 node scripts/3d/pack-delivery.mjs --phase="${CAMPING_PHASE:-8}" || true
 step verify node scripts/3d/verify-delivery.mjs . docs/camping-v3/scene-bible.json --phase="${CAMPING_PHASE:-8}"
 node scripts/3d/pack-delivery.mjs --phase="${CAMPING_PHASE:-8}" || true
