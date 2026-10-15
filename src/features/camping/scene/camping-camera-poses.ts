@@ -98,6 +98,7 @@ function getFloorBounds(root: THREE.Object3D): FloorBounds | null {
         const documentedAreas = [7.6 * 5.6, 13.1 * 8.26, 14.2 * 9.2];
         return Math.min(...documentedAreas.map((expected) => Math.abs(Math.log(area / expected))));
       };
+      return score(a.bounds) - score(b.bounds);
     });
 
   // Never substitute the full scene bounds for floor bounds. That is how a
