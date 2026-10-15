@@ -192,6 +192,11 @@ def _light_stand(element,ctx,center,panel_dims,kind):
         for side in (-1,1):
             _child_box(element,ctx,"barn_door_top_"+str(side),(0.025,0.07,panel_dims[2]*0.9),
                        (face_x+0.008,y+0.52+side*panel_dims[1]*0.46,z),"steel_black",0.003)
+    # Warm pilot LED on the rear housing: real Phase 09 geometry using the mandated
+    # led_warm_emissive material, without tinting the neutral front-facing diffuser.
+    _child_box(element,ctx,"warm_status_led",(0.012,0.018,0.018),
+               (x-panel_dims[0]*0.5-0.006,y+0.52,z+panel_dims[2]*0.30),
+               "led_warm_emissive",0.002)
     # Three-legged stand, height-adjustable centre column and locks.
     _rod(element,ctx,"stand_column",(x,y-0.10,z),(x,y+0.48,z),0.014,"steel_black_tube")
     _child_box(element,ctx,"stand_lock",(0.055,0.045,0.055),(x,y+0.12,z),"steel_brushed",0.003)
