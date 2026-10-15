@@ -67,28 +67,19 @@ async function openCamping(page: import("@playwright/test").Page, query = "", op
     if (message.type() === "error") browserDiagnostics.push("console: " + message.text());
   });
 
+  if (!options.skipUnlock) {
+    // Seed the site session before navigation so GATE_BOOT can restore it on
+    // the first document. Reloading after WebGL/audio mounts can hang the CI
+    // browser's navigation lifecycle and prevents reaching the inner 808 test.
+    await page.addInitScript(() => {
+      try { window.sessionStorage.setItem("sdt-open", "1"); } catch { /* Browser policy may disable storage. */ }
+    });
+  }
   await page.goto("/camping" + query);
   if (!options.skipUnlock) {
-    // The site keypad has its own real-interaction/session tests above and in
-    // the shared radio suite. These scene tests target the inner CAMPING 808
-    // gate and the WebGL result. Persist the session only after the first SSR
-    // response, then reload so GATE_BOOT restores it before hydration. This
-    // avoids making a software-WebGL render compete with outer-keypad clicks.
     const siteGate = page.locator('[data-site-gate="locked"]');
-    if (await siteGate.isVisible().catch(() => false)) {
-      await page.evaluate(() => {
-        try { window.sessionStorage.setItem("sdt-open", "1"); } catch { /* Browser policy may disable storage. */ }
-      });
-      // The production page has continuously active audio/media resources.
-      // Waiting for the full load event on reload can stall even after SSR is
-      // available, so use DOMContentLoaded and assert the gate state explicitly.
-      await page.reload({ waitUntil: "domcontentloaded", timeout: 15_000 });
-      await expect(page.locator("html")).toHaveAttribute("data-gate", "open", { timeout: 15_000 });
-      // GATE_BOOT hides the overlay before hydration; a slow software-WebGL
-      // frame loop may delay React's passive unmount. The overlay must be
-      // visually absent, while the dedicated session test verifies unmount.
-      await expect(siteGate).toBeHidden({ timeout: 15_000 });
-    }
+    await expect(page.locator("html")).toHaveAttribute("data-gate", "open", { timeout: 15_000 });
+    await expect(siteGate).toBeHidden({ timeout: 15_000 });
     options.afterNavigation?.();
     await expect(page.locator("main.camping-studio-route")).toBeVisible();
   } else {
