@@ -28,11 +28,16 @@ export function CodeGate({ onOpen }: { onOpen: () => void }) {
     if(key==="OK"){
       if(value===CODE){
         setAccepted(true);
-        openGate();
-        // Commit the state transition first. WebAudio and analytics are optional
-        // effects, so they must not keep the site-wide gate mounted or block the
-        // first CAMPING frame on restricted or resource-constrained browsers.
+        // Release React's site shell before running storage or audio side effects.
+        // The UI must not remain hidden if sessionStorage is restricted.
         onOpen();
+        try {
+          openGate();
+        } catch {
+          // Access must still be granted when browser storage or the boot gate fails.
+        }
+        // Keep the synchronous CSS gate in lockstep with React state.
+        document.documentElement.dataset.gate = "open";
         window.setTimeout(() => {
           try { buzz([60,40,60,40,220]); } catch { /* Optional browser API; continue without this enhancement. */ }
           try { kick808(); } catch { /* Optional browser API; continue without this enhancement. */ }
