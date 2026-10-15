@@ -33,16 +33,27 @@ def main():
         if name not in materials: failures.append("material missing: "+name)
     if len([o for o in mesh if o.name.startswith("SDT_photo_garments_garment_")])<5:
         failures.append("less than five garment meshes")
-    for obj in mesh:
-        if str(obj.get("elementId","")).startswith("photo.") and not obj.data.materials:
+    photo_mesh=[o for o in mesh if any(col.name=="COL_photo" for col in o.users_collection) or o.name.startswith("SDT_photo_")]
+    # Validate every photo-zone mesh, not just Scene Bible root anchors. Garment,
+    # hanger, light-stand and decal meshes often inherit no elementId themselves.
+    for obj in photo_mesh:
+        if not obj.data.materials or all(material is None for material in obj.data.materials):
             failures.append(obj.name+": no material")
-        if str(obj.get("elementId","")).startswith("photo.") and ("UVMap" not in {u.name for u in obj.data.uv_layers} or "UV_Lightmap" not in {u.name for u in obj.data.uv_layers}):
+        uv_names={layer.name for layer in obj.data.uv_layers}
+        if "UVMap" not in uv_names or "UV_Lightmap" not in uv_names:
             failures.append(obj.name+": UVMap/UV_Lightmap missing")
-    report={"phase":9,"status":"source-validated" if not failures else "failed","blenderVersion":bpy.app.version_string,
+    if len([o for o in photo_mesh if o.name.startswith("SDT_photo_garments_garment_")]) != 5:
+        failures.append("exactly five independently modelled garment meshes required")
+    photo_materials={material.name for obj in photo_mesh for material in obj.data.materials if material}
+    for name in ("print_official_seal","print_official_xoyens","led_panel_emissive","led_warm_emissive"):
+        if name not in photo_materials:
+            failures.append("Phase 09 material not assigned to photo geometry: "+name)
+    report={"version":1,"phase":9,"status":"source-validated" if not failures else "failed","blenderVersion":bpy.app.version_string,
             "photoElements":len(required),"photoRootsFound":len([x for x in required if x in photo]),
             "garments":5 if garments else 0,"rackWidthM":1.6 if rack else None,"sealDiameterM":2.2 if seal else None,
-            "requiredMaterials":sorted(name for name in ("print_official_seal","print_official_xoyens","led_panel_emissive","led_warm_emissive") if name in materials),
-            "meshCount":len(mesh),"photoMeshCount":len([o for o in mesh if str(o.get("elementId","")).startswith("photo.")]),
+            "garmentTypes":["tee-seal","tee-seal","tee-xoyens","hoodie","hoodie-grey-sleeve"] if garments else [],
+            "requiredMaterials":sorted(name for name in ("print_official_seal","print_official_xoyens","led_panel_emissive","led_warm_emissive") if name in photo_materials),
+            "meshCount":len(mesh),"photoMeshCount":len(photo_mesh),
             "failures":failures}
     output.parent.mkdir(parents=True,exist_ok=True)
     output.write_text(json.dumps(report,indent=2,sort_keys=True)+"\n",encoding="utf-8")
