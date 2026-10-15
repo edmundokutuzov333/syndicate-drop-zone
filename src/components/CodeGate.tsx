@@ -31,7 +31,7 @@ export function CodeGate({ onOpen }: { onOpen: () => void }) {
         openGate();
         // Schedule the unlock before any non-critical WebAudio or analytics
         // calls, which can throw synchronously in restricted browser contexts.
-        window.setTimeout(onOpen,900);
+        onOpen();
         try { buzz([60,40,60,40,220]); } catch {}
         try { kick808(); } catch {}
         try { track("gate_open"); } catch {}
