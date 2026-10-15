@@ -319,7 +319,7 @@ def material_library(bible):
             if not path.is_file():
                 raise FileNotFoundError(name + ": PBR map missing: " + str(path))
 
-    names = set()
+    names = set(profiles.keys())
     for element in bible.get("elements", []):
         names.update(element.get("materials", []))
     names.update(MATERIAL_COLOURS.keys())
