@@ -19,13 +19,27 @@ export function CodeGate({ onOpen }: { onOpen: () => void }) {
   const [hydrated,setHydrated]=useState(false);
   const press=(key:string)=>{
     if(accepted)return;
-    click(); buzz(12); setError(false);
+    // Sound and analytics are optional enhancements. They must never block
+    // the keypad state machine or leave the whole site trapped behind the gate.
+    try { click(); } catch {}
+    try { buzz(12); } catch {}
+    setError(false);
     if(key==="C"){setValue("");return;}
     if(key==="OK"){
       if(value===CODE){
-        setAccepted(true); buzz([60,40,60,40,220]); openGate(); kick808(); track("gate_open"); hiss(0.6); void frequency.start(); window.setTimeout(onOpen,900);
+        setAccepted(true);
+        openGate();
+        // Schedule the unlock before any non-critical WebAudio or analytics
+        // calls, which can throw synchronously in restricted browser contexts.
+        window.setTimeout(onOpen,900);
+        try { buzz([60,40,60,40,220]); } catch {}
+        try { kick808(); } catch {}
+        try { track("gate_open"); } catch {}
+        try { hiss(0.6); } catch {}
+        try { void frequency.start(); } catch {}
       }else{
-        buzz([180,60,180]); setError(true); setValue("");
+        try { buzz([180,60,180]); } catch {}
+        setError(true); setValue("");
       }
       return;
     }
