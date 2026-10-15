@@ -1322,13 +1322,17 @@ export class CampingStudioEngine {
   }
 
   private resolveCameraPose(id: CampingCameraPoseName): CampingCameraPose | null {
-    if (this.modelSource === "blender-v3" && this.studioRoot) {
-      const resolved = deriveCampingCameraPoses(this.studioRoot, CAM_HEIGHT)?.[id];
+    if (this.modelSource === "blender-v3") {
+      const resolved = this.studioRoot
+        ? deriveCampingCameraPoses(this.studioRoot, CAM_HEIGHT)?.[id]
+        : null;
       if (resolved) {
         if (this.canvas) this.canvas.dataset.campingCameraPoseSource = "blender-v3-scene";
         return resolved;
       }
-      if (this.canvas) this.canvas.dataset.campingCameraPoseSource = "blender-v3-fallback";
+      if (this.canvas) this.canvas.dataset.campingCameraPoseSource = "blender-v3-invalid-geometry";
+      // Do not silently reuse legacy coordinates for a metric-authored V3 room.
+      return null;
     }
     const legacyPose = (CAMPING_DEBUG_POSES as Partial<Record<CampingCameraPoseName, CampingCameraPose>>)[id];
     if (!legacyPose) return null;
@@ -1921,6 +1925,10 @@ export class CampingStudioEngine {
     }
     if (this.access.phase === "ENTERING_STUDIO" && previousPhase !== "ENTERING_STUDIO") {
       const entryPose = this.resolveCameraPose("entrada");
+      if (this.modelSource === "blender-v3" && !entryPose) {
+        this.dispatch({ type: "LOAD_ERROR", message: "CAMERA GEOMETRY INVALID" });
+        return;
+      }
       this.startTween(
         this.camera.position.clone(),
         new THREE.Vector3(...(entryPose?.position ?? CAMPING_REFERENCE_COMPOSITION.entryPosition)),

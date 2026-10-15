@@ -35,9 +35,15 @@ function toFloorBounds(bounds: THREE.Box3, source: CampingFloorBounds["source"])
   // The published CAMPING V3 contract is 7.6 m × 5.6 m. A scene-root/room
   // collection can have the same X/Z size but includes the 2.85–3.45 m walls
   // and roof. Reject it instead of using the roof apex as the camera's floor Y.
+  // Blender/export transforms can swap the world-space X/Z extents even when
+  // the certified room is still 7.6 × 5.6 m. Validate the footprint area and
+  // each plausible room dimension, rather than rejecting that valid rotation.
+  const footprintArea = width * depth;
+  const certifiedArea = 7.6 * 5.6;
   if (
     !Number.isFinite(width) || !Number.isFinite(height) || !Number.isFinite(depth) ||
-    width < 5.2 || width > 9.8 || depth < 3.8 || depth > 7.4 ||
+    width < 3.8 || width > 9.8 || depth < 3.8 || depth > 9.8 ||
+    footprintArea < certifiedArea * 0.72 || footprintArea > certifiedArea * 1.28 ||
     height < 0 || height > 0.35
   ) return null;
 

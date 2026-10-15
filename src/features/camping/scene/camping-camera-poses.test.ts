@@ -47,6 +47,25 @@ describe("CAMPING V3 camera and collision coordinates", () => {
     expect(new Box3().setFromObject(parquet).max.y).toBeCloseTo(0.05, 3);
   });
 
+  it("accepts the certified floor footprint when world X/Z dimensions are swapped", () => {
+    const root = new Group();
+    addBox(root, "studio.parquet", [5.6, 0.1, 7.6], [0, 0, 0]);
+    addBox(root, "studio.inner-door", [0.3, 2.2, 0.12], [0, 1.1, -3.7]);
+    root.updateMatrixWorld(true);
+
+    const bounds = deriveCampingFloorBounds(root);
+    expect(bounds).not.toBeNull();
+    expect(bounds?.width).toBeCloseTo(5.6, 2);
+    expect(bounds?.depth).toBeCloseTo(7.6, 2);
+
+    const poses = deriveCampingCameraPoses(root, 1.62);
+    expect(poses).not.toBeNull();
+    if (!poses) return;
+    const centerZ = (bounds!.minZ + bounds!.maxZ) / 2;
+    expect(poses.entrada.position[2]).toBeGreaterThan(centerZ);
+    expect(poses.entrada.look[2]).toBeLessThan(centerZ);
+  });
+
   it("does not fall back to the complete room envelope when no flat floor exists", () => {
     const root = new Group();
     addBox(root, "studio.floor", [7.6, 3.45, 5.6], [0, 1.7, 0]);
