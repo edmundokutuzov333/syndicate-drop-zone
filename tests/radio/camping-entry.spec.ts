@@ -395,10 +395,28 @@ test("serves a certified optimized Blender V3 model on the canonical CAMPING URL
   const metadata = await metadataResponse.json();
 
   expect(metadata.version).toBe(3);
-  expect(metadata.phase).toBe(8);
-  expect(metadata.productionPhase).toBe(8);
+  expect(metadata.phase).toBe(9);
+  expect(metadata.productionPhase).toBe(metadata.phase);
   expect(metadata.surfacePhase).toBe(7);
   expect(metadata.status).toBe("blender-v3-published");
+
+  const photoZone = metadata.geometry?.photoZone;
+  expect(photoZone?.sourceStatus).toBe("source-validated");
+  expect(photoZone?.requiredElements).toBe(9);
+  expect(photoZone?.taggedPhotoObjects).toBe(9);
+  expect(photoZone?.garments).toBe(5);
+  expect(photoZone?.sealDiameterM).toBeCloseTo(2.2, 3);
+  expect(photoZone?.rackWidthM).toBeCloseTo(1.6, 3);
+  expect(photoZone?.requiredMaterialsLinked).toEqual(expect.arrayContaining([
+    "print_official_seal",
+    "print_official_xoyens",
+    "led_panel_emissive",
+    "led_warm_emissive",
+  ]));
+  expect(photoZone?.requiredInteractionsPreserved).toEqual(expect.arrayContaining([
+    "studio.photo-backdrop",
+    "studio.merch-rack",
+  ]));
   expect(metadata.model).toBe("/models/camping/xoyens-studio.glb");
   expect(metadata.geometry?.productionZone?.sourceStatus).toBe("source-validated");
   expect(metadata.geometry?.productionZone?.requiredElements).toBe(19);
@@ -449,6 +467,13 @@ test("serves a certified optimized Blender V3 model on the canonical CAMPING URL
 
   const nodes = gltf?.nodes ?? [];
   const phase8MaterialNames = new Set((gltf?.materials ?? []).map((material: { name?: string }) => material.name));
+  const phase9MaterialNames = new Set((gltf?.materials ?? []).map((material: { name?: string }) => material.name));
+  for (const name of ["print_official_seal", "print_official_xoyens", "led_panel_emissive"]) {
+    expect(phase9MaterialNames.has(name), "Phase 09 photo material must be used in the served GLB: " + name).toBe(true);
+  }
+  const garmentMeshes = nodes.filter((node: { name?: unknown; mesh?: unknown }) =>
+    /^SDT_photo_garments_garment_\d+$/.test(String(node.name ?? "")) && Number.isInteger(node.mesh));
+  expect(garmentMeshes).toHaveLength(5);
   for (const name of ["ceramic_red", "glass_mirror", "led_warm_emissive"]) {
     expect(phase8MaterialNames.has(name), "Phase 08 material must be used in the served GLB: " + name).toBe(true);
   }
