@@ -136,6 +136,7 @@ if (targetPhase >= 7) {
 }
 
 let phase8Production = null;
+let phase9Photo = null;
 if (targetPhase >= 8) {
   // Phase 08 can only build on a published, checksum-verified Phase 07 asset.
   const productionReportPath = resolve("art/xoyens-studio.phase08.report.json");
@@ -218,6 +219,39 @@ if (targetPhase >= 8) {
   };
 }
 
+if (targetPhase >= 9) {
+  const photoReportPath = resolve("art/xoyens-studio.phase09.report.json");
+  if (!existsSync(photoReportPath)) throw new Error("Refusing promotion: Phase 09 photo report is missing");
+  const report = JSON.parse(readFileSync(photoReportPath, "utf8"));
+  if (report.phase !== 9 || report.status !== "source-validated" || report.photoElements !== 9 ||
+      report.photoRootsFound !== 9 || report.garments !== 5 || report.sealDiameterM !== 2.2) {
+    throw new Error("Refusing promotion: Phase 09 photo source report is not certified");
+  }
+  const photoIds = ["photo.roller_backdrop", "photo.backdrop_seal", "photo.rack", "photo.garments",
+    "photo.softbox_octa", "photo.led_panel_1", "photo.light_grid", "photo.led_panel_barn_doors", "photo.rack_wheels"];
+  for (const id of photoIds) {
+    if (!nodes.some(node => node.extras?.elementId === id)) throw new Error("Refusing promotion: Phase 09 element missing from optimized GLB: " + id);
+  }
+  const photoMaterials = new Set((gltf.materials || []).map(material => material.name).filter(Boolean));
+  const requiredPhotoMaterials = ["print_official_seal", "print_official_xoyens", "led_panel_emissive", "led_warm_emissive"];
+  const missingPhotoMaterials = requiredPhotoMaterials.filter(name => !photoMaterials.has(name));
+  if (missingPhotoMaterials.length) throw new Error("Refusing promotion: Phase 09 materials missing from optimized GLB: " + missingPhotoMaterials.join(", "));
+  const garments = nodes.filter(node => /^SDT_photo_garments_garment_\d+$/.test(String(node.name || "")) && Number.isInteger(node.mesh));
+  if (garments.length !== 5) throw new Error("Refusing promotion: optimized GLB must contain exactly five garment meshes, found " + garments.length);
+  phase9Photo = {
+    sourceStatus: report.status,
+    requiredElements: report.photoElements,
+    taggedPhotoObjects: report.photoRootsFound,
+    garments: report.garments,
+    garmentTypes: ["tee-seal", "tee-seal", "tee-xoyens", "hoodie", "hoodie-grey-sleeve"],
+    sealDiameterM: report.sealDiameterM,
+    rackWidthM: report.rackWidthM,
+    requiredMaterialsLinked: requiredPhotoMaterials,
+    requiredInteractionsPreserved: ["studio.photo-backdrop", "studio.merch-rack"],
+    garmentMeshNodes: garments.map(node => node.name),
+  };
+}
+
 mkdirSync(dirname(target), { recursive: true });
 copyFileSync(source, target);
 const published = readFileSync(target);
@@ -265,6 +299,7 @@ const updated = {
     officialBrandImages: previous.geometry && previous.geometry.officialBrandImages || [],
     heroSurfaces: phase7Surfaces,
     productionZone: phase8Production,
+    photoZone: phase9Photo,
   },
   objects: modelNodes,
   frontendDelivery: {
@@ -290,5 +325,5 @@ console.log(JSON.stringify({
   triangles: updated.geometry.triangles, materials: materials.length,
   images: updated.geometry.embeddedImages, extensions: Array.from(extensions).sort(),
   interactions: interactions.size, phase: updated.phase, productionPhase: updated.productionPhase,
-  productionZone: phase8Production, sourceCommit: updated.sourceCommit,
+  productionZone: phase8Production, photoZone: phase9Photo, sourceCommit: updated.sourceCommit,
 }, null, 2));
