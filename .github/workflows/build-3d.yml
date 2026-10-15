@@ -8,6 +8,7 @@ on:
       - "scripts/fetch-cc0-materials.mjs"
       - "scripts/validate-pbr-materials.mjs"
       - "scripts/3d/**"
+      - "scripts/fetch-brand-assets.mjs"
       - "scripts/build-3d.mjs"
       - "scripts/check-3d-budgets.mjs"
       - "src/features/camping/scene/CampingStudioEngine.ts"
