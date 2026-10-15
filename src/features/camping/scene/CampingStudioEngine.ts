@@ -2380,16 +2380,30 @@ export class CampingStudioEngine {
             // bounded collision contract until a genuine flat floor mesh is identifiable.
             this.collision = createStudioCollisionConfig();
           }
+          if (physicalFloorBounds) {
+            this.canvas.dataset.campingModelFloorBounds = JSON.stringify([
+              physicalFloorBounds.minX, physicalFloorBounds.minZ, physicalFloorBounds.maxX, physicalFloorBounds.maxZ,
+            ]);
+            this.canvas.dataset.campingModelFloorBoundsSource = physicalFloorBounds.source;
+            this.canvas.dataset.campingModelFloorSize = JSON.stringify([physicalFloorBounds.width, physicalFloorBounds.depth]);
+            this.canvas.dataset.campingModelFloorY = JSON.stringify([physicalFloorBounds.minY, physicalFloorBounds.maxY]);
+          } else {
+            // Do not label an inferred room plane as a physical floor mesh.
+            delete this.canvas.dataset.campingModelFloorBounds;
+            delete this.canvas.dataset.campingModelFloorBoundsSource;
+            delete this.canvas.dataset.campingModelFloorSize;
+            delete this.canvas.dataset.campingModelFloorY;
+          }
           if (poseFloorBounds) {
             this.cameraEyeHeight = poseFloorBounds.maxY + CAM_HEIGHT;
-            this.canvas.dataset.campingModelFloorBounds = JSON.stringify([
+            this.canvas.dataset.campingCameraPoseBounds = JSON.stringify([
               poseFloorBounds.minX, poseFloorBounds.minZ, poseFloorBounds.maxX, poseFloorBounds.maxZ,
             ]);
-            this.canvas.dataset.campingModelFloorBoundsSource = poseFloorBounds.source;
-            this.canvas.dataset.campingModelFloorSize = JSON.stringify([poseFloorBounds.width, poseFloorBounds.depth]);
-            this.canvas.dataset.campingModelFloorY = JSON.stringify([poseFloorBounds.minY, poseFloorBounds.maxY]);
+            this.canvas.dataset.campingCameraPoseBoundsSource = poseFloorBounds.source;
+            this.canvas.dataset.campingCameraPoseBoundsSize = JSON.stringify([poseFloorBounds.width, poseFloorBounds.depth]);
+            this.canvas.dataset.campingCameraPoseBoundsY = JSON.stringify([poseFloorBounds.minY, poseFloorBounds.maxY]);
             this.canvas.dataset.campingCameraEyeY = String(this.cameraEyeHeight);
-            this.canvas.dataset.campingCameraFloorHeight = String(poseFloorBounds.maxY - poseFloorBounds.minY);
+            this.canvas.dataset.campingCameraPoseFloorHeight = String(poseFloorBounds.maxY - poseFloorBounds.minY);
             this.canvas.dataset.campingCameraGeometryStatus = physicalFloorBounds ? "floor-mesh-ready" : "room-envelope-pose-fallback";
           } else {
             this.canvas.dataset.campingCameraGeometryStatus = "invalid-floor-bounds";
