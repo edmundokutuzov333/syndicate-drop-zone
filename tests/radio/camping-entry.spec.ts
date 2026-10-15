@@ -69,6 +69,13 @@ async function expectCampingModelReady(page: Page, canvas: Locator, timeout = 60
       sceneStatus: element.getAttribute("data-camping-scene-status"),
       portraitsRequested: element.getAttribute("data-camping-portraits-requested"),
       portraitsLoaded: element.getAttribute("data-camping-portraits-loaded"),
+      accessPhase: element.getAttribute("data-camping-access-phase"),
+      cameraGeometryStatus: element.getAttribute("data-camping-camera-geometry-status"),
+      cameraPoseSource: element.getAttribute("data-camping-camera-pose-source"),
+      cameraPoseError: element.getAttribute("data-camping-camera-pose-error"),
+      floorBoundsSource: element.getAttribute("data-camping-model-floor-bounds-source"),
+      floorSize: element.getAttribute("data-camping-model-floor-size"),
+      floorY: element.getAttribute("data-camping-model-floor-y"),
     }));
     throw new Error(
       "CAMPING failed to reach MODEL / READY. Runtime diagnostics: " +
