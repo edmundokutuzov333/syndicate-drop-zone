@@ -57,8 +57,8 @@ try {
     // The Phase 08 furniture adds real upholstery, panel and audio geometry. The
     // medium/low tiers use stronger geometric reduction while keeping the same
     // checked budgets and all named interaction anchors.
-    // The 2026-10-15 runner measured 140,568 triangles at 0.27, exceeding the 140,000 mid-tier budget by 568. Increase the reduction slightly; never relax the budget.
-    { name: "mid", maxTex: 1024, colorTex: 512, dataTex: 256, ratio: 0.25, error: 0.003 },
+    // Measured on the current Phase 09 source: ratio 0.25 / error 0.003 exceeded the mid triangle budget (155,486). Use stronger, bounded LOD reduction; do not relax budgets.
+    { name: "mid", maxTex: 1024, colorTex: 512, dataTex: 256, ratio: 0.15, error: 0.01 },
     // Measured 2026-10-15: ratio 0.10 / error 0.010 yielded 93,040 triangles and 131 primitives vs budgets of 70,000 / 130.
     // Increase low-tier simplification tolerance without relaxing either budget.
     { name: "low", maxTex: 512, colorTex: 256, dataTex: 128, ratio: 0.08, error: 0.025 }
@@ -134,10 +134,10 @@ try {
       fabric_black_flag: "cotton_black",
       fabric_black_softbox: "cotton_black",
       steel_black_tube: "steel_black",
-      // Low tier only: consolidate similar reclaimed wood and black leather variants.
-      // Wood has the same warm brown base colour; the leather variants both use nearly identical black albedo/roughness.
-      // Keep these approximations out of high/mid so hero materials and close-up detail stay intact.
-      ...(tierName === "low" ? {
+      // Mid/low LOD only: consolidate two close material variants to meet the
+      // unchanged 40-material budget while retaining the full high-tier palette.
+      // Both pairings share the same visible family; no source Blender material is edited.
+      ...(tierName !== "high" ? {
         wood_reclaimed_top: "wood_reclaimed_planks",
         leather_black_tufted: "leather_black_quilted",
       } : {}),
