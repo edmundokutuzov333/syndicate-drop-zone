@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Source-level acceptance gate for Phase 09 photography geometry."""
-import json, math, sys
+import json, math, re, sys
 from pathlib import Path
 import bpy
 SCRIPT_DIR=Path(__file__).resolve().parent
@@ -31,7 +31,7 @@ def main():
     materials={m.name for m in bpy.data.materials}
     for name in ("print_official_seal","print_official_xoyens","led_panel_emissive","led_warm_emissive"):
         if name not in materials: failures.append("material missing: "+name)
-    if len([o for o in mesh if o.name.startswith("SDT_photo_garments_garment_")])<5:
+    if len([o for o in mesh if re.fullmatch(r"SDT_photo_garments_garment_[1-5]", o.name)])<5:
         failures.append("less than five garment meshes")
     photo_mesh=[o for o in mesh if any(col.name=="COL_photo" for col in o.users_collection) or o.name.startswith("SDT_photo_")]
     # Validate every photo-zone mesh, not just Scene Bible root anchors. Garment,
@@ -42,7 +42,7 @@ def main():
         uv_names={layer.name for layer in obj.data.uv_layers}
         if "UVMap" not in uv_names or "UV_Lightmap" not in uv_names:
             failures.append(obj.name+": UVMap/UV_Lightmap missing")
-    if len([o for o in photo_mesh if o.name.startswith("SDT_photo_garments_garment_")]) != 5:
+    if len([o for o in photo_mesh if re.fullmatch(r"SDT_photo_garments_garment_[1-5]", o.name)]) != 5:
         failures.append("exactly five independently modelled garment meshes required")
     photo_materials={material.name for obj in photo_mesh for material in obj.data.materials if material}
     for name in ("print_official_seal","print_official_xoyens","led_panel_emissive"):
