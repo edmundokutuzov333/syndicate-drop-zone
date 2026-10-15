@@ -35,9 +35,10 @@ describe("CAMPING V3 camera and collision coordinates", () => {
 
     const bounds = deriveCampingFloorBounds(root);
     expect(bounds).not.toBeNull();
-    expect(bounds?.source).toBe("floor-node");
-    expect(bounds?.maxY).toBeCloseTo(0.05, 3);
-    expect(bounds?.maxY! - bounds?.minY!).toBeLessThan(0.35);
+    if (!bounds) throw new Error("Expected a valid flat floor candidate.");
+    expect(bounds.source).toBe("floor-node");
+    expect(bounds.maxY).toBeCloseTo(0.05, 3);
+    expect(bounds.maxY - bounds.minY).toBeLessThan(0.35);
 
     const poses = deriveCampingCameraPoses(root, 1.62);
     expect(poses).not.toBeNull();
