@@ -1356,7 +1356,11 @@ export class CampingStudioEngine {
     }
     const direction = new THREE.Vector3(...pose.look).sub(this.camera.position).normalize();
     this.yaw = Math.atan2(-direction.x, -direction.z);
-    this.pitch = Math.asin(THREE.MathUtils.clamp(direction.y, -1, 1));
+    this.pitch = THREE.MathUtils.clamp(
+      Math.asin(THREE.MathUtils.clamp(direction.y, -1, 1)),
+      THREE.MathUtils.degToRad(-12),
+      THREE.MathUtils.degToRad(5),
+    );
     this.camera.rotation.order = "YXZ";
     this.camera.rotation.set(this.pitch, this.yaw, 0, "YXZ");
     if (this.canvas) {

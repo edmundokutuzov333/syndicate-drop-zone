@@ -129,14 +129,31 @@ export function deriveCampingCameraPoses(root: THREE.Object3D, cameraHeight = 1.
     return serializePose(camera, new THREE.Vector3(target.x, targetY, target.z));
   };
 
-  // Entry composition is computed from the measured room footprint, not from
-  // the doorway edge. Staying 40% of the room depth behind the +Z wall prevents
-  // the door leaf/frame from filling the camera while keeping a first-person view.
-  const entryPosition = position(center.x, center.z + floor.depth * 0.1);
+  // Infer the doorway's actual wall from the measured door and floor bounds.
+  // Do not assume +Z: a reversed axis places the camera facing the door leaf.
+  const doorBounds = getObjectBounds(root, ["studio.inner-door", "studio.entry-door"]);
+  const doorCenter = doorBounds?.getCenter(new THREE.Vector3());
+  const edgeDistances = doorCenter ? [
+    { edge: "minX", distance: Math.abs(doorCenter.x - floor.minX) },
+    { edge: "maxX", distance: Math.abs(floor.maxX - doorCenter.x) },
+    { edge: "minZ", distance: Math.abs(doorCenter.z - floor.minZ) },
+    { edge: "maxZ", distance: Math.abs(floor.maxZ - doorCenter.z) },
+  ] : [];
+  edgeDistances.sort((a, b) => a.distance - b.distance);
+  const doorwayEdge = edgeDistances[0]?.edge ?? "maxZ";
+  const entryPositionXZ = doorCenter ? {
+    x: doorwayEdge === "minX" ? floor.minX + Math.min(1.15, floor.width * 0.18)
+      : doorwayEdge === "maxX" ? floor.maxX - Math.min(1.15, floor.width * 0.18)
+      : clamp(doorCenter.x, minX, maxX),
+    z: doorwayEdge === "minZ" ? floor.minZ + Math.min(1.15, floor.depth * 0.2)
+      : doorwayEdge === "maxZ" ? floor.maxZ - Math.min(1.15, floor.depth * 0.2)
+      : clamp(doorCenter.z, minZ, maxZ),
+  } : { x: center.x, z: center.z + floor.depth * 0.1 };
+  const entryPosition = position(entryPositionXZ.x, entryPositionXZ.z);
   const entryLook = new THREE.Vector3(
-    clamp(center.x - floor.width * 0.08, minX, maxX),
+    clamp(center.x, minX, maxX),
     floorY + 1.48,
-    clamp(center.z - floor.depth * 0.36, minZ, maxZ),
+    clamp(center.z, minZ, maxZ),
   );
   const production = targetPose(["studio.production-desk", "studio.imac"], Math.min(1.65, floor.depth * 0.3));
   const photography = targetPose(["studio.photo-backdrop"], Math.min(1.55, floor.depth * 0.28));
