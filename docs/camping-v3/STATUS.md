@@ -20,7 +20,7 @@ Issues de execução: fases 01–17 em [#33–#49](https://github.com/edmundokut
 | 08 | Zona de produção | Em validação | geometria no modelo V3 de fase 08; capturas A/B, gate visual e CI final ainda por certificar |
 | 09 | Zona fotográfica | Em validação | build Blender + captura/checksums + GLB optimizado promovido para a URL canónica + gate Vite fase 09+ + confirmação HTTP do modelo servido em produção |
 | 10 | Zonas esquerda e direita | Implementação iniciada, não certificada | validator dedicado adicionado; falta execução Blender, capturas e CI de fase |
-| 11 | Props orgânicos, IA e trilho de splats | Pendente | guitarra, plantas e gate de splats |
+| 11 | Props orgânicos, IA e trilho de splats | Implementação iniciada, não certificada | validator de polycount/fonte e decisão splats documentados; execução Blender pendente |
 | 12 | UV2 e orçamento de lightmaps | Pendente | UV2 validado e atlas por zona |
 | 13 | Luz em Blender e bake | Pendente | bake reproduzível, denoise e mapas sRGB |
 | 14 | Pipeline glTF, KTX2 e Meshopt | Pendente | GLB high/mid/low dentro dos orçamentos |
@@ -197,3 +197,8 @@ A verificação foi reforçada para validar primeiro o GLB e o manifesto do chec
 ## Execução da Fase 10 · 2026-10-16
 
 A Fase 10 foi aberta sem esperar pela certificação da Fase 09, conforme a ordem de execução. O construtor genérico `scripts/blender/build_sides.py` já processa os elementos `left.*`, `right.*` e `artists.wall` declarados na Scene Bible. Foi acrescentado um validador dedicado para verificar a presença de mural, rolo branco, bandeira Xoyens, sofá, estante e quadro no ficheiro Blender produzido. Este commit não declara a geometria certificada: a validação só passa a ser evidência depois de o script correr num Blender real e o relatório ser inspeccionado. A Fase 09 continua em validação devido à divergência real dos metadados/bytes/hash servidos pelo Lovable e às falhas dos testes públicos.
+
+
+## Execução da Fase 11 · 2026-10-16
+
+A Fase 11 foi aberta sem aguardar a certificação das fases anteriores. A Scene Bible já declara guitarra (`left.guitar_strat`), palmeira (`left.palm_areca`) e jiboia (`right.pothos`) com orçamentos de 14 000, 22 000 e 18 000 triângulos. Foi adicionado um validador Blender que mede triângulos e verifica UVs/materiais dos meshes associados. O trilho Gaussian Splats fica documentado como não avaliado: não há evidência reproduzível de licença comercial, peso ≤25 MB, 45 FPS no tier mid ou melhoria de score ≥8 pontos. Por isso, a decisão segura nesta passagem é manter a malha como visualização e colisão, sem integrar splats não certificados. A Fase 11 não está certificada até correr o validador em Blender real e guardar os resultados.
