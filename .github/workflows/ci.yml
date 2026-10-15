@@ -25,6 +25,8 @@ on:
       - "package.json"
       - "docker/blender-ci/Dockerfile"
       - ".github/workflows/build-3d.yml"
+      - ".github/workflows/ci.yml"
+      - "src/features/camping/scene/camping-photo-publication.test.ts"
   pull_request:
     branches: [main]
   workflow_run:
