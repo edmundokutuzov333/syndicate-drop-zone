@@ -233,12 +233,12 @@ def build_phase09_element(element,ctx):
             _hanger(element,ctx,i+1,x,1.64,gz,width)
             if i==4:
                 # One contrasting light-grey sleeve is an actual fabric panel, not a colour overlay.
-                _child_box(element,ctx,"garment_5_grey_sleeve",(0.022,0.27,0.105),(x+0.026,gy+0.10,gz+0.17),"fabric_grey",0.01)
+                _child_box(element,ctx,"garment_5_grey_sleeve",(0.006,0.27,0.105),(x+0.060,gy+0.10,gz+0.17),"fabric_grey",0.01)
             if i in (0,1):
-                _plane(element,ctx,"SDT_photo_garment_seal_"+str(i+1),(x+0.041,gy+0.08,gz),0.13,0.13,
+                _plane(element,ctx,"SDT_photo_garment_seal_"+str(i+1),(x+0.061,gy+0.08,gz),0.13,0.13,
                        _image_material("print_official_seal",os.path.abspath("art/textures/brand/sindicato-selo.png")),tag_element=False)
             elif i==2:
-                _plane(element,ctx,"SDT_photo_garment_xoyens",(x+0.041,gy+0.08,gz),0.12,0.12,
+                _plane(element,ctx,"SDT_photo_garment_xoyens",(x+0.061,gy+0.08,gz),0.12,0.12,
                        _image_material("print_official_xoyens",os.path.abspath("art/textures/brand/xoyens.png")),tag_element=False)
             if i==0: root=obj
         root["phase9GarmentCount"]=5
