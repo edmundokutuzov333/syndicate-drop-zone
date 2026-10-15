@@ -265,10 +265,6 @@ def build_phase09_element(element,ctx):
         return root
     if eid=="photo.rack_wheels":
         x,y,z=center
-        root=_root_box(element,ctx,"wheel_contract",(0.05,0.07,0.05),(x,y,z),"steel_brushed",0.002)
         # Stable Scene Bible anchor only. The physical four wheels are on photo.rack.
-        root.dimensions = (0.004, 0.004, 0.004)
-        bpy.context.view_layer.objects.active = root
-        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-        return root
+        return _root_box(element,ctx,"wheel_contract",(0.004,0.004,0.004),(x,0.035,z),"steel_brushed",0.0)
     return None
