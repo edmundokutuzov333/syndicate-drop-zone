@@ -45,6 +45,11 @@ def main():
     if len([o for o in photo_mesh if re.fullmatch(r"SDT_photo_garments_garment_[1-5]", o.name)]) != 5:
         failures.append("exactly five independently modelled garment meshes required")
     photo_materials={material.name for obj in photo_mesh for material in obj.data.materials if material}
+    warm_status_leds=[o for o in photo_mesh if o.name.endswith("_warm_status_led")]
+    if len(warm_status_leds)!=3:
+        failures.append("three warm-emissive fixture status LEDs required")
+    if any(not any(m and m.name=="led_warm_emissive" for m in o.data.materials) for o in warm_status_leds):
+        failures.append("warm-emissive fixture LED material assignment missing")
     for name in ("print_official_seal","print_official_xoyens","led_panel_emissive"):
         if name not in photo_materials:
             failures.append("Phase 09 material not assigned to photo geometry: "+name)
@@ -53,7 +58,7 @@ def main():
             "garments":5 if garments else 0,"rackWidthM":1.6 if rack else None,"sealDiameterM":2.2 if seal else None,
             "garmentTypes":["tee-seal","tee-seal","tee-xoyens","hoodie","hoodie-grey-sleeve"] if garments else [],
             "requiredMaterials":sorted(name for name in ("print_official_seal","print_official_xoyens","led_panel_emissive","led_warm_emissive") if name in photo_materials),
-            "meshCount":len(mesh),"photoMeshCount":len(photo_mesh),
+            "meshCount":len(mesh),"photoMeshCount":len(photo_mesh),"warmStatusLeds":len(warm_status_leds),
             "failures":failures}
     output.parent.mkdir(parents=True,exist_ok=True)
     output.write_text(json.dumps(report,indent=2,sort_keys=True)+"\n",encoding="utf-8")
