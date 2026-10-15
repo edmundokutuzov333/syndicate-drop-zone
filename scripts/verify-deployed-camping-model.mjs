@@ -4,7 +4,10 @@ import { createHash } from "node:crypto";
 const BASE_URL = process.env.CAMPING_PRODUCTION_URL || "https://syndicate-drop-zone.vercel.app";
 const MODEL_PATH = "/models/camping/xoyens-studio.glb";
 const METADATA_PATH = "/models/camping/xoyens-studio.model.json";
-const EXPECTED_MODEL_PHASE = Number(process.env.CAMPING_EXPECTED_MODEL_PHASE || process.env.CAMPING_PHASE || 8);
+const EXPECTED_MODEL_PHASE = Number(process.env.CAMPING_EXPECTED_MODEL_PHASE || process.env.CAMPING_PHASE || 9);
+if (!Number.isInteger(EXPECTED_MODEL_PHASE) || EXPECTED_MODEL_PHASE < 9 || EXPECTED_MODEL_PHASE > 22) {
+  throw new Error("CAMPING_EXPECTED_MODEL_PHASE must be an integer between 9 and 22; pre-Phase-09 models are not accepted");
+}
 const REQUIRED_EXTENSIONS = ["KHR_texture_basisu", "EXT_meshopt_compression"];
 const REQUIRED_PHASE08_MATERIALS = ["ceramic_red", "glass_mirror", "led_warm_emissive"];
 const REQUIRED_PHASE09_MATERIALS = ["print_official_seal", "print_official_xoyens", "led_panel_emissive", "led_warm_emissive"];
@@ -167,10 +170,14 @@ async function verifyPublishedAsset(metadata) {
     const garments = (gltf.nodes ?? []).filter(node => /^SDT_photo_garments_garment_\d+$/.test(String(node.name ?? "")) && Number.isInteger(node.mesh));
     if (garments.length !== 5) throw new Error("served GLB must contain five Phase 09 garment meshes, found " + garments.length);
     photoZone = metadata.geometry?.photoZone;
-    if (photoZone?.sourceStatus !== "source-validated" || photoZone?.requiredElements !== 9 ||
+    if (photoZone?.sourceStatus !== "source-validated" ||
+        photoZone?.requiredElements !== 9 || photoZone?.taggedPhotoObjects !== 9 ||
         photoZone?.garments !== 5 || photoZone?.sealDiameterM !== 2.2 ||
-        REQUIRED_PHASE09_MATERIALS.some(name => !(photoZone.requiredMaterialsLinked ?? []).includes(name))) {
-      throw new Error("served model metadata does not certify the complete Phase 09 photo zone");
+        photoZone?.rackWidthM !== 1.6 ||
+        JSON.stringify(photoZone?.garmentTypes) !== JSON.stringify(["tee-seal", "tee-seal", "tee-xoyens", "hoodie", "hoodie-grey-sleeve"]) ||
+        REQUIRED_PHASE09_MATERIALS.some(name => !(photoZone.requiredMaterialsLinked ?? []).includes(name)) ||
+        !["studio.photo-backdrop", "studio.merch-rack"].every(id => photoZone.requiredInteractionsPreserved?.includes(id))) {
+      throw new Error("served model metadata does not certify all Phase 09 geometry, garments, materials and interactions");
     }
   }
 
