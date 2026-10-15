@@ -28,7 +28,7 @@ for (const item of assets) {
   for (const origin of origins) {
     const url = new URL(manifest.url, origin);
     try {
-      const response = await fetch(url, { cache: "no-store", redirect: "follow" });
+      const response = await fetch(url, { cache: "no-store", redirect: "follow", signal: AbortSignal.timeout(12000) });
       if (!response.ok) {
         failures.push(origin + " -> HTTP " + response.status);
         continue;
