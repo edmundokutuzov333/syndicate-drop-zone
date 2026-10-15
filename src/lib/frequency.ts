@@ -380,7 +380,7 @@ export class FrequencyEngine {
         this.set({ syncStatus: "sync_ok" });
         return;
       }
-    } catch {}
+    } catch { /* Media and storage APIs are best-effort; keep radio fallback state. */ }
 
     this.set({ syncStatus: this.clockLastSuccessAt ? "sync_degraded" : "offline_clock" });
   }
@@ -446,13 +446,13 @@ export class FrequencyEngine {
 
     const prototype = HTMLMediaElement.prototype;
     const originalPlay = prototype.play;
-    const engine = this;
+    const owner = () => this;
 
     prototype.play = function guardedPlay(this: HTMLMediaElement): Promise<void> {
       if (
-        engine.state.active &&
+        owner().state.active &&
         this instanceof HTMLAudioElement &&
-        !engine.isAllowedPlaybackSource(this.currentSrc || this.src)
+        !owner().isAllowedPlaybackSource(this.currentSrc || this.src)
       ) {
         this.pause();
         return Promise.reject(
@@ -575,7 +575,7 @@ export class FrequencyEngine {
 
     try {
       audio.load();
-    } catch {}
+    } catch { /* Media and storage APIs are best-effort; keep radio fallback state. */ }
   }
 
   private applyVolumes() {
@@ -588,7 +588,7 @@ export class FrequencyEngine {
   private stopStatic() {
     try {
       this.staticSource?.stop();
-    } catch {}
+    } catch { /* Media and storage APIs are best-effort; keep radio fallback state. */ }
     this.staticSource = null;
   }
 
@@ -603,7 +603,7 @@ export class FrequencyEngine {
 
     try {
       this.staticSource?.stop();
-    } catch {}
+    } catch { /* Media and storage APIs are best-effort; keep radio fallback state. */ }
 
     const gain = ctx.createGain();
     gain.gain.value = effectiveVolume(this.state.volume) * 0.2;
@@ -707,7 +707,7 @@ export class FrequencyEngine {
 
     try {
       audio.currentTime = safeOffset;
-    } catch {}
+    } catch { /* Media and storage APIs are best-effort; keep radio fallback state. */ }
 
     audio.volume = effectiveVolume(this.state.volume);
 
@@ -784,7 +784,7 @@ export class FrequencyEngine {
           try {
             this.audio?.pause();
             if (this.audio) this.audio.currentTime = 0;
-          } catch {}
+          } catch { /* Media and storage APIs are best-effort; keep radio fallback state. */ }
           void this.playMusic(track, 0);
         }, MUTE_RETRY_DELAY_MS);
         return;
@@ -877,14 +877,14 @@ export class FrequencyEngine {
       navigator.mediaSession.playbackState = this.state.playing ? "playing" : "paused";
       navigator.mediaSession.setActionHandler("play", () => void this.resume());
       navigator.mediaSession.setActionHandler("pause", () => this.pause());
-    } catch {}
+    } catch { /* Media and storage APIs are best-effort; keep radio fallback state. */ }
   }
 
   private setMediaSessionState(state: MediaSessionPlaybackState) {
     if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
     try {
       navigator.mediaSession.playbackState = state;
-    } catch {}
+    } catch { /* Media and storage APIs are best-effort; keep radio fallback state. */ }
   }
 
   private clearMediaSession() {
@@ -896,16 +896,16 @@ export class FrequencyEngine {
       for (const action of ["play", "pause"]) {
         try {
           navigator.mediaSession.setActionHandler(action as MediaSessionAction, null);
-        } catch {}
+        } catch { /* Media and storage APIs are best-effort; keep radio fallback state. */ }
       }
-    } catch {}
+    } catch { /* Media and storage APIs are best-effort; keep radio fallback state. */ }
   }
 
   private clearAllUnauthorizedAudio() {
     this.stopUnauthorizedAudio();
     try {
       tape.stop();
-    } catch {}
+    } catch { /* Media and storage APIs are best-effort; keep radio fallback state. */ }
   }
 
   private invalidatePlayback() {
@@ -939,7 +939,7 @@ export class FrequencyEngine {
       try {
         shouldEmitSession = sessionStorage.getItem("sdt-radio-session") !== "1";
         if (shouldEmitSession) sessionStorage.setItem("sdt-radio-session", "1");
-      } catch {}
+      } catch { /* Media and storage APIs are best-effort; keep radio fallback state. */ }
 
       if (shouldEmitSession) {
         analyticsTrack("radio_session_start", { sid: getAnalyticsSessionId() });
@@ -965,7 +965,7 @@ export class FrequencyEngine {
 
     try {
       void firstAudio.play();
-    } catch {}
+    } catch { /* Media and storage APIs are best-effort; keep radio fallback state. */ }
 
     await this.prepare();
 
@@ -1008,7 +1008,7 @@ export class FrequencyEngine {
       this.audio.volume = effectiveVolume(this.state.volume);
       try {
         void this.audio.play();
-      } catch {}
+      } catch { /* Media and storage APIs are best-effort; keep radio fallback state. */ }
     } else {
       const first = this.currentTrack ?? this.selectNextTrack();
       if (first) {
@@ -1053,7 +1053,7 @@ export class FrequencyEngine {
 
     try {
       window.localStorage.setItem("sdt-radio-volume", String(safe));
-    } catch {}
+    } catch { /* Media and storage APIs are best-effort; keep radio fallback state. */ }
 
     this.set({ volume: safe });
     this.applyVolumes();
