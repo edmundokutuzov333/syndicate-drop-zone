@@ -68,8 +68,7 @@ async function openCamping(page: import("@playwright/test").Page, query = "", af
   });
 
   await page.goto("/camping" + query);
-  await unlockSite(page);
-  afterUnlock?.();
+  await unlockSite(page, afterUnlock);
   await expect(page.locator("main.camping-studio-route")).toBeVisible();
   const canvas = page.locator("canvas.camping-studio__canvas");
   await expect(canvas).toBeVisible();
