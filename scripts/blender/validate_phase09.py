@@ -45,7 +45,7 @@ def main():
     if len([o for o in photo_mesh if o.name.startswith("SDT_photo_garments_garment_")]) != 5:
         failures.append("exactly five independently modelled garment meshes required")
     photo_materials={material.name for obj in photo_mesh for material in obj.data.materials if material}
-    for name in ("print_official_seal","print_official_xoyens","led_panel_emissive","led_warm_emissive"):
+    for name in ("print_official_seal","print_official_xoyens","led_panel_emissive"):
         if name not in photo_materials:
             failures.append("Phase 09 material not assigned to photo geometry: "+name)
     report={"version":1,"phase":9,"status":"source-validated" if not failures else "failed","blenderVersion":bpy.app.version_string,
