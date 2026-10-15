@@ -77,7 +77,8 @@ function countTriangles(gltf: GlbDocument): number {
   for (const mesh of gltf.meshes ?? []) {
     for (const primitive of mesh.primitives ?? []) {
       const accessorIndex = primitive.indices ?? primitive.attributes?.POSITION;
-      const accessor = gltf.accessors?.[accessorIndex];
+      if (!Number.isInteger(accessorIndex)) continue;
+      const accessor = gltf.accessors?.[Number(accessorIndex)];
       if (!accessor) continue;
       const count = accessor.count ?? 0;
       const mode = primitive.mode ?? 4;
