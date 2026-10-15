@@ -5,6 +5,28 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { routeTree } from "@/routeTree.gen";
 
+vi.mock("@/lib/site-content", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/site-content")>();
+  const site = {
+    dropAt: new Date("2026-12-18T00:00:00+02:00").getTime(),
+    marquee: null,
+    heroTitle: "SINDICATO DO TRAP",
+    heroSubtitle: "STUDIO XOYENS",
+    social: {},
+  };
+  return {
+    ...actual,
+    getLiveSiteConfig: vi.fn(async () => site),
+    getLiveHomeContent: vi.fn(async () => ({
+      artists: [],
+      tapes: [],
+      merch: [],
+      site,
+      memberCount: 0,
+    })),
+  };
+});
+
 function renderAt(path: string) {
   const queryClient = new QueryClient();
   const router = createRouter({
@@ -33,6 +55,8 @@ describe("App routing", () => {
   });
 
   it("registers the camera route in the generated tree", () => {
-    expect(routeTree.children).toHaveProperty("CameraRoute");
+    expect(routeTree.children).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: "/camera" })]),
+    );
   });
 });
