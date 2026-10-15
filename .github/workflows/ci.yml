@@ -3,13 +3,41 @@ name: Camera Production CI
 on:
   push:
     branches: [main]
+    # Geometry changes publish an optimized GLB in a follow-up commit from
+    # Build CAMPING 3D. Do not race the frontend publication guard against the
+    # previous model; workflow_run below validates the published main revision.
+    paths-ignore:
+      - "scripts/blender/**"
+      - "scripts/3d/**"
+      - "scripts/build-3d.mjs"
+      - "scripts/check-3d-budgets.mjs"
+      - "scripts/build-blend.sh"
+      - "scripts/install-3d-toolchain.sh"
+      - "scripts/verify-glb-contract.mjs"
+      - "scripts/camping-frontend-publication-guard.ts"
+      - "src/features/camping/scene/CampingStudioEngine.ts"
+      - "src/features/camping/scene/camping-model-compatibility.ts"
+      - "vite.config.ts"
+      - "public/models/camping/**"
+      - "art/**"
+      - "docs/camping-v3/scene-bible.json"
+      - "docs/camping-v3/phase-05/**"
+      - "package.json"
+      - "docker/blender-ci/Dockerfile"
+      - ".github/workflows/build-3d.yml"
   pull_request:
     branches: [main]
+  workflow_run:
+    workflows: ["Build CAMPING 3D - Blender + frontend V3"]
+    types: [completed]
 
 env:
   CAMPING_PHASE: "8"
 jobs:
   verify:
+    # For workflow_run, verify the latest main only after the 3D publish job
+    # has completed successfully. A failed Blender publication must not be masked.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 

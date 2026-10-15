@@ -46,6 +46,22 @@ test("Phase 08 is rejected when Phase 07 source evidence is missing", () => {
   }
 });
 
+test("Phase 13 defers collider artifacts, while Phase 14 requires both", () => {
+  const phase13 = new Set(requiredFilesForPhase(13));
+  assert.equal(phase13.has("art/out/xoyens-studio.colliders.glb"), false);
+  assert.equal(phase13.has("public/models/camping/xoyens-studio.colliders.glb"), false);
+  const root = mkdtempSync(join(tmpdir(), "camping-phase13-gate-"));
+  try {
+    const failures = phasePrerequisiteFailures(root, 13);
+    assert.equal(failures.some((failure) => failure.includes("Phase 14 collider artifact missing")), false);
+    const phase14Failures = phasePrerequisiteFailures(root, 14);
+    assert.ok(phase14Failures.some((failure) => failure.includes("Phase 14 collider artifact missing: art/out/xoyens-studio.colliders.glb")));
+    assert.ok(phase14Failures.some((failure) => failure.includes("Phase 14 collider artifact missing: public/models/camping/xoyens-studio.colliders.glb")));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("Phase 14 keeps both source and public collider GLBs as required artifacts", () => {
   const required = new Set(requiredFilesForPhase(14));
   assert.equal(required.has("art/out/xoyens-studio.colliders.glb"), true);
