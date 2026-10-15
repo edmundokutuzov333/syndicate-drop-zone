@@ -561,15 +561,7 @@ function RecordEditor({
     setPreview(false);
   }, [record?.id]);
 
-  if (!record) {
-    return (
-      <div className="grid min-h-80 place-items-center border border-dashed border-white/10 bg-[#0d0d0d] font-mono text-xs text-white/25">
-        SELECT REGISTO
-      </div>
-    );
-  }
-
-  const isNew = !record.id;
+  const isNew = !record?.id;
   const fields = Object.keys(form);
   const dirty = JSON.stringify(form) !== JSON.stringify(savedForm);
 
@@ -582,6 +574,14 @@ function RecordEditor({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [dirty, editable]);
+
+  if (!record) {
+    return (
+      <div className="grid min-h-80 place-items-center border border-dashed border-white/10 bg-[#0d0d0d] font-mono text-xs text-white/25">
+        SELECT REGISTO
+      </div>
+    );
+  }
 
   const patchField = (key: string, value: unknown) => {
     setForm((current) => {
