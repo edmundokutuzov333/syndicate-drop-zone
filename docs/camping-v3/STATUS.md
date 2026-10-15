@@ -1,6 +1,6 @@
 # CAMPING V3 · Estado das 22 fases
 
-Última actualização: 2026-10-14  
+Última actualização: 2026-10-15  
 Branch de execução: `main`  
 Referência: `docs/camping-v3/reference/reference-sectors.json`  
 Hash da panorâmica original: `998f637c62fad46c1459a0c85c99db79f2f799951b9d2c4c38b659ad2e193813`  
@@ -17,8 +17,8 @@ Issues de execução: fases 01–17 em [#33–#49](https://github.com/edmundokut
 | 05 | Biblioteca de materiais PBR CC0 2K | Certificada | 20 conjuntos CC0 2K, manifesto/licenças/hashes e build Blender real aprovados no run 38538988505 |
 | 06 | Casca arquitectónica fechada | Em validação | abóbada sólida, portas, AC, conduta, zero non-manifold, 3.000 raios interiores e pipeline Blender aprovados |
 | 07 | Superfícies-herói | Em validação | malha de tábuas reais, variação COLOR_0, vinil circular, cyclorama contínuo, UVs físicos do bambu e gate Blender/GLB/deploy em execução |
-| 08 | Zona de produção | Pendente | secretária, DAW, colunas, cadeira, painéis e LED |
-| 09 | Zona fotográfica | Em validação | geometria especializada, assets oficiais, cinco peças e evidência Blender; CI e deployment ainda pendentes |
+| 08 | Zona de produção | Em validação | geometria no modelo V3 de fase 08; capturas A/B, gate visual e CI final ainda por certificar |
+| 09 | Zona fotográfica | Em validação | build Blender + captura/checksums + GLB optimizado promovido para a URL canónica + gate Vite fase 09+ + confirmação HTTP do modelo servido em produção |
 | 10 | Zonas esquerda e direita | Pendente | mural, sofá, bandeira, estante e quadro |
 | 11 | Props orgânicos, IA e trilho de splats | Pendente | guitarra, plantas e gate de splats |
 | 12 | UV2 e orçamento de lightmaps | Pendente | UV2 validado e atlas por zona |
@@ -133,3 +133,15 @@ A aceitação exige nove elementos fotográficos, selo de 2,2 m, cinco peças (d
 A auditoria da integração encontrou uma incompatibilidade concreta: o guard de build do frontend exigia `phase=8` e `productionPhase=8`, apesar do pipeline de entrega estar configurado para construir e promover a Fase 09. Isso impediria uma build da Fase 09 mesmo depois de o Blender gerar e optimizar a zona fotográfica. O guard agora aceita fases certificadas de 08 a 22, exige que `productionPhase` corresponda à fase publicada e, a partir da Fase 09, valida os nove IDs de elementos fotográficos, os quatro materiais de marca/iluminação, as cinco malhas de roupa e as interacções `studio.photo-backdrop` e `studio.merch-rack`.
 
 O verificador do pacote também passou a exigir metadados completos da zona fotográfica e os testes de entrega cobrem os artefactos e pré-requisitos da Fase 09. Commits: `661143f` (guard), `9ec67b8` (gate de metadados), `2e6028f` (testes de pré-requisitos). Esta correcção de código não certifica por si só o modelo: a Fase 09 continua em validação até o workflow Blender, capturas, promoção do GLB, CI e publicação em `/camping` serem confirmados por execução real.
+
+### Bloqueio contra GLB anterior à Fase 09 · 2026-10-15
+
+A regra de publicação foi tornada fail-closed. O Vite já não aceita um manifesto de fase 8: requer `version=3`, `phase>=9`, `productionPhase=phase`, `surfacePhase=7` e o contrato completo da fotografia. Isto impede que novos deployments com a versão antiga passem silenciosamente a compilação. O modelo público actualmente registado ainda indica `phase=8`, por isso a certificação permanece aberta até à promoção real do artefacto novo.
+
+O verificador de produção deixou de aceitar fase 8 por defeito e exige, na rota canónica, SHA-256/bytes coerentes, as nove raízes de fotografia, os quatro materiais oficiais/iluminação exigidos no GLB, cinco malhas de roupa, 17 slots de artistas e interacções preservadas. O workflow 3D aguarda agora a confirmação do endpoint de produção após publicar; falha em vez de marcar sucesso se o Vercel continuar a servir metadados antigos. O pipeline local comum também executa `npm run lint`, `npm run test` e `npm run build` sobre o candidato optimizado antes de permitir a publicação.
+
+A validação Blender da Fase 09 foi reforçada para inspeccionar todas as malhas da colecção fotográfica, garantindo `UVMap`, `UV_Lightmap` e materiais nas malhas dos cabides, roupas, suportes e decals, não apenas nos nove anchors do Scene Bible.
+
+Commits de endurecimento: `d68212f` (Vite fail-closed fase 09+), `8f2b8c6` (verificador de produção), `104f38b` e `38004d0` (validação geométrica/material da fotografia), `87af35c` (lint/test/build pré-publicação), `2146d80` (verificação da rota pública após promoção).
+
+**Limite de evidência:** o código e os gates estão na `main`; o modelo canónico existente não se transforma em fase 9 até o job Blender gerar, optimizar e promover o novo GLB. Não declarar o frontend actualizado só porque o commit de código foi aceite pelo GitHub ou porque um deployment de código ficou `READY`.
