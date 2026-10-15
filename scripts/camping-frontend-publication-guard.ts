@@ -55,7 +55,7 @@ function readGlb(bytes: Buffer): GlbDocument {
     const start = offset + 8;
     if (start + length > bytes.length) throw new Error("GLB chunk exceeds file length");
     if (type === 0x4e4f534a) {
-      json = JSON.parse(bytes.subarray(start, start + length).toString("utf8").replace(/\0+$/g, "").trim());
+      json = JSON.parse(bytes.subarray(start, start + length).toString("utf8").replace(/\0+$/g, "").trim()) as GlbDocument;
     }
     offset = start + length;
   }
