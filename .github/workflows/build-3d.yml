@@ -374,7 +374,10 @@ jobs:
           echo "PUBLISHED_BLEND_BYTES=$BLEND_SIZE"
           echo "REMOTE_MAIN=$REMOTE_MAIN"
 
+      # Vercel deployment verification is opt-in while execution is scoped to GitHub/Lovable.
+      # The GitHub build, GLB contracts, hashes, LFS checks and forward-only main publication remain mandatory.
       - name: Verify Phase 09 model served by the production alias
+        if: ${{ vars.CAMPING_VERIFY_PRODUCTION == 'true' }}
         env:
           CAMPING_EXPECTED_MODEL_PHASE: "9"
           CAMPING_PRODUCTION_URL: "https://syndicate-drop-zone.vercel.app"
