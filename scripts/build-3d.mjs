@@ -185,6 +185,12 @@ try {
         .resize({ width: minimum, height: minimum, fit: "inside", withoutEnlargement: false })
         .png()
         .toBuffer();
+      const resizedMetadata = await sharp(resized).metadata();
+      if (!resizedMetadata.width || !resizedMetadata.height ||
+          Math.max(resizedMetadata.width, resizedMetadata.height) < minimum) {
+        throw new Error("Base-colour texture remains below the required " + minimum + "px floor: " +
+          (texture.getName() || "unnamed"));
+      }
       texture.setImage(resized);
       texture.setMimeType("image/png");
       console.log("[hero texture floor] " + (texture.getName() || "unnamed") + " " +
