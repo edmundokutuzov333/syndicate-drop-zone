@@ -60,7 +60,7 @@ def _image_material(name, filepath, base=(1,1,1,1)):
     m["officialAssetPath"] = filepath
     return m
 
-def _plane(element, ctx, name, center, width, height, material_name, uv=True):
+def _plane(element, ctx, name, center, width, height, material_name, uv=True, tag_element=True):
     # Wall plane normal points into the room (+X). Horizontal image axis follows room Z.
     x, y, z = center
     verts = [(x, y-height/2, z-width/2), (x, y-height/2, z+width/2),
@@ -71,7 +71,7 @@ def _plane(element, ctx, name, center, width, height, material_name, uv=True):
     mesh.update()
     obj = bpy.data.objects.new(name, mesh)
     _col(ctx).objects.link(obj)
-    finish_mesh(obj, [], element=element, collider="none", zone="photo", lm_group="photo", bevel=0)
+    finish_mesh(obj, [], element=element if tag_element else None, collider="none", zone="photo", lm_group="photo", bevel=0)
     if uv:
         layer = mesh.uv_layers.get("UVMap") or mesh.uv_layers.new(name="UVMap")
         for loop, uvco in zip(layer.data, ((0,0),(1,0),(1,1),(0,1))):
@@ -235,10 +235,10 @@ def build_phase09_element(element,ctx):
                 _child_box(element,ctx,"garment_5_grey_sleeve",(0.022,0.27,0.105),(x+0.026,gy+0.10,gz+0.17),"fabric_grey",0.01)
             if i in (0,1):
                 _plane(element,ctx,"SDT_photo_garment_seal_"+str(i+1),(x+0.041,gy+0.08,gz),0.13,0.13,
-                       _image_material("print_official_seal",os.path.abspath("art/textures/brand/sindicato-selo.png")))
+                       _image_material("print_official_seal",os.path.abspath("art/textures/brand/sindicato-selo.png")),tag_element=False)
             elif i==2:
                 _plane(element,ctx,"SDT_photo_garment_xoyens",(x+0.041,gy+0.08,gz),0.12,0.12,
-                       _image_material("print_official_xoyens",os.path.abspath("art/textures/brand/xoyens.png")))
+                       _image_material("print_official_xoyens",os.path.abspath("art/textures/brand/xoyens.png")),tag_element=False)
             if i==0: root=obj
         root["phase9GarmentCount"]=5
         root["phase9GarmentTypes"]=["tee-seal","tee-seal","tee-xoyens","hoodie","hoodie-grey-sleeve"]
@@ -265,7 +265,9 @@ def build_phase09_element(element,ctx):
     if eid=="photo.rack_wheels":
         x,y,z=center
         root=_root_box(element,ctx,"wheel_contract",(0.05,0.07,0.05),(x,y,z),"steel_brushed",0.002)
-        for i in range(4):
-            cylinder(_name(element,"contract_wheel_"+str(i+1)),0.025,0.028,(x,0.035,z-0.04+i*0.027),"rubber_black",_col(ctx),vertices=16,rotation=(0,math.pi/2,0),zone="photo")
+        # Stable Scene Bible anchor only. The physical four wheels are on photo.rack.
+        root.dimensions = (0.004, 0.004, 0.004)
+        bpy.context.view_layer.objects.active = root
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
         return root
     return None
