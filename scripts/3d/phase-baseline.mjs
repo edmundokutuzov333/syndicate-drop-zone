@@ -2,7 +2,7 @@
 // This module deliberately has no CLI side effects so it can be imported by tests.
 export function certifiedPhase7BaselineTriangles(metadata) {
   const phase = Number(metadata?.phase);
-  if (metadata?.version !== 3 || ![7, 8].includes(phase) || metadata?.surfacePhase !== 7 ||
+  if (metadata?.version !== 3 || ![7, 8, 9].includes(phase) || metadata?.surfacePhase !== 7 ||
       metadata?.status !== "blender-v3-published" || metadata?.model !== "/models/camping/xoyens-studio.glb") {
     throw new Error("Canonical model is not a valid Phase 07+ publication checkpoint");
   }
@@ -27,7 +27,7 @@ export function certifiedPhase7BaselineTriangles(metadata) {
 
   const production = geometry.productionZone ?? {};
   const requiredInteractions = ["studio.production-desk", "studio.imac", "studio.audio-system"];
-  if (metadata.productionPhase !== 8 || production.sourceStatus !== "source-validated" ||
+  if (metadata.productionPhase !== phase || production.sourceStatus !== "source-validated" ||
       production.requiredElements !== 19 || !Number.isInteger(production.chairUpholsteryTrianglesSource) ||
       production.chairUpholsteryTrianglesSource < 14000 || production.chairUpholsteryTrianglesSource > 18000 ||
       production.midiWhiteKeys !== 36 || production.midiBlackKeys !== 25 ||
@@ -39,6 +39,26 @@ export function certifiedPhase7BaselineTriangles(metadata) {
       production.baselineTriangles + production.trianglesAddedFromPhase7 !== geometry.triangles ||
       !(production.trianglesAddedFromPhase7 > 0)) {
     throw new Error("Published Phase 08 checkpoint does not contain internally consistent Phase 07 baseline evidence");
+  }
+  if (phase === 9) {
+    const photo = geometry.photoZone ?? {};
+    const requiredPhotoMaterials = [
+      "print_official_seal",
+      "print_official_xoyens",
+      "led_panel_emissive",
+      "led_warm_emissive",
+    ];
+    const requiredPhotoInteractions = ["studio.photo-backdrop", "studio.merch-rack"];
+    if (photo.sourceStatus !== "source-validated" ||
+        photo.requiredElements !== 9 ||
+        photo.taggedPhotoObjects !== 9 ||
+        photo.garments !== 5 ||
+        photo.sealDiameterM !== 2.2 ||
+        photo.rackWidthM !== 1.6 ||
+        !requiredPhotoMaterials.every((name) => photo.requiredMaterialsLinked?.includes(name)) ||
+        !requiredPhotoInteractions.every((id) => photo.requiredInteractionsPreserved?.includes(id))) {
+      throw new Error("Published Phase 09 checkpoint does not contain the certified photo-zone contract");
+    }
   }
   return production.baselineTriangles;
 }

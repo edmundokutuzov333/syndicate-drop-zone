@@ -154,3 +154,60 @@ test("Phase 08 promotion accepts a SHA-verified Phase 07 checkpoint or a rerun f
     heroSurfaces: { ...heroSurfaces, floorBoards: 3 },
   } }), /certified Phase 07 hero surfaces/);
 });
+
+
+test("Phase 09 publication is accepted as a Phase 07 baseline checkpoint only when photo contracts remain certified", () => {
+  const heroSurfaces = {
+    floorBoards: 117,
+    floorHasColor0: true,
+    floorHasUv0Uv1: true,
+    vinylRadiusM: 2.3,
+    vinylThicknessM: 0.0012,
+    vinylEdgeLiftM: 0.004,
+    bambooTileMeters: 1.2,
+    cycloramaRadiusM: 0.35,
+    cycloramaContinuousToFloor: true,
+  };
+  const metadata = {
+    version: 3,
+    phase: 9,
+    productionPhase: 9,
+    surfacePhase: 7,
+    status: "blender-v3-published",
+    model: "/models/camping/xoyens-studio.glb",
+    geometry: {
+      triangles: 282910,
+      heroSurfaces,
+      productionZone: {
+        sourceStatus: "source-validated",
+        requiredElements: 19,
+        chairUpholsteryTrianglesSource: 14768,
+        midiWhiteKeys: 36,
+        midiBlackKeys: 25,
+        acousticFabricPanels: 3,
+        acousticFoamTiles: 30,
+        pendants: 4,
+        edisonBulbs: 4,
+        requiredInteractionsPreserved: ["studio.production-desk", "studio.imac", "studio.audio-system"],
+        baselineTriangles: 113556,
+        publishedTriangles: 282910,
+        trianglesAddedFromPhase7: 169354,
+      },
+      photoZone: {
+        sourceStatus: "source-validated",
+        requiredElements: 9,
+        taggedPhotoObjects: 9,
+        garments: 5,
+        sealDiameterM: 2.2,
+        rackWidthM: 1.6,
+        requiredMaterialsLinked: ["print_official_seal", "print_official_xoyens", "led_panel_emissive", "led_warm_emissive"],
+        requiredInteractionsPreserved: ["studio.photo-backdrop", "studio.merch-rack"],
+      },
+    },
+  };
+  assert.equal(certifiedPhase7BaselineTriangles(metadata), 113556);
+  assert.throws(() => certifiedPhase7BaselineTriangles({
+    ...metadata,
+    geometry: { ...metadata.geometry, photoZone: { ...metadata.geometry.photoZone, garments: 4 } },
+  }), /certified photo-zone contract/);
+});
