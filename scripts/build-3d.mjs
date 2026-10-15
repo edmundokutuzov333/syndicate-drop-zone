@@ -59,7 +59,9 @@ try {
     // checked budgets and all named interaction anchors.
     // The 2026-10-15 runner measured 140,568 triangles at 0.27, exceeding the 140,000 mid-tier budget by 568. Increase the reduction slightly; never relax the budget.
     { name: "mid", maxTex: 1024, colorTex: 512, dataTex: 256, ratio: 0.25, error: 0.003 },
-    { name: "low", maxTex: 512, colorTex: 256, dataTex: 128, ratio: 0.10, error: 0.010 }
+    // Measured 2026-10-15: ratio 0.10 / error 0.010 yielded 93,040 triangles and 131 primitives vs budgets of 70,000 / 130.
+    // Increase low-tier simplification tolerance without relaxing either budget.
+    { name: "low", maxTex: 512, colorTex: 256, dataTex: 128, ratio: 0.08, error: 0.025 }
   ];
 
   function descendantNodes(node) {
@@ -132,6 +134,9 @@ try {
       fabric_black_flag: "cotton_black",
       fabric_black_softbox: "cotton_black",
       steel_black_tube: "steel_black",
+      // Low tier only: merge two reclaimed-wood variants with matching base colour.
+      // Their warm brown albedo and non-metallic PBR preserve the scene identity at 256px.
+      ...(tierName === "low" ? { wood_reclaimed_top: "wood_reclaimed_planks" } : {}),
     };
     const resolved = new Map();
     for (const [sourceName, targetName] of Object.entries(redirects)) {
