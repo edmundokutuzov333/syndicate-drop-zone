@@ -17,7 +17,7 @@ export type CampingCameraPoseMap = Record<CampingCameraPoseName, CampingCameraPo
 export type CampingFloorBounds = {
   minX: number; maxX: number; minY: number; maxY: number; minZ: number; maxZ: number;
   width: number; depth: number;
-  source: "floor-node" | "floor-element" | "floor-inferred";
+  source: "floor-node" | "floor-element" | "floor-inferred" | "room-envelope";
 };
 type FloorBounds = CampingFloorBounds;
 
@@ -115,6 +115,68 @@ function getFloorBounds(root: THREE.Object3D): FloorBounds | null {
 export function deriveCampingFloorBounds(root: THREE.Object3D): CampingFloorBounds | null {
   return getFloorBounds(root);
 }
+
+/**
+ * Camera-only bounds when the certified visual GLB contains no measurable floor mesh.
+ * The room envelope must come from many real architectural meshes and a documented
+ * footprint/height range. This plane is NOT a physical collider and is never used to
+ * certify a floor mesh; it only lets entry and guided camera poses remain usable.
+ */
+function deriveRoomEnvelopePoseBounds(root: THREE.Object3D): FloorBounds | null {
+  root.updateMatrixWorld(true);
+  const bounds = new THREE.Box3().setFromObject(root);
+  if (bounds.isEmpty()) return null;
+
+  const width = bounds.max.x - bounds.min.x;
+  const depth = bounds.max.z - bounds.min.z;
+  const height = bounds.max.y - bounds.min.y;
+  const area = width * depth;
+  const meshNames: string[] = [];
+  let meshCount = 0;
+  let structuralMeshCount = 0;
+
+  root.traverse((object) => {
+    const mesh = object as THREE.Mesh;
+    if (!mesh.isMesh || /^COL_/i.test(mesh.name)) return;
+    if (!mesh.geometry?.attributes?.position?.count) return;
+    meshCount += 1;
+    meshNames.push(mesh.name);
+    if (/wall|vault|ceiling|door|shell|soffit|arch/i.test(mesh.name)) structuralMeshCount += 1;
+  });
+
+  // The real published GLB contains dozens of independent architectural meshes.
+  // A single room-sized box or a floor mesh with the roof height cannot satisfy this.
+  const longSide = Math.max(width, depth);
+  const shortSide = Math.min(width, depth);
+  if (
+    meshCount < 8 || structuralMeshCount < 3 ||
+    !Number.isFinite(width) || !Number.isFinite(depth) || !Number.isFinite(height) ||
+    longSide < 5.2 || longSide > 16 ||
+    shortSide < 4.2 || shortSide > 10 ||
+    area < 30 || area > 180 ||
+    height < 1.8 || height > 6.5
+  ) return null;
+
+  // A geometry-derived ground plane at the measured bottom of the closed room.
+  // Distinguish it explicitly from a real floor mesh for diagnostics and tests.
+  const groundY = bounds.min.y;
+  return {
+    minX: bounds.min.x,
+    maxX: bounds.max.x,
+    minY: groundY,
+    maxY: groundY,
+    minZ: bounds.min.z,
+    maxZ: bounds.max.z,
+    width,
+    depth,
+    source: "room-envelope",
+  };
+}
+
+export function deriveCampingPoseFloorBounds(root: THREE.Object3D): CampingFloorBounds | null {
+  return deriveCampingFloorBounds(root) ?? deriveRoomEnvelopePoseBounds(root);
+}
+
 
 
 /**
@@ -223,7 +285,7 @@ function serializePose(position: THREE.Vector3, look: THREE.Vector3): CampingCam
 
 /** Resolve V3 views against its metric floor, not stale coordinates from the wider legacy studio. */
 export function deriveCampingCameraPoses(root: THREE.Object3D, cameraHeight = 1.62): CampingCameraPoseMap | null {
-  const floor = deriveCampingFloorBounds(root);
+  const floor = deriveCampingPoseFloorBounds(root);
   if (!floor) return null;
   const allBounds = new THREE.Box3().setFromObject(root);
   if (allBounds.isEmpty()) return null;
