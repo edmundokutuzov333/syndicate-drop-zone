@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { phasePrerequisiteFailures, requiredFilesForPhase } from "./pack-delivery.mjs";
+import { buildManifest, phasePrerequisiteFailures, requiredFilesForPhase } from "./pack-delivery.mjs";
 
 test("Phases before 07 do not require future-phase evidence", () => {
   const phase5 = new Set(requiredFilesForPhase(5));
@@ -117,6 +117,30 @@ test("Phase 14 keeps both source and public collider GLBs as required artifacts"
   assert.equal(required.has("public/models/camping/xoyens-studio.colliders.glb"), true);
   assert.equal(required.has("art/xoyens-studio.phase07.report.json"), true);
   assert.equal(required.has("art/xoyens-studio.phase08.report.json"), true);
+});
+
+
+test("delivery manifest excludes mutable run logs and exit codes from file checksums", async () => {
+  const root = mkdtempSync(join(tmpdir(), "camping-manifest-evidence-"));
+  try {
+    const delivery = join(root, "art/_delivery");
+    const logs = join(delivery, "logs");
+    mkdirSync(logs, { recursive: true });
+    writeFileSync(join(delivery, "environment.txt"), "runtime=ci\n");
+    writeFileSync(join(delivery, "exit-codes.txt"), "verify=0\n");
+    writeFileSync(join(logs, "01-validate.log"), "validation complete\n");
+    writeFileSync(join(logs, "02-package.log"), "packaging is still writing\n");
+
+    const manifest = await buildManifest(root, 6);
+    const checksummed = new Set(manifest.files.map((file) => file.path));
+    assert.equal(checksummed.has("art/_delivery/environment.txt"), true);
+    assert.equal(checksummed.has("art/_delivery/exit-codes.txt"), false);
+    assert.equal(checksummed.has("art/_delivery/logs/01-validate.log"), false);
+    assert.deepEqual(manifest.evidence.logs, ["art/_delivery/logs/01-validate.log"]);
+    assert.equal(manifest.evidence.exitCodesPath, "art/_delivery/exit-codes.txt");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
 
 test("invalid delivery phases are rejected", () => {

@@ -218,14 +218,16 @@ export async function buildManifest(root = ".", phase = PHASE_DEFAULT) {
     ...walk(join(root, "art/_delivery/phase-08")),
     ...walk(join(root, "art/_delivery/phase-09")),
   ].map((file) => relative(root, file));
-  const deliveryLogs = walk(join(root, "art/_delivery/logs")).map((file) => relative(root, file));
+  const deliveryLogs = walk(join(root, "art/_delivery/logs"))
+    .filter((file) => !/-package\.log$/.test(file))
+    .map((file) => relative(root, file))
+    .sort();
+  const exitCodesPath = "art/_delivery/exit-codes.txt";
   const paths = [
     ...required,
     ...materialImages,
     ...phaseEvidence,
-    ...deliveryLogs,
     "art/_delivery/environment.txt",
-    "art/_delivery/exit-codes.txt",
   ].filter((file) => existsSync(join(root, file)));
   const files = [];
   for (const path of [...new Set(paths)].sort()) {
@@ -242,6 +244,12 @@ export async function buildManifest(root = ".", phase = PHASE_DEFAULT) {
     required,
     missing: required.filter((file) => !existsSync(join(root, file))),
     phase_prerequisite_failures: phasePrerequisiteFailures(root, phase),
+    // Logs and exit codes change while the delivery pipeline is still writing them.
+    // Index these as evidence without treating them as immutable checksum inputs.
+    evidence: {
+      logs: deliveryLogs,
+      exitCodesPath: existsSync(join(root, exitCodesPath)) ? exitCodesPath : null,
+    },
     files,
   };
 }
@@ -269,7 +277,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
 
   const stamp = manifest.generated_at.replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z").slice(0, 15);
   const zip = join(root, `art/_delivery/phase04-delivery-${manifest.commit.slice(0, 7)}-${stamp}.zip`);
-  const entries = [...manifest.files.map((file) => file.path), "art/_delivery/manifest.json"];
+  const entries = [
+    ...manifest.files.map((file) => file.path),
+    ...(manifest.evidence?.logs ?? []),
+    "art/_delivery/manifest.json",
+  ];
   let archive = zip;
   try {
     execFileSync("zip", ["-q", "-9", zip, ...entries], { cwd: root, stdio: "inherit" });

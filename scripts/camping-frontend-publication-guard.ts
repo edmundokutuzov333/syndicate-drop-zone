@@ -29,6 +29,14 @@ type GlbDocument = {
   images?: unknown[];
 };
 
+export function countPhase09GarmentMeshes(nodes: GlbNode[]): number {
+  return nodes.filter(
+    (node) =>
+      /^SDT_photo_garments_garment_\d+$/.test(String(node.name ?? "")) &&
+      Number.isInteger(node.mesh),
+  ).length;
+}
+
 const REQUIRED_INTERACTIONS = [
   "studio.imac",
   "studio.artists-wall",
@@ -194,10 +202,9 @@ export function verifyCampingFrontendPublication(root = process.cwd()): void {
     for (const materialName of ["print_official_seal", "print_official_xoyens", "led_panel_emissive", "led_warm_emissive"]) {
       if (!materialNames.has(materialName)) throw new Error("optimized GLB is missing Phase 09 material " + materialName);
     }
-    const garmentNodes = nodes.filter((node: { name?: unknown; mesh?: unknown }) =>
-      /^SDT_photo_garments_garment_\\d+$/.test(String(node.name ?? "")) && Number.isInteger(node.mesh));
-    if (garmentNodes.length !== 5) {
-      throw new Error("optimized GLB must contain exactly five Phase 09 garment meshes, found " + garmentNodes.length);
+    const garmentCount = countPhase09GarmentMeshes(nodes);
+    if (garmentCount !== 5) {
+      throw new Error("optimized GLB must contain exactly five Phase 09 garment meshes, found " + garmentCount);
     }
     for (const id of ["studio.photo-backdrop", "studio.merch-rack"]) {
       if (!photoZone.requiredInteractionsPreserved?.includes(id)) {
