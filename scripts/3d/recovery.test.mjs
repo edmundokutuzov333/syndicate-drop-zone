@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { classify } from "../ci/read-run-annotations.mjs";
 import { blendKind, colliderGlbContract, glbContract } from "./verify-delivery.mjs";
-import { certifiedPhase7BaselineTriangles } from "./promote-frontend-model.mjs";
+import { certifiedPhase7BaselineTriangles } from "./phase-baseline.mjs";
 
 test("annotation classifier identifies known causes only from annotation text", () => {
   assert.equal(classify(["The job was not started because recent account payments have failed"]).cause, "BILLING_BLOCK");
