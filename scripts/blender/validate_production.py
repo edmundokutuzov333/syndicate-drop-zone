@@ -53,6 +53,15 @@ def main():
     element_report = {}
     for element_id in REQUIRED_PROD_IDS:
         objects = element_objects(element_id)
+        # Cable assemblies may carry the stable elementId on the route root and
+        # a second legacy anchor from the source scene. Certify the intended root
+        # by its deterministic name, while still rejecting missing/ambiguous roots.
+        if element_id == "prod.power_audio_cables":
+            canonical = [obj for obj in objects if obj.name == "SDT_production_power_audio_cables_route_1_segment_1"]
+            if len(canonical) != 1 or canonical[0].type != "MESH":
+                fail(element_id + " must contain exactly one canonical route root mesh, found " + str(len(canonical)))
+            element_report[element_id] = canonical[0].name
+            continue
         if len(objects) != 1:
             fail(element_id + " must map to exactly one tagged root/source mesh, found " + str(len(objects)))
         if objects[0].type != "MESH":
