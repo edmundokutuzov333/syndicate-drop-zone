@@ -46,7 +46,12 @@ def main():
         scene.render.image_settings.color_mode=saved["mode"]; scene.view_settings.view_transform=saved["view"]
         for obj in temporary:
             if obj.name in bpy.data.objects:
-                if obj.type=="CAMERA": bpy.data.cameras.remove(obj.data,do_unlink=True)
-                elif obj.type=="LIGHT": bpy.data.lights.remove(obj.data,do_unlink=True)
-                bpy.data.objects.remove(obj,do_unlink=True)
+                obj_type = obj.type
+                data = obj.data
+                bpy.data.objects.remove(obj, do_unlink=True)
+                if data.users == 0:
+                    if obj_type == "CAMERA":
+                        bpy.data.cameras.remove(data)
+                    elif obj_type == "LIGHT":
+                        bpy.data.lights.remove(data)
 if __name__=="__main__": main()
