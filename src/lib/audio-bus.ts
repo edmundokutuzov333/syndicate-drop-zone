@@ -62,7 +62,7 @@ function readVolume(): number {
 }
 
 function writeVolume(value: number): void {
-  try { window.localStorage.setItem(VOLUME_KEY, String(value)); } catch {}
+  try { window.localStorage.setItem(VOLUME_KEY, String(value)); } catch { /* Volume persistence is optional when storage is blocked. */ }
 }
 
 export function getRadioVolume(): number {
