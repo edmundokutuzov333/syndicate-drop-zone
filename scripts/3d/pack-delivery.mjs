@@ -10,9 +10,6 @@ const CORE_REQUIRED = [
   "art/xoyens-studio.blend",
   "art/xoyens-studio.report.json",
   "art/out/xoyens-studio.raw.glb",
-  "art/out/phase07-surfaces.json",
-  "art/xoyens-studio.phase07.report.json",
-  "art/textures/materials.manifest.json",
   "public/models/camping/xoyens-studio.glb",
   "public/models/camping/xoyens-studio.model.json",
 ];
@@ -23,14 +20,135 @@ export function requiredFilesForPhase(phase = PHASE_DEFAULT) {
     throw new Error("CAMPING phase must be an integer between 1 and 22");
   }
   const required = [...CORE_REQUIRED];
+  if (number >= 5) required.push("art/textures/materials.manifest.json");
+  if (number >= 7) {
+    required.push("art/out/phase07-surfaces.json");
+    required.push("art/xoyens-studio.phase07.report.json");
+  }
   if (number >= 8) required.push("art/xoyens-studio.phase08.report.json");
-  // The source and public collision GLBs become release gates at Phase 14,
-  // as specified in the CAMPING V3 addendum. They are not Phase 04-13 blockers.
+  // Collision GLBs are mandatory release artifacts from Phase 14 onward.
   if (number >= 14) {
     required.push("art/out/xoyens-studio.colliders.glb");
     required.push("public/models/camping/xoyens-studio.colliders.glb");
   }
   return required;
+}
+
+const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+const readJson = (path) => JSON.parse(readFileSync(path, "utf8"));
+
+export function phasePrerequisiteFailures(root = ".", phase = PHASE_DEFAULT) {
+  const number = Number(phase);
+  if (!Number.isInteger(number) || number < 1 || number > 22) {
+    throw new Error("CAMPING phase must be an integer between 1 and 22");
+  }
+  const failures = [];
+  const add = (condition, message) => { if (!condition) failures.push(message); };
+  const load = (relativePath, label) => {
+    const path = join(root, relativePath);
+    if (!existsSync(path)) {
+      failures.push(label + " missing: " + relativePath);
+      return null;
+    }
+    try {
+      const value = readJson(path);
+      if (!isObject(value)) throw new Error("expected a JSON object");
+      return value;
+    } catch (error) {
+      failures.push(label + " invalid: " + relativePath + " (" + (error instanceof Error ? error.message : String(error)) + ")");
+      return null;
+    }
+  };
+
+  if (number >= 7) {
+    const source = load("art/out/phase07-surfaces.json", "Phase 07 source evidence");
+    if (source) {
+      add(source.phase === 7, "Phase 07 source evidence has incorrect phase");
+      add(Number(source.floor?.boardCount) >= 100, "Phase 07 source evidence needs at least 100 floor boards");
+      add(Number(source.vinyl?.radiusM) === 2.3, "Phase 07 source evidence has incorrect vinyl radius");
+      add(Number(source.bamboo?.tileMeters) === 1.2, "Phase 07 source evidence has incorrect bamboo tile length");
+      add(source.cyclorama?.continuesToFloor === true, "Phase 07 source evidence is missing continuous cyclorama");
+    }
+
+    const report = load("art/xoyens-studio.phase07.report.json", "Phase 07 Blender validation");
+    if (report) {
+      add(report.phase === 7 && report.status === "source-validated", "Phase 07 Blender validation is not source-validated");
+      add(Number(report.floor?.boards) >= 100, "Phase 07 validation requires at least 100 boards");
+      add(report.floor?.verticalRaycastHits === report.floor?.boards, "Phase 07 validation raycasts do not cover every floor board");
+      add(Number(report.floor?.roughness?.roughnessRange) >= 0.08, "Phase 07 floor roughness variation is below the acceptance threshold");
+    }
+  }
+
+  if (number >= 8) {
+    const report = load("art/xoyens-studio.phase08.report.json", "Phase 08 production validation");
+    if (report) {
+      const zone = report.productionZone ?? {};
+      add(report.version === 1 && report.phase === 8 && report.status === "source-validated",
+        "Phase 08 production report is not source-validated");
+      for (const [field, expected] of Object.entries({
+        requiredElements: 19, midiWhiteKeys: 36, midiBlackKeys: 25,
+        acousticFabricPanels: 3, acousticFoamTiles: 30, pendants: 4, edisonBulbs: 4,
+      })) add(zone[field] === expected, "Phase 08 " + field + " must equal " + expected);
+      add(Number.isInteger(zone.chairUpholsteryTrianglesSource) &&
+        zone.chairUpholsteryTrianglesSource >= 14000 && zone.chairUpholsteryTrianglesSource <= 18000,
+        "Phase 08 chair upholstery must contain 14,000 to 18,000 source triangles");
+    }
+  }
+
+  if (number >= 7) {
+    const modelPath = join(root, "public/models/camping/xoyens-studio.glb");
+    const metadata = load("public/models/camping/xoyens-studio.model.json", "Canonical frontend model metadata");
+    if (!existsSync(modelPath)) failures.push("Canonical frontend GLB missing: public/models/camping/xoyens-studio.glb");
+    if (metadata && existsSync(modelPath)) {
+      try {
+        const bytes = readFileSync(modelPath);
+        const digest = createHash("sha256").update(bytes).digest("hex");
+        const expectedModelPhase = number >= 8 ? number : 7;
+        add(metadata.version === 3 && metadata.phase === expectedModelPhase,
+          "Canonical model metadata phase must be " + expectedModelPhase);
+        add(metadata.surfacePhase === 7 && metadata.status === "blender-v3-published",
+          "Canonical model metadata does not certify the Phase 07 surfaces");
+        add(metadata.model === "/models/camping/xoyens-studio.glb" &&
+          metadata.frontendDelivery?.canonicalUrl === metadata.model &&
+          metadata.frontendDelivery?.hashAlgorithm === "SHA-256",
+          "Canonical model metadata URL or hash algorithm is incorrect");
+        add(metadata.geometry?.bytes === bytes.length && metadata.frontendDelivery?.bytes === bytes.length,
+          "Canonical model byte count does not match metadata");
+        add(metadata.geometry?.sha256 === digest && metadata.frontendDelivery?.sha256 === digest,
+          "Canonical model SHA-256 does not match metadata");
+        add(/^[a-f0-9]{40}$/i.test(String(metadata.sourceCommit ?? "")),
+          "Canonical model sourceCommit is missing or invalid");
+        if (number >= 8) {
+          add(metadata.productionPhase === number, "Canonical model productionPhase must be " + number);
+          const production = metadata.geometry?.productionZone ?? {};
+          add(production.sourceStatus === "source-validated" && production.requiredElements === 19 &&
+            production.midiWhiteKeys === 36 && production.midiBlackKeys === 25 &&
+            production.acousticFabricPanels === 3 && production.acousticFoamTiles === 30 &&
+            production.pendants === 4 && production.edisonBulbs === 4 &&
+            Number(production.chairUpholsteryTrianglesSource) >= 14000 &&
+            Number(production.chairUpholsteryTrianglesSource) <= 18000 &&
+            Number(production.trianglesAddedFromPhase7) > 0,
+            "Canonical model metadata does not contain certified Phase 08 geometry");
+          for (const interactionId of ["studio.production-desk", "studio.imac", "studio.audio-system"]) {
+            add(production.requiredInteractionsPreserved?.includes(interactionId) === true,
+              "Canonical model metadata does not certify preserved interaction " + interactionId);
+          }
+        } else {
+          add(metadata.productionPhase == null || Number(metadata.productionPhase) < 8,
+            "Phase 07 publication cannot claim production geometry from a later phase");
+        }
+      } catch (error) {
+        failures.push("Canonical frontend model could not be verified: " + (error instanceof Error ? error.message : String(error)));
+      }
+    }
+  }
+
+  if (number >= 14) {
+    for (const path of ["art/out/xoyens-studio.colliders.glb", "public/models/camping/xoyens-studio.colliders.glb"]) {
+      add(existsSync(join(root, path)), "Phase 14 collider artifact missing: " + path);
+    }
+  }
+  return failures;
 }
 export const REQUIRED = requiredFilesForPhase(PHASE_DEFAULT);
 export const sha256 = (file) => new Promise((resolve, reject) => {
@@ -80,6 +198,7 @@ export async function buildManifest(root = ".", phase = PHASE_DEFAULT) {
     working_tree_dirty: git(["status", "--porcelain"]) !== "",
     required,
     missing: required.filter((file) => !existsSync(join(root, file))),
+    phase_prerequisite_failures: phasePrerequisiteFailures(root, phase),
     files,
   };
 }
@@ -101,8 +220,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
 
   if (args.includes("--manifest-only")) {
-    console.log(`manifest: ${relative(root, manifestPath)}\nphase: ${phase}\nmissing required: ${manifest.missing.join(", ") || "none"}`);
-    process.exit(manifest.missing.length ? 3 : 0);
+    console.log(`manifest: ${relative(root, manifestPath)}\nphase: ${phase}\nmissing required: ${manifest.missing.join(", ") || "none"}\nphase prerequisite failures: ${manifest.phase_prerequisite_failures.join("; ") || "none"}`);
+    process.exit(manifest.missing.length || manifest.phase_prerequisite_failures.length ? 3 : 0);
   }
 
   const stamp = manifest.generated_at.replace(/[-:]/g, "").replace(/\.\d+Z$/, "Z").slice(0, 15);
@@ -117,6 +236,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   }
   const digest = await sha256(archive);
   writeFileSync(archive + ".sha256", `${digest}  ${relative(root, archive)}\n`);
-  console.log(`manifest: ${relative(root, manifestPath)}\narchive: ${relative(root, archive)}\nSHA-256: ${digest}\nphase: ${phase}\nfiles: ${manifest.files.length}\nmissing required: ${manifest.missing.join(", ") || "none"}`);
-  process.exit(manifest.missing.length ? 3 : 0);
+  console.log(`manifest: ${relative(root, manifestPath)}\narchive: ${relative(root, archive)}\nSHA-256: ${digest}\nphase: ${phase}\nfiles: ${manifest.files.length}\nmissing required: ${manifest.missing.join(", ") || "none"}\nphase prerequisite failures: ${manifest.phase_prerequisite_failures.join("; ") || "none"}`);
+  process.exit(manifest.missing.length || manifest.phase_prerequisite_failures.length ? 3 : 0);
 }
