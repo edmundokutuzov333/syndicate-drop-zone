@@ -52,7 +52,7 @@ const PUBLISHED_ARTIST_FIXTURE = ARTIST_PHOTO_URLS.map((photo_url, index) => ({
   status: "published",
 }));
 
-async function openCamping(page: import("@playwright/test").Page, query = "", afterUnlock?: () => void) {
+async function openCamping(page: import("@playwright/test").Page, query = "", options: { skipUnlock?: boolean; afterNavigation?: () => void } = {}) {
   await page.route("**/rest/v1/**", async (route) => {
     const pathname = new URL(route.request().url()).pathname;
     await route.fulfill({
@@ -68,8 +68,8 @@ async function openCamping(page: import("@playwright/test").Page, query = "", af
   });
 
   await page.goto("/camping" + query);
-  await unlockSite(page);
-  afterUnlock?.();
+  if (!options.skipUnlock) await unlockSite(page);
+  options.afterNavigation?.();
   await expect(page.locator("main.camping-studio-route")).toBeVisible();
   const canvas = page.locator("canvas.camping-studio__canvas");
   await expect(canvas).toBeVisible();
@@ -563,18 +563,16 @@ test("serves a certified optimized Blender V3 model on the canonical CAMPING URL
     await modelResponseGate;
     await route.continue();
   });
-  await openCamping(page, "", () => releaseModelResponse());
+  await openCamping(page, "", { skipUnlock: true, afterNavigation: () => releaseModelResponse() });
   const webglFallback = page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]');
   if (await webglFallback.isVisible()) {
     await expect(webglFallback).toBeVisible();
     await expect(page.getByRole("button", { name: "ABRIR REGISTOS PÚBLICOS" })).toBeVisible();
     return;
   }
-  await page.getByRole("button", { name: "NAVEGAÇÃO GUIADA" }).focus();
-  await page.keyboard.press("8");
-  await page.keyboard.press("0");
-  await page.keyboard.press("8");
-  await expect(page.locator(".camping-studio__explore-state")).toContainText("EXPLORATION ACTIVE", { timeout: 30_000 });
+  // The site-wide 808 gate is validated by its dedicated tests. This smoke
+  // focuses on the renderer and model contract, so keep that unrelated overlay
+  // closed and assert the model source/status directly on the mounted canvas.
   const canvas = page.locator("canvas.camping-studio__canvas");
   await expect(canvas).toHaveAttribute("data-camping-model-source", "blender-v3", { timeout: 60_000 });
   await expect(canvas).toHaveAttribute("data-camping-model-version", "3");
