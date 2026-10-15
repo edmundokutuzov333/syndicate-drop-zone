@@ -277,7 +277,8 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
     try {
       const frontendJson = parseGlb(readFileSync(frontendGlb));
       for (const check of glbContract(frontendJson, JSON.parse(readFileSync(biblePath, "utf8")), {
-        requirePhase8: existsSync(productionReportPath),
+        requirePhase7: currentPhase >= 7,
+        requirePhase8: currentPhase >= 8,
       })) {
         add("Frontend GLB: " + check.name, check.pass, check.detail);
       }
