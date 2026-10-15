@@ -344,6 +344,9 @@ def material_library(bible):
                 sheen_weight=target.get("sheenWeight", 0.0),
                 sheen_roughness=target.get("sheenRoughness", 0.8),
             )
+            # Preserve all manifest-declared CC0 materials in the saved .blend, including profiles
+            # that are not assigned until a later phase. Unused datablocks otherwise disappear on save.
+            bpy.data.materials[name].use_fake_user = True
         else:
             material(name)
 
