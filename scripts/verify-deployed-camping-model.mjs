@@ -59,7 +59,13 @@ function countTriangles(gltf) {
 
 async function verifyPublishedAsset(metadata) {
   const modelUrl = new URL(MODEL_PATH, BASE_URL);
-  const response = await fetch(modelUrl, { cache: "no-store" });
+  // Bind the request cache key to the expected digest. If a CDN serves an old
+  // object for this canonical path, the SHA-256 gate below rejects it.
+  modelUrl.searchParams.set("_sdt_sha256", String(metadata.geometry?.sha256 ?? ""));
+  const response = await fetch(modelUrl, {
+    cache: "no-store",
+    headers: { "Cache-Control": "no-cache, no-store, max-age=0", Pragma: "no-cache" },
+  });
   if (!response.ok) throw new Error("canonical model returned HTTP " + response.status);
   const bytes = Buffer.from(await response.arrayBuffer());
   if (bytes.length === 0 || bytes.length > 16 * 1024 * 1024) throw new Error("model size is outside the allowed 1 B to 16 MiB range");
@@ -214,7 +220,12 @@ let lastError = "production metadata is not certified V3 yet";
 while (Date.now() < deadline) {
   try {
     const metadataUrl = new URL(METADATA_PATH, BASE_URL);
-    const response = await fetch(metadataUrl, { cache: "no-store" });
+    // Avoid reusing a CDN/browser-cached manifest while checking a new deployment.
+    metadataUrl.searchParams.set("_sdt_verify", String(Date.now()));
+    const response = await fetch(metadataUrl, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache, no-store, max-age=0", Pragma: "no-cache" },
+    });
     if (!response.ok) throw new Error("metadata returned HTTP " + response.status);
     const metadata = await response.json();
 
