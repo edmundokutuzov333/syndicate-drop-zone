@@ -27,7 +27,7 @@ function gitCommit() {
 function countPrimitives(json) {
   return (json.meshes || []).reduce((sum, mesh) => sum + (mesh.primitives || []).length, 0);
 }
-const targetPhase = Number(process.env.CAMPING_PHASE || 8);
+const targetPhase = Number(process.env.CAMPING_PHASE || 9);
 if (!Number.isInteger(targetPhase) || targetPhase < 1 || targetPhase > 22) {
   throw new Error("CAMPING_PHASE must be an integer between 1 and 22");
 }
