@@ -44,6 +44,12 @@ import { createDawScreen } from "../v3/screen-texture";
 import { renderEquirect, rgbaToDataUrl, createDifferenceImage } from "../v3/refmatch";
 import { referenceMatchScore, sectorStats, type Rgba } from "../v3/sector-stats";
 import { normalizeCampingModel } from "./camping-model-compatibility";
+import {
+  createCampingV3CollisionConfig,
+  deriveCampingCameraPoses,
+  type CampingCameraPose,
+  type CampingCameraPoseName,
+} from "./camping-camera-poses";
 import { REFERENCE_SECTOR_STATS, REFERENCE_SOURCE_SHA256 } from "../v3/reference-sector-baseline";
 import type { CampingDebugMetrics, CampingDebugPoseId, CampingReferenceMatch } from "../v3/debug-api";
 
@@ -660,6 +666,7 @@ export class CampingStudioEngine {
   private hoveredRoot: THREE.Object3D | null = null;
   private outline: THREE.BoxHelper | null = null;
   private studioRoot: THREE.Group | null = null;
+  private modelSource: "blender-v3" | "legacy-glb" | null = null;
   private studioLoaded = false;
   private currentRoom: CampingRoomId = "studio";
   private roomLayout: CampingRoomLayout | null = null;
@@ -960,7 +967,15 @@ export class CampingStudioEngine {
       clothing: { position: [2.15, CAM_HEIGHT, -0.15], look: [3.05, 1.3, -1.55] },
       artists: { position: [5.25, CAM_HEIGHT, 0.35], look: [6.72, 2.1, 0.15] },
     };
-    const target = anchors[anchor];
+    const poseForAnchor: Record<typeof anchor, CampingCameraPoseName> = {
+      entrance: "entrada",
+      studio: "entrada",
+      production: "producao",
+      photography: "foto",
+      clothing: "vestuario",
+      artists: "artistas",
+    };
+    const target = this.resolveCameraPose(poseForAnchor[anchor]) ?? anchors[anchor];
     const from = this.camera.position.clone();
     const fromLook = this.currentLookTarget();
     this.startTween(
@@ -983,11 +998,12 @@ export class CampingStudioEngine {
     if (this.phase === "INTERACTION_FOCUS") this.finishFocusState();
     this.focusReturn = null;
     this.callbacks.onHoverChange(null);
+    const entryPose = this.modelSource === "blender-v3" ? this.resolveCameraPose("entrada") : null;
     this.startTween(
       this.camera.position.clone(),
-      new THREE.Vector3(0.14, CAM_HEIGHT, 3.18),
+      entryPose ? new THREE.Vector3(...entryPose.position) : new THREE.Vector3(0.14, CAM_HEIGHT, 3.18),
       this.currentLookTarget(),
-      new THREE.Vector3(0.05, 1.42, 5.47),
+      entryPose ? new THREE.Vector3(...entryPose.look) : new THREE.Vector3(0.05, 1.42, 5.47),
       880,
     );
   }
@@ -1303,8 +1319,21 @@ export class CampingStudioEngine {
     }
   }
 
+  private resolveCameraPose(id: CampingCameraPoseName): CampingCameraPose | null {
+    if (this.modelSource === "blender-v3" && this.studioRoot) {
+      const resolved = deriveCampingCameraPoses(this.studioRoot, CAM_HEIGHT)?.[id];
+      if (resolved) return resolved;
+    }
+    const legacyPose = (CAMPING_DEBUG_POSES as Partial<Record<CampingCameraPoseName, CampingCameraPose>>)[id];
+    if (!legacyPose) return null;
+    return {
+      position: [...legacyPose.position] as [number, number, number],
+      look: [...legacyPose.look] as [number, number, number],
+    };
+  }
+
   private applyDebugPose(id: CampingDebugPoseId, renderNow: boolean): boolean {
-    const pose = CAMPING_DEBUG_POSES[id];
+    const pose = this.resolveCameraPose(id);
     if (!pose || !this.renderer || !this.studioLoaded || this.phase !== "EXPLORATION" || this.currentRoom !== "studio") return false;
     this.keyState.clear();
     this.virtualState.clear();
@@ -1313,6 +1342,10 @@ export class CampingStudioEngine {
     this.roomTransitioning = false;
     this.roomDoorMotion = null;
     this.camera.position.set(...pose.position);
+    if (this.canvas) {
+      this.canvas.dataset.campingCameraPosition = JSON.stringify(pose.position);
+      this.canvas.dataset.campingCameraLookTarget = JSON.stringify(pose.look);
+    }
     const direction = new THREE.Vector3(...pose.look).sub(this.camera.position).normalize();
     this.yaw = Math.atan2(-direction.x, -direction.z);
     this.pitch = Math.asin(THREE.MathUtils.clamp(direction.y, -1, 1));
@@ -1871,11 +1904,12 @@ export class CampingStudioEngine {
       this.updateEntryLights();
     }
     if (this.access.phase === "ENTERING_STUDIO" && previousPhase !== "ENTERING_STUDIO") {
+      const entryPose = this.resolveCameraPose("entrada");
       this.startTween(
         this.camera.position.clone(),
-        new THREE.Vector3(...CAMPING_REFERENCE_COMPOSITION.entryPosition),
+        new THREE.Vector3(...(entryPose?.position ?? CAMPING_REFERENCE_COMPOSITION.entryPosition)),
         this.currentLookTarget(),
-        new THREE.Vector3(...CAMPING_REFERENCE_COMPOSITION.entryLookTarget),
+        new THREE.Vector3(...(entryPose?.look ?? CAMPING_REFERENCE_COMPOSITION.entryLookTarget)),
         1650,
         () => this.dispatch({ type: "EXPLORE" }),
       );
@@ -2037,6 +2071,10 @@ export class CampingStudioEngine {
         root.name = "CAMPING / XOYENS STUDIO GLB";
         root.visible = this.phase !== "LOCKED" && this.phase !== "CODE_ENTRY" && this.phase !== "ACCESS_GRANTED";
         const modelSource = normalizeCampingModel(root);
+        this.modelSource = modelSource;
+        this.collision = modelSource === "blender-v3"
+          ? createCampingV3CollisionConfig(root) ?? createStudioCollisionConfig()
+          : createStudioCollisionConfig();
         if (this.canvas) {
           this.canvas.dataset.campingModelSource = modelSource;
           this.canvas.dataset.campingModelVersion = modelSource === "blender-v3" ? "3" : "legacy";
@@ -2161,6 +2199,17 @@ export class CampingStudioEngine {
           if (typeof interactionId === "string" && interactionId) this.interactiveRoots.push(object);
         });
         this.studioRoot = root;
+        if (this.canvas) {
+          const floorNode = root.getObjectByName("studio.floor") ?? root.getObjectByName("studio.parquet");
+          if (floorNode) {
+            const floorBounds = new THREE.Box3().setFromObject(floorNode);
+            if (!floorBounds.isEmpty()) {
+              this.canvas.dataset.campingModelFloorBounds = JSON.stringify([
+                floorBounds.min.x, floorBounds.min.z, floorBounds.max.x, floorBounds.max.z,
+              ]);
+            }
+          }
+        }
         this.studioRoot.visible = this.phase !== "LOCKED" && this.phase !== "CODE_ENTRY" && this.phase !== "ACCESS_GRANTED";
         this.scene.add(root);
         // Keep the entry transition in "loading" until the real portrait texture requests

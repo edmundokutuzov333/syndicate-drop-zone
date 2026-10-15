@@ -342,6 +342,18 @@ test.describe("CAMPING V2 / 808 access", () => {
       expect(applied, "pose should apply only after 808 unlock and GLB readiness: " + pose).toBe(true);
       await expect(canvas).toHaveAttribute("data-camping-debug-pose", pose);
       await expect(canvas).toHaveAttribute("data-camping-debug-frozen", "true");
+      const cameraBounds = await canvas.evaluate((element) => ({
+        position: element.getAttribute("data-camping-camera-position"),
+        bounds: element.getAttribute("data-camping-model-floor-bounds"),
+      }));
+      expect(cameraBounds.position, "camera position diagnostics for " + pose).not.toBeNull();
+      expect(cameraBounds.bounds, "model floor bounds diagnostics for " + pose).not.toBeNull();
+      const cameraPosition = JSON.parse(cameraBounds.position!) as [number, number, number];
+      const floorBounds = JSON.parse(cameraBounds.bounds!) as [number, number, number, number];
+      expect(cameraPosition[0], pose + " camera x inside floor").toBeGreaterThan(floorBounds[0]);
+      expect(cameraPosition[0], pose + " camera x inside floor").toBeLessThan(floorBounds[2]);
+      expect(cameraPosition[2], pose + " camera z inside floor").toBeGreaterThan(floorBounds[1]);
+      expect(cameraPosition[2], pose + " camera z inside floor").toBeLessThan(floorBounds[3]);
       const metrics = await page.evaluate(() => window.__SDT3D__?.metrics() ?? null);
       expect(metrics).not.toBeNull();
       captureMetrics[pose] = metrics;
