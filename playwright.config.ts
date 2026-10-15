@@ -19,12 +19,18 @@ export default defineConfig({
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
   ],
   webServer: {
-    // The workflow builds production before browser smoke tests. Serve that build
-    // instead of recompiling the full 3D application in Vite dev mode, which can
-    // stall the Playwright webServer readiness gate.
-    command: "npm run preview -- --host 127.0.0.1 --port 4173",
+    // Preview the generated Nitro deployment output directly. The Vite preview
+    // adapter expects dist/server/server.js, which this app's Nitro build does not
+    // emit because its server output is produced under the Nitro preset.
+    command: "npx nitro preview",
     url: "http://127.0.0.1:4173",
+    env: {
+      HOST: "127.0.0.1",
+      PORT: "4173",
+      NITRO_HOST: "127.0.0.1",
+      NITRO_PORT: "4173",
+    },
     reuseExistingServer: false,
-    timeout: 120_000,
+    timeout: 180_000,
   },
 });
