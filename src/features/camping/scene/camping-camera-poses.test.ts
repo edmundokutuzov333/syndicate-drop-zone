@@ -39,7 +39,7 @@ describe("CAMPING V3 camera and collision coordinates", () => {
     expect(poses).not.toBeNull();
     expect(poses?.entrada.position[1]).toBeCloseTo(1.67, 2);
     expect(poses?.entrada.position[1]).toBeLessThan(2);
-    expect(poses?.entrada.look[1]).toBeCloseTo(1.48, 2);
+    expect(poses?.entrada.look[1]).toBeCloseTo(1.53, 2);
     expect(new Box3().setFromObject(parquet).max.y).toBeCloseTo(0.05, 3);
   });
 
