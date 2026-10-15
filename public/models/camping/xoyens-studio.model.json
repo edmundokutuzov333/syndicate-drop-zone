@@ -1255,13 +1255,10 @@
   },
   "auditUpdatedAt": "2026-10-12",
   "frontendDelivery": {
-    "generatedAt": "2026-10-15T06:14:03.893Z",
-    "sourceGlb": "art/out/optimized/xoyens-studio.high.glb",
     "canonicalUrl": "/models/camping/xoyens-studio.glb",
     "hashAlgorithm": "SHA-256",
-    "sha256": "f831ddbba5a7e57dd2ada184d44cf5cdcf209e6a8e03a8f8beb513d13bd84c4e",
     "bytes": 13245224,
-    "browserLoader": "GLTFLoader + KTX2Loader + MeshoptDecoder"
+    "sha256": "f831ddbba5a7e57dd2ada184d44cf5cdcf209e6a8e03a8f8beb513d13bd84c4e"
   },
   "surfacePhase": 7,
   "productionPhase": 8
