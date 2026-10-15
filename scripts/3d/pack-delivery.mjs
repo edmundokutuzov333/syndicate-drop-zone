@@ -26,6 +26,7 @@ export function requiredFilesForPhase(phase = PHASE_DEFAULT) {
     required.push("art/xoyens-studio.phase07.report.json");
   }
   if (number >= 8) required.push("art/xoyens-studio.phase08.report.json");
+  if (number >= 9) { required.push("art/xoyens-studio.phase09.report.json"); required.push("art/textures/brand/sindicato-selo.png"); required.push("art/textures/brand/xoyens.png"); }
   // Collision GLBs are mandatory release artifacts from Phase 14 onward.
   if (number >= 14) {
     required.push("art/out/xoyens-studio.colliders.glb");
@@ -95,6 +96,16 @@ export function phasePrerequisiteFailures(root = ".", phase = PHASE_DEFAULT) {
     }
   }
 
+  if (number >= 9) {
+    const report = load("art/xoyens-studio.phase09.report.json", "Phase 09 photo validation");
+    if (report) {
+      add(report.phase === 9 && report.status === "source-validated", "Phase 09 photo report is not source-validated");
+      add(report.photoElements === 9 && report.photoRootsFound === 9, "Phase 09 must validate all nine photo element roots");
+      add(report.garments === 5, "Phase 09 requires exactly five garments");
+    }
+    for (const path of ["art/textures/brand/sindicato-selo.png", "art/textures/brand/xoyens.png"]) add(existsSync(join(root, path)), "Phase 09 official brand asset missing: " + path);
+  }
+
   if (number >= 7) {
     const modelPath = join(root, "public/models/camping/xoyens-studio.glb");
     const metadata = load("public/models/camping/xoyens-studio.model.json", "Canonical frontend model metadata");
@@ -137,6 +148,10 @@ export function phasePrerequisiteFailures(root = ".", phase = PHASE_DEFAULT) {
           add(metadata.productionPhase == null || Number(metadata.productionPhase) < 8,
             "Phase 07 publication cannot claim production geometry from a later phase");
         }
+        if (number >= 9) {
+          const photo = metadata.geometry?.photoZone ?? {};
+          add(photo.sourceStatus === "source-validated" && photo.requiredElements === 9 && photo.garments === 5 && photo.sealDiameterM === 2.2, "Canonical model metadata does not certify Phase 09 photo geometry");
+        }
       } catch (error) {
         failures.push("Canonical frontend model could not be verified: " + (error instanceof Error ? error.message : String(error)));
       }
@@ -168,12 +183,12 @@ const git = (args) => {
 
 export async function buildManifest(root = ".", phase = PHASE_DEFAULT) {
   const required = requiredFilesForPhase(phase);
-  const materialImages = walk(join(root, "art/textures/materials"))
-    .filter((file) => /\.png$/i.test(file))
-    .map((file) => relative(root, file));
+  const materialImages = [...walk(join(root, "art/textures/materials")), ...walk(join(root, "art/textures/brand"))]
+    .filter((file) => /\.png$/i.test(file)).map((file) => relative(root, file));
   const phaseEvidence = [
     ...walk(join(root, "art/_delivery/phase-06")),
     ...walk(join(root, "art/_delivery/phase-08")),
+    ...walk(join(root, "art/_delivery/phase-09")),
   ].map((file) => relative(root, file));
   const deliveryLogs = walk(join(root, "art/_delivery/logs")).map((file) => relative(root, file));
   const paths = [
