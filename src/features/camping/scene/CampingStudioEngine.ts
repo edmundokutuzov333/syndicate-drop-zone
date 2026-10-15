@@ -1994,6 +1994,9 @@ export class CampingStudioEngine {
       throw new Error("CAMPING canonical GLB returned HTTP " + modelResponse.status + ".");
     }
     const bytes = await modelResponse.arrayBuffer();
+    if (bytes.byteLength === 0 || bytes.byteLength > 16 * 1024 * 1024) {
+      throw new Error("CAMPING canonical GLB is empty or exceeds the 16 MiB transfer budget.");
+    }
     const digestBuffer = await crypto.subtle.digest("SHA-256", bytes);
     const digest = Array.from(new Uint8Array(digestBuffer), (byte) => byte.toString(16).padStart(2, "0")).join("");
     assertCampingModelBytesMatchMetadata(metadataValue, bytes.byteLength, digest);
