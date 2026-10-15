@@ -1,7 +1,13 @@
 import { Box3, BoxGeometry, Group, Mesh, MeshBasicMaterial } from "three";
 import { describe, expect, it } from "vitest";
 import { canOccupyStudio } from "../camera/camping-collision";
-import { createCampingV3CollisionConfig, deriveCampingCameraPoses, deriveCampingFloorBounds } from "./camping-camera-poses";
+import {
+  createCampingV3CollisionConfig,
+  deriveCampingCameraPoses,
+  deriveCampingEntryPoseFromSceneBounds,
+  deriveCampingFloorBounds,
+  inspectCampingFloorGeometry,
+} from "./camping-camera-poses";
 
 function addBox(root: Group, name: string, size: [number, number, number], position: [number, number, number]): Mesh {
   const mesh = new Mesh(new BoxGeometry(...size), new MeshBasicMaterial());
@@ -225,6 +231,43 @@ describe("CAMPING V3 camera and collision coordinates", () => {
     expect(poses.entrada.position[1] - bounds.maxY).toBeCloseTo(1.62, 2);
     expect(poses.entrada.look[1] - bounds.maxY).toBeCloseTo(1.48, 2);
     expect(poses.entrada.look[1]).toBeLessThan(poses.entrada.position[1]);
+  });
+
+  it("keeps the 808 entry usable when a verified room has no resolvable floor node", () => {
+    const root = new Group();
+    // A certified room shell with walls and a vaulted roof but no floor node.
+    // The emergency entry pose must be derived from the actual room envelope,
+    // not a legacy hardcoded coordinate or the roof apex as the ground plane.
+    addBox(root, "wall.left", [0.12, 4.35, 9.2], [-7.04, 2.175, 0]);
+    addBox(root, "wall.right", [0.12, 4.35, 9.2], [7.04, 2.175, 0]);
+    addBox(root, "wall.back", [14.2, 4.35, 0.12], [0, 2.175, -4.54]);
+    addBox(root, "wall.front", [14.2, 4.35, 0.12], [0, 2.175, 4.54]);
+    addBox(root, "ceiling.vault", [14.2, 0.1, 9.2], [0, 4.3, 0]);
+    root.updateMatrixWorld(true);
+
+    expect(deriveCampingFloorBounds(root)).toBeNull();
+    const diagnostics = inspectCampingFloorGeometry(root);
+    expect(diagnostics.rootBounds).not.toBeNull();
+    expect(diagnostics.candidates.every((candidate) => candidate.size === null || candidate.size[1] > 0.35)).toBe(true);
+
+    const pose = deriveCampingEntryPoseFromSceneBounds(root, 1.62);
+    expect(pose).not.toBeNull();
+    if (!pose) throw new Error("Expected an entry pose from the certified room bounds.");
+
+    expect(pose.position[1]).toBeCloseTo(1.62, 2);
+    expect(pose.look[1]).toBeCloseTo(1.48, 2);
+    expect(pose.position[2]).toBeGreaterThan(0);
+    expect(pose.look[2]).toBeLessThan(0);
+
+    const distance = Math.hypot(
+      pose.position[0] - pose.look[0],
+      pose.position[2] - pose.look[2],
+    );
+    expect(distance).toBeGreaterThan(2.4);
+    expect(distance).toBeLessThan(5.2);
+    const pitch = Math.atan2(pose.look[1] - pose.position[1], distance) * 180 / Math.PI;
+    expect(pitch).toBeGreaterThan(-12);
+    expect(pitch).toBeLessThanOrEqual(0);
   });
 
   it("builds collision bounds and obstacle boxes from the metric V3 floor", () => {
