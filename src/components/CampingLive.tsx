@@ -6,7 +6,7 @@ function isLikelyEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 function isLikelyWhatsApp(value: string) {
-  return /^\+?[0-9][0-9 .()\-]{4,}$/.test(value.trim());
+  return /^\+?[0-9][0-9 .()-]{4,}$/.test(value.trim());
 }
 
 export function CampingLive({
