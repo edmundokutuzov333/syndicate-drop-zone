@@ -1926,7 +1926,22 @@ export class CampingStudioEngine {
     if (this.access.phase === "ENTERING_STUDIO" && previousPhase !== "ENTERING_STUDIO") {
       const entryPose = this.resolveCameraPose("entrada");
       if (this.modelSource === "blender-v3" && !entryPose) {
-        this.dispatch({ type: "LOAD_ERROR", message: "CAMERA GEOMETRY INVALID" });
+        const floorSource = this.canvas?.dataset.campingModelFloorBoundsSource || "not-found";
+        const floorSize = this.canvas?.dataset.campingModelFloorSize || "unavailable";
+        const floorY = this.canvas?.dataset.campingModelFloorY || "unavailable";
+        const geometryError =
+          "CAMERA GEOMETRY INVALID / floor=" + floorSource +
+          " / size=" + floorSize +
+          " / y=" + floorY +
+          " / model=" + (this.canvas?.dataset.campingModelSource || "unknown");
+        if (this.canvas) {
+          this.canvas.dataset.campingCameraGeometryStatus = "entry-pose-invalid";
+          this.canvas.dataset.campingCameraPoseError = geometryError.slice(0, 400);
+        }
+        // Surface the actual blocking stage. A blank generic fallback hid the
+        // difference between a verified GLB and an entry-camera failure.
+        this.callbacks.onWebGLFailure(geometryError);
+        this.dispatch({ type: "LOAD_ERROR", message: geometryError });
         return;
       }
       this.startTween(
@@ -1958,6 +1973,7 @@ export class CampingStudioEngine {
   private publishAccess(): void {
     this.phase = this.access.phase;
     this.phaseStartedAt = performance.now();
+    if (this.canvas) this.canvas.dataset.campingAccessPhase = this.access.phase;
     this.callbacks.onAccessChange({ ...this.access });
   }
 
