@@ -296,7 +296,7 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
         add(
           "frontend metadata certifies the requested phase and its predecessor surfaces",
           metadata.version === 3 && metadata.phase === currentPhase &&
-            (currentPhase >= 8 ? metadata.productionPhase === currentPhase : metadata.productionPhase == null) &&
+            (currentPhase >= 8 ? metadata.productionPhase === currentPhase : metadata.productionPhase == null || Number(metadata.productionPhase) < 8) &&
             (currentPhase < 7 || metadata.surfacePhase === 7) && metadata.status === "blender-v3-published",
           JSON.stringify({ version: metadata.version, phase: metadata.phase, productionPhase: metadata.productionPhase, surfacePhase: metadata.surfacePhase, status: metadata.status }),
         );

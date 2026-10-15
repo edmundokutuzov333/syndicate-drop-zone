@@ -57,7 +57,7 @@ try {
     // The Phase 08 furniture adds real upholstery, panel and audio geometry. The
     // medium/low tiers use stronger geometric reduction while keeping the same
     // checked budgets and all named interaction anchors.
-    { name: "mid", maxTex: 1024, colorTex: 512, dataTex: 256, ratio: 0.30, error: 0.003 },
+    { name: "mid", maxTex: 1024, colorTex: 512, dataTex: 256, ratio: 0.27, error: 0.003 },
     { name: "low", maxTex: 512, colorTex: 256, dataTex: 128, ratio: 0.10, error: 0.010 }
   ];
 
