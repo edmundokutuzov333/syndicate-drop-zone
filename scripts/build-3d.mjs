@@ -154,38 +154,39 @@ try {
     console.log("[LOD material palette] " + tierSafeName(document) + " redirected primitives=" + reassigned);
   }
 
-  for (const tier of tiers) {
-    const document = await io.read(src);
-    if (tier.name !== "high") {
-      const beforeMaterials = document.getRoot().listMaterials().length;
-      const materials = new Map(document.getRoot().listMaterials().map((material) => [material.getName(), material]));
-      const redirects = {
-        fabric_black_flag: "cotton_black",
-        fabric_black_softbox: "cotton_black",
-        steel_black_tube: "steel_black",
-      };
-      const resolved = new Map();
-      for (const [sourceName, targetName] of Object.entries(redirects)) {
-        const sourceMaterial = materials.get(sourceName);
-        const targetMaterial = materials.get(targetName);
-        if (!sourceMaterial) continue;
-        if (!targetMaterial) throw new Error("LOD material palette is missing canonical material " + targetName);
-        resolved.set(sourceMaterial, targetMaterial);
-      }
-      let reassigned = 0;
-      for (const mesh of document.getRoot().listMeshes()) {
-        for (const primitive of mesh.listPrimitives()) {
-          const material = primitive.getMaterial();
-          const target = material ? resolved.get(material) : undefined;
-          if (target && target !== material) {
-            primitive.setMaterial(target);
-            reassigned += 1;
-          }
+  function mergeLowTierMaterials(document, tierName) {
+    const root = document.getRoot();
+    const materials = new Map(root.listMaterials().map((material) => [material.getName(), material]));
+    const redirects = {
+      fabric_black_flag: "cotton_black",
+      fabric_black_softbox: "cotton_black",
+      steel_black_tube: "steel_black",
+    };
+    const resolved = new Map();
+    for (const [sourceName, targetName] of Object.entries(redirects)) {
+      const sourceMaterial = materials.get(sourceName);
+      const targetMaterial = materials.get(targetName);
+      if (!sourceMaterial) continue;
+      if (!targetMaterial) throw new Error("LOD material palette is missing canonical material " + targetName);
+      resolved.set(sourceMaterial, targetMaterial);
+    }
+    let reassigned = 0;
+    for (const mesh of root.listMeshes()) {
+      for (const primitive of mesh.listPrimitives()) {
+        const material = primitive.getMaterial();
+        const target = material ? resolved.get(material) : undefined;
+        if (target && target !== material) {
+          primitive.setMaterial(target);
+          reassigned += 1;
         }
       }
-      console.log("[LOD material palette] " + tier.name + " reassigned primitives=" + reassigned +
-        "; source materials=" + beforeMaterials + "; redirects=" + resolved.size);
     }
+    console.log("[LOD material palette] " + tierName + " reassigned primitives=" + reassigned);
+  }
+
+  for (const tier of tiers) {
+    const document = await io.read(src);
+    if (tier.name !== "high") mergeLowTierMaterials(document, tier.name);
     preserveContractMetadata(document);
 
     // Keep UV1 for lightmap workflows even when core glTF materials do not
