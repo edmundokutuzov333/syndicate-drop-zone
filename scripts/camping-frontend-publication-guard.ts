@@ -74,9 +74,9 @@ export function verifyCampingFrontendPublication(root = process.cwd()): void {
   const bytes = readFileSync(modelPath);
   const metadata = JSON.parse(readFileSync(metadataPath, "utf8"));
   if (bytes.length > MAX_BYTES) throw new Error("frontend GLB exceeds the 16 MiB transfer budget");
-  if (metadata.version !== 3 || !Number.isInteger(metadata.phase) || metadata.phase < 8 || metadata.phase > 22 ||
+  if (metadata.version !== 3 || !Number.isInteger(metadata.phase) || metadata.phase < 9 || metadata.phase > 22 ||
       metadata.productionPhase !== metadata.phase || metadata.surfacePhase !== 7 || metadata.status !== "blender-v3-published") {
-    throw new Error("metadata is stale: expected version=3, phase=8..22, productionPhase=phase, surfacePhase=7, status=blender-v3-published");
+    throw new Error("refusing stale frontend asset: expected version=3, phase=9..22, productionPhase=phase, surfacePhase=7, status=blender-v3-published");
   }
   if (metadata.model !== "/models/camping/xoyens-studio.glb") {
     throw new Error("metadata does not point to the canonical /camping asset URL");
