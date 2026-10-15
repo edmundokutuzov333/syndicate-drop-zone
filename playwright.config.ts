@@ -8,7 +8,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "line" : "list",
   use: {
-    baseURL: "http://127.0.0.1:4173",
+    baseURL: process.env.CAMPING_BASE_URL || "http://127.0.0.1:4173",
     trace: "retain-on-failure",
     video: "retain-on-failure",
     launchOptions: {
@@ -18,19 +18,17 @@ export default defineConfig({
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
   ],
-  webServer: {
-    // Preview the generated Nitro deployment output directly. The Vite preview
-    // adapter expects dist/server/server.js, which this app's Nitro build does not
-    // emit because its server output is produced under the Nitro preset.
-    command: "npx nitro preview",
-    url: "http://127.0.0.1:4173",
-    env: {
-      HOST: "127.0.0.1",
-      PORT: "4173",
-      NITRO_HOST: "127.0.0.1",
-      NITRO_PORT: "4173",
-    },
-    reuseExistingServer: false,
-    timeout: 180_000,
-  },
+  // CI sets CAMPING_BASE_URL to the actual Lovable production site. In that
+  // mode do not start a local server: the smoke test must verify what visitors
+  // receive, including the gate, the GLB and the photo assets.
+  ...(process.env.CAMPING_BASE_URL
+    ? {}
+    : {
+        webServer: {
+          command: "npm run dev -- --host 127.0.0.1 --port 4173",
+          url: "http://127.0.0.1:4173",
+          reuseExistingServer: false,
+          timeout: 180_000,
+        },
+      }),
 });
