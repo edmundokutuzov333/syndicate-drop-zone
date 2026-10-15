@@ -128,64 +128,88 @@ const phase7Surfaces = {
 };
 
 
-const productionReportPath = resolve("art/xoyens-studio.phase08.report.json");
-if (!existsSync(productionReportPath)) throw new Error("Refusing promotion: Phase 08 production report is missing");
-const phase8Report = JSON.parse(readFileSync(productionReportPath, "utf8"));
-const production = phase8Report.productionZone || {};
-if (phase8Report.version !== 1 || phase8Report.phase !== 8 || phase8Report.status !== "source-validated") {
-  throw new Error("Refusing promotion: Phase 08 source report is not certified");
+let phase8Production = null;
+if (targetPhase >= 8) {
+  // Phase 08 can only build on a published, checksum-verified Phase 07 asset.
+  const productionReportPath = resolve("art/xoyens-studio.phase08.report.json");
+  if (!existsSync(productionReportPath)) throw new Error("Refusing promotion: Phase 08 production report is missing");
+  const phase8Report = JSON.parse(readFileSync(productionReportPath, "utf8"));
+  const production = phase8Report.productionZone || {};
+  if (phase8Report.version !== 1 || phase8Report.phase !== 8 || phase8Report.status !== "source-validated") {
+    throw new Error("Refusing promotion: Phase 08 source report is not certified");
+  }
+  for (const [field, expected] of Object.entries({
+    requiredElements: 19, midiWhiteKeys: 36, midiBlackKeys: 25,
+    acousticFabricPanels: 3, acousticFoamTiles: 30, pendants: 4, edisonBulbs: 4,
+  })) {
+    if (production[field] !== expected) throw new Error("Refusing promotion: Phase 08 " + field + " expected " + expected + ", got " + production[field]);
+  }
+  if (!Number.isInteger(production.chairUpholsteryTrianglesSource) ||
+      production.chairUpholsteryTrianglesSource < 14000 || production.chairUpholsteryTrianglesSource > 18000) {
+    throw new Error("Refusing promotion: chair upholstery must contain 14k–18k source triangles");
+  }
+  const productionScreen = nodes.find((node) => node.name === "SDT_production_monitor_daw_screen" && Number.isInteger(node.mesh));
+  if (!productionScreen) throw new Error("Refusing promotion: live 16:9 DAW screen mesh is missing");
+  for (const id of ["studio.production-desk", "studio.imac", "studio.audio-system"]) {
+    if (!interactions.has(id)) throw new Error("Refusing promotion: Phase 08 interaction missing: " + id);
+  }
+  const phase8MaterialNames = new Set((gltf.materials || []).map((material) => material.name).filter(Boolean));
+  const requiredPhase8Materials = ["ceramic_red", "glass_mirror", "led_warm_emissive"];
+  const missingPhase8Materials = requiredPhase8Materials.filter((name) => !phase8MaterialNames.has(name));
+  if (missingPhase8Materials.length) {
+    throw new Error("Refusing promotion: Phase 08 materials are not linked: " + missingPhase8Materials.join(", "));
+  }
+
+  const previousPhase7 = existsSync(metadataPath) ? JSON.parse(readFileSync(metadataPath, "utf8")) : {};
+  const previousModelPath = resolve("public/models/camping/xoyens-studio.glb");
+  if (!existsSync(previousModelPath)) {
+    throw new Error("Refusing Phase 08 promotion: the certified Phase 07 canonical GLB is missing");
+  }
+  const previousBytes = readFileSync(previousModelPath);
+  const previousDigest = sha256(previousBytes);
+  if (previousPhase7.version !== 3 || previousPhase7.phase !== 7 || previousPhase7.surfacePhase !== 7 ||
+      previousPhase7.status !== "blender-v3-published" ||
+      previousPhase7.model !== "/models/camping/xoyens-studio.glb") {
+    throw new Error("Refusing Phase 08 promotion: canonical metadata is not a Phase 07 publication");
+  }
+  if (previousPhase7.geometry?.bytes !== previousBytes.length ||
+      previousPhase7.frontendDelivery?.bytes !== previousBytes.length ||
+      previousPhase7.geometry?.sha256 !== previousDigest ||
+      previousPhase7.frontendDelivery?.sha256 !== previousDigest ||
+      previousPhase7.frontendDelivery?.canonicalUrl !== previousPhase7.model ||
+      previousPhase7.frontendDelivery?.hashAlgorithm !== "SHA-256") {
+    throw new Error("Refusing Phase 08 promotion: the published Phase 07 GLB does not match its SHA-256/byte metadata");
+  }
+  const baselineTriangles = Number(previousPhase7.geometry?.triangles || 0);
+  const phase8Triangles = countTriangles(gltf);
+  if (!Number.isInteger(baselineTriangles) || baselineTriangles <= 0 || phase8Triangles <= baselineTriangles) {
+    throw new Error("Refusing promotion: high-tier GLB must add geometry over the certified Phase 07 baseline (" +
+      phase8Triangles + " <= " + baselineTriangles + " triangles)");
+  }
+  phase8Production = {
+    sourceStatus: phase8Report.status,
+    requiredElements: production.requiredElements,
+    taggedProductionObjects: production.taggedProductionObjects,
+    chairUpholsteryTrianglesSource: production.chairUpholsteryTrianglesSource,
+    midiWhiteKeys: production.midiWhiteKeys,
+    midiBlackKeys: production.midiBlackKeys,
+    acousticFabricPanels: production.acousticFabricPanels,
+    acousticFoamTiles: production.acousticFoamTiles,
+    reclaimedWallBoards: production.reclaimedWallBoards,
+    upperLed: production.upperLed,
+    lowerLed: production.lowerLed,
+    pendants: production.pendants,
+    edisonBulbs: production.edisonBulbs,
+    cableSegments: production.cableSegments,
+    cableMaximumY: production.cableMaximumY,
+    requiredPbrMaterialsLinked: requiredPhase8Materials,
+    requiredInteractionsPreserved: ["studio.production-desk", "studio.imac", "studio.audio-system"],
+    productionScreenNode: productionScreen.name,
+    baselineTriangles,
+    publishedTriangles: phase8Triangles,
+    trianglesAddedFromPhase7: phase8Triangles - baselineTriangles,
+  };
 }
-for (const [field, expected] of Object.entries({
-  requiredElements: 19, midiWhiteKeys: 36, midiBlackKeys: 25,
-  acousticFabricPanels: 3, acousticFoamTiles: 30, pendants: 4, edisonBulbs: 4,
-})) {
-  if (production[field] !== expected) throw new Error("Refusing promotion: Phase 08 " + field + " expected " + expected + ", got " + production[field]);
-}
-if (!Number.isInteger(production.chairUpholsteryTrianglesSource) ||
-    production.chairUpholsteryTrianglesSource < 14000 || production.chairUpholsteryTrianglesSource > 18000) {
-  throw new Error("Refusing promotion: chair upholstery must contain 14k–18k source triangles");
-}
-const productionScreen = nodes.find((node) => node.name === "SDT_production_monitor_daw_screen" && Number.isInteger(node.mesh));
-if (!productionScreen) throw new Error("Refusing promotion: live 16:9 DAW screen mesh is missing");
-for (const id of ["studio.production-desk", "studio.imac", "studio.audio-system"]) {
-  if (!interactions.has(id)) throw new Error("Refusing promotion: Phase 08 interaction missing: " + id);
-}
-const phase8MaterialNames = new Set((gltf.materials || []).map((material) => material.name).filter(Boolean));
-const requiredPhase8Materials = ["ceramic_red", "glass_mirror", "led_warm_emissive"];
-const missingPhase8Materials = requiredPhase8Materials.filter((name) => !phase8MaterialNames.has(name));
-if (missingPhase8Materials.length) {
-  throw new Error("Refusing promotion: Phase 08 materials are not linked: " + missingPhase8Materials.join(", "));
-}
-const previousPhase7 = existsSync(metadataPath) ? JSON.parse(readFileSync(metadataPath, "utf8")) : {};
-const baselineTriangles = Number(previousPhase7.geometry?.triangles || 0);
-const phase8Triangles = countTriangles(gltf);
-if (baselineTriangles > 0 && phase8Triangles <= baselineTriangles) {
-  throw new Error("Refusing promotion: high-tier GLB does not add any geometry over Phase 07 (" +
-    phase8Triangles + " <= " + baselineTriangles + " triangles)");
-}
-const phase8Production = {
-  sourceStatus: phase8Report.status,
-  requiredElements: production.requiredElements,
-  taggedProductionObjects: production.taggedProductionObjects,
-  chairUpholsteryTrianglesSource: production.chairUpholsteryTrianglesSource,
-  midiWhiteKeys: production.midiWhiteKeys,
-  midiBlackKeys: production.midiBlackKeys,
-  acousticFabricPanels: production.acousticFabricPanels,
-  acousticFoamTiles: production.acousticFoamTiles,
-  reclaimedWallBoards: production.reclaimedWallBoards,
-  upperLed: production.upperLed,
-  lowerLed: production.lowerLed,
-  pendants: production.pendants,
-  edisonBulbs: production.edisonBulbs,
-  cableSegments: production.cableSegments,
-  cableMaximumY: production.cableMaximumY,
-  requiredPbrMaterialsLinked: requiredPhase8Materials,
-  requiredInteractionsPreserved: ["studio.production-desk", "studio.imac", "studio.audio-system"],
-  productionScreenNode: productionScreen.name,
-  baselineTriangles,
-  publishedTriangles: phase8Triangles,
-  trianglesAddedFromPhase7: baselineTriangles > 0 ? phase8Triangles - baselineTriangles : null,
-};
 
 mkdirSync(dirname(target), { recursive: true });
 copyFileSync(source, target);
@@ -208,7 +232,7 @@ const updated = {
   ...previous,
   version: 3,
   phase: targetPhase,
-  productionPhase: targetPhase,
+  productionPhase: targetPhase >= 8 ? targetPhase : null,
   surfacePhase: 7,
   status: "blender-v3-published",
   model: "/models/camping/xoyens-studio.glb",
