@@ -127,3 +127,9 @@ A implementação permanece em validação até o workflow reconstruir e reabrir
 A implementação especializada está na main em `scripts/blender/phase09_photo.py` e é activada por `CAMPING_PHASE=9`. O construtor cria o rolo, decal do selo oficial, cabideiro, cinco peças de roupa, suportes de iluminação e detalhes de tripés. O selo e o logótipo Xoyens são obtidos dos manifestos oficiais existentes, não redesenhados.
 
 A aceitação exige nove elementos fotográficos, selo de 2,2 m, cinco peças (duas t-shirts com selo, uma com marca Xoyens, dois hoodies, um com manga cinzenta), quatro rodas, materiais requeridos, duas capturas com SHA-256, metadados do modelo optimizado e confirmação da publicação em `/camping`. A fase permanece em validação até os gates CI e deployment passarem.
+
+### Correcção do gate de publicação · 2026-10-15
+
+A auditoria da integração encontrou uma incompatibilidade concreta: o guard de build do frontend exigia `phase=8` e `productionPhase=8`, apesar do pipeline de entrega estar configurado para construir e promover a Fase 09. Isso impediria uma build da Fase 09 mesmo depois de o Blender gerar e optimizar a zona fotográfica. O guard agora aceita fases certificadas de 08 a 22, exige que `productionPhase` corresponda à fase publicada e, a partir da Fase 09, valida os nove IDs de elementos fotográficos, os quatro materiais de marca/iluminação, as cinco malhas de roupa e as interacções `studio.photo-backdrop` e `studio.merch-rack`.
+
+O verificador do pacote também passou a exigir metadados completos da zona fotográfica e os testes de entrega cobrem os artefactos e pré-requisitos da Fase 09. Commits: `661143f` (guard), `9ec67b8` (gate de metadados), `2e6028f` (testes de pré-requisitos). Esta correcção de código não certifica por si só o modelo: a Fase 09 continua em validação até o workflow Blender, capturas, promoção do GLB, CI e publicação em `/camping` serem confirmados por execução real.
