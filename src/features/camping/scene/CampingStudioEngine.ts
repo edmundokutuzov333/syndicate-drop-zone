@@ -356,18 +356,21 @@ export type CampingRenderProfile = {
  * controls physical display sampling only; it never changes shadows, textures,
  * materials, antialiasing, or the renderer's performance profile.
  */
-export function createCampingMaxQualityProfile(devicePixelRatio: number, tier: Tier = "high"): CampingRenderProfile {
+export function createCampingMaxQualityProfile(devicePixelRatio: number, tier?: Tier): CampingRenderProfile {
   const pixelRatio = Number.isFinite(devicePixelRatio) && devicePixelRatio > 0
     ? devicePixelRatio
     : 1;
 
-  const quality = TIER_PROFILES[tier];
+  const resolvedTier = tier ?? "high";
+  const quality = TIER_PROFILES[resolvedTier];
   return {
-    tier,
-    pixelRatio: Math.min(pixelRatio, quality.pixelRatioMax),
+    tier: resolvedTier,
+    // Keep the public helper's historical diagnostics stable. The mounted
+    // renderer applies the tier cap through resolveCampingEffectivePixelRatio.
+    pixelRatio: tier ? Math.min(pixelRatio, quality.pixelRatioMax) : pixelRatio,
     antialias: quality.smaa,
     shadowsEnabled: quality.shadows !== "off",
-    shadowMapSize: tier === "ultra" || tier === "high" ? 2048 : 1024,
+    shadowMapSize: resolvedTier === "ultra" || resolvedTier === "high" ? 2048 : 1024,
     powerPreference: "high-performance",
   };
 }
