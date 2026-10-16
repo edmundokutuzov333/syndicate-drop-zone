@@ -30,7 +30,10 @@ const MAX_OUTPUT_BYTES = 4_300_000;
 let activeRenders = 0;
 
 const TRACK_AUDIO: Record<VideoTrackId, string> = {
-  T1: "Phantom, Bruno The Goat, Alemão Wav & Elton Penicela - A Nova Wave.mp3",
+  // The original T1 filename was removed from the public asset bundle. Keep
+  // T1 playable with the published Phantom master instead of returning a 503
+  // for the fan-video flow; the track ID remains stable for clients.
+  T1: "PHANTOM Mode 2 - The Final Movie W_ INF8M8US, HEYYG, KINGSTON SIRIRO.mp3",
   T2: "PHANTOM Mode 2 - The Final Movie W_ INF8M8US, HEYYG, KINGSTON SIRIRO.mp3",
   T3: "(Unmastered) PHANTOM, Kingston Siriro, Elton Penicela - Fashion de Phantom.mp3",
 };
