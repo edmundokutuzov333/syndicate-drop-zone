@@ -56,6 +56,7 @@ import {
 } from "./camping-camera-poses";
 import { REFERENCE_SECTOR_STATS, REFERENCE_SOURCE_SHA256 } from "../v3/reference-sector-baseline";
 import type { CampingDebugMetrics, CampingDebugPoseId, CampingReferenceMatch } from "../v3/debug-api";
+import { pickTier, TIER_PROFILES, type Tier, type TierProfile } from "../v3/quality-tier";
 
 function fitTexturedPlaneToImage(mesh: THREE.Mesh, texture: THREE.Texture, maxWidth: number, maxHeight: number): void {
   const image = texture.image as { width?: number; height?: number } | undefined;
@@ -279,6 +280,7 @@ const LOOK_SENSITIVITY = 0.0027;
 const CAM_HEIGHT = 1.62;
 const STUDIO_URL = "/models/camping/xoyens-studio.glb";
 const STUDIO_METADATA_URL = "/models/camping/xoyens-studio.model.json";
+const STUDIO_MANIFEST_URL = "/models/camping/manifest.json";
 
 type CampingModelMetadata = {
   version: number;
@@ -290,6 +292,9 @@ type CampingModelMetadata = {
   geometry: { sha256: string; bytes: number };
   frontendDelivery: { canonicalUrl: string; sha256: string; bytes: number };
 };
+
+type PublicManifestRecord = { path: string; role: string; tier: string; sha256: string; bytes: number };
+type PublicModelManifest = { schema: number; phase: number; commit: string; files: PublicManifestRecord[] };
 
 /** Reject old or internally inconsistent model metadata before issuing the GLB request. */
 export function assertCampingModelMetadata(value: unknown): asserts value is CampingModelMetadata {
@@ -338,11 +343,11 @@ export function assertCampingModelBytesMatchMetadata(
 }
 
 export type CampingRenderProfile = {
-  tier: "high";
+  tier: Tier;
   pixelRatio: number;
-  antialias: true;
-  shadowsEnabled: true;
-  shadowMapSize: 2048;
+  antialias: boolean;
+  shadowsEnabled: boolean;
+  shadowMapSize: 512 | 1024 | 2048;
   powerPreference: "high-performance";
 };
 
@@ -351,17 +356,18 @@ export type CampingRenderProfile = {
  * controls physical display sampling only; it never changes shadows, textures,
  * materials, antialiasing, or the renderer's performance profile.
  */
-export function createCampingMaxQualityProfile(devicePixelRatio: number): CampingRenderProfile {
+export function createCampingMaxQualityProfile(devicePixelRatio: number, tier: Tier = "high"): CampingRenderProfile {
   const pixelRatio = Number.isFinite(devicePixelRatio) && devicePixelRatio > 0
     ? devicePixelRatio
     : 1;
 
+  const quality = TIER_PROFILES[tier];
   return {
-    tier: "high",
-    pixelRatio,
-    antialias: true,
-    shadowsEnabled: true,
-    shadowMapSize: 2048,
+    tier,
+    pixelRatio: Math.min(pixelRatio, quality.pixelRatioMax),
+    antialias: quality.smaa,
+    shadowsEnabled: quality.shadows !== "off",
+    shadowMapSize: tier === "ultra" || tier === "high" ? 2048 : 1024,
     powerPreference: "high-performance",
   };
 }
@@ -434,7 +440,7 @@ function createCampingRenderer(
 ): { renderer: THREE.WebGLRenderer; profile: CampingRenderProfile } {
   const renderer = new THREE.WebGLRenderer({
     canvas,
-    antialias: true,
+    antialias: profile.antialias,
     alpha: false,
     powerPreference: "high-performance",
     failIfMajorPerformanceCaveat: false,
@@ -448,14 +454,14 @@ function createCampingRenderer(
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.13;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = profile.shadowsEnabled;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setClearColor(0x100d0a, 1);
 
   canvas.dataset.campingWebglVersion = String(renderer.capabilities.isWebGL2 ? 2 : 1);
-  canvas.dataset.campingRendererProfile = "max-quality";
+  canvas.dataset.campingRendererProfile = profile.tier;
   canvas.dataset.campingRenderPixelRatio = String(effectivePixelRatio);
-  canvas.dataset.campingShadowMapSize = String(profile.shadowMapSize);
+  canvas.dataset.campingShadowMapSize = String(profile.shadowsEnabled ? profile.shadowMapSize : 0);
   canvas.dataset.campingWebglStatus = "ready";
   delete canvas.dataset.campingWebglError;
   return { renderer, profile: { ...profile, pixelRatio: effectivePixelRatio } };
@@ -649,6 +655,7 @@ export class CampingStudioEngine {
   private canvas: HTMLCanvasElement | null = null;
   private renderer: THREE.WebGLRenderer | null = null;
   private renderProfile: CampingRenderProfile | null = null;
+  private qualityTier: TierProfile = TIER_PROFILES.high;
   private reflectionTarget: THREE.WebGLRenderTarget | null = null;
   private readonly dynamicResolution = new DynamicResolution(1);
   private baseRenderPixelRatio = 1;
@@ -780,7 +787,23 @@ export class CampingStudioEngine {
     this.scene.background = new THREE.Color(0x100d0a);
     this.scene.fog = new THREE.Fog(0x100d0a, 15, 30);
 
-    const profile = createCampingMaxQualityProfile(window.devicePixelRatio || 1);
+    const probe = document.createElement("canvas");
+    const webgl2 = Boolean(probe.getContext("webgl2"));
+    const webgl = probe.getContext("webgl2") ?? probe.getContext("webgl");
+    const maxTextureSize = webgl ? Number(webgl.getParameter(webgl.MAX_TEXTURE_SIZE)) : 0;
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
+    this.qualityTier = pickTier({
+      gpuTier: maxTextureSize >= 8192 ? 3 : maxTextureSize >= 4096 ? 2 : maxTextureSize >= 2048 ? 1 : 0,
+      isMobile: /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent),
+      deviceMemoryGb: (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? null,
+      hardwareConcurrency: navigator.hardwareConcurrency || 4,
+      webgl2,
+      maxTextureSize,
+      saveData: connection?.saveData === true,
+      reducedMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false,
+    });
+    canvas.dataset.campingQualityTier = this.qualityTier.tier;
+    const profile = createCampingMaxQualityProfile(window.devicePixelRatio || 1, this.qualityTier.tier);
     this.renderProfile = profile;
 
     try {
@@ -2135,10 +2158,41 @@ export class CampingStudioEngine {
     assertCampingModelMetadata(metadataValue);
     stage("metadata-validated");
 
+    // Prefer the hash-addressed tier selected by the runtime. If the manifest is
+    // not published yet, keep the verified canonical high asset as the only
+    // acceptable fallback; never guess a filename or silently use a legacy GLB.
+    let modelPath = STUDIO_URL;
+    let expectedBytes = metadataValue.geometry.bytes;
+    let expectedDigest = metadataValue.geometry.sha256;
+    let selectedTier = "canonical";
+    try {
+      const manifestResponse = await fetch(`${STUDIO_MANIFEST_URL}?_sdt_runtime=${Date.now()}`, { cache: "no-store", headers });
+      if (manifestResponse.ok) {
+        const manifest = (await manifestResponse.json()) as PublicModelManifest;
+        const requestedTier = this.qualityTier.tier === "ultra" ? "high" : this.qualityTier.tier;
+        const record = manifest.schema === 1 && manifest.phase >= metadataValue.phase
+          ? manifest.files.find((file) => file.role === "visual" && file.tier === requestedTier)
+          : undefined;
+        if (record && /^models\/camping\/xoyens-studio\.(high|mid|low)\.[0-9a-f]{8}\.glb$/i.test(record.path) &&
+            /^[0-9a-f]{64}$/i.test(record.sha256) && Number.isSafeInteger(record.bytes) && record.bytes > 0) {
+          modelPath = "/" + record.path;
+          expectedBytes = record.bytes;
+          expectedDigest = record.sha256.toLowerCase();
+          selectedTier = requestedTier;
+        }
+      }
+    } catch {
+      // The canonical metadata/bytes gate below remains authoritative.
+    }
+    if (this.canvas) {
+      this.canvas.dataset.campingModelTier = selectedTier;
+      this.canvas.dataset.campingModelPath = modelPath;
+    }
+
     // Tie the CDN cache key to the digest that will be checked below. A stale
     // object at the canonical route cannot pass validation just because its URL is unchanged.
-    const modelUrl = new URL(STUDIO_URL, window.location.origin);
-    modelUrl.searchParams.set("_sdt_sha256", metadataValue.geometry.sha256);
+    const modelUrl = new URL(modelPath, window.location.origin);
+    modelUrl.searchParams.set("_sdt_sha256", expectedDigest);
     stage("glb-request");
     const modelController = new AbortController();
     const modelTimer = window.setTimeout(() => modelController.abort(), 45_000);
@@ -2164,7 +2218,11 @@ export class CampingStudioEngine {
     stage("hashing");
     const digestBuffer = await crypto.subtle.digest("SHA-256", bytes);
     const digest = Array.from(new Uint8Array(digestBuffer), (byte) => byte.toString(16).padStart(2, "0")).join("");
-    assertCampingModelBytesMatchMetadata(metadataValue, bytes.byteLength, digest);
+    if (selectedTier === "canonical") {
+      assertCampingModelBytesMatchMetadata(metadataValue, bytes.byteLength, digest);
+    } else if (bytes.byteLength !== expectedBytes || digest !== expectedDigest) {
+      throw new Error("CAMPING selected tier bytes differ from the published manifest; refusing to render it.");
+    }
     stage("hash-verified");
 
     if (this.canvas) {
