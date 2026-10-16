@@ -19,7 +19,7 @@ step py-compile python3 -m py_compile scripts/blender/*.py
 step validate npm run 3d:validate
 if [ "${CAMPING_PHASE:-9}" -ge 9 ]; then step brand-assets node scripts/fetch-brand-assets.mjs; fi
 step blend npm run 3d:blend
-if [ "$CAMPING_PHASE" -ge 10 ]; then BLENDER_BIN="$(command -v blender)"; step phase10-check --informational "$BLENDER_BIN" -b art/xoyens-studio.blend --python-exit-code 1 -P scripts/blender/validate_phase10.py -- art/xoyens-studio.phase10.report.json; fi
+if [ "$CAMPING_PHASE" -ge 10 ]; then BLENDER_BIN="$(command -v blender)"; step phase10-check "$BLENDER_BIN" -b art/xoyens-studio.blend --python-exit-code 1 -P scripts/blender/validate_phase10.py -- art/xoyens-studio.phase10.report.json; fi
 if [ "$CAMPING_PHASE" -ge 11 ]; then BLENDER_BIN="$(command -v blender)"; step phase11-check --informational "$BLENDER_BIN" -b art/xoyens-studio.blend --python-exit-code 1 -P scripts/blender/validate_phase11.py -- art/xoyens-studio.phase11.report.json; fi
 if [ "$CAMPING_PHASE" -ge 12 ]; then
  BLENDER_BIN="$(command -v blender)"
