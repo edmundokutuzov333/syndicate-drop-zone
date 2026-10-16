@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import {mkdirSync,readFileSync,writeFileSync} from "node:fs";import {dirname,resolve} from "node:path";import {pathToFileURL} from "node:url";
 export const GROUPS=["shell","production","photo","left","right"],TIERS={high:{maxPx:4096,budgetMB:24},mid:{maxPx:2048,budgetMB:10},low:{maxPx:1024,budgetMB:4}};
-const SIZES=[512,1024,2048,4096],EFF=.72,MIP=1.333;
+const SIZES=[512,1024,2048,4096],EFF=.72,MIP=1.333,MARGIN=.004;
 export function planSingleAtlas(meshes, maxPx) {
   const a = meshes.filter((mesh) => mesh.lightmapPolicy !== "shared-ao-ibl");
   const area = a.reduce((sum, mesh) => sum + Number(mesh.surfaceM2 || 0), 0);
