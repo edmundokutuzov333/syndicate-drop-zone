@@ -19,6 +19,14 @@ step py-compile python3 -m py_compile scripts/blender/*.py
 step validate npm run 3d:validate
 if [ "${CAMPING_PHASE:-9}" -ge 9 ]; then step brand-assets node scripts/fetch-brand-assets.mjs; fi
 step blend npm run 3d:blend
+if [ "$CAMPING_PHASE" -ge 10 ]; then BLENDER_BIN="$(command -v blender)"; step phase10-check --informational "$BLENDER_BIN" -b art/xoyens-studio.blend --python-exit-code 1 -P scripts/blender/validate_phase10.py -- art/xoyens-studio.phase10.report.json; fi
+if [ "$CAMPING_PHASE" -ge 11 ]; then BLENDER_BIN="$(command -v blender)"; step phase11-check --informational "$BLENDER_BIN" -b art/xoyens-studio.blend --python-exit-code 1 -P scripts/blender/validate_phase11.py -- art/xoyens-studio.phase11.report.json; fi
+if [ "$CAMPING_PHASE" -ge 12 ]; then
+ BLENDER_BIN="$(command -v blender)"
+ step phase12-uv2 "$BLENDER_BIN" -b art/xoyens-studio.blend --python-exit-code 1 -P scripts/blender/phase12_lightmaps.py -- --apply art/xoyens-studio.phase12.apply-report.json
+ step phase12-reopen-check "$BLENDER_BIN" -b art/xoyens-studio.blend --python-exit-code 1 -P scripts/blender/validate_phase12.py -- art/out/phase12-mesh-areas.json art/xoyens-studio.phase12.report.json
+ step phase12-plan node scripts/plan-lightmaps.mjs --input art/out/phase12-mesh-areas.json --scene-bible docs/camping-v3/scene-bible.json --output docs/camping-v3/phase-12/lightmap-plan.md --json-output art/xoyens-studio.phase12.plan.json
+fi
 if [ "${CAMPING_PHASE:-9}" -ge 9 ]; then
   BLENDER_BIN="${BLENDER_BIN:-$(command -v blender)}"
   step phase09-check "$BLENDER_BIN" -b art/xoyens-studio.blend --python-exit-code 1 -P scripts/blender/validate_phase09.py -- art/xoyens-studio.phase09.report.json

@@ -30,6 +30,7 @@ export function requiredFilesForPhase(phase = PHASE_DEFAULT) {
   }
   if (number >= 8) required.push("art/xoyens-studio.phase08.report.json");
   if (number >= 9) { required.push("art/xoyens-studio.phase09.report.json"); required.push("art/textures/brand/sindicato-selo.png"); required.push("art/textures/brand/xoyens.png"); }
+  if (number >= 12) required.push("art/out/phase12-mesh-areas.json", "art/xoyens-studio.phase12.report.json", "art/xoyens-studio.phase12.plan.json", "docs/camping-v3/phase-12/lightmap-plan.md");
   // Collision GLBs are mandatory release artifacts from Phase 14 onward.
   if (number >= 14) {
     required.push("art/out/xoyens-studio.colliders.glb");
@@ -119,6 +120,14 @@ export function phasePrerequisiteFailures(root = ".", phase = PHASE_DEFAULT) {
       add(report.garments === 5, "Phase 09 requires exactly five garments");
     }
     for (const path of ["art/textures/brand/sindicato-selo.png", "art/textures/brand/xoyens.png"]) add(existsSync(join(root, path)), "Phase 09 official brand asset missing: " + path);
+  }
+  if (number >= 12) {
+    const areas=load("art/out/phase12-mesh-areas.json","Phase 12 measured mesh areas");
+    if(areas){add(areas.phase===12&&areas.status==="source-validated","Phase 12 area report failed");add(Array.isArray(areas.meshAreas)&&areas.meshAreas.length>0,"Phase 12 area report empty");add(areas.uv2Independent===true&&Number(areas.packMargin)===.004&&Number(areas.smartProjectAngleDegrees)===66,"Phase 12 UV2 contract failed");}
+    const r=load("art/xoyens-studio.phase12.report.json","Phase 12 UV2 validation");
+    if(r){add(r.phase===12&&r.status==="source-validated","Phase 12 UV2 validation failed");add(r.uv2Independent===true&&Number(r.maxIslandStretch)<=1.15&&Number(r.paddingAt4096Px)>=8,"Phase 12 stretch/padding failed");add(Array.isArray(r.groups)&&r.groups.length===5,"Phase 12 needs five groups");}
+    const p=load("art/xoyens-studio.phase12.plan.json","Phase 12 atlas plan");
+    if(p){add(p.phase===12&&p.status==="within-budget","Phase 12 plan exceeds budget");for(const[t,n]of Object.entries({high:24,mid:10,low:4})){add(Number(p.tiers?.[t]?.totalMemoryMB)<=n,"Phase 12 "+t+" budget failed");add(Object.keys(p.tiers?.[t]?.groups??{}).length===5,"Phase 12 "+t+" groups missing");}}
   }
 
   if (number >= 7) {

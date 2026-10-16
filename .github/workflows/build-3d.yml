@@ -11,6 +11,8 @@ on:
       - "scripts/fetch-brand-assets.mjs"
       - "scripts/build-3d.mjs"
       - "scripts/check-3d-budgets.mjs"
+      - "scripts/plan-lightmaps.mjs"
+      - "docs/camping-v3/phase-12/**"
       - "src/features/camping/scene/CampingStudioEngine.ts"
       - "src/features/camping/scene/camping-model-compatibility.ts"
       - "vite.config.ts"
@@ -30,9 +32,9 @@ concurrency:
   cancel-in-progress: true
 permissions:
   contents: read
-# Release target: build and certify the real Phase 09 model before canonical promotion.
+# Release target: build and validate Phase 12 UV2/lightmap planning before canonical promotion.
 env:
-  CAMPING_PHASE: "9"
+  CAMPING_PHASE: "12"
 jobs:
   build:
     name: Build, reopen and certify Blender delivery
@@ -73,7 +75,7 @@ jobs:
           find scripts -name '*.mjs' -type f -print0 | while IFS= read -r -d '' file; do node --check "$file"; done
           find scripts -name '*.sh' -type f -print0 | while IFS= read -r -d '' file; do bash -n "$file"; done
           python3 -m py_compile scripts/blender/*.py
-          node --test scripts/3d/recovery.test.mjs scripts/3d/pbr-materials.test.mjs scripts/3d/delivery-phase.test.mjs
+          node --test scripts/3d/recovery.test.mjs scripts/3d/pbr-materials.test.mjs scripts/3d/delivery-phase.test.mjs scripts/3d/phase12-lightmaps.test.mjs
       - name: Shared route build, reopen, validate and package
         shell: bash
         run: bash scripts/3d/local-build.sh
@@ -169,24 +171,24 @@ jobs:
         shell: bash
         run: |
           {
-            echo "CAMPING V3 Fases 06-09"
+            echo "CAMPING V3 Fases 06-12"
             echo "Commit: $(git rev-parse HEAD)"
             echo "Exit codes:"
             cat art/_delivery/exit-codes.txt 2>/dev/null || echo "not created"
             echo "Delivery SHA-256:"
-            find art/_delivery -maxdepth 1 -name 'phase09-delivery-*.sha256' -type f -exec cat {} \; 2>/dev/null || true
+            find art/_delivery -maxdepth 1 -name 'phase12-delivery-*.sha256' -type f -exec cat {} \; 2>/dev/null || true
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload outputs and evidence even on failure
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: camping-v3-phase09-delivery-${{ github.sha }}
+          name: camping-v3-phase12-delivery-${{ github.sha }}
           retention-days: 30
           if-no-files-found: warn
           path: |
             art/_delivery/**
-            !art/_delivery/phase09-delivery-*.zip
-            !art/_delivery/phase09-delivery-*.tar.gz
+            !art/_delivery/phase12-delivery-*.zip
+            !art/_delivery/phase12-delivery-*.tar.gz
             art/xoyens-studio.blend
             art/xoyens-studio.report.json
             art/out/xoyens-studio.raw.glb
@@ -196,12 +198,24 @@ jobs:
             art/xoyens-studio.phase07.report.json
             art/xoyens-studio.phase08.report.json
             art/xoyens-studio.phase09.report.json
+            art/xoyens-studio.phase12.report.json
+            art/xoyens-studio.phase12.plan.json
+            art/out/phase12-mesh-areas.json
             art/textures/brand/**
             art/textures/materials/**
             art/textures/materials.manifest.json
 
+      - name: Upload Phase 12 lightmap plan
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: camping-phase12-plan-${{ github.sha }}
+          path: docs/camping-v3/phase-12/lightmap-plan.md
+          if-no-files-found: warn
+          retention-days: 30
+
   publish:
-    name: Promote certified Blender source through real Git LFS
+    name: Promote current CAMPING phase through real Git LFS
     needs: build
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
@@ -230,8 +244,13 @@ jobs:
       - name: Download certified Blender delivery
         uses: actions/download-artifact@v7
         with:
-          name: camping-v3-phase09-delivery-${{ github.sha }}
-          path: /tmp/phase09-delivery
+          name: camping-v3-phase12-delivery-${{ github.sha }}
+          path: /tmp/phase12-delivery
+      - name: Download Phase 12 lightmap plan
+        uses: actions/download-artifact@v7
+        with:
+          name: camping-phase12-plan-${{ github.sha }}
+          path: /tmp/phase12-docs
       - name: Download optimized frontend model
         uses: actions/download-artifact@v7
         with:
@@ -265,67 +284,76 @@ jobs:
             echo "PUBLISH_BASE=$REMOTE_MAIN"
           fi
 
-          test -s /tmp/phase09-delivery/xoyens-studio.blend
-          test -s /tmp/phase09-delivery/xoyens-studio.report.json
-          test -s /tmp/phase09-delivery/out/xoyens-studio.raw.glb
-          test -s /tmp/phase09-delivery/out/optimized/xoyens-studio.high.glb
+          test -s /tmp/phase12-delivery/xoyens-studio.blend
+          test -s /tmp/phase12-delivery/xoyens-studio.report.json
+          test -s /tmp/phase12-delivery/out/xoyens-studio.raw.glb
+          test -s /tmp/phase12-delivery/out/optimized/xoyens-studio.high.glb
           if [[ "${CAMPING_PHASE:-9}" -ge 14 ]]; then
-            test -s /tmp/phase09-delivery/out/xoyens-studio.colliders.glb
+            test -s /tmp/phase12-delivery/out/xoyens-studio.colliders.glb
             test -s /tmp/camping-frontend-model/xoyens-studio.colliders.glb
           fi
-          test -s /tmp/phase09-delivery/out/phase07-surfaces.json
-          test -s /tmp/phase09-delivery/xoyens-studio.phase07.report.json
-          test -s /tmp/phase09-delivery/xoyens-studio.phase08.report.json
-          test -s /tmp/phase09-delivery/xoyens-studio.phase09.report.json
-          test -s /tmp/phase09-delivery/textures/brand/sindicato-selo.png
-          test -s /tmp/phase09-delivery/textures/brand/xoyens.png
-          test -s /tmp/phase09-delivery/_delivery/phase-09/photo-overview.png
-          test -s /tmp/phase09-delivery/_delivery/phase-09/photo-detail.png
-          test -s /tmp/phase09-delivery/_delivery/phase-09/capture-manifest.json
-          test -s /tmp/phase09-delivery/_delivery/phase-08/production-overview.png
-          test -s /tmp/phase09-delivery/_delivery/phase-08/production-detail.png
-          test -s /tmp/phase09-delivery/_delivery/phase-08/capture-manifest.json
-          test -s /tmp/phase09-delivery/textures/materials.manifest.json
+          test -s /tmp/phase12-delivery/out/phase07-surfaces.json
+          test -s /tmp/phase12-delivery/xoyens-studio.phase07.report.json
+          test -s /tmp/phase12-delivery/xoyens-studio.phase08.report.json
+          test -s /tmp/phase12-delivery/xoyens-studio.phase09.report.json
+          test -s /tmp/phase12-delivery/xoyens-studio.phase12.report.json
+          test -s /tmp/phase12-delivery/xoyens-studio.phase12.plan.json
+          test -s /tmp/phase12-delivery/out/phase12-mesh-areas.json
+          test -s /tmp/phase12-docs/lightmap-plan.md
+          test -s /tmp/phase12-delivery/textures/brand/sindicato-selo.png
+          test -s /tmp/phase12-delivery/textures/brand/xoyens.png
+          test -s /tmp/phase12-delivery/_delivery/phase-09/photo-overview.png
+          test -s /tmp/phase12-delivery/_delivery/phase-09/photo-detail.png
+          test -s /tmp/phase12-delivery/_delivery/phase-09/capture-manifest.json
+          test -s /tmp/phase12-delivery/_delivery/phase-08/production-overview.png
+          test -s /tmp/phase12-delivery/_delivery/phase-08/production-detail.png
+          test -s /tmp/phase12-delivery/_delivery/phase-08/capture-manifest.json
+          test -s /tmp/phase12-delivery/textures/materials.manifest.json
           test -s /tmp/camping-frontend-model/xoyens-studio.glb
           test -s /tmp/camping-frontend-model/xoyens-studio.model.json
-          test -s /tmp/phase09-delivery/_delivery/phase-06/ceiling.png
-          test -s /tmp/phase09-delivery/_delivery/phase-06/main-door.png
-          test -s /tmp/phase09-delivery/_delivery/phase-06/capture-manifest.json
-          test -s /tmp/phase09-delivery/_delivery/manifest.json
+          test -s /tmp/phase12-delivery/_delivery/phase-06/ceiling.png
+          test -s /tmp/phase12-delivery/_delivery/phase-06/main-door.png
+          test -s /tmp/phase12-delivery/_delivery/phase-06/capture-manifest.json
+          test -s /tmp/phase12-delivery/_delivery/manifest.json
           mkdir -p art/_delivery art/out
-          cp -a /tmp/phase09-delivery/_delivery/. art/_delivery/
+          cp -a /tmp/phase12-delivery/_delivery/. art/_delivery/
           mkdir -p docs/camping-v3/phase-06
-          cp /tmp/phase09-delivery/_delivery/phase-06/ceiling.png docs/camping-v3/phase-06/ceiling.png
-          cp /tmp/phase09-delivery/_delivery/phase-06/main-door.png docs/camping-v3/phase-06/main-door.png
-          cp /tmp/phase09-delivery/_delivery/phase-06/capture-manifest.json docs/camping-v3/phase-06/capture-manifest.json
-          cp /tmp/phase09-delivery/xoyens-studio.blend art/xoyens-studio.blend
-          cp /tmp/phase09-delivery/xoyens-studio.report.json art/xoyens-studio.report.json
-          cp /tmp/phase09-delivery/out/xoyens-studio.raw.glb art/out/xoyens-studio.raw.glb
+          cp /tmp/phase12-delivery/_delivery/phase-06/ceiling.png docs/camping-v3/phase-06/ceiling.png
+          cp /tmp/phase12-delivery/_delivery/phase-06/main-door.png docs/camping-v3/phase-06/main-door.png
+          cp /tmp/phase12-delivery/_delivery/phase-06/capture-manifest.json docs/camping-v3/phase-06/capture-manifest.json
+          cp /tmp/phase12-delivery/xoyens-studio.blend art/xoyens-studio.blend
+          cp /tmp/phase12-delivery/xoyens-studio.report.json art/xoyens-studio.report.json
+          cp /tmp/phase12-delivery/out/xoyens-studio.raw.glb art/out/xoyens-studio.raw.glb
           mkdir -p art/out/optimized
-          cp /tmp/phase09-delivery/out/optimized/xoyens-studio.high.glb art/out/optimized/xoyens-studio.high.glb
+          cp /tmp/phase12-delivery/out/optimized/xoyens-studio.high.glb art/out/optimized/xoyens-studio.high.glb
           if [[ "${CAMPING_PHASE:-9}" -ge 14 ]]; then
-            cp /tmp/phase09-delivery/out/xoyens-studio.colliders.glb art/out/xoyens-studio.colliders.glb
+            cp /tmp/phase12-delivery/out/xoyens-studio.colliders.glb art/out/xoyens-studio.colliders.glb
             cp /tmp/camping-frontend-model/xoyens-studio.colliders.glb public/models/camping/xoyens-studio.colliders.glb
           fi
-          cp /tmp/phase09-delivery/out/phase07-surfaces.json art/out/phase07-surfaces.json
-          cp /tmp/phase09-delivery/xoyens-studio.phase07.report.json art/xoyens-studio.phase07.report.json
-          cp /tmp/phase09-delivery/xoyens-studio.phase08.report.json art/xoyens-studio.phase08.report.json
-          cp /tmp/phase09-delivery/xoyens-studio.phase09.report.json art/xoyens-studio.phase09.report.json
+          cp /tmp/phase12-delivery/out/phase07-surfaces.json art/out/phase07-surfaces.json
+          cp /tmp/phase12-delivery/xoyens-studio.phase07.report.json art/xoyens-studio.phase07.report.json
+          cp /tmp/phase12-delivery/xoyens-studio.phase08.report.json art/xoyens-studio.phase08.report.json
+          cp /tmp/phase12-delivery/xoyens-studio.phase09.report.json art/xoyens-studio.phase09.report.json
+          cp /tmp/phase12-delivery/xoyens-studio.phase12.report.json art/xoyens-studio.phase12.report.json
+          cp /tmp/phase12-delivery/xoyens-studio.phase12.plan.json art/xoyens-studio.phase12.plan.json
+          cp /tmp/phase12-delivery/out/phase12-mesh-areas.json art/out/phase12-mesh-areas.json
+          mkdir -p docs/camping-v3/phase-12
+          cp /tmp/phase12-docs/lightmap-plan.md docs/camping-v3/phase-12/lightmap-plan.md
           mkdir -p docs/camping-v3/phase-07 docs/camping-v3/phase-08 docs/camping-v3/phase-09
-          cp /tmp/phase09-delivery/xoyens-studio.phase07.report.json docs/camping-v3/phase-07/surface-validation.json
-          cp /tmp/phase09-delivery/out/phase07-surfaces.json docs/camping-v3/phase-07/surface-source.json
-          cp /tmp/phase09-delivery/xoyens-studio.phase08.report.json docs/camping-v3/phase-08/production-validation.json
-          cp /tmp/phase09-delivery/_delivery/phase-08/production-overview.png docs/camping-v3/phase-08/production-overview.png
-          cp /tmp/phase09-delivery/_delivery/phase-08/production-detail.png docs/camping-v3/phase-08/production-detail.png
-          cp /tmp/phase09-delivery/_delivery/phase-08/capture-manifest.json docs/camping-v3/phase-08/capture-manifest.json
-          cp /tmp/phase09-delivery/xoyens-studio.phase09.report.json docs/camping-v3/phase-09/photo-validation.json
-          cp /tmp/phase09-delivery/_delivery/phase-09/photo-overview.png docs/camping-v3/phase-09/photo-overview.png
-          cp /tmp/phase09-delivery/_delivery/phase-09/photo-detail.png docs/camping-v3/phase-09/photo-detail.png
-          cp /tmp/phase09-delivery/_delivery/phase-09/capture-manifest.json docs/camping-v3/phase-09/capture-manifest.json
+          cp /tmp/phase12-delivery/xoyens-studio.phase07.report.json docs/camping-v3/phase-07/surface-validation.json
+          cp /tmp/phase12-delivery/out/phase07-surfaces.json docs/camping-v3/phase-07/surface-source.json
+          cp /tmp/phase12-delivery/xoyens-studio.phase08.report.json docs/camping-v3/phase-08/production-validation.json
+          cp /tmp/phase12-delivery/_delivery/phase-08/production-overview.png docs/camping-v3/phase-08/production-overview.png
+          cp /tmp/phase12-delivery/_delivery/phase-08/production-detail.png docs/camping-v3/phase-08/production-detail.png
+          cp /tmp/phase12-delivery/_delivery/phase-08/capture-manifest.json docs/camping-v3/phase-08/capture-manifest.json
+          cp /tmp/phase12-delivery/xoyens-studio.phase09.report.json docs/camping-v3/phase-09/photo-validation.json
+          cp /tmp/phase12-delivery/_delivery/phase-09/photo-overview.png docs/camping-v3/phase-09/photo-overview.png
+          cp /tmp/phase12-delivery/_delivery/phase-09/photo-detail.png docs/camping-v3/phase-09/photo-detail.png
+          cp /tmp/phase12-delivery/_delivery/phase-09/capture-manifest.json docs/camping-v3/phase-09/capture-manifest.json
           mkdir -p art/textures/materials art/textures/brand
-          cp -a /tmp/phase09-delivery/textures/brand/. art/textures/brand/
-          cp -a /tmp/phase09-delivery/textures/materials/. art/textures/materials/
-          cp /tmp/phase09-delivery/textures/materials.manifest.json art/textures/materials.manifest.json
+          cp -a /tmp/phase12-delivery/textures/brand/. art/textures/brand/
+          cp -a /tmp/phase12-delivery/textures/materials/. art/textures/materials/
+          cp /tmp/phase12-delivery/textures/materials.manifest.json art/textures/materials.manifest.json
           mkdir -p public/models/camping
           cp /tmp/camping-frontend-model/xoyens-studio.glb public/models/camping/xoyens-studio.glb
           cp /tmp/camping-frontend-model/xoyens-studio.model.json public/models/camping/xoyens-studio.model.json
@@ -351,6 +379,7 @@ jobs:
           git add docs/camping-v3/phase-07/surface-validation.json docs/camping-v3/phase-07/surface-source.json
           git add art/xoyens-studio.phase08.report.json docs/camping-v3/phase-08/production-validation.json
           git add art/xoyens-studio.phase09.report.json art/textures/brand/*.png docs/camping-v3/phase-09
+          git add art/xoyens-studio.phase12.report.json art/xoyens-studio.phase12.plan.json art/out/phase12-mesh-areas.json docs/camping-v3/phase-12/lightmap-plan.md
           git add docs/camping-v3/phase-08/production-overview.png docs/camping-v3/phase-08/production-detail.png docs/camping-v3/phase-08/capture-manifest.json
 
           # Inspect the pointer generated by Git LFS itself and bind it to the binary hash/size.
@@ -384,9 +413,9 @@ jobs:
       # Publication is not certified until Lovable's public alias serves the exact
       # optimized Phase 09 GLB whose digest is recorded in the public metadata.
       # Cache-busting and SHA-256 checks reject stale CDN objects at the canonical URL.
-      - name: Verify Phase 09 model served by Lovable production
+      - name: Verify Phase 12 model served by Lovable production
         env:
-          CAMPING_EXPECTED_MODEL_PHASE: "9"
+          CAMPING_EXPECTED_MODEL_PHASE: "12"
           CAMPING_PRODUCTION_URL: "https://syndicate-do-trap.lovable.app"
           CAMPING_PRODUCTION_VERIFY_TIMEOUT_MS: "300000"
         run: node scripts/verify-deployed-camping-model.mjs

@@ -41,7 +41,7 @@ jobs:
   verify:
     # For workflow_run, verify the latest main only after the 3D publish job
     # has completed successfully. A failed Blender publication must not be masked.
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion != 'cancelled'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 

@@ -32,7 +32,7 @@ export function blendKind(b) {
   return "unknown";
 }
 
-export function glbContract(j, bible, { requirePhase7 = true, requirePhase8 = false } = {}) {
+export function glbContract(j, bible, { requirePhase7 = true, requirePhase8 = false, requirePhase12 = false } = {}) {
   const out = [];
   const check = (name, pass, detail = "") => out.push({ name, pass, detail });
   const nodes = j.nodes ?? [];
@@ -56,6 +56,7 @@ export function glbContract(j, bible, { requirePhase7 = true, requirePhase8 = fa
   check("UV0 on every primitive", primitives.length > 0 && primitives.every((primitive) => primitive.attributes?.TEXCOORD_0 !== undefined));
   const uv1 = primitives.filter((primitive) => primitive.attributes?.TEXCOORD_1 !== undefined).length;
   check("UV1 on at least 80% primitives", primitives.length > 0 && uv1 >= primitives.length * 0.8, uv1 + "/" + primitives.length);
+  if (requirePhase12) check("Phase 12 UV2 on every primitive", primitives.length > 0 && uv1 === primitives.length, uv1 + "/" + primitives.length);
   check("at least 10 materials", (j.materials ?? []).length >= 10, String((j.materials ?? []).length));
   check("extras zone and lmGroup", extras.some((extra) => extra.zone) && extras.some((extra) => extra.lmGroup));
   check("visual GLB excludes COL_* collision nodes", !nodes.some((node) => String(node.name ?? "").startsWith("COL_")));
@@ -236,6 +237,7 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
     } catch (error) { add("Phase 08 source production report", false, error instanceof Error ? error.message : String(error)); }
   } else if (currentPhase >= 8) add("Phase 08 source production report", false, "missing art/xoyens-studio.phase08.report.json");
 
+  if (currentPhase >= 12) { const rp=join(dir,"art/xoyens-studio.phase12.report.json"),pp=join(dir,"art/xoyens-studio.phase12.plan.json"); if(existsSync(rp)){const r=JSON.parse(readFileSync(rp,"utf8"));add("Phase 12 UV2 report",r.phase===12&&r.status==="source-validated"&&r.uv2Independent===true&&Number(r.maxIslandStretch)<=1.15);}else add("Phase 12 UV2 report",false,"missing"); if(existsSync(pp)){const p=JSON.parse(readFileSync(pp,"utf8"));add("Phase 12 budgets",p.phase===12&&p.status==="within-budget"&&Number(p.tiers?.high?.totalMemoryMB)<=24&&Number(p.tiers?.mid?.totalMemoryMB)<=10&&Number(p.tiers?.low?.totalMemoryMB)<=4);}else add("Phase 12 budgets",false,"missing"); }
   const reportPath = join(dir, "art/xoyens-studio.report.json");
   let report = null;
   if (existsSync(reportPath)) {
@@ -262,6 +264,7 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
       for (const check of glbContract(parseGlb(readFileSync(glb)), JSON.parse(readFileSync(biblePath, "utf8")), {
         requirePhase7: currentPhase >= 7,
         requirePhase8: currentPhase >= 8,
+        requirePhase12: currentPhase >= 12,
       })) {
         add("GLB: " + check.name, check.pass, check.detail);
       }

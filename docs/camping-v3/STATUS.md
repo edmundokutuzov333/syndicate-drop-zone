@@ -21,7 +21,7 @@ Issues de execução: fases 01–17 em [#33–#49](https://github.com/edmundokut
 | 09 | Zona fotográfica | Em validação | build Blender + captura/checksums + GLB optimizado promovido para a URL canónica + gate Vite fase 09+ + confirmação HTTP do modelo servido em produção |
 | 10 | Zonas esquerda e direita | Implementação iniciada, não certificada | validator dedicado adicionado; falta execução Blender, capturas e CI de fase |
 | 11 | Props orgânicos, IA e trilho de splats | Implementação iniciada, não certificada | validator de polycount/fonte e decisão splats documentados; execução Blender pendente |
-| 12 | UV2 e orçamento de lightmaps | Pendente | UV2 validado e atlas por zona |
+| 12 | UV2 e orçamento de lightmaps | Implementação iniciada, não certificada | UV2 independente, medição Blender, plano de atlas por grupo/tier e budgets integrados; execução real pendente |
 | 13 | Luz em Blender e bake | Pendente | bake reproduzível, denoise e mapas sRGB |
 | 14 | Pipeline glTF, KTX2 e Meshopt | Pendente | GLB high/mid/low dentro dos orçamentos |
 | 15 | Runtime, loader, tiers e contratos | Pendente | carregamento progressivo e lightmaps activas |
@@ -202,3 +202,10 @@ A Fase 10 foi aberta sem esperar pela certificação da Fase 09, conforme a orde
 ## Execução da Fase 11 · 2026-10-16
 
 A Fase 11 foi aberta sem aguardar a certificação das fases anteriores. A Scene Bible já declara guitarra (`left.guitar_strat`), palmeira (`left.palm_areca`) e jiboia (`right.pothos`) com orçamentos de 14 000, 22 000 e 18 000 triângulos. Foi adicionado um validador Blender que mede triângulos e verifica UVs/materiais dos meshes associados. O trilho Gaussian Splats fica documentado como não avaliado: não há evidência reproduzível de licença comercial, peso ≤25 MB, 45 FPS no tier mid ou melhoria de score ≥8 pontos. Por isso, a decisão segura nesta passagem é manter a malha como visualização e colisão, sem integrar splats não certificados. A Fase 11 não está certificada até correr o validador em Blender real e guardar os resultados.
+
+
+## Execução da Fase 12 · 2026-10-16
+
+A Fase 12 foi aberta sem esperar pela certificação das fases anteriores. O pipeline gera UV_Lightmap independente sem alterar UVMap, mede áreas no .blend reaberto e planeia um atlas único por lmGroup/tier. O contrato usa Smart UV Project a 66 graus, island_margin 0.003, Pack Islands margin 0.004, stretching máximo 1.15, padding mínimo de 8 px no tier 4096 e budgets totais de 24/10/4 MiB. Foam tiles e cabides usam AO + IBL sem lightmap individual.
+
+A validação das fases anteriores continua registada separadamente. A Fase 12 não está certificada até build Blender real, reabertura, plano medido, promoção, publicação Lovable, hash HTTP público e Playwright passarem. O bake pertence à Fase 13.
