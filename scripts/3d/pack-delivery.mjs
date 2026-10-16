@@ -4,6 +4,7 @@ import { createReadStream, existsSync, mkdirSync, readFileSync, readdirSync, sta
 import { execFileSync } from "node:child_process";
 import { join, relative } from "node:path";
 import { pathToFileURL } from "node:url";
+import { validateBakeReport } from "./verify-lightmap-bakes.mjs";
 
 const PHASE_DEFAULT = Number(process.env.CAMPING_PHASE || 9);
 const CORE_REQUIRED = [
@@ -31,6 +32,13 @@ export function requiredFilesForPhase(phase = PHASE_DEFAULT) {
   if (number >= 8) required.push("art/xoyens-studio.phase08.report.json");
   if (number >= 9) { required.push("art/xoyens-studio.phase09.report.json"); required.push("art/textures/brand/sindicato-selo.png"); required.push("art/textures/brand/xoyens.png"); }
   if (number >= 12) required.push("art/out/phase12-mesh-areas.json", "art/xoyens-studio.phase12.report.json", "art/xoyens-studio.phase12.plan.json", "docs/camping-v3/phase-12/lightmap-plan.md");
+  if (number >= 13) {
+    required.push("art/_delivery/phase-13/bake-report.json", "art/_delivery/phase-13/bake/ibl/studio-ibl.exr", "art/_delivery/phase-13/orange-spill.png");
+    for (const tier of ["ultra", "high", "mid"]) for (const group of ["shell", "production", "photo", "left", "right"]) {
+      required.push("art/_delivery/phase-13/bake/" + tier + "/LM_" + group + "_" + tier + ".exr");
+      required.push("art/_delivery/phase-13/bake/" + tier + "/LM_" + group + "_" + tier + ".png");
+    }
+  }
   // Collision GLBs are mandatory release artifacts from Phase 14 onward.
   if (number >= 14) {
     required.push("art/out/xoyens-studio.colliders.glb");
@@ -128,6 +136,13 @@ export function phasePrerequisiteFailures(root = ".", phase = PHASE_DEFAULT) {
     if(r){add(r.phase===12&&r.status==="source-validated","Phase 12 UV2 validation failed");add(r.uv2Independent===true&&Number(r.maxIslandStretch)<=1.15&&Number(r.paddingAt4096Px)>=8,"Phase 12 stretch/padding failed");add(Array.isArray(r.groups)&&r.groups.length===5,"Phase 12 needs five groups");}
     const p=load("art/xoyens-studio.phase12.plan.json","Phase 12 atlas plan");
     if(p){add(p.phase===12&&p.status==="within-budget","Phase 12 plan exceeds budget");for(const[t,n]of Object.entries({high:24,mid:10,low:4})){add(Number(p.tiers?.[t]?.totalMemoryMB)<=n,"Phase 12 "+t+" budget failed");add(Object.keys(p.tiers?.[t]?.groups??{}).length===5,"Phase 12 "+t+" groups missing");}}
+  }
+  if (number >= 13) {
+    const report = load("art/_delivery/phase-13/bake-report.json", "Phase 13 lightmap bake report");
+    if (report) {
+      const validation = validateBakeReport(report, root);
+      for (const failure of validation.failures) failures.push("Phase 13: " + failure);
+    }
   }
 
   if (number >= 7) {

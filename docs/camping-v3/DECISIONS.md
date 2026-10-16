@@ -240,3 +240,7 @@ As execuções 38770621421 (Camera Production CI) e 38770621513 (Build CAMPING 3
 A Fase 12 regenera UV_Lightmap sem alterar UVMap, agrupa o unwrap por lmGroup e aplica densidade alvo antes do packing. Usa Smart UV Project a 66 graus com island_margin 0.003 e Pack Islands margin 0.004, sem mirroring. A validação reabre o .blend e mede áreas em coordenadas de mundo, independência UV2, faces degeneradas e stretching por ilha. O planeador usa áreas medidas e exige um atlas único por grupo em high/mid/low com budgets de 24/10/4 MiB.
 
 Foam tiles e cabides ficam em shared-ao-ibl e não entram nos atlas baked. A Fase 12 continua aberta até os gates de build, GLB, promoção, publicação e produção passarem.
+
+## 2026-10-16 · D042 · Fase 13
+
+O bake de irradiância Cycles gera EXR/PNG por grupo e tier, IBL e captura de evidência. Os outputs ficam como artefactos, fora de Git LFS. A Fase 13 continua aberta até o bake real, hashes, promoção, produção e Playwright passarem.

@@ -30,7 +30,9 @@
     "3d:blend:validate": "bash scripts/3d/validate-blend.sh",
     "3d:recovery:test": "node --test scripts/3d/recovery.test.mjs",
     "3d:materials:fetch": "node scripts/fetch-cc0-materials.mjs --download",
-    "3d:materials:validate": "node scripts/validate-pbr-materials.mjs"
+    "3d:materials:validate": "node scripts/validate-pbr-materials.mjs",
+    "3d:bake:verify": "node scripts/3d/verify-lightmap-bakes.mjs --root . --report art/_delivery/phase-13/bake-report.json",
+    "3d:bake:test": "node --test scripts/3d/phase13-bake.test.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

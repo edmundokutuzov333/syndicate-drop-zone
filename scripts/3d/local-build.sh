@@ -27,7 +27,15 @@ if [ "$CAMPING_PHASE" -ge 12 ]; then
  step phase12-reopen-check "$BLENDER_BIN" -b art/xoyens-studio.blend --python-exit-code 1 -P scripts/blender/validate_phase12.py -- art/out/phase12-mesh-areas.json art/xoyens-studio.phase12.report.json
  step phase12-plan node scripts/plan-lightmaps.mjs --input art/out/phase12-mesh-areas.json --scene-bible docs/camping-v3/scene-bible.json --output docs/camping-v3/phase-12/lightmap-plan.md --json-output art/xoyens-studio.phase12.plan.json
 fi
+if [ "$CAMPING_PHASE" -ge 12 ]; then
+  BLENDER_BIN="${BLENDER_BIN:-$(command -v blender)}"
+  step phase13-bake "$BLENDER_BIN" -b art/xoyens-studio.blend --python-exit-code 1 -P scripts/blender/bake_lightmaps.py -- art/_delivery/phase-13/bake all
+  step phase13-report-copy cp art/xoyens-studio.phase13.report.json art/_delivery/phase-13/bake-report.json
+  step phase13-bake-verify node scripts/3d/verify-lightmap-bakes.mjs --root . --report art/_delivery/phase-13/bake-report.json
+  step phase13-bake-tests node --test scripts/3d/phase13-bake.test.mjs
+fi
 if [ "${CAMPING_PHASE:-9}" -ge 9 ]; then
+
   BLENDER_BIN="${BLENDER_BIN:-$(command -v blender)}"
   step phase09-check "$BLENDER_BIN" -b art/xoyens-studio.blend --python-exit-code 1 -P scripts/blender/validate_phase09.py -- art/xoyens-studio.phase09.report.json
   step phase09-capture env LIBGL_ALWAYS_SOFTWARE=1 "$BLENDER_BIN" -b art/xoyens-studio.blend --python-exit-code 1 -P scripts/blender/capture_phase09.py -- art/_delivery/phase-09

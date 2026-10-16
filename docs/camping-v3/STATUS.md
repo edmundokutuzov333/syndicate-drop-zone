@@ -22,7 +22,7 @@ Issues de execução: fases 01–17 em [#33–#49](https://github.com/edmundokut
 | 10 | Zonas esquerda e direita | Implementação iniciada, não certificada | validator dedicado adicionado; falta execução Blender, capturas e CI de fase |
 | 11 | Props orgânicos, IA e trilho de splats | Implementação iniciada, não certificada | validator de polycount/fonte e decisão splats documentados; execução Blender pendente |
 | 12 | UV2 e orçamento de lightmaps | Implementação iniciada, não certificada | UV2 independente, medição Blender, plano de atlas por grupo/tier e budgets integrados; execução real pendente |
-| 13 | Luz em Blender e bake | Pendente | bake reproduzível, denoise e mapas sRGB |
+| 13 | Luz em Blender e bake | Implementação iniciada, não certificada | 5 grupos × 3 tiers, EXR/PNG sRGB, denoise OIDN, margem 8 px, clamp p99.9, histograma, IBL 4096×2048 e captura do sector 100°–170°; execução Blender e publicação ainda pendentes |
 | 14 | Pipeline glTF, KTX2 e Meshopt | Pendente | GLB high/mid/low dentro dos orçamentos |
 | 15 | Runtime, loader, tiers e contratos | Pendente | carregamento progressivo e lightmaps activas |
 | 16 | Renderer, cor e pós-processamento | Pendente | A/B de tone mapping e score mínimo 78 |
