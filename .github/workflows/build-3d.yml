@@ -48,7 +48,10 @@ jobs:
     # The publish job commits its own generated model/metadata. Do not loop on that bot commit.
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    # Phase 13 is a real CPU Cycles bake at 4096 px / 2048 samples. The
+    # timeout covers the required computation; acceptance budgets remain in
+    # verify-lightmap-bakes.mjs and are unchanged.
+    timeout-minutes: 180
     steps:
       - name: Checkout main without downloading source LFS
         uses: actions/checkout@v7
@@ -180,7 +183,7 @@ jobs:
         shell: bash
         run: |
           {
-            echo "CAMPING V3 Fases 06-12"
+            echo "CAMPING V3 Fases 10-14"
             echo "Commit: $(git rev-parse HEAD)"
             echo "Exit codes:"
             cat art/_delivery/exit-codes.txt 2>/dev/null || echo "not created"
