@@ -393,7 +393,7 @@ export async function verify(dir, biblePath, { checkExitCodes = false, phase = N
     else {
       const metadata = JSON.parse(readFileSync(metadataPath, "utf8"));
       const photo = metadata.geometry?.photoZone ?? {};
-      add("Phase 09 frontend metadata", metadata.phase === 9 && metadata.productionPhase === 9 && photo.sourceStatus === "source-validated" && photo.requiredElements === 9 && photo.garments === 5 && photo.sealDiameterM === 2.2, JSON.stringify(photo));
+      add("Phase 09 frontend metadata", metadata.phase === currentPhase && metadata.productionPhase === currentPhase && photo.sourceStatus === "source-validated" && photo.requiredElements === 9 && photo.garments === 5 && photo.sealDiameterM === 2.2, JSON.stringify({ phase: metadata.phase, productionPhase: metadata.productionPhase, photo }));
     }
   }
   if (currentPhase >= 14) {
