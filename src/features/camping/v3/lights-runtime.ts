@@ -36,6 +36,7 @@ export function createRuntimeLights(scene: THREE.Scene, specs: readonly RuntimeL
 export function disposeRuntimeLights(lights: readonly THREE.Light[]): void {
   for (const light of lights) {
     light.parent?.remove(light);
-    light.shadow.map?.dispose();
+    const shadow = (light as THREE.Light & { shadow?: THREE.LightShadow }).shadow;
+    shadow?.map?.dispose();
   }
 }

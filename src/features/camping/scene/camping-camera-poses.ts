@@ -198,10 +198,14 @@ function getStructuralRoomEnvelope(root: THREE.Object3D): StructuralRoomEnvelope
 
   wallBottoms.sort((a, b) => a - b);
   const middle = Math.floor(wallBottoms.length / 2);
+  const lowerGround = wallBottoms[middle - 1];
+  const upperGround = wallBottoms[middle];
   const groundY = wallBottoms.length % 2 === 1
-    ? wallBottoms[middle]
-    : (wallBottoms[middle - 1] + wallBottoms[middle]) / 2;
-  if (!Number.isFinite(groundY) || groundY < bounds.min.y - 0.35 || groundY > bounds.min.y + 0.65) return null;
+    ? upperGround
+    : lowerGround !== undefined && upperGround !== undefined
+      ? (lowerGround + upperGround) / 2
+      : undefined;
+  if (groundY === undefined || !Number.isFinite(groundY) || groundY < bounds.min.y - 0.35 || groundY > bounds.min.y + 0.65) return null;
 
   return { bounds, groundY, width, depth, meshCount, wallCount, ceilingCount };
 }
