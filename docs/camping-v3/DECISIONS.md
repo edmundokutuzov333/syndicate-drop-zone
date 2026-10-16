@@ -261,3 +261,10 @@ O bake de irradiância Cycles gera EXR/PNG por grupo e tier, IBL e captura de ev
 **Decisão:** declarar `MARGIN=0.004`, mantendo o padding do contrato. Não reduzir budgets nem alterar tolerâncias. A build Blender e o Camera Production CI permanecem sem conclusão, por isso nenhuma fase é certificada neste registo.
 
 **Bloqueio estrutural:** o kit launchers exige os verificadores de manifesto/hash, contrato de promoção e E2E público, mas esses cinco ficheiros ainda não existem na main. A migração tem de preservar o GLB antigo fora de `public/`, gerar tiers e colliders reais, publicar `manifest.json`, adaptar o loader e só então executar verificação de preview/produção. Não declarar certificação antes desse percurso completo.
+
+
+## 2026-10-16 · D045 · Bloquear promoção quando fonte optimizada e modelo canónico divergem
+
+**Evidência:** o run [38872724687](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38872724687) rejeitou a entrega da Fase 12 porque o SHA-256 do GLB optimizado high não coincide com o GLB canónico, os relatórios UV2/áreas/stretch-padding falham e os metadados do modelo servido continuam na fase 09. O job de promoção foi ignorado. O run [38872724658](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38872724658) também falhou no smoke de produção, com timeout de captura e estado geométrico diferente do esperado.
+
+**Decisão:** manter a promoção bloqueada. Não copiar o GLB optimizado para o caminho canónico, não alterar os metadados de fase e não relaxar os testes até os artefactos e relatórios estarem coerentes. O check Vercel do HEAD documental está success e a Lovable reporta o mesmo SHA, mas estes factos não substituem a verificação HTTP dos bytes do modelo em preview e produção.
