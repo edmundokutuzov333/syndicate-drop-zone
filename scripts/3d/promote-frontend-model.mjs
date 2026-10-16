@@ -137,6 +137,7 @@ if (targetPhase >= 7) {
 
 let phase8Production = null;
 let phase9Photo = null;
+let phase12Lightmaps = null;
 if (targetPhase >= 8) {
   // Phase 08 can only build on a published, checksum-verified Phase 07 asset.
   const productionReportPath = resolve("art/xoyens-studio.phase08.report.json");
@@ -252,6 +253,30 @@ if (targetPhase >= 9) {
   };
 }
 
+if (targetPhase >= 12) {
+  const reportPath = resolve("art/xoyens-studio.phase12.report.json");
+  const planPath = resolve("art/xoyens-studio.phase12.plan.json");
+  if (!existsSync(reportPath) || !existsSync(planPath)) throw new Error("Phase 12 promotion blocked: missing report/plan");
+  const r = JSON.parse(readFileSync(reportPath, "utf8"));
+  const p = JSON.parse(readFileSync(planPath, "utf8"));
+  if (r.phase !== 12 || r.status !== "source-validated" || r.uv2Independent !== true ||
+      !Number.isFinite(r.maxIslandStretch) || r.maxIslandStretch > 1.15 || p.phase !== 12 || p.status !== "within-budget") {
+    throw new Error("Phase 12 promotion blocked: UV2/stretch/budget gates failed");
+  }
+  for (const [name, budget] of Object.entries({ high: 24, mid: 10, low: 4 })) {
+    const tier = p.tiers?.[name];
+    if (!tier || tier.budgetMB !== budget || tier.totalMemoryMB > budget ||
+        Object.keys(tier.groups ?? {}).length !== 5 ||
+        Object.values(tier.groups ?? {}).some((g) => g.fits !== true || g.atlases !== 1 || g.atlasPx > tier.maxPx)) {
+      throw new Error("Phase 12 promotion blocked: " + name + " atlas/budget contract failed");
+    }
+  }
+  const primitives = (gltf.meshes || []).flatMap((mesh) => mesh.primitives || []);
+  const uv2Primitives = primitives.filter((primitive) => primitive.attributes?.TEXCOORD_1 !== undefined).length;
+  if (!primitives.length || uv2Primitives !== primitives.length) throw new Error("Phase 12 promotion blocked: missing TEXCOORD_1");
+  phase12Lightmaps = { sourceStatus: r.status, meshCount: r.meshCount, primitives: primitives.length, uv2Primitives, uv2Independent: r.uv2Independent, maxIslandStretch: r.maxIslandStretch, tiers: p.tiers };
+}
+
 mkdirSync(dirname(target), { recursive: true });
 copyFileSync(source, target);
 const published = readFileSync(target);
@@ -300,6 +325,7 @@ const updated = {
     heroSurfaces: phase7Surfaces,
     productionZone: phase8Production,
     photoZone: phase9Photo,
+    lightmapUV: phase12Lightmaps,
   },
   objects: modelNodes,
   frontendDelivery: {
