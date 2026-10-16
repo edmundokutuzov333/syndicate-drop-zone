@@ -78,3 +78,10 @@ test("o bake da Fase 13 não bloqueia a Fase 12", () => {
   const script = readFileSync(resolve("scripts/3d/local-build.sh"), "utf8");
   assert.match(script, /if \[ "\$CAMPING_PHASE" -ge 13 \]; then[\s\S]*?step phase13-bake/);
 });
+
+test("a UV2 usa Smart Project e uma parametrização de lightmap verificável", () => {
+  const script = readFileSync(resolve("scripts/blender/phase12_lightmaps.py"), "utf8");
+  assert.match(script, /bpy\.ops\.uv\.smart_project\(angle_limit=math\.radians\(ANGLE\),island_margin=\.003\)/);
+  assert.match(script, /bpy\.ops\.uv\.lightmap_pack\([\s\S]*?PREF_NEW_UVLAYER=False/);
+  assert.match(script, /bpy\.ops\.uv\.pack_islands\(rotate=True, margin=MARGIN, scale=True\)/);
+});

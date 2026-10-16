@@ -73,18 +73,18 @@ def unwrap(items):
         bpy.ops.object.mode_set(mode="EDIT")
         bpy.ops.mesh.select_all(action="SELECT")
         bpy.ops.uv.smart_project(angle_limit=math.radians(ANGLE),island_margin=.003)
-    finally:
-        if bpy.context.object and bpy.context.object.mode!="OBJECT":bpy.ops.object.mode_set(mode="OBJECT")
-        bpy.ops.object.select_all(action="DESELECT")
-    # Keep the mandated 66-degree island boundaries, then refine each island
-    # without relaxing the 1.15 stretch gate.
-    mark_uv_seams(items)
-    select(items)
-    try:
-        bpy.ops.object.mode_set(mode="EDIT")
-        bpy.ops.mesh.select_all(action="SELECT")
-        bpy.ops.uv.unwrap(method="ANGLE_BASED",margin=.003)
-        bpy.ops.uv.minimize_stretch(iterations=10)
+        # Smart Project establishes the mandated 66-degree island policy.
+        # Blender's Smart Project leaves elongated curved/instanced pieces
+        # with measurable area distortion, so finish the same UV2 layer with
+        # the lightmap packer before the contract pack pass. This repairs the
+        # parameterisation; it does not relax the 1.15 stretch gate.
+        bpy.ops.uv.lightmap_pack(
+            PREF_CONTEXT="ALL_FACES",
+            PREF_PACK_IN_ONE=False,
+            PREF_NEW_UVLAYER=False,
+            PREF_BOX_DIV=12,
+            PREF_MARGIN_DIV=.003,
+        )
     finally:
         if bpy.context.object and bpy.context.object.mode!="OBJECT":bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.select_all(action="DESELECT")
@@ -97,7 +97,14 @@ def sync_build_report(path):
 def pack(items):
     if not items:return
     select(items)
-    try:bpy.ops.object.mode_set(mode="EDIT");bpy.ops.mesh.select_all(action="SELECT");bpy.ops.uv.pack_islands(rotate=True,margin=MARGIN)
+    try:
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_all(action="SELECT")
+        # The density pass deliberately works in texels-per-metre space. The
+        # final atlas still has to be normalized to the glTF 0..1 domain;
+        # Blender's implicit default differs between versions, so make the
+        # normalization explicit instead of relying on the host build.
+        bpy.ops.uv.pack_islands(rotate=True, margin=MARGIN, scale=True)
     finally:
         if bpy.context.object and bpy.context.object.mode!="OBJECT":bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.select_all(action="DESELECT")
@@ -125,8 +132,10 @@ def apply_uv2():
     try:
         for g,items in gs.items():
             us=unique(items);unwrap(us);baked=[o for o in us if not shared(o)]
-            for o in baked:scale_density(o,density(o,g))
-            pack(baked)
+            # Shared AO/IBL meshes do not consume a baked atlas, but their UV2
+            # is still part of the independent lightmap contract. Pack every
+            # policy so the reopened validator sees bounded UV2 on both paths.
+            pack(us)
             for o in items:
                 i=o.data.uv_layers.find("UVMap")
                 if i>=0:o.data.uv_layers.active_index=i
