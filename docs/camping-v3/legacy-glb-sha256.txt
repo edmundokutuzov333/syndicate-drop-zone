@@ -1,3 +1,0 @@
-sha256 3edcc4457d357393a85b3a098433764d33cd244df9533a80fa27bee249bd1e24
-bytes 13530632
-source public/models/camping/xoyens-studio.glb before Phase 14 promotion
