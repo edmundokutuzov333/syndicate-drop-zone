@@ -98,7 +98,7 @@ export function validateBakeReport(report, root = ".") {
     add(Number(entry.dilateMarginPx) >= 8, key + ": margin inferior a 8 px");
     add(entry.bakeType === "DIFFUSE" && entry.direct === true && entry.indirect === true && entry.usePassColor === false, key + ": contrato de irradiância inválido");
     add(entry.denoiser === "OPENIMAGEDENOISE", key + ": denoiser inválido");
-    add(Number(entry.histogram?.clippedOccupiedPct) <= 1, key + ": clipping >1%");
+    add(Number(entry.histogram?.clippedOccupiedPct) <= 0.5, key + ": clipping >0.5%");
     add(Number(entry.histogram?.blackOccupiedPct) <= 1, key + ": ilhas UV pretas >1%");
     checkImage(root, entry.exr, "exr", {width:px,height:px}, key + " EXR", failures);
     checkImage(root, entry.png, "png", {width:px,height:px}, key + " PNG", failures);

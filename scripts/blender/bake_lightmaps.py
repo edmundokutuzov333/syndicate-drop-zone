@@ -99,7 +99,7 @@ def bake_group(group, tier, cfg, out_dir):
         grid = lum.reshape((256, factor, 256, factor)).mean(axis=(1, 3))
         black_pct = float(np.count_nonzero(coverage & (grid <= 1e-7)) * 100 / occupied)
         clipped_pct = float(np.count_nonzero(coverage & (np.max(rgb / LM_SCALE, axis=2) >= 1.0)) * 100 / occupied)
-        if black_pct > 1.0 or clipped_pct > 1.0:
+        if black_pct > 1.0 or clipped_pct > 0.5:
             raise RuntimeError("histograma fora do limite: black=" + str(round(black_pct, 4)) + "% clip=" + str(round(clipped_pct, 4)) + "%")
         png = save_png(out_dir / tier / ("LM_" + group + "_" + tier + ".png"), rgb / LM_SCALE, px, px, "SDT_LDR_" + group + "_" + tier)
         return {"group": group, "tier": tier, "samples": cfg["samples"], "exr": stat_record(exr, px, px), "png": png,
