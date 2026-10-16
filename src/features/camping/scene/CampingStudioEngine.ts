@@ -41,6 +41,7 @@ import { applyCampingReferenceComposition, CAMPING_REFERENCE_COMPOSITION } from 
 import { frequency } from "@/lib/frequency";
 import { DynamicResolution } from "../v3/dynamic-resolution";
 import { bindLightmaps } from "../v3/asset-loader";
+import { createRenderPipeline, type RenderPipeline } from "../v3/render-pipeline";
 import { createDawScreen } from "../v3/screen-texture";
 import { renderEquirect, rgbaToDataUrl, createDifferenceImage } from "../v3/refmatch";
 import { referenceMatchScore, sectorStats, type Rgba } from "../v3/sector-stats";
@@ -658,6 +659,7 @@ export class CampingStudioEngine {
   private readonly callbacks: EngineCallbacks;
   private canvas: HTMLCanvasElement | null = null;
   private renderer: THREE.WebGLRenderer | null = null;
+  private renderPipeline: RenderPipeline | null = null;
   private renderProfile: CampingRenderProfile | null = null;
   private qualityTier: TierProfile = TIER_PROFILES.high;
   private reflectionTarget: THREE.WebGLRenderTarget | null = null;
@@ -816,6 +818,18 @@ export class CampingStudioEngine {
       this.renderProfile = initialized.profile;
       this.baseRenderPixelRatio = initialized.profile.pixelRatio;
       this.canvas.dataset.campingRenderResolutionScale = "1";
+      try {
+        this.renderPipeline = createRenderPipeline(this.renderer, this.scene, this.camera, {
+          bloom: this.qualityTier.bloom,
+          smaa: this.qualityTier.smaa,
+          noise: this.qualityTier.tier !== "pano",
+        });
+        this.canvas.dataset.campingRenderPipeline = "postprocessing-agx";
+      } catch {
+        // Keep the canonical Three.js renderer as a real fallback on constrained GPUs.
+        this.renderPipeline = null;
+        this.canvas.dataset.campingRenderPipeline = "three-fallback";
+      }
       this.createStudioEnvironment();
       this.createLighting();
       this.createEntrySet();
@@ -915,6 +929,8 @@ export class CampingStudioEngine {
     this.scene.environment = null;
     this.reflectionTarget?.dispose();
     this.reflectionTarget = null;
+    this.renderPipeline?.dispose();
+    this.renderPipeline = null;
     this.renderer?.dispose();
     this.renderer = null;
     this.scene.clear();
@@ -1277,7 +1293,7 @@ export class CampingStudioEngine {
     this.debugFrozen = true;
     if (this.animationFrame) window.cancelAnimationFrame(this.animationFrame);
     this.animationFrame = 0;
-    if (this.renderer) this.renderer.render(this.scene, this.camera);
+    this.renderFrame();
     if (this.canvas) this.canvas.dataset.campingDebugFrozen = "true";
   }
 
@@ -1459,7 +1475,7 @@ export class CampingStudioEngine {
     this.debugAppliedPose = id;
     this.debugRequestedPose = null;
     if (this.canvas) this.canvas.dataset.campingDebugPose = id;
-    if (renderNow) this.renderer.render(this.scene, this.camera);
+    if (renderNow) this.renderFrame();
     return true;
   }
 
@@ -1501,7 +1517,7 @@ export class CampingStudioEngine {
     }
     this.updateHoverOutline();
     this.updateDawScreen(now, delta);
-    this.renderer.render(this.scene, this.camera);
+    this.renderFrame(delta);
     this.advanceTransientMessage(now);
     this.publishRenderDiagnostics(now, performance.now() - frameStartedAt);
     if (!this.debugFrozen) this.animationFrame = window.requestAnimationFrame(this.tick);
@@ -3503,8 +3519,18 @@ export class CampingStudioEngine {
     const width = Math.max(1, this.canvas.clientWidth || this.canvas.parentElement?.clientWidth || window.innerWidth);
     const height = Math.max(1, this.canvas.clientHeight || this.canvas.parentElement?.clientHeight || window.innerHeight);
     this.renderer.setSize(width, height, false);
+    this.renderPipeline?.resize(width, height, this.renderer.getPixelRatio());
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
-    if (this.debugFrozen) this.renderer.render(this.scene, this.camera);
+    if (this.debugFrozen) this.renderFrame();
+  }
+
+  private renderFrame(deltaSeconds = 0.016): void {
+    if (!this.renderer) return;
+    if (this.renderPipeline) {
+      this.renderPipeline.render(deltaSeconds);
+      return;
+    }
+    this.renderer.render(this.scene, this.camera);
   }
 }
