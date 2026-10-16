@@ -1,0 +1,175 @@
+name: Camera Production CI
+
+on:
+  push:
+    branches: [main]
+    # Geometry changes publish an optimized GLB in a follow-up commit from
+    # Build CAMPING 3D. Do not race the frontend publication guard against the
+    # previous model; workflow_run below validates the published main revision.
+    paths-ignore:
+      - "scripts/blender/**"
+      - "scripts/3d/**"
+      - "scripts/build-3d.mjs"
+      - "scripts/check-3d-budgets.mjs"
+      - "scripts/build-blend.sh"
+      - "scripts/install-3d-toolchain.sh"
+      - "scripts/verify-glb-contract.mjs"
+      - "scripts/camping-frontend-publication-guard.ts"
+      - "scripts/ci/verify-public-model.mjs"
+      - "tests/verify-public-model.test.mjs"
+      - "tests/e2e/camping-experience.spec.ts"
+      - "src/features/camping/scene/CampingStudioEngine.ts"
+      - "src/features/camping/scene/camping-model-compatibility.ts"
+      - "vite.config.ts"
+      - "public/models/camping/**"
+      - "art/**"
+      - "docs/camping-v3/scene-bible.json"
+      - "docs/camping-v3/phase-05/**"
+      - "package.json"
+      - "docker/blender-ci/Dockerfile"
+      - ".github/workflows/build-3d.yml"
+      - ".github/workflows/ci.yml"
+      - "docs/camping-v3/STATUS.md"
+      - "docs/camping-v3/DECISIONS.md"
+      - "src/features/camping/scene/camping-photo-publication.test.ts"
+  pull_request:
+    branches: [main]
+  workflow_run:
+    workflows: ["Build CAMPING 3D - Blender + frontend V3"]
+    types: [completed]
+
+env:
+  CAMPING_PHASE: "14"
+jobs:
+  verify:
+    # For workflow_run, verify the latest main only after the 3D publish job
+    # has completed successfully. A failed Blender publication must not be masked.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion != 'cancelled'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          lfs: false
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Prepare Three.js Basis runtime assets
+        run: npm run 3d:basis
+
+      - name: CAMPING 3D dependency contract
+        run: node scripts/check-3d-toolchain.mjs --packages-only
+
+
+      - name: Native FFmpeg encoder smoke test
+        run: node scripts/test-fan-video-encoder.mjs
+
+      - name: Camera lint
+        run: "npx eslint src/lib/camera src/lib/webgl src/features/camera src/routes/camera.tsx --rule 'prettier/prettier: off'"
+
+      - name: CAMPING scene bible contract
+        run: npm run validate:camping-scene
+
+      - name: CAMPING published GLB high-tier budget contract
+        run: npm run audit:camping-glb
+
+      - name: Engineering tests
+        run: npm run test -- src/features/camping/interactions/access-machine.test.ts src/features/camping/camera/camping-collision.test.ts src/features/camping/scene/camping-object-contracts.test.ts src/features/camping/scene/camping-model-compatibility.test.ts src/features/camping/scene/camping-glb-contract.test.ts src/features/camping/scene/camping-room-world.test.ts src/features/camping/scene/camping-camera-poses.test.ts src/features/camping/v3/v3.test.ts src/lib/merch-stock.test.ts src/test/camera-engineering.test.ts src/test/frequency.test.ts src/test/supabase-public.test.ts src/test/membership.test.ts src/test/fan-membership.test.ts src/test/fan-video.test.ts src/test/fan-video-api.test.ts src/test/filiacao.test.tsx src/test/partnership.test.ts src/test/phase1.test.ts src/lib/site-content.test.ts
+
+      - name: Production build
+        run: npm run build
+
+      - name: Inspect bundled radio WAV header and duration
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = "public/audio/KHRYIS - A Bag.wav";
+          const b = fs.readFileSync(path);
+          if (b.toString("ascii", 0, 4) !== "RIFF" || b.toString("ascii", 8, 12) !== "WAVE") {
+            throw new Error("Invalid RIFF/WAVE header");
+          }
+          let offset = 12;
+          let audioFormat = null;
+          let channels = null;
+          let sampleRate = null;
+          let byteRate = null;
+          let blockAlign = null;
+          let bitsPerSample = null;
+          let dataBytes = null;
+          while (offset + 8 <= b.length) {
+            const id = b.toString("ascii", offset, offset + 4);
+            const size = b.readUInt32LE(offset + 4);
+            const body = offset + 8;
+            if (id === "fmt " && size >= 16) {
+              audioFormat = b.readUInt16LE(body);
+              channels = b.readUInt16LE(body + 2);
+              sampleRate = b.readUInt32LE(body + 4);
+              byteRate = b.readUInt32LE(body + 8);
+              blockAlign = b.readUInt16LE(body + 12);
+              bitsPerSample = b.readUInt16LE(body + 14);
+            }
+            if (id === "data") {
+              dataBytes = size;
+              break;
+            }
+            offset = body + size + (size % 2);
+          }
+          if (!audioFormat || !channels || !sampleRate || !byteRate || !blockAlign || !bitsPerSample || !dataBytes) {
+            throw new Error("Incomplete WAV metadata");
+          }
+          const duration = dataBytes / byteRate;
+          console.log({ audioFormat, channels, sampleRate, byteRate, blockAlign, bitsPerSample, dataBytes, duration });
+          if (duration <= 30) throw new Error("A Bag is not a full-length source");
+          if (![1, 3].includes(audioFormat)) throw new Error("Unsupported WAV format for native browser playback: " + audioFormat);
+          NODE
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: CAMPING production frontend smoke
+        env:
+          CAMPING_BASE_URL: https://syndicate-do-trap.lovable.app
+        run: npx playwright test tests/radio/camping-entry.spec.ts --grep "mounts the 3D entry|accepts 808 and enters the loaded studio|captures the seven deterministic baseline poses|certified optimized Blender V3 model" --project=chromium
+
+      - name: CAMPING public model manifest E2E
+        if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+        env:
+          CAMPING_BASE_URL: https://syndicate-do-trap.lovable.app
+        run: npx playwright test tests/e2e/camping-experience.spec.ts --project=chromium
+
+      - name: Camera browser validation (permissions, photo download and video playback)
+        run: npx playwright test tests/radio/camera.spec.ts --project=chromium
+
+      - name: Radio browser smoke tests
+        run: npm run test:e2e
+
+      # Production alias verification is opt-in while the current delivery scope is GitHub/Lovable.
+      - name: Verify the actual production CAMPING model served by Vercel
+        if: ${{ vars.CAMPING_VERIFY_PRODUCTION == 'true' }}
+        env:
+          CAMPING_PRODUCTION_URL: https://syndicate-drop-zone.vercel.app
+          CAMPING_PRODUCTION_VERIFY_TIMEOUT_MS: "300000"
+          CAMPING_EXPECTED_MODEL_PHASE: "${{ env.CAMPING_PHASE }}"
+        run: node scripts/verify-deployed-camping-model.mjs
+
+      - name: Upload CAMPING visual and failure evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: camping-visual-evidence-${{ github.sha }}
+          path: |
+            test-results/camping-reference-full-ui.png
+            test-results/camping-reference-canvas.png
+            test-results/camping-v3-baseline/**
+            test-results/camping-startup-diagnostic.png
+            test-results/camping-renderer-diagnostics.json
+            test-results/**/error-context.md
+          if-no-files-found: ignore
+          retention-days: 3

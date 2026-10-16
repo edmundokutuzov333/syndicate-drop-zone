@@ -1,0 +1,46 @@
+{
+  "blenderVersion": "4.5.14 LTS",
+  "purpose": "phase-06 architectural evidence",
+  "referenceFilePresent": true,
+  "renderEngine": "BLENDER_EEVEE_NEXT",
+  "sourceBlend": "/home/runner/work/syndicate-drop-zone/syndicate-drop-zone/art/xoyens-studio.blend",
+  "version": 1,
+  "views": {
+    "ceiling.png": {
+      "bytes": 1558691,
+      "cameraLocation": [
+        0.0,
+        1.55,
+        2.0
+      ],
+      "description": "Ab\u00f3bada, esteira de bambu, costelas e linha de arranque",
+      "height": 540,
+      "path": "/home/runner/work/syndicate-drop-zone/syndicate-drop-zone/art/_delivery/phase-06/ceiling.png",
+      "sha256": "c316dae90830d99f9dba9e3fb984dc9a15abf259232275d7e7af515f632d368b",
+      "target": [
+        0.0,
+        3.15,
+        -0.15
+      ],
+      "width": 960
+    },
+    "main-door.png": {
+      "bytes": 1558693,
+      "cameraLocation": [
+        0.0,
+        1.65,
+        0.1
+      ],
+      "description": "Porta principal, aro, puxador, AC e conduta",
+      "height": 540,
+      "path": "/home/runner/work/syndicate-drop-zone/syndicate-drop-zone/art/_delivery/phase-06/main-door.png",
+      "sha256": "9d427d710d88081c1ea60eeba1c5a1cbb970f6a1d0deb7856feecfd4f5c493e6",
+      "target": [
+        0.0,
+        1.25,
+        2.78
+      ],
+      "width": 960
+    }
+  }
+}

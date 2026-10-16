@@ -1,0 +1,2244 @@
+{
+  "version": 3,
+  "referencePano": {
+    "width": 1774,
+    "height": 887,
+    "note": "composição, não levantamento métrico: a altura de câmara implícita varia 0,95–1,42 m entre objectos"
+  },
+  "units": "metres",
+  "coordinate": "+Y cima, -Z azimute 0, azimute cresce para +X",
+  "budget": {
+    "totalTrianglesHigh": 260000,
+    "totalTrianglesLow": 70000
+  },
+  "elements": [
+    {
+      "id": "arch.vault_ceiling",
+      "zone": "shell",
+      "name": "Tecto abobadado em esteira de bambu entrançado com costelas de madeira",
+      "azimuth": [
+        0,
+        360
+      ],
+      "elevation": [
+        25,
+        90
+      ],
+      "size_m": [
+        7.6,
+        0.6,
+        5.6
+      ],
+      "materials": [
+        "bamboo_weave",
+        "wood_rib_dark"
+      ],
+      "source": "model",
+      "polyBudget": 9000,
+      "notes": "Abóbada semicircular com eixo X; paredes a 2,85 m e chave a 3,45 m (flecha de 0,60 m). Cerca de 14 costelas secundárias e esteira contínua."
+    },
+    {
+      "id": "arch.walls_plaster",
+      "zone": "shell",
+      "name": "Paredes em reboco rugoso creme (stucco)",
+      "azimuth": [
+        90,
+        360
+      ],
+      "elevation": [
+        -10,
+        35
+      ],
+      "size_m": [
+        7.6,
+        2.85,
+        5.6
+      ],
+      "materials": [
+        "plaster_stucco_cream"
+      ],
+      "source": "model",
+      "polyBudget": 2500,
+      "notes": "Dimensões úteis da sala: 7,60 × 5,60 m; quatro paredes contínuas com vãos explícitos fechados por folhas de porta. Reboco creme rugoso na zona de produção."
+    },
+    {
+      "id": "arch.wall_black_left",
+      "zone": "shell",
+      "name": "Parede preta mate (lado do mural e do sofá)",
+      "azimuth": [
+        0,
+        100
+      ],
+      "elevation": [
+        -10,
+        35
+      ],
+      "size_m": [
+        3.2,
+        2.85,
+        0.14
+      ],
+      "materials": [
+        "paint_black_matte"
+      ],
+      "source": "model",
+      "polyBudget": 600,
+      "notes": "Acabamento mate na zona negra de entrada; é uma camada de acabamento e nunca um buraco na casca estrutural."
+    },
+    {
+      "id": "arch.soffit_box",
+      "zone": "shell",
+      "name": "Viga/soffit encaixado no lado direito",
+      "azimuth": [
+        335,
+        360
+      ],
+      "elevation": [
+        20,
+        38
+      ],
+      "size_m": [
+        1.2,
+        0.5,
+        0.4
+      ],
+      "materials": [
+        "plaster_stucco_cream"
+      ],
+      "source": "model",
+      "polyBudget": 300
+    },
+    {
+      "id": "arch.baseboard",
+      "zone": "shell",
+      "name": "Rodapé de madeira escura 8 cm",
+      "azimuth": [
+        0,
+        360
+      ],
+      "elevation": [
+        -14,
+        -8
+      ],
+      "size_m": [
+        26.4,
+        0.08,
+        0.02
+      ],
+      "materials": [
+        "wood_dark_stained"
+      ],
+      "source": "model",
+      "polyBudget": 1800,
+      "notes": "Rodapé escuro contínuo nos quatro lados: 7,6 + 7,6 + 5,6 + 5,6 = 26,4 m."
+    },
+    {
+      "id": "arch.door_main",
+      "zone": "shell",
+      "name": "Porta preta mate com aro de aço e puxador de alavanca em inox",
+      "azimuth": [
+        167,
+        195
+      ],
+      "elevation": [
+        -31,
+        34
+      ],
+      "size_m": [
+        0.92,
+        2.04,
+        0.06
+      ],
+      "materials": [
+        "paint_black_matte",
+        "steel_brushed"
+      ],
+      "source": "model",
+      "polyBudget": 1800,
+      "interactionId": "studio.inner-door"
+    },
+    {
+      "id": "arch.door_left",
+      "zone": "shell",
+      "name": "Porta preta com puxador (junto ao mural)",
+      "azimuth": [
+        12,
+        22
+      ],
+      "elevation": [
+        -25,
+        22
+      ],
+      "size_m": [
+        0.9,
+        2.04,
+        0.06
+      ],
+      "materials": [
+        "paint_black_matte",
+        "steel_black"
+      ],
+      "source": "model",
+      "polyBudget": 1200,
+      "notes": "Porta de acesso na extremidade visual esquerda da panorâmica, antes do mural; a folha fechada faz parte da casca e não deixa um lado aberto."
+    },
+    {
+      "id": "arch.ac_split",
+      "zone": "shell",
+      "name": "Ar condicionado split branco por cima da porta",
+      "azimuth": [
+        149,
+        181
+      ],
+      "elevation": [
+        22,
+        36
+      ],
+      "size_m": [
+        0.92,
+        0.29,
+        0.21
+      ],
+      "materials": [
+        "plastic_white_abs"
+      ],
+      "source": "model",
+      "polyBudget": 1400,
+      "notes": "grelha com lamelas modeladas; tubagem exterior em conduta branca"
+    },
+    {
+      "id": "arch.conduit_pvc",
+      "zone": "shell",
+      "name": "Conduta PVC branca na parede e interruptores/tomadas",
+      "azimuth": [
+        150,
+        215
+      ],
+      "elevation": [
+        -15,
+        32
+      ],
+      "size_m": [
+        3.2,
+        0.03,
+        0.03
+      ],
+      "materials": [
+        "plastic_white_abs"
+      ],
+      "source": "model",
+      "polyBudget": 900
+    },
+    {
+      "id": "floor.wood",
+      "zone": "shell",
+      "name": "Soalho laminado nogueira escuro, réguas longas com variação de tom e brilho semi-polido",
+      "azimuth": [
+        0,
+        360
+      ],
+      "elevation": [
+        -90,
+        -12
+      ],
+      "size_m": [
+        7.6,
+        0.02,
+        5.6
+      ],
+      "materials": [
+        "floor_walnut_semi_gloss"
+      ],
+      "source": "model",
+      "polyBudget": 3500,
+      "notes": "100% das réguas individuais; roughness 0.35–0.55 variável; reflexão planar nos tiers altos"
+    },
+    {
+      "id": "floor.vinyl_sweep",
+      "zone": "photo",
+      "name": "Piso de vinil preto circular (varrimento do fundo fotográfico)",
+      "azimuth": [
+        215,
+        345
+      ],
+      "elevation": [
+        -60,
+        -14
+      ],
+      "size_m": [
+        4.6,
+        0.012,
+        2.6
+      ],
+      "materials": [
+        "vinyl_black_matte"
+      ],
+      "source": "model",
+      "polyBudget": 900,
+      "notes": "borda levemente levantada e com sombra de contacto"
+    },
+    {
+      "id": "prod.plank_wall",
+      "zone": "production",
+      "name": "Parede de tábuas de madeira recuperada com fita LED laranja (2200K) em cima e em baixo",
+      "azimuth": [
+        100,
+        168
+      ],
+      "elevation": [
+        -18,
+        30
+      ],
+      "size_m": [
+        2.6,
+        2.3,
+        0.08
+      ],
+      "materials": [
+        "wood_reclaimed_planks",
+        "led_warm_emissive"
+      ],
+      "source": "model",
+      "polyBudget": 2600,
+      "lights": [
+        {
+          "kind": "led_strip",
+          "kelvin": 2200,
+          "lumensPerM": 420,
+          "lengthM": 6.2
+        }
+      ]
+    },
+    {
+      "id": "prod.desk_l",
+      "zone": "production",
+      "name": "Secretária em L: tampo de madeira recuperada, pernas em aço preto, tabuleiro de teclado",
+      "azimuth": [
+        104,
+        168
+      ],
+      "elevation": [
+        -30,
+        -2
+      ],
+      "size_m": [
+        2.3,
+        0.75,
+        0.8
+      ],
+      "materials": [
+        "wood_reclaimed_top",
+        "steel_black"
+      ],
+      "source": "model",
+      "polyBudget": 3200,
+      "interactionId": "studio.production-desk"
+    },
+    {
+      "id": "prod.monitor_daw",
+      "zone": "production",
+      "name": "Monitor 27\" com sessão DAW (ecrã vivo)",
+      "azimuth": [
+        124,
+        142
+      ],
+      "elevation": [
+        0,
+        15
+      ],
+      "size_m": [
+        0.62,
+        0.37,
+        0.05
+      ],
+      "materials": [
+        "screen_emissive",
+        "plastic_black"
+      ],
+      "source": "model",
+      "polyBudget": 2200,
+      "interactionId": "studio.imac",
+      "notes": "o ID legado chama-se studio.imac mas a referência mostra monitor+DAW; manter o ID, modelar como na referência; ecrã = CanvasTexture animado ligado ao motor da Frequência"
+    },
+    {
+      "id": "prod.monitors_pair",
+      "zone": "production",
+      "name": "Monitores de estúdio 2 vias (par) com cones modelados",
+      "azimuth": [
+        116,
+        162
+      ],
+      "elevation": [
+        -3,
+        14
+      ],
+      "size_m": [
+        0.25,
+        0.38,
+        0.28
+      ],
+      "materials": [
+        "speaker_cone_black",
+        "plastic_black"
+      ],
+      "source": "model",
+      "polyBudget": 5200,
+      "interactionId": "studio.audio-system"
+    },
+    {
+      "id": "prod.sub",
+      "zone": "production",
+      "name": "Subwoofer sob a secretária + suporte de auscultadores",
+      "azimuth": [
+        148,
+        162
+      ],
+      "elevation": [
+        -30,
+        -8
+      ],
+      "size_m": [
+        0.3,
+        0.4,
+        0.35
+      ],
+      "materials": [
+        "plastic_black",
+        "speaker_cone_black"
+      ],
+      "source": "model",
+      "polyBudget": 2500
+    },
+    {
+      "id": "prod.keyboard_midi",
+      "zone": "production",
+      "name": "Teclado MIDI 61 teclas no tabuleiro",
+      "azimuth": [
+        128,
+        146
+      ],
+      "elevation": [
+        -8,
+        -2
+      ],
+      "size_m": [
+        1,
+        0.07,
+        0.28
+      ],
+      "materials": [
+        "plastic_black",
+        "key_ivory"
+      ],
+      "source": "model",
+      "polyBudget": 3800
+    },
+    {
+      "id": "prod.chair_leather",
+      "zone": "production",
+      "name": "Cadeira executiva de couro preto com apoio de cabeça, braços e base de 5 pés com rodízios",
+      "azimuth": [
+        86,
+        127
+      ],
+      "elevation": [
+        -40,
+        12
+      ],
+      "size_m": [
+        0.7,
+        1.15,
+        0.7
+      ],
+      "materials": [
+        "leather_black_quilted",
+        "plastic_black"
+      ],
+      "source": "model",
+      "polyBudget": 16000,
+      "notes": "Encosto com altura total de referência de 1,15 m; apoio de cabeça, braços e base de cinco raios com rodízios."
+    },
+    {
+      "id": "prod.panels_fabric",
+      "zone": "production",
+      "name": "3 painéis acústicos de tecido preto na parede",
+      "azimuth": [
+        75,
+        120
+      ],
+      "elevation": [
+        2,
+        28
+      ],
+      "size_m": [
+        1.9,
+        1.2,
+        0.07
+      ],
+      "materials": [
+        "fabric_black_acoustic"
+      ],
+      "source": "model",
+      "polyBudget": 900,
+      "notes": "bordas chanfradas; sombra suave por AO cozido"
+    },
+    {
+      "id": "prod.foam_tiles",
+      "zone": "production",
+      "name": "Placas de espuma acústica em grelha",
+      "azimuth": [
+        66,
+        76
+      ],
+      "elevation": [
+        -8,
+        25
+      ],
+      "size_m": [
+        0.6,
+        1.2,
+        0.05
+      ],
+      "materials": [
+        "foam_black_grid"
+      ],
+      "source": "model",
+      "polyBudget": 4200,
+      "notes": "instanciar tiles; baixa densidade de triângulos, o detalhe vem da normal"
+    },
+    {
+      "id": "prod.pendant_cage_1",
+      "zone": "production",
+      "name": "Candeeiro pendente industrial com gaiola e lâmpada Edison",
+      "azimuth": [
+        114,
+        128
+      ],
+      "elevation": [
+        10,
+        32
+      ],
+      "size_m": [
+        0.18,
+        0.24,
+        0.18
+      ],
+      "materials": [
+        "steel_black",
+        "bulb_edison_emissive"
+      ],
+      "source": "model",
+      "polyBudget": 2600,
+      "lights": [
+        {
+          "kind": "point",
+          "kelvin": 2200,
+          "lumens": 250
+        }
+      ]
+    },
+    {
+      "id": "prod.pendant_cage_2",
+      "zone": "photo",
+      "name": "Candeeiro pendente industrial (centro-direita)",
+      "azimuth": [
+        186,
+        198
+      ],
+      "elevation": [
+        25,
+        45
+      ],
+      "size_m": [
+        0.18,
+        0.24,
+        0.18
+      ],
+      "materials": [
+        "steel_black",
+        "bulb_edison_emissive"
+      ],
+      "source": "model",
+      "polyBudget": 2600,
+      "lights": [
+        {
+          "kind": "point",
+          "kelvin": 2200,
+          "lumens": 250
+        }
+      ]
+    },
+    {
+      "id": "prod.pendant_cage_3",
+      "zone": "photo",
+      "name": "Candeeiro pendente industrial (direita)",
+      "azimuth": [
+        326,
+        338
+      ],
+      "elevation": [
+        22,
+        44
+      ],
+      "size_m": [
+        0.18,
+        0.24,
+        0.18
+      ],
+      "materials": [
+        "steel_black",
+        "bulb_edison_emissive"
+      ],
+      "source": "model",
+      "polyBudget": 2600,
+      "lights": [
+        {
+          "kind": "point",
+          "kelvin": 2200,
+          "lumens": 250
+        }
+      ]
+    },
+    {
+      "id": "prod.pendant_cage_4",
+      "zone": "left",
+      "name": "Candeeiro pendente industrial (esquerda)",
+      "azimuth": [
+        18,
+        28
+      ],
+      "elevation": [
+        28,
+        48
+      ],
+      "size_m": [
+        0.18,
+        0.24,
+        0.18
+      ],
+      "materials": [
+        "steel_black",
+        "bulb_edison_emissive"
+      ],
+      "source": "model",
+      "polyBudget": 2600,
+      "lights": [
+        {
+          "kind": "point",
+          "kelvin": 2200,
+          "lumens": 250
+        }
+      ]
+    },
+    {
+      "id": "prod.frame_mirror",
+      "zone": "production",
+      "name": "Moldura/espelho estreito na parede de tábuas",
+      "azimuth": [
+        130,
+        150
+      ],
+      "elevation": [
+        10,
+        22
+      ],
+      "size_m": [
+        0.7,
+        0.22,
+        0.03
+      ],
+      "materials": [
+        "steel_black",
+        "glass_mirror"
+      ],
+      "source": "model",
+      "polyBudget": 600
+    },
+    {
+      "id": "prod.headphones",
+      "zone": "production",
+      "name": "Auscultadores num suporte + interface de áudio + caneca vermelha",
+      "azimuth": [
+        150,
+        164
+      ],
+      "elevation": [
+        -12,
+        6
+      ],
+      "size_m": [
+        0.2,
+        0.3,
+        0.2
+      ],
+      "materials": [
+        "plastic_black",
+        "ceramic_red"
+      ],
+      "source": "model",
+      "polyBudget": 4800
+    },
+    {
+      "id": "left.guitar_strat",
+      "zone": "left",
+      "name": "Guitarra eléctrica branca (tipo Stratocaster) em suporte",
+      "azimuth": [
+        64,
+        74
+      ],
+      "elevation": [
+        -28,
+        20
+      ],
+      "size_m": [
+        0.38,
+        1,
+        0.12
+      ],
+      "materials": [
+        "guitar_body_white",
+        "maple_neck",
+        "steel_chrome"
+      ],
+      "source": "ai-or-cc0",
+      "polyBudget": 14000,
+      "notes": "CC0 (Poly Haven/Sketchfab CC0) ou TRELLIS.2/Hunyuan3D + retopologia; verificar licença"
+    },
+    {
+      "id": "left.palm_areca",
+      "zone": "left",
+      "name": "Palmeira areca em vaso dourado",
+      "azimuth": [
+        73,
+        88
+      ],
+      "elevation": [
+        -30,
+        18
+      ],
+      "size_m": [
+        0.7,
+        1.3,
+        0.7
+      ],
+      "materials": [
+        "leaf_areca",
+        "pot_brass"
+      ],
+      "source": "ai-or-cc0",
+      "polyBudget": 22000,
+      "notes": "folhas com alpha-test + translucidez simulada; instanciar folhas"
+    },
+    {
+      "id": "left.mural_print",
+      "zone": "left",
+      "name": "Mural impresso (olhos/ciclope) pendurado de um rolo branco",
+      "azimuth": [
+        25,
+        66
+      ],
+      "elevation": [
+        -22,
+        28
+      ],
+      "size_m": [
+        1.9,
+        2.4,
+        0.02
+      ],
+      "materials": [
+        "canvas_print_mural"
+      ],
+      "source": "print-reference",
+      "polyBudget": 300,
+      "notes": "usar o recorte da referência como placeholder; pedir o original em alta resolução ao dono; upscale ×4 como solução provisória e registar"
+    },
+    {
+      "id": "left.roller_white",
+      "zone": "left",
+      "name": "Rolo branco do fundo (cilindro no topo do mural)",
+      "azimuth": [
+        22,
+        70
+      ],
+      "elevation": [
+        24,
+        34
+      ],
+      "size_m": [
+        2.15,
+        0.14,
+        0.14
+      ],
+      "materials": [
+        "plastic_white_abs"
+      ],
+      "source": "model",
+      "polyBudget": 1200,
+      "notes": "Rolo branco com margem moderada sobre o mural de 1,90 m; alinhar com as extremidades do suporte."
+    },
+    {
+      "id": "left.flag_yen",
+      "zone": "left",
+      "name": "Bandeira preta com símbolo ¥ branco",
+      "azimuth": [
+        0,
+        17
+      ],
+      "elevation": [
+        -2,
+        18
+      ],
+      "size_m": [
+        1,
+        0.8,
+        0.02
+      ],
+      "materials": [
+        "fabric_black_flag",
+        "print_official_xoyens"
+      ],
+      "source": "official-asset",
+      "polyBudget": 900,
+      "notes": "usar o manifesto oficial do logo Xoyens, nunca redesenhar"
+    },
+    {
+      "id": "left.sofa_tufted",
+      "zone": "left",
+      "name": "Sofá/daybed de couro preto acolchoado + almofada prateada",
+      "azimuth": [
+        0,
+        40
+      ],
+      "elevation": [
+        -38,
+        -5
+      ],
+      "size_m": [
+        1.9,
+        0.45,
+        0.95
+      ],
+      "materials": [
+        "leather_black_tufted",
+        "foil_silver"
+      ],
+      "source": "model",
+      "polyBudget": 15000,
+      "notes": "tufting com geometria (botões) + normal; almofada com folha reflectora"
+    },
+    {
+      "id": "photo.roller_backdrop",
+      "zone": "photo",
+      "name": "Rolo branco e papel de fundo preto até ao chão",
+      "azimuth": [
+        215,
+        325
+      ],
+      "elevation": [
+        22,
+        34
+      ],
+      "size_m": [
+        2.7,
+        0.14,
+        0.14
+      ],
+      "materials": [
+        "plastic_white_abs",
+        "paper_black_seamless"
+      ],
+      "source": "model",
+      "polyBudget": 1500,
+      "interactionId": "studio.photo-backdrop"
+    },
+    {
+      "id": "photo.backdrop_seal",
+      "zone": "photo",
+      "name": "Selo gigante do Sindicato impresso no fundo",
+      "azimuth": [
+        225,
+        318
+      ],
+      "elevation": [
+        -20,
+        24
+      ],
+      "size_m": [
+        2.2,
+        2.2,
+        0.01
+      ],
+      "materials": [
+        "print_official_seal"
+      ],
+      "source": "official-asset",
+      "polyBudget": 200,
+      "notes": "manifesto oficial do selo; textura 4K KTX2; aplicar como decal sobre o papel, com desgaste de impressão via máscara"
+    },
+    {
+      "id": "photo.rack",
+      "zone": "photo",
+      "name": "Cabideiro tubular preto com rodas, 5 peças e cabides de madeira",
+      "azimuth": [
+        205,
+        258
+      ],
+      "elevation": [
+        -35,
+        10
+      ],
+      "size_m": [
+        1.6,
+        1.7,
+        0.5
+      ],
+      "materials": [
+        "steel_black_tube",
+        "wood_hanger",
+        "cotton_black"
+      ],
+      "source": "model",
+      "polyBudget": 12000,
+      "interactionId": "studio.merch-rack",
+      "notes": "peças: 2 tees com selo, 1 tee com estrela, 2 hoodies (um com manga cinza claro)"
+    },
+    {
+      "id": "photo.garments",
+      "zone": "photo",
+      "name": "Peças de roupa penduradas (tees e hoodies) com estampas oficiais",
+      "azimuth": [
+        207,
+        256
+      ],
+      "elevation": [
+        -15,
+        8
+      ],
+      "size_m": [
+        1.4,
+        0.8,
+        0.2
+      ],
+      "materials": [
+        "cotton_black",
+        "print_official_seal"
+      ],
+      "source": "model",
+      "polyBudget": 14000,
+      "notes": "2 faces; dobras por normal+geometria; estampa via decal do selo oficial"
+    },
+    {
+      "id": "photo.softbox_octa",
+      "zone": "photo",
+      "name": "Softbox octogonal com cabeça de luz, em tripé",
+      "azimuth": [
+        198,
+        226
+      ],
+      "elevation": [
+        -20,
+        22
+      ],
+      "size_m": [
+        0.9,
+        2,
+        0.9
+      ],
+      "materials": [
+        "fabric_black_softbox",
+        "steel_black_tube"
+      ],
+      "source": "model",
+      "polyBudget": 5200,
+      "lights": [
+        {
+          "kind": "rect",
+          "kelvin": 5600,
+          "lumens": 800,
+          "areaM2": 0.5
+        }
+      ]
+    },
+    {
+      "id": "photo.led_panel_1",
+      "zone": "photo",
+      "name": "Painel LED de vídeo com palas (barn doors), em tripé",
+      "azimuth": [
+        303,
+        326
+      ],
+      "elevation": [
+        -20,
+        22
+      ],
+      "size_m": [
+        0.55,
+        2,
+        0.4
+      ],
+      "materials": [
+        "plastic_black",
+        "led_panel_emissive",
+        "steel_black_tube"
+      ],
+      "source": "model",
+      "polyBudget": 6800,
+      "lights": [
+        {
+          "kind": "rect",
+          "kelvin": 5600,
+          "lumens": 1800,
+          "areaM2": 0.12
+        }
+      ]
+    },
+    {
+      "id": "photo.light_grid",
+      "zone": "photo",
+      "name": "Segunda luz com grelha, em tripé",
+      "azimuth": [
+        322,
+        338
+      ],
+      "elevation": [
+        -20,
+        12
+      ],
+      "size_m": [
+        0.5,
+        1.7,
+        0.4
+      ],
+      "materials": [
+        "plastic_black",
+        "steel_black_tube"
+      ],
+      "source": "model",
+      "polyBudget": 5500
+    },
+    {
+      "id": "right.shelf_unit",
+      "zone": "right",
+      "name": "Estante metálica preta com prateleiras de madeira, caixas e câmara",
+      "azimuth": [
+        343,
+        360
+      ],
+      "elevation": [
+        -20,
+        26
+      ],
+      "size_m": [
+        0.9,
+        1.8,
+        0.4
+      ],
+      "materials": [
+        "steel_black",
+        "wood_reclaimed_top",
+        "plastic_black"
+      ],
+      "source": "model",
+      "polyBudget": 9000,
+      "notes": "fita LED sob a prateleira; planta pendente (jiboia) com folhas instanciadas"
+    },
+    {
+      "id": "right.pothos",
+      "zone": "right",
+      "name": "Planta trepadeira na estante (jiboia)",
+      "azimuth": [
+        343,
+        360
+      ],
+      "elevation": [
+        4,
+        28
+      ],
+      "size_m": [
+        0.4,
+        1,
+        0.3
+      ],
+      "materials": [
+        "leaf_pothos"
+      ],
+      "source": "ai-or-cc0",
+      "polyBudget": 18000
+    },
+    {
+      "id": "right.painting",
+      "zone": "right",
+      "name": "Quadro abstracto rosa/laranja",
+      "azimuth": [
+        330,
+        347
+      ],
+      "elevation": [
+        0,
+        25
+      ],
+      "size_m": [
+        0.9,
+        1.2,
+        0.04
+      ],
+      "materials": [
+        "canvas_print_painting",
+        "wood_dark_stained"
+      ],
+      "source": "print-reference",
+      "polyBudget": 500,
+      "notes": "recorte da referência como placeholder; pedir original"
+    },
+    {
+      "id": "artists.wall",
+      "zone": "right",
+      "name": "Parede dos 17 retratos (molduras físicas) — dados do backend, nunca inventar o 18.º",
+      "azimuth": [
+        0,
+        360
+      ],
+      "elevation": [
+        -5,
+        25
+      ],
+      "size_m": [
+        3,
+        1.2,
+        0.05
+      ],
+      "materials": [
+        "wood_dark_stained",
+        "paper_matte"
+      ],
+      "source": "model",
+      "polyBudget": 9000,
+      "interactionId": "studio.artists-wall",
+      "notes": "Parede lógica dos 17 retratos ligados ao backend, sem injectar retratos inventados na imagem de referência. Slots studio.artist-slot-001…017; fallback = moldura numerada vazia."
+    },
+    {
+      "id": "arch.outlet_pair",
+      "zone": "production",
+      "name": "Duas tomadas de parede com moldura e parafusos de fixação visíveis",
+      "azimuth": [
+        145,
+        170
+      ],
+      "elevation": [
+        -14,
+        -5
+      ],
+      "size_m": [
+        0.28,
+        0.16,
+        0.04
+      ],
+      "materials": [
+        "plastic_white_abs",
+        "steel_brushed"
+      ],
+      "source": "model",
+      "polyBudget": 320,
+      "notes": "Par de tomadas baixas junto à secretária; placas alinhadas, parafusos metálicos discretos e escala realista."
+    },
+    {
+      "id": "arch.switch_plate",
+      "zone": "shell",
+      "name": "Placa de interruptor junto à porta principal",
+      "azimuth": [
+        167,
+        185
+      ],
+      "elevation": [
+        1,
+        9
+      ],
+      "size_m": [
+        0.09,
+        0.14,
+        0.025
+      ],
+      "materials": [
+        "plastic_white_abs",
+        "steel_brushed"
+      ],
+      "source": "model",
+      "polyBudget": 160,
+      "notes": "Placa simples, ligeiramente saliente, junto ao puxador; centro dentro da altura útil da parede."
+    },
+    {
+      "id": "prod.power_audio_cables",
+      "zone": "production",
+      "name": "Cabos de alimentação e áudio roteados sob a secretária",
+      "azimuth": [
+        108,
+        165
+      ],
+      "elevation": [
+        -38,
+        -12
+      ],
+      "size_m": [
+        2.4,
+        0.025,
+        0.02
+      ],
+      "materials": [
+        "plastic_black",
+        "steel_black"
+      ],
+      "source": "model",
+      "polyBudget": 1400,
+      "notes": "Cabos em curvas controladas, com abraçadeiras e descida para o subwoofer; sem cabos suspensos no ar nem a cruzar a zona de circulação."
+    },
+    {
+      "id": "prod.visible_fasteners",
+      "zone": "production",
+      "name": "Parafusos, anilhas e cabeças de fixação dos suportes",
+      "azimuth": [
+        100,
+        168
+      ],
+      "elevation": [
+        -12,
+        20
+      ],
+      "size_m": [
+        0.018,
+        0.018,
+        0.008
+      ],
+      "materials": [
+        "steel_black",
+        "steel_brushed"
+      ],
+      "source": "model",
+      "polyBudget": 650,
+      "notes": "Detalhe repetido em ferragens da secretária, suportes de monitores e painéis; instanciar quando possível e evitar ruído visual."
+    },
+    {
+      "id": "prod.equipment_labels",
+      "zone": "production",
+      "name": "Etiquetas técnicas pequenas em interface de áudio, colunas e equipamento",
+      "azimuth": [
+        116,
+        164
+      ],
+      "elevation": [
+        -5,
+        13
+      ],
+      "size_m": [
+        0.075,
+        0.022,
+        0.001
+      ],
+      "materials": [
+        "paper_matte",
+        "plastic_black"
+      ],
+      "source": "model",
+      "polyBudget": 240,
+      "notes": "Microtipografia técnica genérica; não redesenhar logótipos oficiais nem gerar texto promocional ilegível."
+    },
+    {
+      "id": "prod.pendant_cage_details",
+      "zone": "shell",
+      "name": "Uniões, aro inferior e parafusos das quatro gaiolas de candeeiros",
+      "azimuth": [
+        18,
+        338
+      ],
+      "elevation": [
+        22,
+        48
+      ],
+      "size_m": [
+        0.18,
+        0.04,
+        0.18
+      ],
+      "materials": [
+        "steel_black",
+        "steel_brushed"
+      ],
+      "source": "model",
+      "polyBudget": 900,
+      "notes": "Detalhes ligados aos quatro candeeiros pendentes já definidos; não cria uma quinta fonte de luz."
+    },
+    {
+      "id": "photo.paper_folds",
+      "zone": "photo",
+      "name": "Vincos subtis e ondulação controlada no papel de fundo fotográfico",
+      "azimuth": [
+        215,
+        325
+      ],
+      "elevation": [
+        -18,
+        7
+      ],
+      "size_m": [
+        2.7,
+        1.8,
+        0.003
+      ],
+      "materials": [
+        "paper_black_seamless"
+      ],
+      "source": "model",
+      "polyBudget": 450,
+      "notes": "Papel preto contínuo do rolo ao chão em curva suave; vincos discretos no rodapé e nas zonas de tensão, sem costura horizontal."
+    },
+    {
+      "id": "photo.led_panel_barn_doors",
+      "zone": "photo",
+      "name": "Quatro palas metálicas no painel LED de vídeo",
+      "azimuth": [
+        303,
+        326
+      ],
+      "elevation": [
+        0,
+        18
+      ],
+      "size_m": [
+        0.55,
+        0.34,
+        0.035
+      ],
+      "materials": [
+        "steel_black",
+        "plastic_black"
+      ],
+      "source": "model",
+      "polyBudget": 850,
+      "notes": "Palas reais em torno do emissor LED; ligadas ao painel já definido, sem acrescentar luzes dinâmicas."
+    },
+    {
+      "id": "photo.rack_wheels",
+      "zone": "photo",
+      "name": "Quatro rodízios e travões do cabideiro",
+      "azimuth": [
+        205,
+        258
+      ],
+      "elevation": [
+        -35,
+        -27
+      ],
+      "size_m": [
+        0.055,
+        0.075,
+        0.055
+      ],
+      "materials": [
+        "steel_black",
+        "plastic_black"
+      ],
+      "source": "model",
+      "polyBudget": 720,
+      "notes": "Quatro rodas sob a estrutura tubular; travões discretos e contacto firme com o soalho."
+    },
+    {
+      "id": "right.shelf_fasteners",
+      "zone": "right",
+      "name": "Parafusos e cantoneiras da estante metálica",
+      "azimuth": [
+        343,
+        360
+      ],
+      "elevation": [
+        -16,
+        20
+      ],
+      "size_m": [
+        0.018,
+        0.018,
+        0.008
+      ],
+      "materials": [
+        "steel_black",
+        "steel_brushed"
+      ],
+      "source": "model",
+      "polyBudget": 360,
+      "notes": "Fixações visíveis nos cantos e suportes das prateleiras; pequenas, alinhadas e sem brilho exagerado."
+    },
+    {
+      "id": "right.shelf_led_cable",
+      "zone": "right",
+      "name": "Cabo fino da fita LED por baixo da prateleira",
+      "azimuth": [
+        343,
+        360
+      ],
+      "elevation": [
+        -9,
+        8
+      ],
+      "size_m": [
+        0.8,
+        0.012,
+        0.012
+      ],
+      "materials": [
+        "plastic_black",
+        "steel_black"
+      ],
+      "source": "model",
+      "polyBudget": 260,
+      "notes": "Cabo preso à parte inferior da prateleira e encaminhado para a parede, fora da silhueta principal."
+    }
+  ],
+  "metricPlan": {
+    "version": 1,
+    "status": "phase-03-approved-target-not-yet-built",
+    "units": "metres",
+    "coordinateFrame": {
+      "origin": "centro geométrico do chão",
+      "x": "positivo para a direita de quem entra pela parede +Z",
+      "y": "vertical; topo do soalho acabado = 0",
+      "z": "positivo para a entrada; fundo do estúdio = -Z",
+      "azimuth": "convenção visual de equirect.ts: 0° olha para -Z e cresce para +X",
+      "note": "Os sectores da panorâmica descrevem composição visual, não levantamento fotogramétrico. As âncoras métricas são alvos iniciais para calibrar por A/B; não escalar pixel a pixel."
+    },
+    "room": {
+      "clearWidthM": 7.6,
+      "clearDepthM": 5.6,
+      "halfWidthM": 3.8,
+      "halfDepthM": 2.8,
+      "floorY": 0,
+      "wallHeightM": 2.85,
+      "vaultCrownY": 3.45,
+      "vaultRiseM": 0.6,
+      "wallThicknessM": 0.14,
+      "floorThicknessM": 0.02,
+      "interiorBounds": {
+        "minX": -3.8,
+        "maxX": 3.8,
+        "minZ": -2.8,
+        "maxZ": 2.8
+      },
+      "externalBounds": {
+        "widthM": 7.88,
+        "depthM": 5.88
+      },
+      "ceiling": {
+        "type": "barrel-vault",
+        "axis": "X",
+        "springLineY": 2.85,
+        "crownY": 3.45,
+        "riseM": 0.6
+      }
+    },
+    "enclosure": {
+      "closed": true,
+      "allWallsClosedByDefault": true,
+      "walls": [
+        {
+          "id": "wall.back",
+          "axis": "z",
+          "insideFaceM": -2.8,
+          "centerM": -2.87,
+          "spanM": [
+            -3.8,
+            3.8
+          ],
+          "heightM": 2.85,
+          "openings": [
+            "arch.door_left"
+          ]
+        },
+        {
+          "id": "wall.front",
+          "axis": "z",
+          "insideFaceM": 2.8,
+          "centerM": 2.87,
+          "spanM": [
+            -3.8,
+            3.8
+          ],
+          "heightM": 2.85,
+          "openings": [
+            "arch.door_main"
+          ]
+        },
+        {
+          "id": "wall.left",
+          "axis": "x",
+          "insideFaceM": -3.8,
+          "centerM": -3.87,
+          "spanM": [
+            -2.8,
+            2.8
+          ],
+          "heightM": 2.85,
+          "openings": []
+        },
+        {
+          "id": "wall.right",
+          "axis": "x",
+          "insideFaceM": 3.8,
+          "centerM": 3.87,
+          "spanM": [
+            -2.8,
+            2.8
+          ],
+          "heightM": 2.85,
+          "openings": []
+        }
+      ],
+      "openings": [
+        {
+          "elementId": "arch.door_main",
+          "wallId": "wall.front",
+          "centerM": [
+            0,
+            1.02,
+            2.8
+          ],
+          "widthM": 0.92,
+          "heightM": 2.04,
+          "closedByDoorLeaf": true
+        },
+        {
+          "elementId": "arch.door_left",
+          "wallId": "wall.back",
+          "centerM": [
+            0.8,
+            1.02,
+            -2.8
+          ],
+          "widthM": 0.9,
+          "heightM": 2.04,
+          "closedByDoorLeaf": true
+        }
+      ],
+      "note": "A casca de destino terá quatro paredes e a abóbada. Os vãos são intencionais e fechados por folhas de porta; não representam um lado ausente."
+    },
+    "cameraReference": {
+      "positionM": [
+        0,
+        1.45,
+        0
+      ],
+      "forward": [
+        0,
+        0,
+        -1
+      ],
+      "fovDeg": 68,
+      "purpose": "pose de calibração visual inicial",
+      "constraint": "Validar proporções relativas por sectores de 15° e bandas de elevação; não fazer reconstrução métrica pixel a pixel."
+    },
+    "humanScaleAnchors": [
+      {
+        "elementId": "arch.door_main",
+        "dimension": "height",
+        "valueM": 2.04
+      },
+      {
+        "elementId": "prod.desk_l",
+        "dimension": "height",
+        "valueM": 0.75
+      },
+      {
+        "elementId": "prod.monitor_daw",
+        "dimension": "width",
+        "valueM": 0.62,
+        "diagonalIn": 27,
+        "heightM": 0.37
+      },
+      {
+        "elementId": "prod.chair_leather",
+        "dimension": "backrest-height",
+        "valueM": 1.15
+      },
+      {
+        "elementId": "photo.rack",
+        "dimension": "height",
+        "valueM": 1.7
+      },
+      {
+        "elementId": "photo.softbox_octa",
+        "dimension": "tripod-height",
+        "valueM": 2
+      }
+    ],
+    "anchorPlacements": [
+      {
+        "elementId": "arch.door_main",
+        "centerM": [
+          0,
+          1.02,
+          2.8
+        ],
+        "rotationYDeg": 0,
+        "basis": "main door in front wall"
+      },
+      {
+        "elementId": "arch.door_left",
+        "centerM": [
+          0.8,
+          1.02,
+          -2.8
+        ],
+        "rotationYDeg": 0,
+        "basis": "small access door at the panorama seam, before the mural"
+      },
+      {
+        "elementId": "arch.ac_split",
+        "centerM": [
+          0.75,
+          2.57,
+          2.72
+        ],
+        "rotationYDeg": 0,
+        "basis": "split AC above the production/front wall door zone"
+      },
+      {
+        "elementId": "arch.conduit_pvc",
+        "centerM": [
+          1.6,
+          1.45,
+          2.72
+        ],
+        "rotationYDeg": 0,
+        "basis": "visible conduit routed on the front/production wall"
+      },
+      {
+        "elementId": "arch.outlet_pair",
+        "centerM": [
+          2,
+          0.18,
+          2.72
+        ],
+        "rotationYDeg": 0,
+        "basis": "pair of sockets on production wall under desk"
+      },
+      {
+        "elementId": "arch.switch_plate",
+        "centerM": [
+          0.72,
+          1.15,
+          2.72
+        ],
+        "rotationYDeg": 0,
+        "basis": "switch beside main door"
+      },
+      {
+        "elementId": "prod.plank_wall",
+        "centerM": [
+          2.5,
+          1.425,
+          2.72
+        ],
+        "rotationYDeg": 0,
+        "basis": "production wall panels on front-right wall"
+      },
+      {
+        "elementId": "prod.desk_l",
+        "centerM": [
+          2.5,
+          0.375,
+          2.12
+        ],
+        "rotationYDeg": 0,
+        "basis": "desk top at 0.75 m on the production-side wall"
+      },
+      {
+        "elementId": "prod.monitor_daw",
+        "centerM": [
+          2.5,
+          0.935,
+          2.4
+        ],
+        "rotationYDeg": 0,
+        "basis": "27-inch display centred on desk"
+      },
+      {
+        "elementId": "prod.chair_leather",
+        "centerM": [
+          2.5,
+          0.575,
+          1.25
+        ],
+        "rotationYDeg": 0,
+        "basis": "chair behind desk, overall height 1.15 m"
+      },
+      {
+        "elementId": "prod.panels_fabric",
+        "centerM": [
+          3.72,
+          1.8,
+          0.45
+        ],
+        "rotationYDeg": 90,
+        "basis": "acoustic panels on right-side wall"
+      },
+      {
+        "elementId": "prod.foam_tiles",
+        "centerM": [
+          3.72,
+          1,
+          -1.3
+        ],
+        "rotationYDeg": 90,
+        "basis": "foam grid on right-side wall near rear end"
+      },
+      {
+        "elementId": "prod.pendant_cage_1",
+        "centerM": [
+          3,
+          3.06,
+          1.8
+        ],
+        "rotationYDeg": 0,
+        "basis": "pendant for azimuth sector 114–128"
+      },
+      {
+        "elementId": "prod.pendant_cage_2",
+        "centerM": [
+          -0.4,
+          3.06,
+          2.4
+        ],
+        "rotationYDeg": 0,
+        "basis": "pendant for azimuth sector 186–198"
+      },
+      {
+        "elementId": "prod.pendant_cage_3",
+        "centerM": [
+          -1.4,
+          3.06,
+          -2.25
+        ],
+        "rotationYDeg": 0,
+        "basis": "pendant for azimuth sector 326–338"
+      },
+      {
+        "elementId": "prod.pendant_cage_4",
+        "centerM": [
+          1.1,
+          3.06,
+          -2.4
+        ],
+        "rotationYDeg": 0,
+        "basis": "pendant for azimuth sector 18–28"
+      },
+      {
+        "elementId": "prod.frame_mirror",
+        "centerM": [
+          2.25,
+          2,
+          2.72
+        ],
+        "rotationYDeg": 0,
+        "basis": "narrow frame above production desk"
+      },
+      {
+        "elementId": "prod.headphones",
+        "centerM": [
+          1.15,
+          0.88,
+          2.1
+        ],
+        "rotationYDeg": 0,
+        "basis": "desk accessory at production wall end"
+      },
+      {
+        "elementId": "left.guitar_strat",
+        "centerM": [
+          3.25,
+          0.5,
+          -1.35
+        ],
+        "rotationYDeg": -90,
+        "basis": "guitar on stand at right-side wall, azimuth 64–74"
+      },
+      {
+        "elementId": "left.palm_areca",
+        "centerM": [
+          3.15,
+          0.65,
+          -0.45
+        ],
+        "rotationYDeg": 0,
+        "basis": "potted plant at right-side wall near guitar"
+      },
+      {
+        "elementId": "left.mural_print",
+        "centerM": [
+          2,
+          1.25,
+          -2.72
+        ],
+        "rotationYDeg": 0,
+        "basis": "mural on rear wall, sized to reference"
+      },
+      {
+        "elementId": "left.roller_white",
+        "centerM": [
+          2,
+          2.55,
+          -2.72
+        ],
+        "rotationYDeg": 0,
+        "basis": "roller aligned with mural width"
+      },
+      {
+        "elementId": "left.flag_yen",
+        "centerM": [
+          0.45,
+          1.45,
+          -2.72
+        ],
+        "rotationYDeg": 0,
+        "basis": "official flag on rear wall near the panorama seam"
+      },
+      {
+        "elementId": "left.sofa_tufted",
+        "centerM": [
+          0.75,
+          0.225,
+          -1.85
+        ],
+        "rotationYDeg": 0,
+        "basis": "daybed in front of rear-wall mural/flag zone"
+      },
+      {
+        "elementId": "photo.roller_backdrop",
+        "centerM": [
+          -3.72,
+          2.68,
+          -0.15
+        ],
+        "rotationYDeg": 90,
+        "basis": "seamless paper roller on left-side photo wall"
+      },
+      {
+        "elementId": "photo.backdrop_seal",
+        "centerM": [
+          -3.72,
+          1.45,
+          -0.15
+        ],
+        "rotationYDeg": 90,
+        "basis": "official seal printed on photo wall"
+      },
+      {
+        "elementId": "photo.rack",
+        "centerM": [
+          -2.78,
+          0.85,
+          1.25
+        ],
+        "rotationYDeg": 90,
+        "basis": "five garments between camera and left photo backdrop"
+      },
+      {
+        "elementId": "photo.garments",
+        "centerM": [
+          -2.79,
+          1.08,
+          1.25
+        ],
+        "rotationYDeg": 90,
+        "basis": "five garments anchored to rack"
+      },
+      {
+        "elementId": "photo.softbox_octa",
+        "centerM": [
+          -1.75,
+          1,
+          2
+        ],
+        "rotationYDeg": -90,
+        "basis": "softbox facing left-side photo backdrop"
+      },
+      {
+        "elementId": "photo.led_panel_1",
+        "centerM": [
+          -2.55,
+          1,
+          -1.65
+        ],
+        "rotationYDeg": -90,
+        "basis": "LED panel facing left-side photo backdrop"
+      },
+      {
+        "elementId": "photo.light_grid",
+        "centerM": [
+          -1.55,
+          0.85,
+          -2.25
+        ],
+        "rotationYDeg": -90,
+        "basis": "grid light near rear corner of photo zone"
+      },
+      {
+        "elementId": "right.shelf_unit",
+        "centerM": [
+          -0.55,
+          0.9,
+          -2.6
+        ],
+        "rotationYDeg": 0,
+        "basis": "shelf on rear wall near the 360-degree panorama seam"
+      },
+      {
+        "elementId": "right.pothos",
+        "centerM": [
+          -0.55,
+          1.9,
+          -2.5
+        ],
+        "rotationYDeg": 0,
+        "basis": "hanging plant above shelf"
+      },
+      {
+        "elementId": "right.painting",
+        "centerM": [
+          -1.75,
+          1.4,
+          -2.72
+        ],
+        "rotationYDeg": 0,
+        "basis": "abstract painting on the rear wall, separated from the shelf"
+      },
+      {
+        "elementId": "artists.wall",
+        "centerM": [
+          -2.25,
+          1.55,
+          2.72
+        ],
+        "rotationYDeg": 0,
+        "basis": "backend-driven 17-slot artist wall on front wall, away from the desk"
+      },
+      {
+        "elementId": "arch.soffit_box",
+        "centerM": [
+          3.15,
+          2.62,
+          -2.45
+        ],
+        "rotationYDeg": 0,
+        "basis": "upper corner soffit integrated into the closed shell"
+      },
+      {
+        "elementId": "floor.vinyl_sweep",
+        "centerM": [
+          -1.2,
+          0.006,
+          -0.15
+        ],
+        "rotationYDeg": 0,
+        "basis": "photo floor sweep kept inside the room footprint"
+      },
+      {
+        "elementId": "prod.monitors_pair",
+        "centerM": [
+          2.5,
+          0.94,
+          2.32
+        ],
+        "rotationYDeg": 0,
+        "basis": "paired near-field speakers on left/right sides of the monitor"
+      },
+      {
+        "elementId": "prod.sub",
+        "centerM": [
+          3.2,
+          0.2,
+          1.95
+        ],
+        "rotationYDeg": 0,
+        "basis": "subwoofer beneath desk right end"
+      },
+      {
+        "elementId": "prod.keyboard_midi",
+        "centerM": [
+          2.5,
+          0.79,
+          2.2
+        ],
+        "rotationYDeg": 0,
+        "basis": "MIDI keyboard on the desk tray"
+      }
+    ],
+    "assemblyRules": [
+      {
+        "elementId": "arch.vault_ceiling",
+        "method": "barrel-vault",
+        "axis": "X",
+        "springLineY": 2.85,
+        "crownY": 3.45,
+        "ribs": 14
+      },
+      {
+        "elementId": "arch.walls_plaster",
+        "method": "four-wall-shell",
+        "wallIds": [
+          "wall.back",
+          "wall.front",
+          "wall.left",
+          "wall.right"
+        ],
+        "doorOpeningIds": [
+          "arch.door_main",
+          "arch.door_left"
+        ],
+        "keepShellClosed": true
+      },
+      {
+        "elementId": "arch.wall_black_left",
+        "method": "wall-finish-overlay",
+        "wallId": "wall.left",
+        "keepStructuralWall": true
+      },
+      {
+        "elementId": "arch.baseboard",
+        "method": "perimeter-segments",
+        "segmentLengthsM": [
+          7.6,
+          7.6,
+          5.6,
+          5.6
+        ],
+        "totalLengthM": 26.4
+      },
+      {
+        "elementId": "floor.wood",
+        "method": "floor-slab",
+        "topSurfaceY": 0,
+        "clearSizeM": [
+          7.6,
+          5.6
+        ],
+        "thicknessM": 0.02
+      },
+      {
+        "elementId": "prod.power_audio_cables",
+        "method": "attached-cable-runs",
+        "parentIds": [
+          "prod.desk_l",
+          "prod.sub"
+        ],
+        "keepOutOfWalkway": true
+      },
+      {
+        "elementId": "prod.visible_fasteners",
+        "method": "repeat-details",
+        "parentIds": [
+          "prod.plank_wall",
+          "prod.desk_l",
+          "prod.panels_fabric",
+          "right.shelf_unit"
+        ],
+        "instancingPreferred": true
+      },
+      {
+        "elementId": "prod.equipment_labels",
+        "method": "surface-decals",
+        "parentIds": [
+          "prod.monitor_daw",
+          "prod.monitors_pair",
+          "prod.sub"
+        ],
+        "noInventedBrandMarks": true
+      },
+      {
+        "elementId": "prod.pendant_cage_details",
+        "method": "repeat-details",
+        "parentIds": [
+          "prod.pendant_cage_1",
+          "prod.pendant_cage_2",
+          "prod.pendant_cage_3",
+          "prod.pendant_cage_4"
+        ],
+        "createsNewLights": false
+      },
+      {
+        "elementId": "photo.paper_folds",
+        "method": "surface-deformation",
+        "parentIds": [
+          "photo.roller_backdrop"
+        ],
+        "continuousFloorSweep": true
+      },
+      {
+        "elementId": "photo.led_panel_barn_doors",
+        "method": "attached-fixture-details",
+        "parentIds": [
+          "photo.led_panel_1"
+        ]
+      },
+      {
+        "elementId": "photo.rack_wheels",
+        "method": "repeat-details",
+        "parentIds": [
+          "photo.rack"
+        ],
+        "count": 4,
+        "contactWithFloor": true
+      },
+      {
+        "elementId": "right.shelf_fasteners",
+        "method": "repeat-details",
+        "parentIds": [
+          "right.shelf_unit"
+        ],
+        "instancingPreferred": true
+      },
+      {
+        "elementId": "right.shelf_led_cable",
+        "method": "attached-cable-run",
+        "parentIds": [
+          "right.shelf_unit"
+        ],
+        "hiddenFromHeroSilhouette": true
+      },
+      {
+        "elementId": "prod.monitors_pair",
+        "method": "two-instances",
+        "parentIds": [
+          "prod.desk_l"
+        ],
+        "instanceCentersM": [
+          [
+            1.7,
+            0.94,
+            2.32
+          ],
+          [
+            3.3,
+            0.94,
+            2.32
+          ]
+        ],
+        "count": 2
+      }
+    ],
+    "angularComposition": {
+      "cameraPoseM": [
+        0,
+        1.45,
+        0
+      ],
+      "azimuthSectorDeg": 15,
+      "elevationBandsDeg": [
+        [
+          -90,
+          -15
+        ],
+        [
+          -15,
+          25
+        ],
+        [
+          25,
+          90
+        ]
+      ],
+      "note": "Os ângulos da Bible mantêm a correspondência com a panorâmica; anchorPlacements são o alvo de plano 3D para A/B, não uma solução fotogramétrica."
+    },
+    "contracts": {
+      "interactionIds": [
+        "studio.imac",
+        "studio.artists-wall",
+        "studio.merch-rack",
+        "studio.photo-backdrop",
+        "studio.production-desk",
+        "studio.audio-system",
+        "studio.inner-door"
+      ],
+      "artistSlotIds": [
+        "studio.artist-slot-001",
+        "studio.artist-slot-002",
+        "studio.artist-slot-003",
+        "studio.artist-slot-004",
+        "studio.artist-slot-005",
+        "studio.artist-slot-006",
+        "studio.artist-slot-007",
+        "studio.artist-slot-008",
+        "studio.artist-slot-009",
+        "studio.artist-slot-010",
+        "studio.artist-slot-011",
+        "studio.artist-slot-012",
+        "studio.artist-slot-013",
+        "studio.artist-slot-014",
+        "studio.artist-slot-015",
+        "studio.artist-slot-016",
+        "studio.artist-slot-017"
+      ],
+      "portraitSource": "backend",
+      "portraitFallback": "empty-numbered-frame",
+      "brandAssetsPolicy": "official-manifests-only"
+    },
+    "runtimeCompatibility": {
+      "publishedModelPath": "/models/camping/xoyens-studio.glb",
+      "publishedBoundsMeters": {
+        "width": 14.2,
+        "depth": 9.2,
+        "wallHeight": 3.2,
+        "ceilingApex": 4.35
+      },
+      "collisionBoundsMeters": {
+        "minX": -6.55,
+        "maxX": 6.55,
+        "minZ": -4.18,
+        "maxZ": 4.08
+      },
+      "migration": "O GLB publicado e os limites de colisão continuam com o envelope legacy 14,2×9,2 m. O alvo métrico é 7,6×5,6 m. Não alterar silenciosamente colisões ou runtime na Fase 03; alinhar GLB, casca e colisões nas fases próprias de modelo/runtime."
+    },
+    "layoutAcceptance": {
+      "requiredWalls": [
+        "wall.back",
+        "wall.front",
+        "wall.left",
+        "wall.right"
+      ],
+      "requiredHumanAnchors": [
+        "arch.door_main",
+        "prod.desk_l",
+        "prod.monitor_daw",
+        "prod.chair_leather",
+        "photo.rack",
+        "photo.softbox_octa"
+      ],
+      "requiredDetailElements": [
+        "arch.outlet_pair",
+        "arch.switch_plate",
+        "prod.power_audio_cables",
+        "prod.visible_fasteners",
+        "prod.equipment_labels",
+        "prod.pendant_cage_details",
+        "photo.paper_folds",
+        "photo.led_panel_barn_doors",
+        "photo.rack_wheels",
+        "right.shelf_fasteners",
+        "right.shelf_led_cable"
+      ],
+      "budgetMustFailWhenExceeded": true,
+      "azimuthSectors": 24,
+      "sectorWidthDeg": 15,
+      "elevationBands": [
+        [
+          -90,
+          -15
+        ],
+        [
+          -15,
+          25
+        ],
+        [
+          25,
+          90
+        ]
+      ]
+    }
+  }
+}

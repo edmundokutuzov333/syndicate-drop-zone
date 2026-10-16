@@ -1,0 +1,62 @@
+Fase 04-R · diagnóstico de runners e certificação final
+Actualizado: 2026-10-14
+Repositório: edmundokutuzov333/syndicate-drop-zone
+Branch: main
+
+## 1. Anotações históricas do bloqueio de runner
+
+Classificação das falhas históricas: UNKNOWN.
+
+Os runs 38378115395 (job 115231891106), 38423793670 (job 115387875010), 38525746588 (jobs 115725652932 e 115725653309), 38525929465 (job 115726141876) e 38525393516 (job 115724441631) falharam antes de iniciar steps, com runner_id=0. A integração GitHub disponível recusou o endpoint de check-run annotations e não foi possível obter o texto original de Annotations. Portanto, billing, política de Actions, quota e provisionamento não foram confirmados. Não classificar retroactivamente a causa sem a anotação original.
+
+## 2. Execução real posterior
+
+Build CAMPING 3D - Fase 04:
+- Run: 38527906358
+- URL: https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38527906358
+- Commit de build: e40d013526e23162782c9ab0404228226022b6bd
+- Job de build: 115732530135
+- Runner: 1000012342
+- Resultado do build: success
+- Etapa "Syntax and recovery tests without Blender": success
+- Etapa "Shared route build, reopen, validate and package": success
+- Etapa "Upload outputs and evidence even on failure": success
+
+A primeira execução real revelou `IndentationError` em scripts/blender/build_all.py (corrigido no commit 4efa8ddfac9b120620e02748a67beff315d3028f). A seguinte revelou um objecto Material passado em vez de material name a finish_mesh() em scripts/blender/common.py (corrigido no commit c258de8953e628b884c850e76a9f9323c4002d9c). O pipeline foi então executado com sucesso.
+
+## 3. Certificação e artefactos reais
+
+Resultado integral do verificador: "Fase 04 certificável".
+- Blender: 4.5.14 LTS
+- .blend: 8 248 183 bytes; magic BLENDER; reaberto e validado
+- Scene: 54 elementos, 378 objectos, 371 malhas, 37 046 vértices, 62 864 triângulos estimados, 7 colecções
+- GLB: 5 693 056 bytes, 359 nós, 359 malhas, 359 primitivas, 38 materiais
+- IDs de interacção: 7/7 presentes
+- Slots de artistas: 17, IDs 001–017, sem 018
+- Materiais/UV0/UV1: nenhuma primitiva sem material, UV0 ou UV1; UV1 em 359/359
+- Extras zone e lmGroup: presentes
+- Exit codes exigidos: validate=0, blend=0, blend-check=0, verify=0
+- doctor=1 foi informativo antes da instalação; install-blender=0 e doctor-after-install=0.
+
+## 4. Promoção Git LFS real
+
+- Commit: ec362ec04665085dd2ce8ff6b5a13306b0727bd1
+- URL: https://github.com/edmundokutuzov333/syndicate-drop-zone/commit/ec362ec04665085dd2ce8ff6b5a13306b0727bd1
+- Git LFS object SHA-256 / oid: cfbffce61ed393a427b0f167847f05ba6dc1fa04df7fff64700def48909bbb58
+- Tamanho binário: 8 248 183 bytes
+- O script confirmou o pointer gerado pelo filtro LFS com a mesma oid e size, `git lfs ls-files --long --size`, `git lfs fsck --objects HEAD`, `git lfs push origin HEAD`, `git push origin HEAD:main`, e comparou o remote main com o commit local. Tudo passou. O pointer não foi criado manualmente.
+
+## 5. Checksums SHA-256
+
+- art/xoyens-studio.blend: cfbffce61ed393a427b0f167847f05ba6dc1fa04df7fff64700def48909bbb58
+- art/xoyens-studio.report.json: dd8d7e576cbe1ab76536923d3e89b748e88b394dcb9a48f0178ab843f4ce0474
+- art/out/xoyens-studio.raw.glb: 298a3ea8819f92cf21eecb540ba8bb04699762630a4aa7a655fdf46245c0a012
+- ZIP de entrega final art/_delivery/phase04-delivery-e40d013-20261014T072406.zip: 450695dd705c6f68231fa74c823e113855d5793b2c661348b0704b2bd42f25e7
+- Artifact ZIP do GitHub Actions (ID 11876836734): 88f150f558493ae7b6948901d60cd3b86643fa900293bb01fc93cf2fc0d7c3cb
+
+A cópia local do artifact foi revalidada: 15/15 entradas do manifesto passaram os seus checksums. Artifact disponível por 30 dias: https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38527906358/artifacts/11876836734
+
+## 6. Estado final
+
+Certificação da Fase 04: CERTIFIED.
+O diagnóstico exacto das falhas históricas de runner continua UNKNOWN até se obter o texto real de Annotations. Este dado não altera a certificação da entrega actual, porque o build posterior correu num runner atribuído e passou todos os critérios técnicos e de LFS.

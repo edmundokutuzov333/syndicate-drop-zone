@@ -1,0 +1,14 @@
+{
+  "rewrites": [
+    {
+      "source": "/__l5e/assets-v1/:path*",
+      "destination": "https://sindicato-do-trap.lovable.app/__l5e/assets-v1/:path*"
+    }
+  ],
+  "functions": {
+    "api/fan-video.ts": {
+      "maxDuration": 60,
+      "includeFiles": "{node_modules/ffmpeg-static/**/*,public/audio/*.mp3}"
+    }
+  }
+}

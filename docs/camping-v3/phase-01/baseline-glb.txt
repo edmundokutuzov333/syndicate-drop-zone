@@ -1,0 +1,38 @@
+CAMPING V3 / FASE 01 / BASELINE DO GLB ORIGINAL
+Ficheiro: public/models/camping/xoyens-studio.glb
+Tier de referência: high
+Origem das métricas: diagnóstico inicial registado no SUPERPROMPT_Estudio3D_22Fases.md, secção 1.
+Estado de execução: baseline histórica documentada; a execução fresca do comando continua pendente. Este ficheiro não é apresentado como stdout capturado nesta sessão.
+
+MÉTRICAS DOCUMENTADAS
+Gerador: CAMPING V2 / Xoyens Studio procedural PBR builder
+Triângulos: 13 366
+Primitivas / draw calls: 150
+Materiais: 26
+Imagens: 15 (13 embebidas; dimensões 32×32 ou 64×64)
+Tamanho: aproximadamente 1,26 MB
+UV1 (lightmap): ausente
+Extensão KHR_texture_basisu (KTX2/Basis): ausente
+Extensão EXT_meshopt_compression (Meshopt): ausente
+Materiais com normal map: 8
+Tangentes: ausentes
+
+RESULTADO ESPERADO DO CHECKER HIGH
+OK    triângulos                         13366                             <= 300000
+OK    materiais                          26                                <= 64
+OK    primitivas                         150                               <= 260
+OK    tamanho do GLB (MB)                aproximadamente 1.26               <= 16
+FALHA textura embebida mais pequena     32                                >= 1024
+OK    textura embebida maior             64                                <= 2048
+FALHA UV1 para lightmaps                 false                             obrigatório
+FALHA KTX2/BasisU                        false                             obrigatório
+FALHA Meshopt                            false                             obrigatório
+OK    mapas de normais/tangentes         8 materiais com normal map         obrigatório
+
+Total esperado: 4 violações.
+
+COMANDO DE REPRODUÇÃO
+node scripts/check-3d-budgets.mjs public/models/camping/xoyens-studio.glb high
+
+IMPORTANTE
+Este registo preserva a linha de base histórica para comparação. Antes de fechar a Fase 01, executar o comando acima num checkout com dependências/ficheiros completos e substituir/actualizar este relatório com stdout real e timestamp. Não reduzir orçamentos para forçar aprovação.

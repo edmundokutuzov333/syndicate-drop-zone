@@ -1,0 +1,343 @@
+# Camera Engineering
+
+## Phase 0, Phase 1, Phase 2, Phase 3 and Phase 4
+
+The camera feature is an isolated local capture surface. The global site shell does not render TacticalNav, footer, grain or scanlines on /camera.
+
+## Architecture
+
+/camera
+  ↓
+Camera Surface
+  ↓
+CameraManager / DeviceManager / OrientationManager / CapabilityDetector
+  ↓
+MediaStream + HTMLVideoElement
+  ↓
+TextureManager
+  ↓
+WebGL FX engine
+  ↓
+ShaderCache / FilterRegistry / FrameBuffer
+  ↓
+Canvas Output
+  ↓
+CaptureEngine
+  ├── Photo
+  └── Video + microphone
+
+Phase 3 connects the existing WebGL output to real local capture without introducing camera media persistence or Control Room coupling.
+
+## Phase 3 lifecycle
+
+### Photo
+
+1. Verify camera is active, WebGL is available and the delivered camera source is at least 3840×2160.
+2. Optional 3 s or 10 s countdown is rendered in the interface only.
+3. Trigger a short 90 ms visual flash outside the capture canvas.
+4. Force the WebGL canvas to the orientation-correct 4K dimensions.
+5. Wait for a rendered frame at the capture resolution.
+6. Export the rendered canvas to JPEG or PNG.
+7. Restore the adaptive preview resolution.
+8. Create a local object URL and open CapturePreview.
+9. User downloads the original local blob using the generated filename.
+
+### Video
+
+1. Verify camera, WebGL and 4K source capability.
+2. Optional 3 s or 10 s countdown runs before recording.
+3. Force the WebGL canvas to the orientation-correct 4K dimensions.
+4. Call canvas.captureStream(60).
+5. Route the microphone through AudioContext + MediaStreamDestination when the browser exposes the API.
+6. Combine the canvas video track with the processed microphone track.
+7. Create MediaRecorder only after runtime codec capability detection.
+8. Collect chunks without touching Supabase or remote storage.
+9. On STOP, close the recorder, build the blob, restore preview resolution and open CapturePreview.
+
+The interface countdown, flash and HUD are DOM overlays and are therefore not inserted into the canvas recording. The recorded pixels are the WebGL canvas output.
+
+## 4K rule
+
+The capture engine does not upscale a lower-resolution camera stream and call it native 4K.
+
+When the delivered camera source is true 4K or higher, capture targets 3840×2160 in landscape or 2160×3840 in portrait.
+
+When 4K is unavailable, capture is still allowed at the maximum real camera resolution actually delivered by the track. The interface exposes that resolution and the filename uses the actual dimensions instead of a false 4K tag.
+
+The preview renderer may use adaptive DPR/render scale for performance, while capture temporarily forces the output canvas to the true 4K dimensions or the actual maximum source dimensions.
+
+## Video format capability policy
+
+The application checks MediaRecorder.isTypeSupported() at runtime.
+
+Requested formats are represented explicitly:
+- MP4: H.264 / AAC
+- MOV: ProRes 422 HQ / 4444
+- MKV: H.265 / HEVC
+
+A requested format is selectable only when the current browser exposes a matching MediaRecorder MIME/codec combination. Otherwise it stays visible as unavailable instead of producing a file with the wrong codec and extension.
+
+WEBM / VP9 is retained as a browser-native fallback so that a browser with no requested MP4/MOV/MKV encoder can still record a real video.
+
+The same principle applies to TIFF. Native browser canvas export does not provide the requested Adobe RGB / CMYK TIFF pipeline, so TIFF remains unavailable until a dedicated encoder is introduced. JPEG and PNG remain native sRGB exports.
+
+## Filename strategy
+
+Files follow:
+
+SDT_YYYYMMDD_HHMMSS_FILTER_FRONT_4K.ext
+
+or
+
+SDT_YYYYMMDD_HHMMSS_FILTER_BACK_4K.ext
+
+Below 4K, the source dimensions are used instead of a false 4K tag, for example:
+
+SDT_YYYYMMDD_HHMMSS_FILTER_BACK_1920x1080.ext
+
+The actual output extension is derived from the MIME type emitted by the recorder.
+
+## Audio routing
+
+The camera stream remains owned by CameraManager.
+
+For video capture:
+camera MediaStream
+  ↓
+microphone audio track
+  ↓
+AudioContext
+  ↓
+MediaStreamDestination
+  ↓
+recording MediaStream
+
+No audio node is connected to speakers, preventing the recorder path from intentionally feeding the microphone back to the output.
+
+When AudioContext is unavailable, the engine falls back to the camera stream's live audio track where the browser exposes one.
+
+## Capture preview and cleanup
+
+CapturePreview owns only the local object URL reference.
+
+Closing the preview revokes the object URL.
+
+Route exit:
+- stops MediaRecorder when active
+- closes the audio context
+- stops capture tracks
+- restores preview resolution
+- destroys WebGL resources
+- CameraManager stops camera and microphone tracks
+
+## Existing architecture preserved
+
+Phase 3 does not change:
+- route topology
+- global shell behaviour
+- Supabase tables
+- Control Room contracts
+- privacy boundary
+- Phase 2 filter shaders
+- adaptive preview rendering
+
+The camera feature remains isolated to /camera.
+
+## Phase boundaries
+
+Phase 1: real camera + microphone, front default, device detection, switching, permission flow, native fallback, live WebGL preview, orientation and cleanup.
+
+Phase 2: real-time FX engine, dynamic grain/noise/distortion/chromatic/feedback, six filter programs, shader cache, 300 ms cross-fade, GPU resource reuse and adaptive render policy.
+
+Phase 3: photo/video capture, countdown, flash, MediaRecorder, audio routing, preview, download, filename strategy, 4K capture gate and runtime format capabilities.
+
+Phase 4: profiling, shader/uniform/texture optimisation, low-end hardening and browser lifecycle hardening.
+
+## Phase 4 engineering
+
+### Render profiling
+
+The WebGL engine now records:
+- rolling FPS and frame time
+- render CPU time
+- texture upload time
+- shader compile time
+- draw calls per frame
+- JavaScript heap usage when the browser exposes it
+- GC event count when the browser exposes a GC PerformanceObserver entry type
+- device tier, DPR and adaptive render scale
+
+GPU cost is treated as a workload proxy through render time, texture upload time and draw-call count because WebGL does not expose a portable synchronous GPU timing API across all target browsers.
+
+### Shader and uniform optimisation
+
+- shader programs remain cached by stable program key
+- program compilation is measured and never repeated for ordinary uniform changes
+- uniform locations are cached
+- unchanged uniforms are skipped instead of issuing redundant GL calls
+- dynamic values remain uniforms rather than shader defines
+- the normal render path remains one filter pass
+- two filter passes plus a blend pass are used only during the 300 ms filter transition
+
+### Texture and framebuffer reuse
+
+- two persistent video textures are reused frame-to-frame
+- video updates use texSubImage2D after initial allocation
+- transition framebuffers are reused when the output resolution has not changed
+- capture still allocates the required orientation-correct 4K surfaces only when the capture resolution actually changes
+- no per-frame WebGL texture creation is introduced
+
+### Low-end hardening
+
+Adaptive policy lowers render scale/DPR only when the measured frame budget degrades. It never changes the delivered camera track resolution.
+
+The capture path explicitly disables adaptive preview scaling while forcing the true 4K dimensions when the camera supports 4K, or the maximum real source dimensions otherwise. The preview policy is restored after capture.
+
+### Lifecycle hardening
+
+- camera recovery checks for ended video tracks when the page becomes visible again
+- camera tracks expose an ended lifecycle state instead of silently rendering a dead stream
+- WebGL context loss is intercepted and the engine can reinitialise after context restoration
+- hidden tabs stop the live render workload when not recording
+- recording keeps the render loop alive while the document is hidden
+- route cleanup remains responsible for WebGL, MediaRecorder, audio and camera resources
+
+### Bundle isolation
+
+The /camera route lazy-loads CameraPage so the heavy camera feature is no longer eagerly pulled into the initial application route payload.
+
+### Capability hardening
+
+Requested MP4, MOV and MKV formats remain capability-gated through MediaRecorder.isTypeSupported(). Unsupported encoders are never simulated by changing file extensions.
+
+TIFF remains explicitly unavailable because the requested Adobe RGB / CMYK, lossless browser-native TIFF pipeline does not exist in the current capture layer.
+
+## Phase 4 verification boundary
+
+Static/unit coverage has been expanded for codec capability gating and adaptive performance policy.
+
+Physical validation on real iPhone, Android, Safari, Chrome, Firefox, Edge, low-end GPUs and browser sleep/wake conditions still requires an actual browser/device matrix. The code is hardened for those cases, but no claim of a completed physical matrix is made until those environments have been exercised.
+
+## Phase 3 definition of done
+
+- [x] photo shutter is functional
+- [x] video shutter starts and stops recording
+- [x] 3 s timer
+- [x] 10 s timer
+- [x] timer OFF
+- [x] countdown is rendered outside the recorded canvas
+- [x] short visual flash
+- [x] 4K output canvas when the source supports 4K
+- [x] maximum real source resolution fallback below 4K
+- [x] lower-resolution camera sources are not falsely labelled 4K
+- [x] microphone is routed into video when browser audio APIs permit
+- [x] runtime MediaRecorder capability detection
+- [x] CapturePreview
+- [x] local download
+- [x] filename strategy
+- [x] front/rear capture state preserved
+- [x] object URL cleanup
+- [x] recorder/audio/WebGL cleanup
+- [x] no automatic upload
+- [x] no Supabase changes
+- [ ] physical browser/device matrix still requires real-device validation in Phase 4
+
+
+## Camera performance audit — three execution phases
+
+### Phase 1 — expensive VFX only on demand
+
+Implemented in the camera viewport:
+
+- MediaPipe face tracking starts only when a filter consumes face position, expression, pose or movement: `vamp`, `astro-haze`, `xray-mesh` and `kinetic-melt`.
+- The separate Three.js/WebGL overlay is constructed only for `vamp`, `astro-haze` and `xray-mesh`.
+- Leaving a face-tracked filter resets the face state before the next filter renders, avoiding stale tracking values.
+- The 15 filter definitions, filter order, visual controls, transition engine, camera track constraints, capture pipeline, route tree and database contracts remain unchanged.
+
+This phase targets startup latency, memory pressure and GPU-context overhead for the 12 filters that do not need the Three.js overlay, and avoids starting the MediaPipe model until face tracking is requested. This is an architectural workload reduction, not a claim of measured FPS improvement; physical device profiling remains pending.
+
+### Phase 2 — render-pipeline optimisation (implemented)
+
+- [x] Eligible single-pass frames render directly to the visible canvas, bypassing the offscreen final framebuffer and the follow-up full-frame copy.
+- [x] Direct rendering is disabled during filter transitions, scene overlays, HUD/countdown clearing or drawing, Master FX, and the `halation`/`kinetic-melt` multipass/feedback pipelines.
+- [x] The initially selected filter compiles synchronously; remaining regular filter programs compile incrementally during browser idle time where `requestIdleCallback` exists, while `setFilter` retains an on-demand compilation fallback.
+- [x] Cinematic pass shaders are compiled only when their filter/Master FX is used.
+- [x] Cinematic framebuffers are allocated only for the pass groups that need them and previously allocated buffers are resized with the preview/capture surface.
+- [x] Preview scheduling follows newly presented video frames through `requestVideoFrameCallback` when both request/cancel APIs exist, with `requestAnimationFrame` fallback.
+- [x] Recording keeps `requestAnimationFrame` active so `canvas.captureStream(60)` can continue sampling animated effects even when camera input runs below 60 FPS.
+- [x] The 300 ms cross-fade, filter registry and IDs, Master FX composition, HUD/countdown overlays, feedback state and local capture contract remain intact.
+- [ ] Runtime profiling on real devices remains pending; reduced passes/allocations are structural improvements and are not presented as measured FPS gains.
+
+### Phase 3 — device-aware preview and capture (code implemented; physical validation pending)
+
+- [x] Initial preview profile uses the actual delivered video dimensions, source frame rate when the track exposes it, device tier/DPR and active filter complexity; unavailable capabilities use an explicit tier-based fallback.
+- [x] Adaptive decisions use smoothed render CPU time and texture-upload cost as workload proxies. They do not treat a 24/30 FPS camera callback cadence as proof of slow rendering.
+- [x] Preview changes use hysteresis: two consecutive overloaded windows before degradation and three healthy windows before gradual recovery. Preview scale never changes the camera track itself.
+- [x] Dropped-frame thresholds use the reported source frame rate where available, with a fallback to observed frame cadence.
+- [x] Forced capture resolution stays outside preview adaptation. True 4K sources use orientation-correct 3840×2160 or 2160×3840 output; lower-resolution sources keep their delivered dimensions with no upscaling or false 4K label.
+- [x] Unit coverage includes a healthy 30 FPS stream, persistent overload, hysteresis/recovery, 4K-vs-1080p initial profiles, missing capabilities, high-complexity filter caps and unchanged capture output dimensions.
+- [ ] Physical profiling on iPhone Safari, Android Chrome, desktop browsers and lower-end GPUs is still required for real FPS/frame time, dropped frames, upload cost, thermal degradation, recording stability and visual fidelity.
+- [ ] MediaPipe inference cadence/input-size tuning is intentionally deferred until the 3D face effects and kinetic-melt motion can be visually checked on real devices.
+
+Render time and texture-upload duration are CPU-visible workload proxies; this implementation does not claim portable direct GPU-time measurements. FPS and frame time may reflect source-frame arrival cadence when requestVideoFrameCallback is active, so they are not used alone as renderer-overload signals.
+### Phase 1 verification boundary
+
+No camera backend or Supabase schema change is required: capture remains local, with no media upload or camera-specific persistence. No route, global shell or Control Room contract is changed. CI results and the active deployment status are reported separately from physical-device validation; inaccessible preview hosts are not treated as a passed runtime test.
+
+## Glitch Camera Engine — Phase 1 (live shader foundation)
+
+The first reference-driven preset set is registered as seven separate GLSL fragment programs. Existing filter IDs and shader bodies remain unchanged. Each preset receives the live camera texture and shader time; switching presets uses the existing WebGLEngine transition lifecycle and 300 ms cross-fade.
+
+| New preset | Visual reference mapping | Runtime treatment |
+|---|---|---|
+| CRT CLASSIC | 1, 4 | curved glass mask, RGB phosphor split, scanlines, vignette, subtle bloom and shimmer |
+| VHS TRACKING | 2, 10, 11 | per-line horizontal displacement, rolling tracking band, RGB shift, monochrome/cool grading and tearing |
+| NIGHT CCTV | 4, 8 | blue/cyan low-light response, high-contrast luma, temporal flicker, rolling interference and sensor static |
+| DATAMOSH | 3, 7, 9, 13 | motion-difference mask, horizontal slice displacement and processed-frame persistence |
+| FIRE BLOOM | 6, 7 | highlight threshold, four-tap bloom, hot red/orange grading and time-driven exposure flicker |
+| NEON CYBERPUNK | 5, 12, 13 | RGB channel separation, cyan/magenta grading, posterisation and animated glitch strips |
+| ANALOG INTERFERENCE | 2, 3, 8, 9, 10, 11 | olive/amber monochrome, jitter, rolling interference, scratches, noisy grain and contrast modulation |
+
+### Datamosh temporal pipeline
+
+- The processed output is copied into two lazily allocated ping-pong framebuffers; each frame samples the prior processed frame while rendering into a different target.
+- History targets are downsampled so their long edge does not exceed 1280 pixels. The live/capture output remains at the active canvas resolution; only the temporal trail buffer is reduced.
+- History is reset when the input source changes, when Datamosh is entered, on framebuffer resize and during cleanup. The initial frame falls back to the existing prior-camera-frame texture.
+- Direct-to-canvas rendering is disabled for Datamosh to prevent a feedback read/write hazard. Non-temporal presets continue on the normal single-pass route.
+- Each effect maps to an independent fragment body compiled/cached by the existing shader cache; the selection does not run a preset switch in a monolithic shader. Motion comes from shader time, previous camera frames or processed-frame history, not an animated thumbnail.
+
+### Three implementation phases
+
+1. Phase 1 — engine and seven live shader presets: implemented in this commit; existing filters, capture path and camera route are retained.
+2. Phase 2 — preset-specific UI controls: add per-preset intensity, RGB split, tracking and grain controls wired to existing uniforms without changing the global shell.
+3. Phase 3 — device profiling and polish: validate mobile GPU cost, visual fidelity, recording output, cross-browser shader compilation and fallback behavior, then tune defaults from measurements.
+
+Camera processing remains client-side because the real-time preview and MediaRecorder capture use the same WebGL canvas. No database/API persistence is introduced in this phase; no new server data contract is required. Persisted/shareable preset configurations, if later required, should be added separately with an explicit schema and access policy.
+
+## Glitch Camera Engine — Phase 2 (live per-preset controls)
+
+The existing camera UI now renders a compact tuning panel only when one of the seven new glitch presets is selected. Each slider is bound to a named GLSL uniform declared in that preset shader, and changes are sent immediately to WebGLEngine; there is no Apply action or per-frame shader recompilation.
+
+| Preset | Live controls |
+|---|---|
+| CRT CLASSIC | Intensity, RGB split, scanline strength, curvature, grain |
+| VHS TRACKING | Tracking amplitude, tearing amplitude, RGB split, temporal trail, noise |
+| NIGHT CCTV | Signal gain, sensor static, rolling-band intensity, ghost trail |
+| DATAMOSH | Smear/displacement, temporal feedback, channel split, grain |
+| FIRE BLOOM | Bloom, halo spread, highlight threshold, warmth, grain |
+| NEON CYBERPUNK | RGB split, saturation, glitch strips, noise |
+| ANALOG INTERFERENCE | Tearing, contrast, ghosting, grain |
+
+The per-filter override store is keyed by FilterId and only applies declared controls to that filter's compiled program. The engine clamps values to each control's min/max and retains overrides across filter switching. React owns editable UI state and restores it if the WebGL context is recreated. All presets use the same preview canvas as MediaRecorder, so live recording contains the current slider values; slider tuning stays enabled during recording, while countdown, processing and capture preview lock the controls.
+
+The tuning panel uses the site's existing compact mono / dark / blood-red design language. It avoids extra rendering libraries and backdrop filters; per-frame work is limited to setting the active shader's already-declared uniforms. No API endpoint or database migration is needed for volatile live tuning values. Persisted or shareable presets remain separate work.
+
+## Execution update: 09 Outubro 2026
+
+The live camera engine retains the original fifteen filters and the seven independently registered analog/glitch shaders. The CRT CLASSIC shader now adds a time-modulated blue/cyan/magenta/orange/yellow thermal palette while retaining its curvature, RGB separation, phosphor pattern, scanlines, bloom and grain.
+
+NIGHT CCTV now displays the existing camera timecode HUD on the processed canvas, in the same render path used by video capture. The per-preset control path shares a testable normalizer that rejects non-finite values and unknown uniforms before applying min/max bounds.
+
+The regression suite now checks that each of the seven preset sliders corresponds to a declared and referenced GLSL float uniform, that clamp and invalid-value behavior is correct, and that the CRT thermal palette is animated. The control panel's small type and slider hit area were increased for legibility and touch interaction while retaining the monochrome / red industrial style.
+
+Adaptive rendering remains driven by measured CPU render duration and texture-upload duration as workload proxies, with hysteresis. These metrics are not portable direct GPU timing. Preview scaling does not change the camera stream and remains disabled while a forced capture output resolution is active. Physical browser, device, GPU, codec and memory certification remains pending under GitHub Issue #4.

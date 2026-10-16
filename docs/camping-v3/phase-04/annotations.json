@@ -1,0 +1,154 @@
+{
+  "observedAt": "2026-10-14T07:24:30Z",
+  "repository": "edmundokutuzov333/syndicate-drop-zone",
+  "branch": "main",
+  "historicalRunnerFailureClassification": "UNKNOWN",
+  "historicalRunnerFailureSummary": "The old jobs had runner_id=0 and steps=[]; the GitHub integration could not return the original check-run Annotations. Billing, policy, quota, and provisioning were not confirmed.",
+  "annotationRead": {
+    "attempted": true,
+    "endpointPattern": "GET /repos/{owner}/{repo}/check-runs/{check_run_id}/annotations",
+    "outcome": "The available GitHub connector refused this endpoint. No exact annotation text was obtained.",
+    "tokenAvailableInExecutionEnvironment": false
+  },
+  "historicalRuns": [
+    {
+      "runId": 38378115395,
+      "jobId": 115231891106,
+      "workflow": "Build CAMPING 3D (Blender headless)",
+      "runnerId": 0,
+      "runnerName": "",
+      "steps": 0,
+      "conclusion": "failure"
+    },
+    {
+      "runId": 38423793670,
+      "jobId": 115387875010,
+      "workflow": "Camera Production CI",
+      "runnerId": 0,
+      "runnerName": "",
+      "steps": 0,
+      "conclusion": "failure"
+    },
+    {
+      "runId": 38525746588,
+      "jobId": 115725652932,
+      "workflow": "Runner smoke test / ubuntu-24.04",
+      "runnerId": 0,
+      "runnerName": "",
+      "steps": 0,
+      "conclusion": "failure"
+    },
+    {
+      "runId": 38525746588,
+      "jobId": 115725653309,
+      "workflow": "Runner smoke test / ubuntu-22.04",
+      "runnerId": 0,
+      "runnerName": "",
+      "steps": 0,
+      "conclusion": "failure"
+    },
+    {
+      "runId": 38525929465,
+      "jobId": 115726141876,
+      "workflow": "Camera Production CI",
+      "runnerId": 0,
+      "runnerName": "",
+      "steps": 0,
+      "conclusion": "failure"
+    },
+    {
+      "runId": 38525393516,
+      "jobId": 115724441631,
+      "workflow": "Build CAMPING 3D - Fase 04",
+      "runnerId": 0,
+      "runnerName": "",
+      "steps": 0,
+      "conclusion": "failure"
+    }
+  ],
+  "successfulBuild": {
+    "runId": 38527906358,
+    "url": "https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38527906358",
+    "workflow": "Build CAMPING 3D - Fase 04",
+    "sourceCommit": "e40d013526e23162782c9ab0404228226022b6bd",
+    "jobId": 115732530135,
+    "runnerId": 1000012342,
+    "conclusion": "success",
+    "steps": {
+      "syntaxAndRecoveryTests": "success",
+      "sharedRouteBuildReopenValidateAndPackage": "success",
+      "uploadArtifacts": "success"
+    },
+    "blenderVersion": "4.5.14 LTS",
+    "metrics": {
+      "sceneBibleElements": 54,
+      "objects": 378,
+      "meshObjects": 371,
+      "vertices": 37046,
+      "estimatedTriangles": 62864,
+      "blendBytes": 8248183,
+      "glbBytes": 5693056,
+      "glbNodes": 359,
+      "glbMeshes": 359,
+      "glbPrimitives": 359,
+      "glbMaterials": 38,
+      "interactionsFound": 7,
+      "artistSlotsFound": 17,
+      "artistSlotsExpected": 17,
+      "primitivesMissingMaterial": 0,
+      "primitivesMissingUV0": 0,
+      "primitivesMissingUV1": 0
+    },
+    "exitCodes": {
+      "doctor": 1,
+      "installBlender": 0,
+      "doctorAfterInstall": 0,
+      "npmInstall": 0,
+      "recoveryTests": 0,
+      "pyCompile": 0,
+      "validate": 0,
+      "blend": 0,
+      "blendCheck": 0,
+      "verify": 0
+    },
+    "certificationOutput": "Fase 04 certificável"
+  },
+  "lfsPromotion": {
+    "commit": "ec362ec04665085dd2ce8ff6b5a13306b0727bd1",
+    "commitUrl": "https://github.com/edmundokutuzov333/syndicate-drop-zone/commit/ec362ec04665085dd2ce8ff6b5a13306b0727bd1",
+    "jobId": 115733117500,
+    "conclusion": "success",
+    "file": "art/xoyens-studio.blend",
+    "pointerWasGeneratedByGitLfsFilter": true,
+    "pointerSHA256MatchesBinary": true,
+    "pointerSizeMatchesBinary": true,
+    "lfsLsFiles": "cfbffce61ed393a427b0f167847f05ba6dc1fa04df7fff64700def48909bbb58 * art/xoyens-studio.blend (8.2 MB)",
+    "lfsFsck": "success",
+    "lfsPush": "success",
+    "gitPushMain": "success",
+    "remoteMainMatchesPublishedCommit": true,
+    "bytes": 8248183,
+    "sha256": "cfbffce61ed393a427b0f167847f05ba6dc1fa04df7fff64700def48909bbb58"
+  },
+  "sha256": {
+    "blend": "cfbffce61ed393a427b0f167847f05ba6dc1fa04df7fff64700def48909bbb58",
+    "report": "dd8d7e576cbe1ab76536923d3e89b748e88b394dcb9a48f0178ab843f4ce0474",
+    "glb": "298a3ea8819f92cf21eecb540ba8bb04699762630a4aa7a655fdf46245c0a012",
+    "deliveryZip": "450695dd705c6f68231fa74c823e113855d5793b2c661348b0704b2bd42f25e7",
+    "githubArtifactZip": "88f150f558493ae7b6948901d60cd3b86643fa900293bb01fc93cf2fc0d7c3cb"
+  },
+  "artifacts": {
+    "githubArtifactId": 11876836734,
+    "githubArtifactName": "fase04-entrega-e40d013526e23162782c9ab0404228226022b6bd",
+    "expiresAt": "2026-11-13T07:24:07Z",
+    "downloadUrl": "https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38527906358/artifacts/11876836734",
+    "independentManifestChecks": {
+      "total": 15,
+      "passed": 15,
+      "failed": 0
+    }
+  },
+  "certification": "CERTIFIED",
+  "interpretation": "Certification is based on a real hosted Blender execution, reopen, strict delivery verification, and successful real Git LFS promotion. The historical runner-provisioning failure's exact cause remains UNKNOWN because the original annotation was unavailable.",
+  "nextAction": "Keep the issue about historical runner assignment open until original Annotations can be captured or the owner decides that the transient issue is resolved."
+}

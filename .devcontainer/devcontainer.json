@@ -1,0 +1,12 @@
+{
+  "name": "SDT 3D Fase 04 - Blender 4.5",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" },
+    "ghcr.io/devcontainers/features/git-lfs:1": {},
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.11" }
+  },
+  "hostRequirements": { "cpus": 4, "memory": "8gb", "storage": "32gb" },
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y --no-install-recommends zip xz-utils libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libegl1 libxkbcommon0 libsm6 libice6 libx11-6 libxext6 libgomp1 && bash scripts/3d/install-blender.sh",
+  "customizations": { "vscode": { "extensions": ["ms-python.python", "dbaeumer.vscode-eslint"] } }
+}

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /control-room
+Disallow: /control-room/
+Disallow: /carteira/
+
+Sitemap: https://syndicate-drop-zone.vercel.app/sitemap.xml
