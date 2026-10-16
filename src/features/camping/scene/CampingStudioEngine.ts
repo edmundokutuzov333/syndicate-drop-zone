@@ -40,6 +40,7 @@ import { getRoomTransitionTarget } from "./camping-object-contracts";
 import { applyCampingReferenceComposition, CAMPING_REFERENCE_COMPOSITION } from "./camping-reference-composition";
 import { frequency } from "@/lib/frequency";
 import { DynamicResolution } from "../v3/dynamic-resolution";
+import { bindLightmaps } from "../v3/asset-loader";
 import { createDawScreen } from "../v3/screen-texture";
 import { renderEquirect, rgbaToDataUrl, createDifferenceImage } from "../v3/refmatch";
 import { referenceMatchScore, sectorStats, type Rgba } from "../v3/sector-stats";
@@ -2310,6 +2311,7 @@ export class CampingStudioEngine {
           return;
         }
         const root = gltf.scene;
+        void this.applyTierLightmaps(root);
         root.name = "CAMPING / XOYENS STUDIO GLB";
         root.visible = this.phase !== "LOCKED" && this.phase !== "CODE_ENTRY" && this.phase !== "ACCESS_GRANTED";
         const modelSource = normalizeCampingModel(root);
@@ -2526,6 +2528,24 @@ export class CampingStudioEngine {
         this.callbacks.onWebGLFailure(reason);
       },
     );
+  }
+
+  private async applyTierLightmaps(root: THREE.Group): Promise<void> {
+    const lightmapPx = this.qualityTier.lightmapPx;
+    if (!this.ktx2Loader || lightmapPx <= 0) return;
+    const groups = ["shell", "production", "photo", "left", "right"] as const;
+    const lightmaps = new Map<string, THREE.Texture>();
+    await Promise.all(groups.map(async (group) => {
+      try {
+        const texture = await this.ktx2Loader!.loadAsync(`/models/camping/lm/LM_${group}_${lightmapPx}.ktx2`);
+        lightmaps.set(group, texture);
+      } catch {
+        // The authored AO/IBL path remains valid when an optional tier map is absent.
+      }
+    }));
+    if (this.disposed || !lightmaps.size) return;
+    bindLightmaps(root, lightmaps, this.renderer?.capabilities.getMaxAnisotropy() ?? 1);
+    if (this.canvas) this.canvas.dataset.campingLightmapTier = String(lightmapPx);
   }
 
 
