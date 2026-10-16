@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, type ErrorComponentProps } from "@tanstac
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Room } from "@/components/BunkerMap";
 import { CampingStudioExperience } from "@/features/camping/scene/CampingStudioExperience";
+import { LightmapDebugOverlay } from "@/features/camping/v3/LightmapDebugOverlay";
 import "@/features/camping/scene/camping-route.css";
 import { ArtistPresence } from "@/components/ArtistPresence";
 import { CampingLive } from "@/components/CampingLive";
@@ -139,6 +140,8 @@ function Camping() {
         onClosePanels={closeRecords}
         onLeave={leaveCamping}
       />
+
+      <LightmapDebugOverlay />
 
       <aside className="camping-records-drawer" hidden={!recordsOpen} aria-label="Registos operacionais do Camping">
         <header className="camping-records-drawer__header">

@@ -1,0 +1,97 @@
+.camping-lightmap-debug {
+  position: fixed;
+  z-index: 90;
+  top: 14px;
+  right: 14px;
+  width: min(480px, calc(100vw - 28px));
+  max-height: min(84vh, 780px);
+  overflow: auto;
+  padding: 14px;
+  color: #eee5d6;
+  background: rgba(9, 8, 7, 0.97);
+  border: 1px solid rgba(217, 160, 94, 0.6);
+  box-shadow: 0 18px 70px rgba(0, 0, 0, 0.62);
+  backdrop-filter: blur(14px);
+  font: 10px/1.45 "Space Mono", monospace;
+}
+.camping-lightmap-debug__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #493421;
+}
+.camping-lightmap-debug__header p {
+  margin: 0;
+  color: #b8a58f;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+.camping-lightmap-debug__header h2 {
+  margin: 3px 0 0;
+  color: #f0d4b1;
+  font: 700 14px/1.2 "Space Mono", monospace;
+}
+.camping-lightmap-debug__header button {
+  border: 1px solid #88603d;
+  padding: 7px 9px;
+  color: #ffbd73;
+  background: transparent;
+  font: 8px "Space Mono", monospace;
+  cursor: pointer;
+}
+.camping-lightmap-debug__header button:disabled { opacity: 0.55; cursor: wait; }
+.camping-lightmap-debug__summary {
+  display: grid;
+  gap: 4px;
+  padding: 10px 0;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid #493421;
+}
+.camping-lightmap-debug__summary p,
+.camping-lightmap-debug__footnote,
+.camping-lightmap-debug__empty,
+.camping-lightmap-debug__error {
+  margin: 0;
+  color: #b8a58f;
+}
+.camping-lightmap-debug__summary strong.is-match { color: #8bd5a4; }
+.camping-lightmap-debug__summary strong.is-mismatch,
+.camping-lightmap-debug__error { color: #ff887b; }
+.camping-lightmap-debug__summary code {
+  color: #cbb69a;
+  font-size: 8px;
+  overflow-wrap: anywhere;
+}
+.camping-lightmap-debug__tier {
+  padding: 9px 0;
+  border-bottom: 1px solid #493421;
+}
+.camping-lightmap-debug__tier h3 {
+  margin: 0 0 7px;
+  color: #f0d4b1;
+  font: 700 9px/1.4 "Space Mono", monospace;
+}
+.camping-lightmap-debug__group {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 8px;
+  padding: 3px 0;
+  color: #b8a58f;
+  font-size: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.camping-lightmap-debug__group strong { color: #e5cba7; }
+.camping-lightmap-debug__footnote { padding-top: 9px; font-size: 8px; }
+@media (max-width: 600px) {
+  .camping-lightmap-debug {
+    top: 8px;
+    right: 8px;
+    width: calc(100vw - 16px);
+    max-height: 70vh;
+    padding: 10px;
+  }
+  .camping-lightmap-debug__group { grid-template-columns: 1fr auto auto; }
+  .camping-lightmap-debug__group span:last-child { display: none; }
+}
