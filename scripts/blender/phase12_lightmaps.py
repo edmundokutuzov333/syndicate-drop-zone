@@ -49,13 +49,51 @@ def scale_density(o,d):
     if not layer or area<=1e-10 or ua<=1e-12:raise RuntimeError(o.name+": área UV degenerada")
     factor=math.sqrt(area*d*d/ua);pts=[x.uv.copy() for x in layer.data];centre=sum(pts,start=pts[0].copy()*0)/max(1,len(pts))
     for x in layer.data:x.uv=centre+(x.uv-centre)*factor
+def mark_uv_seams(items):
+    """Preserve Smart UV Project island boundaries for a stretch-minimising unwrap."""
+    for o in items:
+        bm=bmesh.new()
+        try:
+            bm.from_mesh(o.data)
+            uv=bm.loops.layers.uv.get("UV_Lightmap")
+            if uv is None:continue
+            for edge in bm.edges:
+                if len(edge.link_faces)!=2:continue
+                maps=[]
+                for face in edge.link_faces:
+                    maps.append({loop.vert:loop[uv].uv.copy() for loop in face.loops if loop.vert in edge.verts})
+                if len(maps)==2 and all(v in maps[0] and v in maps[1] for v in edge.verts):
+                    if any((maps[0][v]-maps[1][v]).length>1e-6 for v in edge.verts):edge.seam=True
+            bm.to_mesh(o.data)
+        finally:bm.free()
 def unwrap(items):
     if not items:return
     select(items)
-    try:bpy.ops.object.mode_set(mode="EDIT");bpy.ops.mesh.select_all(action="SELECT");bpy.ops.uv.smart_project(angle_limit=math.radians(ANGLE),island_margin=.003)
+    try:
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_all(action="SELECT")
+        bpy.ops.uv.smart_project(angle_limit=math.radians(ANGLE),island_margin=.003)
     finally:
         if bpy.context.object and bpy.context.object.mode!="OBJECT":bpy.ops.object.mode_set(mode="OBJECT")
         bpy.ops.object.select_all(action="DESELECT")
+    # Keep the mandated 66-degree island boundaries, then refine each island
+    # without relaxing the 1.15 stretch gate.
+    mark_uv_seams(items)
+    select(items)
+    try:
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_all(action="SELECT")
+        bpy.ops.uv.unwrap(method="ANGLE_BASED",margin=.003)
+        bpy.ops.uv.minimize_stretch(iterations=10)
+    finally:
+        if bpy.context.object and bpy.context.object.mode!="OBJECT":bpy.ops.object.mode_set(mode="OBJECT")
+        bpy.ops.object.select_all(action="DESELECT")
+def sync_build_report(path):
+    report_path=Path("art/xoyens-studio.report.json").resolve()
+    if not report_path.is_file():raise RuntimeError("art/xoyens-studio.report.json em falta após UV2")
+    report=json.loads(report_path.read_text(encoding="utf-8"))
+    report["blend_bytes"]=path.stat().st_size
+    report_path.write_text(json.dumps(report,indent=2,sort_keys=True)+"\n",encoding="utf-8")
 def pack(items):
     if not items:return
     select(items)
@@ -94,7 +132,10 @@ def apply_uv2():
                 if i>=0:o.data.uv_layers.active_index=i
         path=Path(bpy.data.filepath).resolve()
         if not path.is_file():failures.append("ficheiro Blender sem caminho guardado")
-        elif not failures:bpy.ops.wm.save_as_mainfile(filepath=str(path))
+        elif not failures:
+            bpy.ops.wm.save_as_mainfile(filepath=str(path))
+            try:sync_build_report(path)
+            except Exception as e:failures.append("sincronização do relatório Blender falhou: "+str(e))
     except Exception as e:failures.append("unwrap/packing falhou: "+str(e))
     return {"phase":12,"status":"uv2-applied" if not failures else "failed","sourceCommit":commit(),"meshCount":len(allm),"groups":list(GROUPS),"smartProjectAngleDegrees":ANGLE,"smartProjectIslandMargin":.003,"packMargin":MARGIN,"paddingAt4096Px":MARGIN*4096,"failures":failures}
 def stretch(o):
