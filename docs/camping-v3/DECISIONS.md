@@ -253,3 +253,11 @@ O bake de irradiância Cycles gera EXR/PNG por grupo e tier, IBL e captura de ev
 **Decisão:** adicionar o directório do script a `sys.path` antes dos imports locais nos dois entrypoints. Executar o bake apenas quando `CAMPING_PHASE >= 13`, para que uma falha da Fase 13 não bloqueie indevidamente a certificação da Fase 12. A suite Playwright passa a aguardar até 60 s pelo GLB de 13,5 MB e a aceitar o fallback acessível como resultado explícito, recolhendo diagnósticos quando o modelo não fica pronto.
 
 **Estado:** correcção submetida para validação em GitHub Actions. A Fase 12 continua aberta; os gates de UV2, stretching, orçamento, publicação e E2E ainda têm de passar. Não se alteraram tolerâncias nem budgets.
+
+## 2026-10-16 · D044 · Corrigir erro do planeador sem relaxar o contrato
+
+**Evidência:** o run [38872613074](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38872613074) falhou nos testes de recuperação porque `planSingleAtlas` passou a usar `MARGIN` sem declarar a constante. A execução seguinte [38872724687](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38872724687) valida o fix no commit [f9f21a0](https://github.com/edmundokutuzov333/syndicate-drop-zone/commit/f9f21a0e759157c2d6538199c6f1be968e9c7f83).
+
+**Decisão:** declarar `MARGIN=0.004`, mantendo o padding do contrato. Não reduzir budgets nem alterar tolerâncias. A build Blender e o Camera Production CI permanecem sem conclusão, por isso nenhuma fase é certificada neste registo.
+
+**Bloqueio estrutural:** o kit launchers exige os verificadores de manifesto/hash, contrato de promoção e E2E público, mas esses cinco ficheiros ainda não existem na main. A migração tem de preservar o GLB antigo fora de `public/`, gerar tiers e colliders reais, publicar `manifest.json`, adaptar o loader e só então executar verificação de preview/produção. Não declarar certificação antes desse percurso completo.
