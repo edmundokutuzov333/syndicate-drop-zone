@@ -9,7 +9,7 @@
 - Métricas baseadas em `renderer.info`.
 - Referência sectorial com SHA-256 do ficheiro original.
 - Overlay de QA gated por `?debug3d=1&refmatch=1`.
-- Gate de baseline `npm run check:camping-baseline`, ligado ao CI e desenhado para detectar alterações inesperadas às quatro violações históricas.
+- Gate `npm run check:camping-baseline`, ligado ao CI, que valida os budgets high do GLB actualmente publicado. Não exige que as quatro violações do GLB legado continuem presentes; o relatório `baseline-glb.txt` preserva as medições históricas separadamente.
 - Teste Playwright no ficheiro `tests/radio/camping-entry.spec.ts`: verifica que a API não é exposta por defeito e captura as sete poses do perfil high actual, com métricas e score anexados ao relatório.
 
 ## Pendente para fechar a fase
