@@ -43,6 +43,7 @@ export function requiredFilesForPhase(phase = PHASE_DEFAULT) {
   if (number >= 14) {
     required.push("art/out/xoyens-studio.colliders.glb");
     required.push("public/models/camping/xoyens-studio.colliders.glb");
+    required.push("public/models/camping/manifest.json");
   }
   return required;
 }
@@ -142,6 +143,18 @@ export function phasePrerequisiteFailures(root = ".", phase = PHASE_DEFAULT) {
     if (report) {
       const validation = validateBakeReport(report, root);
       for (const failure of validation.failures) failures.push("Phase 13: " + failure);
+    }
+  }
+
+  if (number >= 14) {
+    const publicManifest = load("public/models/camping/manifest.json", "Phase 14 public model manifest");
+    if (publicManifest) {
+      add(publicManifest.schema === 1, "Phase 14 public manifest schema must be 1");
+      add(publicManifest.phase === number, "Phase 14 public manifest phase must be " + number);
+      add(Array.isArray(publicManifest.files) && publicManifest.files.some((file) => file.role === "visual" && file.tier === "high"),
+        "Phase 14 public manifest high tier missing");
+      add(Array.isArray(publicManifest.files) && publicManifest.files.some((file) => file.role === "collider" && file.tier === "canonical"),
+        "Phase 14 public manifest canonical collider missing");
     }
   }
 

@@ -8,11 +8,18 @@ on:
       - "scripts/fetch-cc0-materials.mjs"
       - "scripts/validate-pbr-materials.mjs"
       - "scripts/3d/**"
+      - "scripts/ci/verify-public-model.mjs"
+      - "tests/verify-public-model.test.mjs"
+      - "tests/e2e/camping-experience.spec.ts"
       - "scripts/fetch-brand-assets.mjs"
       - "scripts/build-3d.mjs"
       - "scripts/check-3d-budgets.mjs"
       - "scripts/plan-lightmaps.mjs"
       - "docs/camping-v3/phase-12/**"
+      - "docs/camping-v3/phase-10/**"
+      - "docs/camping-v3/phase-11/**"
+      - "docs/camping-v3/phase-13/**"
+      - "docs/camping-v3/phase-14/**"
       - "src/features/camping/scene/CampingStudioEngine.ts"
       - "src/features/camping/scene/camping-model-compatibility.ts"
       - "vite.config.ts"
@@ -32,9 +39,9 @@ concurrency:
   cancel-in-progress: true
 permissions:
   contents: read
-# Release target: build and validate Phase 12 UV2/lightmap planning before canonical promotion.
+# Release target: build and validate Phases 10-14 before canonical promotion.
 env:
-  CAMPING_PHASE: "12"
+  CAMPING_PHASE: "14"
 jobs:
   build:
     name: Build, reopen and certify Blender delivery
@@ -75,7 +82,7 @@ jobs:
           find scripts -name '*.mjs' -type f -print0 | while IFS= read -r -d '' file; do node --check "$file"; done
           find scripts -name '*.sh' -type f -print0 | while IFS= read -r -d '' file; do bash -n "$file"; done
           python3 -m py_compile scripts/blender/*.py
-          node --test scripts/3d/recovery.test.mjs scripts/3d/pbr-materials.test.mjs scripts/3d/delivery-phase.test.mjs scripts/3d/phase12-lightmaps.test.mjs
+          node --test scripts/3d/recovery.test.mjs scripts/3d/pbr-materials.test.mjs scripts/3d/delivery-phase.test.mjs scripts/3d/phase12-lightmaps.test.mjs scripts/3d/phase13-bake.test.mjs tests/verify-public-model.test.mjs
       - name: Shared route build, reopen, validate and package
         shell: bash
         run: bash scripts/3d/local-build.sh
@@ -88,6 +95,8 @@ jobs:
             public/models/camping/xoyens-studio.glb
             public/models/camping/xoyens-studio.model.json
             public/models/camping/xoyens-studio.colliders.glb
+            public/models/camping/manifest.json
+            public/models/camping/xoyens-studio.*.glb
           if-no-files-found: error
           retention-days: 30
       - name: Render and verify Phase 06 evidence views
@@ -176,24 +185,25 @@ jobs:
             echo "Exit codes:"
             cat art/_delivery/exit-codes.txt 2>/dev/null || echo "not created"
             echo "Delivery SHA-256:"
-            find art/_delivery -maxdepth 1 -name 'phase12-delivery-*.sha256' -type f -exec cat {} \; 2>/dev/null || true
+            find art/_delivery -maxdepth 1 -name 'phase14-delivery-*.sha256' -type f -exec cat {} \; 2>/dev/null || true
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Upload outputs and evidence even on failure
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: camping-v3-phase12-delivery-${{ github.sha }}
+          name: camping-v3-phase14-delivery-${{ github.sha }}
           retention-days: 30
           if-no-files-found: warn
           path: |
             art/_delivery/**
-            !art/_delivery/phase12-delivery-*.zip
-            !art/_delivery/phase12-delivery-*.tar.gz
+            !art/_delivery/phase14-delivery-*.zip
+            !art/_delivery/phase14-delivery-*.tar.gz
             art/xoyens-studio.blend
             art/xoyens-studio.report.json
             art/out/xoyens-studio.raw.glb
             art/out/optimized/xoyens-studio.high.glb
             art/out/xoyens-studio.colliders.glb
+            docs/camping-v3/legacy-glb-sha256.txt
             art/out/phase07-surfaces.json
             art/xoyens-studio.phase07.report.json
             art/xoyens-studio.phase08.report.json
@@ -244,7 +254,7 @@ jobs:
       - name: Download certified Blender delivery
         uses: actions/download-artifact@v7
         with:
-          name: camping-v3-phase12-delivery-${{ github.sha }}
+          name: camping-v3-phase14-delivery-${{ github.sha }}
           path: /tmp/phase12-delivery
       - name: Download Phase 12 lightmap plan
         uses: actions/download-artifact@v7
@@ -311,6 +321,7 @@ jobs:
           test -s /tmp/phase12-delivery/textures/materials.manifest.json
           test -s /tmp/camping-frontend-model/xoyens-studio.glb
           test -s /tmp/camping-frontend-model/xoyens-studio.model.json
+          test -s /tmp/camping-frontend-model/manifest.json
           test -s /tmp/phase12-delivery/_delivery/phase-06/ceiling.png
           test -s /tmp/phase12-delivery/_delivery/phase-06/main-door.png
           test -s /tmp/phase12-delivery/_delivery/phase-06/capture-manifest.json
@@ -357,7 +368,13 @@ jobs:
           mkdir -p public/models/camping
           cp /tmp/camping-frontend-model/xoyens-studio.glb public/models/camping/xoyens-studio.glb
           cp /tmp/camping-frontend-model/xoyens-studio.model.json public/models/camping/xoyens-studio.model.json
+          cp /tmp/camping-frontend-model/manifest.json public/models/camping/manifest.json
+          cp /tmp/camping-frontend-model/xoyens-studio.high.*.glb public/models/camping/
+          cp /tmp/camping-frontend-model/xoyens-studio.mid.*.glb public/models/camping/
+          cp /tmp/camping-frontend-model/xoyens-studio.low.*.glb public/models/camping/
+          cp /tmp/camping-frontend-model/xoyens-studio.colliders.*.glb public/models/camping/
           node scripts/verify-glb-contract.mjs public/models/camping/xoyens-studio.glb docs/camping-v3/scene-bible.json --frontend-optimized
+          node scripts/ci/verify-public-model.mjs --local public/models/camping --expect-phase "${CAMPING_PHASE:-14}" --legacy docs/camping-v3/legacy-glb-sha256.txt
           node scripts/3d/pack-delivery.mjs --manifest-only --phase="${CAMPING_PHASE:-9}"
           node scripts/validate-pbr-materials.mjs --write-licenses
           node scripts/validate-pbr-materials.mjs
@@ -375,6 +392,7 @@ jobs:
           git add art/xoyens-studio.blend art/textures/materials/*.png art/textures/materials.manifest.json docs/camping-v3/ASSET-LICENSES.md
           git add docs/camping-v3/phase-06/ceiling.png docs/camping-v3/phase-06/main-door.png docs/camping-v3/phase-06/capture-manifest.json
           git add public/models/camping/xoyens-studio.glb public/models/camping/xoyens-studio.model.json
+          git add public/models/camping/manifest.json public/models/camping/xoyens-studio.*.glb
           if [[ "${CAMPING_PHASE:-9}" -ge 14 ]]; then git add public/models/camping/xoyens-studio.colliders.glb; fi
           git add docs/camping-v3/phase-07/surface-validation.json docs/camping-v3/phase-07/surface-source.json
           git add art/xoyens-studio.phase08.report.json docs/camping-v3/phase-08/production-validation.json
@@ -415,7 +433,7 @@ jobs:
       # Cache-busting and SHA-256 checks reject stale CDN objects at the canonical URL.
       - name: Verify Phase 12 model served by Lovable production
         env:
-          CAMPING_EXPECTED_MODEL_PHASE: "12"
+          CAMPING_EXPECTED_MODEL_PHASE: "14"
           CAMPING_PRODUCTION_URL: "https://syndicate-do-trap.lovable.app"
           CAMPING_PRODUCTION_VERIFY_TIMEOUT_MS: "300000"
         run: node scripts/verify-deployed-camping-model.mjs

@@ -115,6 +115,7 @@ test("Phase 14 keeps both source and public collider GLBs as required artifacts"
   const required = new Set(requiredFilesForPhase(14));
   assert.equal(required.has("art/out/xoyens-studio.colliders.glb"), true);
   assert.equal(required.has("public/models/camping/xoyens-studio.colliders.glb"), true);
+  assert.equal(required.has("public/models/camping/manifest.json"), true);
   assert.equal(required.has("art/xoyens-studio.phase07.report.json"), true);
   assert.equal(required.has("art/xoyens-studio.phase08.report.json"), true);
 });

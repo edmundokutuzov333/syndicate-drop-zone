@@ -42,6 +42,9 @@ if [ "${CAMPING_PHASE:-9}" -ge 9 ]; then
 fi
 step blend-check npm run 3d:blend:validate
 step frontend-model bash scripts/3d/build-frontend-model.sh
+if [ "$CAMPING_PHASE" -ge 14 ]; then
+ step public-model-contract node scripts/ci/verify-public-model.mjs --local public/models/camping --expect-phase "$CAMPING_PHASE" --legacy docs/camping-v3/legacy-glb-sha256.txt
+fi
 # The optimized candidate is now at the canonical public URL. Run the same
 # frontend gates required by the superprompt before the publish job can commit it.
 # Formatting-only Prettier findings are warnings; semantic ESLint violations remain blocking.

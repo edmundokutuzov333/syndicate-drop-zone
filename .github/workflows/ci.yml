@@ -15,6 +15,9 @@ on:
       - "scripts/install-3d-toolchain.sh"
       - "scripts/verify-glb-contract.mjs"
       - "scripts/camping-frontend-publication-guard.ts"
+      - "scripts/ci/verify-public-model.mjs"
+      - "tests/verify-public-model.test.mjs"
+      - "tests/e2e/camping-experience.spec.ts"
       - "src/features/camping/scene/CampingStudioEngine.ts"
       - "src/features/camping/scene/camping-model-compatibility.ts"
       - "vite.config.ts"
@@ -36,7 +39,7 @@ on:
     types: [completed]
 
 env:
-  CAMPING_PHASE: "9"
+  CAMPING_PHASE: "14"
 jobs:
   verify:
     # For workflow_run, verify the latest main only after the 3D publish job
@@ -134,6 +137,12 @@ jobs:
         env:
           CAMPING_BASE_URL: https://syndicate-do-trap.lovable.app
         run: npx playwright test tests/radio/camping-entry.spec.ts --grep "mounts the 3D entry|accepts 808 and enters the loaded studio|captures the seven deterministic baseline poses|certified optimized Blender V3 model" --project=chromium
+
+      - name: CAMPING public model manifest E2E
+        if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+        env:
+          CAMPING_BASE_URL: https://syndicate-do-trap.lovable.app
+        run: npx playwright test tests/e2e/camping-experience.spec.ts --project=chromium
 
       - name: Camera browser validation (permissions, photo download and video playback)
         run: npx playwright test tests/radio/camera.spec.ts --project=chromium

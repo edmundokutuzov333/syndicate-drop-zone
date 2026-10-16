@@ -20,3 +20,14 @@ node scripts/verify-glb-contract.mjs art/out/optimized/xoyens-studio.low.glb doc
 node scripts/3d/promote-frontend-model.mjs art/out/optimized/xoyens-studio.high.glb public/models/camping/xoyens-studio.glb public/models/camping/xoyens-studio.model.json docs/camping-v3/scene-bible.json
 node scripts/verify-glb-contract.mjs public/models/camping/xoyens-studio.glb docs/camping-v3/scene-bible.json --frontend-optimized
 node scripts/check-3d-budgets.mjs public/models/camping/xoyens-studio.glb high
+if [ "${CAMPING_PHASE:-9}" -ge 14 ]; then
+  test -s art/out/xoyens-studio.colliders.glb
+  cp art/out/xoyens-studio.colliders.glb public/models/camping/xoyens-studio.colliders.glb
+  node scripts/3d/write-public-model-manifest.mjs --phase "${CAMPING_PHASE}" \
+    --optimized-dir art/out/optimized \
+    --collider art/out/xoyens-studio.colliders.glb \
+    --canonical public/models/camping/xoyens-studio.glb \
+    --canonical-collider public/models/camping/xoyens-studio.colliders.glb \
+    --public-dir public/models/camping \
+    --scene-bible docs/camping-v3/scene-bible.json
+fi
