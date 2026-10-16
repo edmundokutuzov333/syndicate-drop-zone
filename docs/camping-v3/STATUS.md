@@ -243,3 +243,11 @@ O bootstrap vinculativo do contrato de promoção continua pendente: faltam os c
 O Camera Production CI [38872724658](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38872724658) falhou no smoke de produção: um teste excedeu 180 segundos durante a captura e outro recebeu `architectural-envelope-entry` em vez de `floor-mesh-ready`. O contrato backend [38872724686](https://github.com/edmundokutuzov333/syndicate-drop-zone/actions/runs/38872724686) passou.
 
 **Decisão de release:** nenhuma fase nova certificada neste ciclo. Não promover o GLB nem alterar metadados para forçar a fase 12. Resolver a discrepância de artefactos e os gates UV2/budget, depois repetir a verificação de modelo servido em preview e produção. O Superprompt, a Adenda v1.1 e os kits externos não ficaram integralmente disponíveis nos caminhos testados; não se assume que foram lidos a partir desses caminhos.
+
+## Auditoria de integração do runtime · 2026-10-16 · commits `051f7bc` e `2090b0b`
+
+O motor principal passou a seleccionar o tier a partir das capacidades WebGL/dispositivo, expor `data-camping-quality-tier` e aplicar o perfil correspondente de pixel ratio, antialias e sombras. Quando o `manifest.json` público existir, o loader escolhe o GLB visual hash-addressed do tier (`high`, `mid` ou `low`) e verifica bytes + SHA-256 antes de fazer parse. Na ausência do manifest, o fallback permanece exclusivamente no GLB canónico validado por `xoyens-studio.model.json`; nenhum nome de ficheiro legado é inferido.
+
+**Estado verificável no momento deste registo:** a produção Lovable ainda servia `phase=9`, 13.530.632 bytes, SHA-256 `3edcc4457d357393a85b3a098433764d33cd244df9533a80fa27bee249bd1e24`; `manifest.json` respondia 404 e o GLB legado respondia 404. O SHA dos bytes servidos coincidia com a metadata fase 09, mas isto não certifica as Fases 10–22. O build Blender foi disparado para a `main` actual e continua a ser o gate responsável por gerar/promover tiers reais.
+
+Não se declara certificação das Fases 10–22 neste registo: falta concluir Blender, promoção manifest/tier, publicação, E2E público, métricas FPS/triângulos/draw calls/transferência e a rubrica visual da Fase 22.
