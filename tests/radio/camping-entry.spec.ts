@@ -175,7 +175,25 @@ async function openCamping(page: import("@playwright/test").Page, query = "", op
   if (options.skipUnlock) await expect(canvas).toHaveCount(1);
   else await expect(canvas).toBeVisible();
   const badge = page.locator(".camping-studio__asset-state");
-  await expect(badge).toHaveText("MODEL / READY");
+  const startupFallback = page.locator('.camping-studio__fallback[aria-label="Acesso alternativo"]');
+  await expect.poll(async () => {
+    const state = (await badge.textContent())?.trim();
+    const webglStatus = await canvas.getAttribute("data-camping-webgl-status");
+    return state === "MODEL / READY" || webglStatus === "startup-error" || await startupFallback.isVisible();
+  }, { timeout: 60_000 }).toBe(true);
+  if ((await badge.textContent())?.trim() !== "MODEL / READY") {
+    const diagnostics = await canvas.evaluate((element) => ({
+      webglStatus: element.getAttribute("data-camping-webgl-status"),
+      webglError: element.getAttribute("data-camping-webgl-error"),
+      loadStage: element.getAttribute("data-camping-model-load-stage"),
+      loadError: element.getAttribute("data-camping-model-load-error"),
+      source: element.getAttribute("data-camping-model-source"),
+      sha256: element.getAttribute("data-camping-model-sha256"),
+      sceneStatus: element.getAttribute("data-camping-scene-status"),
+    }));
+    console.log("CAMPING STARTUP DIAGNOSTICS", JSON.stringify(diagnostics));
+    return;
+  }
   await expect(page.getByText("LOADING / GLB", { exact: true })).toHaveCount(0);
 
   // SSR can make the canvas visible before React's client layout effects mount

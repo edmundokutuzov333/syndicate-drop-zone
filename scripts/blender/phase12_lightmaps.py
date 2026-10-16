@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Fase 12: UV2 independente e packing por lmGroup."""
-import bpy,bmesh,json,math,os,re,subprocess
+import bpy,bmesh,json,math,os,re,subprocess,sys
 from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parent))
 from common import argv_after_dashes
 GROUPS=("shell","production","photo","left","right")
 COLS={"COL_shell":"shell","COL_production":"production","COL_photo":"photo","COL_left":"left","COL_right":"right"}

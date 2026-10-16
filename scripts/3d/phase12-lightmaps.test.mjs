@@ -1,7 +1,8 @@
-import test from "node:test";import assert from "node:assert/strict";import {buildPlan,planSingleAtlas,GROUPS,TIERS} from "../plan-lightmaps.mjs";
+import test from "node:test";import assert from "node:assert/strict";import { readFileSync } from "node:fs";import { resolve } from "node:path";import {buildPlan,planSingleAtlas,GROUPS,TIERS} from "../plan-lightmaps.mjs";
 const report=(area=1,d=64)=>({phase:12,status:"source-validated",sourceCommit:"a".repeat(40),uv2Independent:true,smartProjectAngleDegrees:66,smartProjectIslandMargin:.003,packMargin:.004,paddingAt4096Px:16.384,meshAreas:GROUPS.map(lmGroup=>({name:lmGroup,lmGroup,surfaceM2:area,targetTexelsPerM:d,lightmapPolicy:"baked",uvMap:"UVMap",uvLightmap:"UV_Lightmap",uv2Independent:true,maxIslandStretch:1.01}))});
 const bible=()=>({version:3,elements:GROUPS.map(zone=>({zone}))});
 test("um atlas por grupo e budgets",()=>{const p=buildPlan(report(),bible());assert.equal(p.status,"within-budget");for(const[t,c]of Object.entries(TIERS)){assert.ok(p.tiers[t].totalMemoryMB<=c.budgetMB);assert.equal(Object.keys(p.tiers[t].groups).length,5);}});
 test("stretching e UV2 são gates",()=>{const r=report();r.meshAreas[0].maxIslandStretch=1.2;r.meshAreas[1].uv2Independent=false;const p=buildPlan(r,bible());assert.equal(p.status,"failed");assert.ok(p.failures.some(x=>x.includes("Stretching >1.15")));});
 test("não cria segundo atlas quando a superfície não cabe",()=>{const p=planSingleAtlas([{surfaceM2:5000,targetTexelsPerM:128}],4096);assert.equal(p.atlases,1);assert.equal(p.fits,false);});
 test("budget high falha quando cinco grupos pedem atlas 2048",()=>{const p=buildPlan(report(100,128),bible());assert.equal(p.status,"failed");assert.ok(p.failures.some(x=>x.includes("high excede 24 MiB")));});
+test("o bake da Fase 13 não bloqueia a Fase 12",()=>{const s=readFileSync(resolve("scripts/3d/local-build.sh"),"utf8");assert.match(s,/if \[ "\$CAMPING_PHASE" -ge 13 \]; then[\s\S]*?step phase13-bake/);});

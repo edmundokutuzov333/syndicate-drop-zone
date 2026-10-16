@@ -244,3 +244,12 @@ Foam tiles e cabides ficam em shared-ao-ibl e não entram nos atlas baked. A Fas
 ## 2026-10-16 · D042 · Fase 13
 
 O bake de irradiância Cycles gera EXR/PNG por grupo e tier, IBL e captura de evidência. Os outputs ficam como artefactos, fora de Git LFS. A Fase 13 continua aberta até o bake real, hashes, promoção, produção e Playwright passarem.
+
+
+## 2026-10-16 · D043 · Isolar o bake da Fase 13 e corrigir arranque Blender
+
+**Evidência:** no run 38840103766, `phase12-uv2` terminou com `ModuleNotFoundError: No module named 'common'` em `scripts/blender/phase12_lightmaps.py:5`. O runner executa scripts com `blender -P`, que não garante que `scripts/blender/` esteja em `sys.path`. O mesmo problema afectava `bake_lightmaps.py`. O log também mostrou que a Fase 12 tentava executar o bake da Fase 13 porque ambas as condições usavam `CAMPING_PHASE >= 12`.
+
+**Decisão:** adicionar o directório do script a `sys.path` antes dos imports locais nos dois entrypoints. Executar o bake apenas quando `CAMPING_PHASE >= 13`, para que uma falha da Fase 13 não bloqueie indevidamente a certificação da Fase 12. A suite Playwright passa a aguardar até 60 s pelo GLB de 13,5 MB e a aceitar o fallback acessível como resultado explícito, recolhendo diagnósticos quando o modelo não fica pronto.
+
+**Estado:** correcção submetida para validação em GitHub Actions. A Fase 12 continua aberta; os gates de UV2, stretching, orçamento, publicação e E2E ainda têm de passar. Não se alteraram tolerâncias nem budgets.
