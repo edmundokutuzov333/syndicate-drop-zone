@@ -1356,7 +1356,14 @@ export class CampingStudioEngine {
         if (this.canvas) {
           if (architecturalEntry) {
             this.canvas.dataset.campingCameraPoseSource = "blender-v3-architectural-envelope";
-            this.canvas.dataset.campingCameraGeometryStatus = "architectural-envelope-entry";
+            // The entry pose may use the shell datum for stability even when a
+            // genuine floor mesh was measured during model load. Preserve the
+            // physical-floor diagnostic in that case; Playwright and debug
+            // consumers use it to distinguish a real mesh from envelope-only
+            // recovery.
+            this.canvas.dataset.campingCameraGeometryStatus = this.canvas.dataset.campingModelFloorBoundsSource
+              ? "floor-mesh-ready"
+              : "architectural-envelope-entry";
             delete this.canvas.dataset.campingCameraPoseFallback;
           } else {
             const isRoomEnvelopeFallback = poseFloorBounds?.source === "room-envelope";
