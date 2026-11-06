@@ -418,7 +418,7 @@ export function CampingStudioExperience({
       {(access.phase === "LOCKED" || access.phase === "CODE_ENTRY") && !showAccessFallback && (
         <div className="camping-studio__access-panel" aria-live="polite">
           <p className="camping-studio__micro-label">STUDIO XOYENS</p>
-          <h1>808</h1>
+          <h1>333</h1>
           <p className="camping-studio__access-instruction">Código de acesso</p>
           <div className="camping-studio__code-slots" aria-label={"Código introduzido: " + (access.code || "vazio")}>
             {[0, 1, 2].map((slot) => (
@@ -495,7 +495,7 @@ export function CampingStudioExperience({
           )}
           {isExploring && (
             <button type="button" onClick={() => engineRef.current?.returnToEntry()}>
-              {currentRoom === "studio" ? "ENTRADA 808" : currentRoom === "archive" ? "ROOM 01 / ESTÚDIO" : "VOLTAR AO ARQUIVO"}
+              {currentRoom === "studio" ? "ENTRADA 333" : currentRoom === "archive" ? "ROOM 01 / ESTÚDIO" : "VOLTAR AO ARQUIVO"}
             </button>
           )}
           <button type="button" onClick={onLeave}>SAIR</button>
@@ -535,7 +535,7 @@ export function CampingStudioExperience({
           </div>
           <p>Escolha um ponto. A câmara desloca-se suavemente sem exigir movimento livre.</p>
           <div className="camping-studio__guided-list">
-            <button type="button" onClick={() => engineRef.current?.guideTo("entrance")}>ENTRADA / 808</button>
+            <button type="button" onClick={() => engineRef.current?.guideTo("entrance")}>ENTRADA / 333</button>
             {guidedPoints.map((point) => (
               <button type="button" key={point.id} onClick={() => engineRef.current?.guideTo(point.id)}>
                 {point.label}

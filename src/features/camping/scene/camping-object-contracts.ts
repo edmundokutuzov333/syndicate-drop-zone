@@ -28,20 +28,13 @@ export function canReserveLiveProduct(productId: string | null | undefined): boo
 }
 
 
-/** Room doors are real, selectable scene objects. The studio's inner door uses its
- * contextual interface as a deliberate confirmation before entering Room 02. */
+/** The published studio is a single physical room; doors never teleport into fabricated scenes. */
 export function getRoomTransitionTarget(
   activeRoom: CampingRoomId,
   interactionId: string,
 ): CampingRoomId | null {
-  if (activeRoom === "studio" && interactionId === "studio.inner-door") return "archive";
-  if (activeRoom === "archive") {
-    if (interactionId === "room.archive.return-door") return "studio";
-    if (interactionId === "room.archive.listening-door") return "listening";
-    if (interactionId === "room.archive.secret-door") return "secret";
-  }
-  if (activeRoom === "listening" && interactionId === "room.listening.return-door") return "archive";
-  if (activeRoom === "secret" && interactionId === "room.secret.return-door") return "archive";
+  void activeRoom;
+  void interactionId;
   return null;
 }
 

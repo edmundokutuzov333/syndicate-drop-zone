@@ -73,13 +73,11 @@ describe("CAMPING object interaction contracts", () => {
     expect(canReserveLiveProduct(null)).toBe(false);
   });
 
-  it("routes physical doors to real room destinations and back", () => {
-    expect(getRoomTransitionTarget("studio", "studio.inner-door")).toBe("archive");
-    expect(getRoomTransitionTarget("archive", "room.archive.return-door")).toBe("studio");
-    expect(getRoomTransitionTarget("archive", "room.archive.listening-door")).toBe("listening");
-    expect(getRoomTransitionTarget("archive", "room.archive.secret-door")).toBe("secret");
-    expect(getRoomTransitionTarget("listening", "room.listening.return-door")).toBe("archive");
-    expect(getRoomTransitionTarget("secret", "room.secret.return-door")).toBe("archive");
+  it("keeps interaction inside the single published studio", () => {
+    expect(getRoomTransitionTarget("studio", "studio.inner-door")).toBeNull();
+    expect(getRoomTransitionTarget("archive", "room.archive.return-door")).toBeNull();
+    expect(getRoomTransitionTarget("archive", "room.archive.listening-door")).toBeNull();
+    expect(getRoomTransitionTarget("archive", "room.archive.secret-door")).toBeNull();
     expect(getRoomTransitionTarget("studio", "studio.imac")).toBeNull();
   });
 

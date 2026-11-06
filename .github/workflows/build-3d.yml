@@ -20,19 +20,15 @@ on:
       - "docs/camping-v3/phase-11/**"
       - "docs/camping-v3/phase-13/**"
       - "docs/camping-v3/phase-14/**"
-      - "src/features/camping/scene/CampingStudioEngine.ts"
       - "src/features/camping/scene/camping-model-compatibility.ts"
       - "vite.config.ts"
-      - "scripts/camping-frontend-publication-guard.ts"
       - "scripts/build-blend.sh"
-      - "public/models/camping/xoyens-studio.model.json"
       - "scripts/install-3d-toolchain.sh"
       - "scripts/verify-glb-contract.mjs"
       - "scripts/verify-deployed-camping-model.mjs"
       - "docs/camping-v3/scene-bible.json"
       - "package.json"
       - "docker/blender-ci/Dockerfile"
-      - ".github/workflows/build-3d.yml"
 concurrency:
   group: build-3d-${{ github.ref }}
   # Only certify the newest main revision; stale builds must not hold the queue.

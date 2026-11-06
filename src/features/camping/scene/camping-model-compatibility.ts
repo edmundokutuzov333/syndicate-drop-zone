@@ -12,6 +12,7 @@ const ELEMENT_NAME_ALIASES: Readonly<Record<string, string>> = {
 };
 const RUNTIME_NAME_ALIASES: ReadonlyArray<readonly [RegExp, string]> = [
   [/^SDT_production_monitor_daw_screen$/i, "studio.imac-screen"],
+  [/^SDT_shell_door_main$/i, "studio.inner-door"],
   [/^SDT_shell_door_main_lever$/i, "studio.door-handle"],
   [/^SDT_shell_door_main_handle_plate$/i, "studio.door-handle-plate"],
 ];

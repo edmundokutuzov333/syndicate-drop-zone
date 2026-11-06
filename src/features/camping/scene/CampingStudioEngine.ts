@@ -686,6 +686,12 @@ export class CampingStudioEngine {
   private studioRoot: THREE.Group | null = null;
   private modelSource: "blender-v3" | "legacy-glb" | null = null;
   private studioLoaded = false;
+  private hemisphereLight: THREE.HemisphereLight | null = null;
+  private warmLights: Array<{ light: THREE.Light; intensity: number }> = [];
+  private redLights: THREE.PointLight[] = [];
+  private roomLightingMode: "warm" | "off" | "red" = "warm";
+  private readonly emissiveDefaults = new Map<THREE.Material, { color: THREE.Color; intensity: number }>();
+  private chairSpin: { root: THREE.Object3D; startY: number; elapsed: number; duration: number } | null = null;
   private currentRoom: CampingRoomId = "studio";
   private roomLayout: CampingRoomLayout | null = null;
   private roomRoots = new Map<CampingInteriorRoomId, THREE.Group>();
@@ -696,6 +702,7 @@ export class CampingStudioEngine {
   private loader: GLTFLoader | null = null;
   private ktx2Loader: KTX2Loader | null = null;
   private entryDoor: THREE.Group | null = null;
+  private modelEntryDoor: THREE.Object3D | null = null;
   private keypadDisplay: THREE.Mesh | null = null;
   private lockLight: THREE.PointLight | null = null;
   private access = { ...initialCampingAccessState };
@@ -944,6 +951,7 @@ export class CampingStudioEngine {
     this.roomTransitionDoorPivot = null;
     this.roomTransitionDoorBaseRotation = 0;
     this.entryDoor = null;
+    this.modelEntryDoor = null;
     this.keypadDisplay = null;
   }
 
@@ -1502,6 +1510,7 @@ export class CampingStudioEngine {
     this.advanceAccessSequence(now);
     this.advanceDoor(now);
     this.advanceTween(now);
+    this.advanceChairSpin(delta);
     if (this.debugRequestedPose && this.phase === "EXPLORATION" && this.studioLoaded && this.currentRoom === "studio") {
       const applied = this.applyDebugPose(this.debugRequestedPose, false);
       if (applied && new URLSearchParams(window.location.search).get("still") === "1") {
@@ -1691,7 +1700,8 @@ export class CampingStudioEngine {
   }
 
   private createLighting(): void {
-    this.scene.add(new THREE.HemisphereLight(0xf4d4a5, 0x17100b, 1.45));
+    this.hemisphereLight = new THREE.HemisphereLight(0xf4d4a5, 0x17100b, 1.45);
+    this.scene.add(this.hemisphereLight);
     const key = new THREE.DirectionalLight(0xffd4a0, 2.0);
     key.position.set(-4, 7, 3);
     key.castShadow = true;
@@ -1706,20 +1716,105 @@ export class CampingStudioEngine {
     key.shadow.camera.right = 9;
     key.shadow.camera.top = 8;
     key.shadow.camera.bottom = -8;
-    this.scene.add(key);
-
     const fill = new THREE.PointLight(0xff8b3d, 25, 14, 2);
     fill.position.set(-4.5, 2.5, 1);
-    this.scene.add(fill);
     const ceilingWarm = new THREE.PointLight(0xffbd73, 38, 11, 2);
     ceilingWarm.position.set(-0.4, 3.1, -1.7);
-    this.scene.add(ceilingWarm);
     const studioWarm = new THREE.PointLight(0xffb66b, 39, 9, 2);
     studioWarm.position.set(3.8, 2.8, -3.1);
-    this.scene.add(studioWarm);
-    const redAccent = new THREE.PointLight(0x5c0809, 6, 4, 2);
-    redAccent.position.set(-0.8, 1.1, -4.2);
-    this.scene.add(redAccent);
+    this.warmLights = [key, fill, ceilingWarm, studioWarm].map((light) => ({ light, intensity: light.intensity }));
+    this.warmLights.forEach(({ light }) => this.scene.add(light));
+
+    this.redLights = [
+      new THREE.PointLight(0xff1028, 48, 14, 1.8),
+      new THREE.PointLight(0xff1028, 42, 14, 1.8),
+      new THREE.PointLight(0xff1028, 36, 12, 1.8),
+    ];
+    this.redLights[0]!.position.set(-3.7, 2.55, -0.4);
+    this.redLights[1]!.position.set(0, 2.65, -1.5);
+    this.redLights[2]!.position.set(3.4, 2.5, -0.2);
+    for (const light of this.redLights) { light.intensity = 0; this.scene.add(light); }
+  }
+
+  private captureModelEmissives(root: THREE.Object3D): void {
+    this.emissiveDefaults.clear();
+    root.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const material of materials) {
+        const emissive = material as THREE.Material & { emissive?: THREE.Color; emissiveIntensity?: number };
+        if (!emissive.emissive) continue;
+        this.emissiveDefaults.set(material, {
+          color: emissive.emissive.clone(),
+          intensity: typeof emissive.emissiveIntensity === "number" ? emissive.emissiveIntensity : 1,
+        });
+      }
+    });
+    this.applyEmissiveMode();
+  }
+
+  private applyEmissiveMode(): void {
+    for (const [material, original] of this.emissiveDefaults) {
+      const emissive = material as THREE.Material & { emissive?: THREE.Color; emissiveIntensity?: number };
+      if (!emissive.emissive) continue;
+      if (this.roomLightingMode === "off") emissive.emissiveIntensity = 0;
+      else if (this.roomLightingMode === "red" && original.color.getHex() !== 0) {
+        emissive.emissive.setHex(0xff1028);
+        emissive.emissiveIntensity = Math.max(original.intensity, 0.45);
+      } else {
+        emissive.emissive.copy(original.color);
+        emissive.emissiveIntensity = original.intensity;
+      }
+      emissive.needsUpdate = true;
+    }
+  }
+
+  private setRoomLighting(mode: "warm" | "off" | "red"): void {
+    this.roomLightingMode = mode;
+    for (const { light, intensity } of this.warmLights) light.intensity = mode === "warm" ? intensity : 0;
+    if (this.hemisphereLight) {
+      this.hemisphereLight.intensity = mode === "warm" ? 1.45 : mode === "red" ? 0.42 : 0;
+      this.hemisphereLight.color.setHex(mode === "red" ? 0x8f0716 : 0xf4d4a5);
+      this.hemisphereLight.groundColor.setHex(mode === "red" ? 0x280006 : 0x17100b);
+    }
+    for (const light of this.redLights) light.intensity = mode === "red" ? (light.distance > 13 ? 48 : 36) : 0;
+    this.scene.environmentIntensity = mode === "warm" ? 0.28 : mode === "red" ? 0.06 : 0;
+    if (this.scene.fog) this.scene.fog.color.setHex(mode === "red" ? 0x210006 : 0x100d0a);
+    this.applyEmissiveMode();
+    this.updateSwitchIndicator("studio.light-switch", mode === "warm" ? 0xffb84d : 0x353331);
+    this.updateSwitchIndicator("studio.red-switch", mode === "red" ? 0xff1832 : 0x353331);
+  }
+
+  private updateSwitchIndicator(rootName: string, color: number): void {
+    const root = this.studioRoot?.getObjectByName(rootName);
+    const indicator = root?.getObjectByName(rootName + ".indicator");
+    if (!indicator) return;
+    indicator.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      const next = materials.map((material) => {
+        const copy = material.clone();
+        if ("color" in copy) (copy as THREE.MeshStandardMaterial).color.setHex(color);
+        if ("emissive" in copy) (copy as THREE.MeshStandardMaterial).emissive.setHex(color);
+        if ("emissiveIntensity" in copy) (copy as THREE.MeshStandardMaterial).emissiveIntensity = color === 0x353331 ? 0 : 0.85;
+        return copy;
+      });
+      mesh.material = Array.isArray(mesh.material) ? next : next[0]!;
+    });
+  }
+
+  private advanceChairSpin(deltaSeconds: number): void {
+    if (!this.chairSpin) return;
+    const motion = this.chairSpin;
+    motion.elapsed = Math.min(motion.duration, motion.elapsed + deltaSeconds);
+    const progress = motion.elapsed / motion.duration;
+    motion.root.rotation.y = motion.startY + Math.PI * 2 * progress;
+    if (progress >= 1) {
+      motion.root.rotation.y = motion.startY + Math.PI * 2;
+      this.chairSpin = null;
+    }
   }
 
   private createEntrySet(): void {
@@ -2016,6 +2111,7 @@ export class CampingStudioEngine {
     this.drawKeypadDisplay();
 
     if (this.access.phase === "ACCESS_GRANTED" && previousPhase !== "ACCESS_GRANTED") {
+      void frequency.start();
       this.beginGrantedSequence();
     }
     if (this.access.phase === "DOOR_OPENING" && previousPhase !== "DOOR_OPENING") {
@@ -2098,16 +2194,18 @@ export class CampingStudioEngine {
   }
 
   private advanceDoor(now: number): void {
-    if (!this.entryDoor) return;
+    if (!this.entryDoor && !this.modelEntryDoor) return;
     if (this.phase === "DOOR_OPENING" || this.phase === "ENTERING_STUDIO" || this.phase === "EXPLORATION" || this.phase === "INTERACTION_FOCUS") {
       const progress = this.phase === "DOOR_OPENING"
         ? Math.min(1, Math.max(0, (now - this.phaseStartedAt) / 1450))
         : 1;
       const targetAngle = 1.38;
       this.doorAngle = targetAngle * easeOutCubic(progress);
-      this.entryDoor.rotation.y = this.doorAngle;
+      if (this.entryDoor) this.entryDoor.rotation.y = this.doorAngle;
+      if (this.modelEntryDoor) this.modelEntryDoor.rotation.y = this.doorAngle;
     } else {
-      this.entryDoor.rotation.y = 0;
+      if (this.entryDoor) this.entryDoor.rotation.y = 0;
+      if (this.modelEntryDoor) this.modelEntryDoor.rotation.y = 0;
       this.doorAngle = 0;
     }
   }
@@ -2143,6 +2241,7 @@ export class CampingStudioEngine {
     );
     for (const item of topLevel) pivot.attach(item);
     doorRoot.userData.doorPivot = pivot;
+    this.modelEntryDoor = pivot;
     root.updateMatrixWorld(true);
   }
 
@@ -2354,19 +2453,29 @@ export class CampingStudioEngine {
         }
         this.prepareInnerDoorPivot(root);
         if (modelSource === "legacy-glb") this.prepareArtistWallMounting(root);
-        this.addSyndicateBanner(root);
-        this.addXoyensBacklitSign(root);
+        if (modelSource === "legacy-glb") {
+          this.addSyndicateBanner(root);
+          this.addXoyensBacklitSign(root);
+        }
         this.addDawScreen(root);
 
         // Non-sensitive diagnostics let browser tests verify the real loaded scene,
         // not infer scene quality from the GLB request alone.
         const requiredSceneNodes = [
           "studio.floor",
-          "studio.vaulted-timber-ceiling",
-          "studio.ceiling-arches",
           "studio.parquet",
+          "SDT_shell_wall_entry",
+          "SDT_shell_wall_rear",
+          "SDT_shell_wall_left",
+          "SDT_shell_wall_right",
+          "studio.imac-screen",
+          "studio.light-switch",
+          "studio.red-switch",
           "studio.production-desk",
           "studio.photo-backdrop",
+          ...(modelSource === "blender-v3"
+            ? ["SDT_shell_ceiling_flat"]
+            : ["studio.vaulted-timber-ceiling", "studio.ceiling-arches"]),
         ];
         const missingSceneNodes = requiredSceneNodes.filter((name) => !root.getObjectByName(name));
         const presentPortraitSlots = Array.from({ length: 17 }, (_, index) =>
@@ -2379,11 +2488,12 @@ export class CampingStudioEngine {
           this.canvas.dataset.campingBannerStatus =
             root.getObjectByName("studio.syndicate-banner.fabric") &&
             root.getObjectByName("studio.syndicate-banner.official-seal")
-              ? "ready" : "missing";
-          this.canvas.dataset.campingXoyensSignStatus =
-            root.getObjectByName("studio.xoyens-sign.official-logo") &&
-            root.getObjectByName("studio.xoyens-sign.backlight")
-              ? "ready" : "missing";
+              ? "ready"
+              : root.getObjectByName("studio.photo-backdrop") ? "reference-model" : "missing";
+          this.canvas.dataset.campingXoyensSignStatus = modelSource === "blender-v3"
+            ? "not-in-reference"
+            : root.getObjectByName("studio.xoyens-sign.official-logo") &&
+              root.getObjectByName("studio.xoyens-sign.backlight") ? "ready" : "missing";
         }
 
         root.traverse((object) => {
@@ -2460,6 +2570,7 @@ export class CampingStudioEngine {
           if (typeof interactionId === "string" && interactionId) this.interactiveRoots.push(object);
         });
         this.studioRoot = root;
+        this.captureModelEmissives(root);
         if (this.canvas) {
           const floorDiagnostics = inspectCampingFloorGeometry(root);
           this.canvas.dataset.campingModelRootBounds = JSON.stringify(floorDiagnostics.rootBounds);
@@ -3269,10 +3380,23 @@ export class CampingStudioEngine {
       this.enterRoom(nextRoom);
       return;
     }
-    if (interactionId === "studio.secret-drawer") {
-      const archiveRoom = this.roomRoots.get("archive");
-      const secretDoor = archiveRoom?.getObjectByName("room.archive.secret-door");
-      if (secretDoor) secretDoor.visible = true;
+    if (interactionId === "studio.light-switch") {
+      this.setRoomLighting(this.roomLightingMode === "off" ? "warm" : "off");
+      this.setTransientMessage(this.roomLightingMode === "off" ? "STUDIO LIGHTS / OFF" : "STUDIO LIGHTS / WARM", "neutral", 1500);
+      click();
+      return;
+    }
+    if (interactionId === "studio.red-switch") {
+      this.setRoomLighting(this.roomLightingMode === "red" ? "warm" : "red");
+      this.setTransientMessage(this.roomLightingMode === "red" ? "RED LIGHT / ACTIVE" : "WARM LIGHT / ACTIVE", "neutral", 1500);
+      click();
+      return;
+    }
+    if (interactionId === "studio.chair") {
+      this.chairSpin = { root, startY: root.rotation.y, elapsed: 0, duration: 0.95 };
+      this.setTransientMessage("STUDIO CHAIR / ROTATION", "neutral", 1200);
+      click();
+      return;
     }
     this.focusObject(root);
   }
@@ -3376,6 +3500,9 @@ export class CampingStudioEngine {
   }
 
   private labelForId(id: string): string {
+    if (id === "studio.light-switch") return this.roomLightingMode === "off" ? "LIGHTS ON" : "LIGHTS OFF";
+    if (id === "studio.red-switch") return this.roomLightingMode === "red" ? "WARM LIGHT" : "RED LIGHT";
+    if (id === "studio.chair") return "SPIN";
     if (id === "studio.imac") return "OPEN";
     if (id === "studio.secret-drawer" || id === "studio.secret-vault") return "DISCOVER";
     if (id === "room.archive.records") return "VIEW FILE";
@@ -3388,6 +3515,9 @@ export class CampingStudioEngine {
   }
 
   private actionForId(id: string): string {
+    if (id === "studio.light-switch") return "TOGGLE STUDIO LIGHTS";
+    if (id === "studio.red-switch") return "SWITCH TO RED LIGHT";
+    if (id === "studio.chair") return "ROTATE CHAIR 360°";
     if (id === "studio.imac") return "OPEN COMPUTER";
     if (id === "studio.secret-drawer") return "UNLISTED ROOM / 808";
     if (id === "studio.secret-vault") return "RESTRICTED ACCESS";
