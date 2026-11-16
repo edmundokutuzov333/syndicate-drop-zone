@@ -11,9 +11,9 @@ const type = (digits: string) =>
     initialCampingAccessState,
   );
 
-describe("CAMPING 333 access machine", () => {
-  it("accepts exactly the 333 sequence and advances through the door states", () => {
-    const entered = campingAccessReducer(type("333"), { type: "SUBMIT" });
+describe("CAMPING 808 access machine", () => {
+  it("accepts exactly the 808 sequence and advances through the door states", () => {
+    const entered = campingAccessReducer(type("808"), { type: "SUBMIT" });
     expect(entered.phase).toBe("ACCESS_GRANTED");
     expect(entered.message).toBe("ACCESS GRANTED");
     expect(campingAccessReducer(entered, { type: "DOOR_OPENING" }).phase).toBe("DOOR_OPENING");
@@ -22,7 +22,7 @@ describe("CAMPING 333 access machine", () => {
   });
 
   it("rejects a wrong code, increments attempts and resets input", () => {
-    const state = campingAccessReducer(type("334"), { type: "SUBMIT" });
+    const state = campingAccessReducer(type("333"), { type: "SUBMIT" });
     expect(state.phase).toBe("LOCKED");
     expect(state.code).toBe("");
     expect(state.attempts).toBe(1);
@@ -30,9 +30,9 @@ describe("CAMPING 333 access machine", () => {
   });
 
   it("limits input to three digits and supports clear/backspace", () => {
-    const typed = type("1333");
-    expect(typed.code).toBe("333");
-    expect(campingAccessReducer(typed, { type: "BACKSPACE" }).code).toBe("33");
+    const typed = type("1808");
+    expect(typed.code).toBe("808");
+    expect(campingAccessReducer(typed, { type: "BACKSPACE" }).code).toBe("80");
     expect(campingAccessReducer(typed, { type: "CLEAR" }).code).toBe("");
   });
 
@@ -49,7 +49,7 @@ describe("CAMPING 333 access machine", () => {
   });
 
   it("does not reopen or submit twice after access is granted", () => {
-    const entered = campingAccessReducer(type("333"), { type: "SUBMIT" });
+    const entered = campingAccessReducer(type("808"), { type: "SUBMIT" });
     expect(campingAccessReducer(entered, { type: "SUBMIT" })).toEqual(entered);
     expect(campingAccessReducer(entered, { type: "DOOR_OPENING" }).phase).toBe("DOOR_OPENING");
   });

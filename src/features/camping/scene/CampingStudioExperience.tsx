@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CampingAccessState } from "../interactions/access-machine";
 import type { CampingRoomId } from "./CampingRoomWorld";
-import { initialCampingAccessState } from "../interactions/access-machine";
+import { CAMPING_ACCESS_CODE, initialCampingAccessState } from "../interactions/access-machine";
 import sindicatoSelo from "@/assets/brand/sindicato-selo.png.asset.json";
 import { CampingStudioEngine } from "./CampingStudioEngine";
 import type { CampingDebugApi, CampingDebugPoseId, CampingReferenceMatch } from "../v3/debug-api";
@@ -418,7 +418,7 @@ export function CampingStudioExperience({
       {(access.phase === "LOCKED" || access.phase === "CODE_ENTRY") && !showAccessFallback && (
         <div className="camping-studio__access-panel" aria-live="polite">
           <p className="camping-studio__micro-label">STUDIO XOYENS</p>
-          <h1>333</h1>
+          <h1>{CAMPING_ACCESS_CODE}</h1>
           <p className="camping-studio__access-instruction">Código de acesso</p>
           <div className="camping-studio__code-slots" aria-label={"Código introduzido: " + (access.code || "vazio")}>
             {[0, 1, 2].map((slot) => (
@@ -495,7 +495,7 @@ export function CampingStudioExperience({
           )}
           {isExploring && (
             <button type="button" onClick={() => engineRef.current?.returnToEntry()}>
-              {currentRoom === "studio" ? "ENTRADA 333" : currentRoom === "archive" ? "ROOM 01 / ESTÚDIO" : "VOLTAR AO ARQUIVO"}
+              {currentRoom === "studio" ? "ENTRADA " + CAMPING_ACCESS_CODE : currentRoom === "archive" ? "ROOM 01 / ESTÚDIO" : "VOLTAR AO ARQUIVO"}
             </button>
           )}
           <button type="button" onClick={onLeave}>SAIR</button>

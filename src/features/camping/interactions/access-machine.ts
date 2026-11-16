@@ -29,7 +29,7 @@ export type CampingAccessAction =
   | { type: "LOAD_ERROR"; message: string }
   | { type: "RETRY_LOAD" };
 
-export const CAMPING_ACCESS_CODE = "333";
+export const CAMPING_ACCESS_CODE = "808";
 
 export const initialCampingAccessState: CampingAccessState = {
   phase: "LOCKED",

@@ -86,6 +86,9 @@ jobs:
       - name: Production build
         run: npm run build
 
+      - name: Verify restored images, logos, videos and audio
+        run: node scripts/hydrate-lovable-assets.mjs --verify-only
+
       - name: Inspect bundled radio WAV header and duration
         run: |
           node <<'NODE'
@@ -133,15 +136,11 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: CAMPING production frontend smoke
-        env:
-          CAMPING_BASE_URL: https://syndicate-do-trap.lovable.app
+      - name: CAMPING frontend smoke against local build
         run: npx playwright test tests/radio/camping-entry.spec.ts --grep "mounts the 3D entry|accepts 808 and enters the loaded studio|captures the seven deterministic baseline poses|certified optimized Blender V3 model" --project=chromium
 
-      - name: CAMPING public model manifest E2E
+      - name: CAMPING local model manifest E2E
         if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
-        env:
-          CAMPING_BASE_URL: https://syndicate-do-trap.lovable.app
         run: npx playwright test tests/e2e/camping-experience.spec.ts --project=chromium
 
       - name: Camera browser validation (permissions, photo download and video playback)

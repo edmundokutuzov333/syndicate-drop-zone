@@ -14,7 +14,7 @@
     "walls": "plain enclosed room on unseen sides",
     "camera": "interactive first-person inside a single authored room; no panoramic shell",
     "audio": "existing Frequencia radio service begins on the access-code user gesture",
-    "accessCode": "333"
+    "accessCode": "808"
   },
   "interactions": {
     "studio.imac": "open the macOS-inspired media/files panel; FL Studio content on monitor",

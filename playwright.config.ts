@@ -18,9 +18,9 @@ export default defineConfig({
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
   ],
-  // CI sets CAMPING_BASE_URL to the actual Lovable production site. In that
-  // mode do not start a local server: the smoke test must verify what visitors
-  // receive, including the gate, the GLB and the photo assets.
+  // When CAMPING_BASE_URL is supplied, test a deployed site. Without it,
+  // start a local Vite server to test exactly the code in the current checkout,
+  // including the 808 gate, the GLB, and all restored media.
   ...(process.env.CAMPING_BASE_URL
     ? {}
     : {
